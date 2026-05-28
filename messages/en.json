@@ -1,0 +1,123 @@
+{
+  "nav": {
+    "projects": "Projects",
+    "skills": "Skills",
+    "experience": "Experience",
+    "contact": "Contact",
+    "downloadCV": "Download CV"
+  },
+  "hero": {
+    "title": "JUAN PABLO",
+    "surname": "ROJO",
+    "role": "Biomedical Engineer · AI Developer · Founder",
+    "tagline": "From Fracture Detection to Full-Stack. End-to-End.",
+    "cta1": "View My Work",
+    "cta2": "Download CV"
+  },
+  "about": {
+    "label": "About",
+    "headline": "From Biology to Code, From Lab to Product",
+    "p1": "I'm a Biomedical Engineer finishing my degree at UNC Córdoba, specializing in AI for medical imaging. My thesis — TraumaVision — is a clinical decision support system that detects fractures in X-rays with 97.18% accuracy.",
+    "p2": "In 2025 I founded Eleven, an AI-first digital agency. We build web products and AI agents for SMBs. It runs on Next.js, Claude API, and GSAP — the same stack I use for everything.",
+    "p3": "I've spent two seasons working in California, which means my English is real, not classroom. I won first place at Rocking the Industry, the first industrial hackathon run by RTS Group.",
+    "p4": "Cross-disciplinary isn't a weakness. It's the feature.",
+    "sub_tagline": "Where Biology Meets the Algorithm."
+  },
+  "projects": {
+    "label": "Projects",
+    "traumavision": {
+      "label": "Thesis Project — UNC Córdoba, 2025",
+      "title": "TraumaVision AI",
+      "subtitle": "Clinical Support System for Fracture Detection in Emergency X-Rays",
+      "description": "End-to-end CDSS for fracture detection in X-ray images. DenseNet + YOLOv8 backbone with Grad-CAM explainability. Full-stack: FastAPI + SQLite + Google OAuth + PDF reports.",
+      "metric_auc": "AUC-ROC",
+      "metric_accuracy": "Accuracy",
+      "metric_sensitivity": "Sensitivity",
+      "metric_f1": "F1 Score",
+      "pipeline_label": "Pipeline",
+      "stack_label": "Stack"
+    },
+    "eleven": {
+      "title": "Eleven Estudio Digital",
+      "subtitle": "AI-First Digital Agency",
+      "description": "Founded and operate an AI-first digital agency building web products and AI agents for SMBs. Claude API integration, GSAP animations, Supabase backends.",
+      "role": "Founder & Co-founder",
+      "cta": "View Site"
+    },
+    "hackathon": {
+      "title": "Rocking the Industry",
+      "subtitle": "Industrial Hackathon — RTS Group",
+      "description": "First industrial hackathon run by RTS Group. Team Algarroba LID placed first solving complex industrial engineering problems under real-world conditions.",
+      "badge": "1st Place · 2025"
+    }
+  },
+  "skills": {
+    "label": "Tech Stack",
+    "cluster_ai": {
+      "title": "AI / ML",
+      "items": ["PyTorch", "DenseNet", "YOLOv8", "Grad-CAM", "Claude API", "Scikit-learn", "NumPy", "Pandas"]
+    },
+    "cluster_web": {
+      "title": "Web Dev",
+      "items": ["Next.js", "React", "FastAPI", "Supabase", "GSAP", "Vercel", "SQLite", "Python"]
+    },
+    "cluster_bio": {
+      "title": "Biomedical",
+      "items": ["CDSS / SaMD", "JCI Compliance", "ISO / IEC", "ANMAT", "Medical Devices", "ICU Equipment"]
+    }
+  },
+  "experience": {
+    "label": "Experience",
+    "items": [
+      {
+        "year": "2025–present",
+        "company": "Eleven Estudio Digital",
+        "role": "Founder",
+        "description": "AI-first digital agency. Web dev, AI agents, Meta/Google Ads."
+      },
+      {
+        "year": "2024",
+        "company": "Sanatorio Allende S.A.",
+        "role": "Biomedical Engineer Intern",
+        "description": "ICU and OR equipment maintenance. JCI compliance. Córdoba, Argentina."
+      },
+      {
+        "year": "2023–2024",
+        "company": "UNC",
+        "role": "Undergraduate TA — Human Physiology",
+        "description": "Teaching assistant for Human Physiology."
+      },
+      {
+        "year": "2022–2023",
+        "company": "Snow Summit LLC",
+        "role": "Rentals Technician",
+        "description": "Two seasons in Big Bear Lake, California, USA."
+      }
+    ],
+    "education_label": "Education",
+    "education": [
+      {
+        "year": "2020–2026",
+        "institution": "Universidad Nacional de Córdoba",
+        "degree": "Biomedical Engineering",
+        "detail": "GPA 7.45/10 · No failures · 90% complete"
+      },
+      {
+        "year": "2023",
+        "institution": "Coursera / University of Michigan",
+        "degree": "Applied Data Science with Python",
+        "detail": ""
+      }
+    ]
+  },
+  "contact": {
+    "label": "Contact",
+    "headline_1": "LET'S BUILD",
+    "headline_2": "SOMETHING.",
+    "subtitle": "Available for international remote opportunities.",
+    "email_label": "Email",
+    "linkedin_label": "LinkedIn",
+    "github_label": "GitHub",
+    "copyright": "© 2026 Juan Pablo Rojo"
+  }
+}

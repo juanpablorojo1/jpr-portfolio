@@ -1,0 +1,123 @@
+{
+  "nav": {
+    "projects": "Proyectos",
+    "skills": "Skills",
+    "experience": "Experiencia",
+    "contact": "Contacto",
+    "downloadCV": "Descargar CV"
+  },
+  "hero": {
+    "title": "JUAN PABLO",
+    "surname": "ROJO",
+    "role": "Ingeniero Biomédico · AI Developer · Fundador",
+    "tagline": "De la Detección de Fracturas al Full-Stack. End-to-End.",
+    "cta1": "Ver mi trabajo",
+    "cta2": "Descargar CV"
+  },
+  "about": {
+    "label": "Sobre mí",
+    "headline": "De la Biología al Código, del Laboratorio al Producto",
+    "p1": "Soy Ingeniero Biomédico terminando mi carrera en la UNC Córdoba, especializado en AI para imágenes médicas. Mi tesis — TraumaVision — es un sistema de soporte clínico que detecta fracturas en radiografías con un 97,18% de precisión.",
+    "p2": "En 2025 fundé Eleven, una agencia digital AI-first. Construimos productos web y agentes de IA para pymes. Corre sobre Next.js, Claude API y GSAP — el mismo stack que uso para todo.",
+    "p3": "Pasé dos temporadas trabajando en California, así que mi inglés es real, no de aula. Gané el primer puesto en Rocking the Industry, el primer hackathon industrial de RTS Group.",
+    "p4": "La interdisciplina no es una debilidad. Es el diferencial.",
+    "sub_tagline": "Donde la Biología se Encuentra con el Algoritmo."
+  },
+  "projects": {
+    "label": "Proyectos",
+    "traumavision": {
+      "label": "Tesis de Grado — UNC Córdoba, 2025",
+      "title": "TraumaVision AI",
+      "subtitle": "Sistema de Soporte Clínico para Detección de Fracturas en Radiografías de Emergencia",
+      "description": "CDSS end-to-end para detección de fracturas en radiografías. Backbone DenseNet + YOLOv8 con explicabilidad Grad-CAM. Full-stack: FastAPI + SQLite + Google OAuth + reportes PDF.",
+      "metric_auc": "AUC-ROC",
+      "metric_accuracy": "Exactitud",
+      "metric_sensitivity": "Sensibilidad",
+      "metric_f1": "F1 Score",
+      "pipeline_label": "Pipeline",
+      "stack_label": "Stack"
+    },
+    "eleven": {
+      "title": "Eleven Estudio Digital",
+      "subtitle": "Agencia Digital AI-First",
+      "description": "Fundé y opero una agencia digital AI-first que construye productos web y agentes de IA para pymes. Integración con Claude API, animaciones GSAP, backends en Supabase.",
+      "role": "Fundador y Co-fundador",
+      "cta": "Ver sitio"
+    },
+    "hackathon": {
+      "title": "Rocking the Industry",
+      "subtitle": "Hackathon Industrial — RTS Group",
+      "description": "Primer hackathon industrial de RTS Group. El equipo Algarroba LID obtuvo el primer puesto resolviendo problemas complejos de ingeniería industrial en condiciones reales.",
+      "badge": "1er Puesto · 2025"
+    }
+  },
+  "skills": {
+    "label": "Tech Stack",
+    "cluster_ai": {
+      "title": "AI / ML",
+      "items": ["PyTorch", "DenseNet", "YOLOv8", "Grad-CAM", "Claude API", "Scikit-learn", "NumPy", "Pandas"]
+    },
+    "cluster_web": {
+      "title": "Desarrollo Web",
+      "items": ["Next.js", "React", "FastAPI", "Supabase", "GSAP", "Vercel", "SQLite", "Python"]
+    },
+    "cluster_bio": {
+      "title": "Biomédica",
+      "items": ["CDSS / SaMD", "Cumplimiento JCI", "ISO / IEC", "ANMAT", "Dispositivos Médicos", "Equipamiento UCI"]
+    }
+  },
+  "experience": {
+    "label": "Experiencia",
+    "items": [
+      {
+        "year": "2025–presente",
+        "company": "Eleven Estudio Digital",
+        "role": "Fundador",
+        "description": "Agencia digital AI-first. Desarrollo web, agentes IA, Meta/Google Ads."
+      },
+      {
+        "year": "2024",
+        "company": "Sanatorio Allende S.A.",
+        "role": "Pasante Ingeniería Biomédica",
+        "description": "Mantenimiento de equipos UCI y quirófano. Cumplimiento JCI. Córdoba, Argentina."
+      },
+      {
+        "year": "2023–2024",
+        "company": "UNC",
+        "role": "Ayudante de Cátedra — Fisiología Humana",
+        "description": "Ayudante de cátedra en Fisiología Humana."
+      },
+      {
+        "year": "2022–2023",
+        "company": "Snow Summit LLC",
+        "role": "Técnico de Equipos de Alquiler",
+        "description": "Dos temporadas en Big Bear Lake, California, EE.UU."
+      }
+    ],
+    "education_label": "Educación",
+    "education": [
+      {
+        "year": "2020–2026",
+        "institution": "Universidad Nacional de Córdoba",
+        "degree": "Ingeniería Biomédica",
+        "detail": "Promedio 7,45/10 · Sin materias reprobadas · 90% completado"
+      },
+      {
+        "year": "2023",
+        "institution": "Coursera / Universidad de Michigan",
+        "degree": "Applied Data Science with Python",
+        "detail": ""
+      }
+    ]
+  },
+  "contact": {
+    "label": "Contacto",
+    "headline_1": "CONSTRUYAMOS",
+    "headline_2": "ALGO.",
+    "subtitle": "Disponible para oportunidades remotas internacionales.",
+    "email_label": "Email",
+    "linkedin_label": "LinkedIn",
+    "github_label": "GitHub",
+    "copyright": "© 2026 Juan Pablo Rojo"
+  }
+}

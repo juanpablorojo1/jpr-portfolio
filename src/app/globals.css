@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Colors */
+  --color-bg: #080808;
+  --color-surface: #1C1C1C;
+  --color-surface-alt: #262626;
+  --color-accent: #E8272A;
+  --color-accent-dark: #B01E20;
+  --color-accent-glow: rgba(232, 39, 42, 0.20);
+  --color-accent-border: rgba(232, 39, 42, 0.30);
+  --color-white: #FFFFFF;
+  --color-off-white: #E8E4DE;
+  --color-muted: #666666;
+  --color-border: #2A2A2A;
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-grid: rgba(255, 255, 255, 0.04);
+  --color-scanline: rgba(255, 255, 255, 0.03);
+
+  /* Fonts */
+  --font-display: var(--font-bebas-neue), 'Arial Narrow', sans-serif;
+  --font-ui: var(--font-barlow-condensed), 'Barlow', sans-serif;
+  --font-mono: var(--font-jetbrains-mono), 'Fira Code', monospace;
+
+  /* Shadows */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.6);
+  --shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 24px rgba(232, 39, 42, 0.15);
+  --shadow-accent-glow: 0 0 16px rgba(232, 39, 42, 0.4), 0 0 48px rgba(232, 39, 42, 0.15);
+  --shadow-text-glow: 0 0 20px rgba(232, 39, 42, 0.6);
+  --shadow-metric-glow: 0 0 20px rgba(232, 39, 42, 0.30);
+
+  /* Transitions */
+  --transition-fast: all 0.15s ease-out;
+  --transition-normal: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--color-bg);
+  color: var(--color-white);
+}
+
+body {
+  font-family: var(--font-ui);
+  background-color: var(--color-bg);
+  color: var(--color-white);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* Tech grid background utility */
+.bg-tech-grid {
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, var(--color-grid) 39px, var(--color-grid) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, var(--color-grid) 39px, var(--color-grid) 40px);
+}
+
+/* Clip-path reveal classes for GSAP */
+.clip-hidden {
+  clip-path: inset(100% 0 0 0);
+}
+.clip-visible {
+  clip-path: inset(0% 0 0 0);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

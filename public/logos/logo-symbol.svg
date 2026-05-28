@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 160" width="140" height="160" fill="none">
+  <!-- Hexagon outline — technical/structural -->
+  <polygon
+    points="70,4 128,37 128,103 70,136 12,103 12,37"
+    stroke="#E8272A"
+    stroke-width="2.5"
+    fill="none"
+  />
+
+  <!-- Inner hexagon — subtle depth -->
+  <polygon
+    points="70,16 116,43 116,97 70,124 24,97 24,43"
+    stroke="#2A2A2A"
+    stroke-width="1"
+    fill="none"
+  />
+
+  <!-- ECG / Waveform path — centered horizontally across hexagon interior -->
+  <!-- Flat → small bump → rise → sharp peak → sharp valley → rise → flat -->
+  <polyline
+    points="28,70 38,70 42,70 46,62 50,70 54,50 58,90 62,70 66,70 70,70 74,70 78,62 82,70 86,70 90,70 94,70 106,70 112,70"
+    stroke="#E8272A"
+    stroke-width="2"
+    fill="none"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- JPR monogram below hexagon -->
+  <text
+    x="70"
+    y="154"
+    font-family="'Bebas Neue', 'Arial Narrow', sans-serif"
+    font-size="18"
+    font-weight="400"
+    letter-spacing="6"
+    fill="#FFFFFF"
+    text-anchor="middle"
+  >JPR</text>
+</svg>

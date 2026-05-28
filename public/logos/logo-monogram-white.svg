@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <!-- Dark background -->
+  <rect width="120" height="120" fill="#080808"/>
+
+  <!-- J -->
+  <text
+    x="10"
+    y="88"
+    font-family="'Bebas Neue', 'Arial Narrow', sans-serif"
+    font-size="80"
+    font-weight="400"
+    letter-spacing="2"
+    fill="#FFFFFF"
+  >J</text>
+
+  <!-- P -->
+  <text
+    x="43"
+    y="88"
+    font-family="'Bebas Neue', 'Arial Narrow', sans-serif"
+    font-size="80"
+    font-weight="400"
+    letter-spacing="2"
+    fill="#FFFFFF"
+  >P</text>
+
+  <!-- R — white in mono variant -->
+  <text
+    x="81"
+    y="88"
+    font-family="'Bebas Neue', 'Arial Narrow', sans-serif"
+    font-size="80"
+    font-weight="400"
+    letter-spacing="2"
+    fill="#FFFFFF"
+  >R</text>
+
+  <!-- Baseline rule — white -->
+  <line x1="10" y1="94" x2="110" y2="94" stroke="#FFFFFF" stroke-width="2"/>
+</svg>

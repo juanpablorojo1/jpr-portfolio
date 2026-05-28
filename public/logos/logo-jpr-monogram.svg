@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <!-- Background: transparent for versatility -->
+
+  <!-- J -->
+  <text
+    x="10"
+    y="88"
+    font-family="'Bebas Neue', 'Arial Narrow', sans-serif"
+    font-size="80"
+    font-weight="400"
+    letter-spacing="2"
+    fill="#FFFFFF"
+  >J</text>
+
+  <!-- P -->
+  <text
+    x="43"
+    y="88"
+    font-family="'Bebas Neue', 'Arial Narrow', sans-serif"
+    font-size="80"
+    font-weight="400"
+    letter-spacing="2"
+    fill="#FFFFFF"
+  >P</text>
+
+  <!-- R — accent color -->
+  <text
+    x="81"
+    y="88"
+    font-family="'Bebas Neue', 'Arial Narrow', sans-serif"
+    font-size="80"
+    font-weight="400"
+    letter-spacing="2"
+    fill="#E8272A"
+  >R</text>
+
+  <!-- Thin baseline rule -->
+  <line x1="10" y1="94" x2="110" y2="94" stroke="#E8272A" stroke-width="2"/>
+</svg>

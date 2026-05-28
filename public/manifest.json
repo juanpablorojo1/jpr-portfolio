@@ -1,0 +1,21 @@
+{
+  "name": "Juan Pablo Rojo — Portfolio",
+  "short_name": "JPR",
+  "description": "Biomedical Engineer · AI Developer · Founder",
+  "start_url": "/en",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#E8272A",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 100" width="320" height="100" fill="none">
+  <!-- JUAN PABLO — condensed, white, small caps tracking -->
+  <text
+    x="8"
+    y="30"
+    font-family="'Barlow Condensed', 'Arial Narrow', sans-serif"
+    font-size="22"
+    font-weight="700"
+    letter-spacing="8"
+    fill="#FFFFFF"
+  >JUAN PABLO</text>
+
+  <!-- ROJO — display, large, accent red -->
+  <text
+    x="4"
+    y="90"
+    font-family="'Bebas Neue', 'Arial Narrow', sans-serif"
+    font-size="72"
+    font-weight="400"
+    letter-spacing="4"
+    fill="#E8272A"
+  >ROJO</text>
+
+  <!-- Vertical bar separator left -->
+  <line x1="0" y1="0" x2="0" y2="100" stroke="#E8272A" stroke-width="3"/>
+</svg>
