@@ -81,7 +81,7 @@ export default function AnchorWord({ sectionId }: Props) {
         top: `${config.yPercent}%`,
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        fontFamily: 'Bebas Neue, sans-serif',
+        fontFamily: 'var(--font-bebas-neue), sans-serif',
         fontSize: config.fontSize,
         color: '#FFFFFF',
         letterSpacing: '0.08em',

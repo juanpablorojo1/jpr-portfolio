@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Bebas_Neue, Barlow_Condensed, JetBrains_Mono } from 'next/font/google';
+import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -80,6 +81,13 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
       index: true,
       follow: true,
     },
+    alternates: {
+      canonical: `${siteUrl}/${locale}`,
+      languages: {
+        'en': `${siteUrl}/en`,
+        'es': `${siteUrl}/es`,
+      },
+    },
   };
 }
 
@@ -105,6 +113,17 @@ export default async function LocaleLayout({ children, params: { locale } }: Pro
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>
+        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}');`}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );

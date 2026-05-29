@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import LanguageSelector from '../ui/LanguageSelector';
 
 export default function Navbar() {
   const t = useTranslations('nav');
+  const locale = useLocale();
+  const cvHref = locale === 'es' ? '/CV_Juan_Pablo_Rojo_ES.pdf' : '/CV_Juan_Pablo_Rojo_EN.pdf';
   const navRef = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -96,7 +98,7 @@ export default function Navbar() {
           ))}
           <LanguageSelector />
           <a
-            href="/CV_Juan_Pablo_Rojo_EN.pdf"
+            href={cvHref}
             target="_blank"
             rel="noopener noreferrer"
             className="
@@ -140,7 +142,7 @@ export default function Navbar() {
             </a>
           ))}
           <a
-            href="/CV_Juan_Pablo_Rojo_EN.pdf"
+            href={cvHref}
             target="_blank"
             rel="noopener noreferrer"
             className="font-ui font-bold text-xs text-accent tracking-widest uppercase"

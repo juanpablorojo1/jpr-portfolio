@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { SOCIAL_LINKS } from '../../lib/content';
 
 export default function Contact() {
   const t = useTranslations('contact');
+  const locale = useLocale();
+  const cvHref = locale === 'es' ? '/CV_Juan_Pablo_Rojo_ES.pdf' : '/CV_Juan_Pablo_Rojo_EN.pdf';
   const headlineRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -198,7 +200,7 @@ export default function Contact() {
               {t('github_label')} ↗
             </a>
             <a
-              href="/CV_Juan_Pablo_Rojo_EN.pdf"
+              href={cvHref}
               target="_blank"
               rel="noopener noreferrer"
               className="

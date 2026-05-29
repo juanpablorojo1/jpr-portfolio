@@ -1,0 +1,353 @@
+{
+  "date": "2026-05-28T20:50:42.230Z",
+  "summary": {
+    "passed": 28,
+    "failed": 37,
+    "warned": 3,
+    "total": 68
+  },
+  "verdict": "HOLD",
+  "results": [
+    {
+      "test": "GET /en → HTTP 200",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "test": "Screenshot 1440px capturado",
+      "status": "PASS",
+      "detail": "01-home-1440.png"
+    },
+    {
+      "test": "Loading screen detección",
+      "status": "WARN",
+      "detail": "No se detectó overlay fijo (puede haber desaparecido rápido o usar otro approach)"
+    },
+    {
+      "test": "Loading screen desaparece",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "test": "Navbar existe y es visible",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "test": "Navbar link \"projects\"",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "test": "Navbar link \"skills\"",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "test": "Navbar link \"experience\"",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "test": "Navbar link \"contact\"",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "test": "Navbar click \"Projects\"",
+      "status": "FAIL",
+      "detail": "page.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"#projects\"]')\u001b[22m\n\u001b[2m    - locator resolved to 2 elements. Proceeding with the first one: <a href=\"#projects\" class=\" font-ui font-bold text-sm text-off-white tracking-widest uppercase transition-colors duration-150 hover:text-accent relative group \">…</a>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <img loading=\"lazy\" decoding=\"async\" data-nimg=\"fill\" alt=\"Juan Pablo Rojo\" sizes=\"(max-width: 768px) 80vw, 40vw\" class=\"object-cover object-top grayscale\" src=\"/_next/image?url=%2Fimages%2Fportrait.jpg&w=3840&q=75\" srcset=\"/_next/image?url=%2Fimages%2Fportrait.jpg&w=256&q=75 256w, /_next/image?url=%2Fimages%2Fportrait.jpg&w=384&q=75 384w, /_next/image?url=%2Fimages%2Fportrait.jpg&w=640&q=75 640w, /_next/image?url=%2Fimages%2Fportrait.jpg&w=750&q=75 750w, /_next/image?url=%2Fimages%2Fportrait.jpg&w…/> from <section id=\"about\" class=\"relative py-24 lg:py-32 bg-bg overflow-hidden\">…</section> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <img loading=\"lazy\" decoding=\"async\" data-nimg=\"fill\" alt=\"Juan Pablo Rojo\" sizes=\"(max-width: 768px) 80vw, 40vw\" class=\"object-cover object-top grayscale\" src=\"/_next/image?url=%2Fimages%2Fportrait.jpg&w=3840&q=75\" srcset=\"/_next/image?url=%2Fimages%2Fportrait.jpg&w=256&q=75 256w, /_next/image?url=%2Fimages%2Fportrait.jpg&w=384&q=75 384w, /_next/image?url=%2Fimages%2Fportrait.jpg&w=640&q=75 640w, /_next/image?url=%2Fimages%2Fportrait.jpg&w=750&q=75 750w, /_next/image?url=%2Fimages%2Fportrait.jpg&w…/> from <section id=\"about\" class=\"relative py-24 lg:py-32 bg-bg overflow-hidden\">…</section> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    57 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <img loading=\"lazy\" decoding=\"async\" data-nimg=\"fill\" alt=\"Juan Pablo Rojo\" sizes=\"(max-width: 768px) 80vw, 40vw\" class=\"object-cover object-top grayscale\" src=\"/_next/image?url=%2Fimages%2Fportrait.jpg&w=3840&q=75\" srcset=\"/_next/image?url=%2Fimages%2Fportrait.jpg&w=256&q=75 256w, /_next/image?url=%2Fimages%2Fportrait.jpg&w=384&q=75 384w, /_next/image?url=%2Fimages%2Fportrait.jpg&w=640&q=75 640w, /_next/image?url=%2Fimages%2Fportrait.jpg&w=750&q=75 750w, /_next/image?url=%2Fimages%2Fportrait.jpg&w…/> from <section id=\"about\" class=\"relative py-24 lg:py-32 bg-bg overflow-hidden\">…</section> subtree intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
+    },
+    {
+      "test": "Hero section",
+      "status": "PASS",
+      "detail": "name text: \"\""
+    },
+    {
+      "test": "Botón \"View Projects\" existe",
+      "status": "PASS",
+      "detail": "href: #projects"
+    },
+    {
+      "test": "Botón/Link CV/Download",
+      "status": "PASS",
+      "detail": "href: /CV_Juan_Pablo_Rojo_EN.pdf"
+    },
+    {
+      "test": "CV link apunta a PDF",
+      "status": "PASS",
+      "detail": "href: /CV_Juan_Pablo_Rojo_EN.pdf"
+    },
+    {
+      "test": "Imágenes no rotas (23 total)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "test": "Selector de idioma \"ES\"",
+      "status": "FAIL",
+      "detail": "No encontrado"
+    },
+    {
+      "test": "Sección Projects existe",
+      "status": "PASS",
+      "detail": "(puede estar anidada en section sin clase Projects)"
+    },
+    {
+      "test": "Link Eleven en Projects",
+      "status": "PASS",
+      "detail": "https://eleven-pagina.vercel.app/"
+    },
+    {
+      "test": "Imágenes en Projects no rotas",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "test": "Screenshot Projects capturado",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "test": "Lightbox",
+      "status": "WARN",
+      "detail": "No se detectó lightbox tras click en imagen (puede que no haya screenshots clickeables en DOM)"
+    },
+    {
+      "test": "Link mailto:",
+      "status": "PASS",
+      "detail": "mailto:juan.pablo.rojo@mi.unc.edu.ar"
+    },
+    {
+      "test": "Link LinkedIn",
+      "status": "PASS",
+      "detail": "https://linkedin.com/in/juan-pablo-rojo"
+    },
+    {
+      "test": "LinkedIn abre en nueva pestaña",
+      "status": "PASS",
+      "detail": "target: _blank"
+    },
+    {
+      "test": "Link GitHub",
+      "status": "PASS",
+      "detail": "https://github.com/juanpablorojo"
+    },
+    {
+      "test": "GitHub abre en nueva pestaña",
+      "status": "PASS",
+      "detail": "target: _blank"
+    },
+    {
+      "test": "Link CV/PDF en contacto",
+      "status": "PASS",
+      "detail": "http://localhost:3001/CV_Juan_Pablo_Rojo_EN.pdf"
+    },
+    {
+      "test": "Barra de progreso",
+      "status": "WARN",
+      "detail": "No detectada (puede ser CSS only o con selector diferente)"
+    },
+    {
+      "test": "Progreso al 50% scroll",
+      "status": "PASS",
+      "detail": "{\"bars\":[]}"
+    },
+    {
+      "test": "Error de consola /en",
+      "status": "FAIL",
+      "detail": "Refused to apply style from 'http://localhost:3001/_next/static/css/app/%5Blocale%5D/layout.css?v=1780001399614' because its MIME type ('text/html') i"
+    },
+    {
+      "test": "Error de consola /en",
+      "status": "FAIL",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "test": "Error de consola /en",
+      "status": "FAIL",
+      "detail": "Refused to execute script from 'http://localhost:3001/_next/static/chunks/webpack.js?v=1780001399614' because its MIME type ('text/html') is not execu"
+    },
+    {
+      "test": "Error de consola /en",
+      "status": "FAIL",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "test": "Error de consola /en",
+      "status": "FAIL",
+      "detail": "Refused to execute script from 'http://localhost:3001/_next/static/chunks/app-pages-internals.js' because its MIME type ('text/html') is not executabl"
+    },
+    {
+      "test": "Error de consola /en",
+      "status": "FAIL",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "test": "Error de consola /en",
+      "status": "FAIL",
+      "detail": "Refused to execute script from 'http://localhost:3001/_next/static/chunks/main-app.js?v=1780001399614' because its MIME type ('text/html') is not exec"
+    },
+    {
+      "test": "Error de consola /en",
+      "status": "FAIL",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "test": "Error de consola /en",
+      "status": "FAIL",
+      "detail": "Refused to execute script from 'http://localhost:3001/_next/static/chunks/app/%5Blocale%5D/page.js' because its MIME type ('text/html') is not executa"
+    },
+    {
+      "test": "Error de consola /en",
+      "status": "FAIL",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "test": "Error de consola /en",
+      "status": "FAIL",
+      "detail": "Refused to execute script from 'http://localhost:3001/_next/static/chunks/app/%5Blocale%5D/layout.js' because its MIME type ('text/html') is not execu"
+    },
+    {
+      "test": "404 en /en",
+      "status": "FAIL",
+      "detail": "http://localhost:3001/_next/static/chunks/webpack.js?v=1780001399614"
+    },
+    {
+      "test": "404 en /en",
+      "status": "FAIL",
+      "detail": "http://localhost:3001/_next/static/chunks/app-pages-internals.js"
+    },
+    {
+      "test": "404 en /en",
+      "status": "FAIL",
+      "detail": "http://localhost:3001/_next/static/chunks/main-app.js?v=1780001399614"
+    },
+    {
+      "test": "404 en /en",
+      "status": "FAIL",
+      "detail": "http://localhost:3001/_next/static/chunks/app/%5Blocale%5D/page.js"
+    },
+    {
+      "test": "404 en /en",
+      "status": "FAIL",
+      "detail": "http://localhost:3001/_next/static/chunks/app/%5Blocale%5D/layout.js"
+    },
+    {
+      "test": "Página /es carga correctamente",
+      "status": "PASS",
+      "detail": "title: Juan Pablo Rojo — Ingeniero Biomédico · AI Developer · Fundador"
+    },
+    {
+      "test": "Error de consola /es",
+      "status": "FAIL",
+      "detail": "Refused to apply style from 'http://localhost:3001/_next/static/css/app/%5Blocale%5D/layout.css?v=1780001406406' because its MIME type ('text/html') i"
+    },
+    {
+      "test": "Error de consola /es",
+      "status": "FAIL",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "test": "Error de consola /es",
+      "status": "FAIL",
+      "detail": "Refused to execute script from 'http://localhost:3001/_next/static/chunks/webpack.js?v=1780001406406' because its MIME type ('text/html') is not execu"
+    },
+    {
+      "test": "Error de consola /es",
+      "status": "FAIL",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "test": "Error de consola /es",
+      "status": "FAIL",
+      "detail": "Refused to execute script from 'http://localhost:3001/_next/static/chunks/main-app.js?v=1780001406406' because its MIME type ('text/html') is not exec"
+    },
+    {
+      "test": "Error de consola /es",
+      "status": "FAIL",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "test": "Error de consola /es",
+      "status": "FAIL",
+      "detail": "Refused to execute script from 'http://localhost:3001/_next/static/chunks/app/%5Blocale%5D/page.js' because its MIME type ('text/html') is not executa"
+    },
+    {
+      "test": "Error de consola /es",
+      "status": "FAIL",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "test": "Error de consola /es",
+      "status": "FAIL",
+      "detail": "Refused to execute script from 'http://localhost:3001/_next/static/chunks/app/%5Blocale%5D/layout.js' because its MIME type ('text/html') is not execu"
+    },
+    {
+      "test": "Error de consola /es",
+      "status": "FAIL",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "test": "Error de consola /es",
+      "status": "FAIL",
+      "detail": "Refused to execute script from 'http://localhost:3001/_next/static/chunks/app-pages-internals.js' because its MIME type ('text/html') is not executabl"
+    },
+    {
+      "test": "404 en /es",
+      "status": "FAIL",
+      "detail": "http://localhost:3001/_next/static/chunks/webpack.js?v=1780001406406"
+    },
+    {
+      "test": "404 en /es",
+      "status": "FAIL",
+      "detail": "http://localhost:3001/_next/static/chunks/main-app.js?v=1780001406406"
+    },
+    {
+      "test": "404 en /es",
+      "status": "FAIL",
+      "detail": "http://localhost:3001/_next/static/chunks/app/%5Blocale%5D/page.js"
+    },
+    {
+      "test": "404 en /es",
+      "status": "FAIL",
+      "detail": "http://localhost:3001/_next/static/chunks/app/%5Blocale%5D/layout.js"
+    },
+    {
+      "test": "404 en /es",
+      "status": "FAIL",
+      "detail": "http://localhost:3001/_next/static/chunks/app-pages-internals.js"
+    },
+    {
+      "test": "Responsive mobile (375px) — overflow horizontal",
+      "status": "FAIL",
+      "detail": "body width: 1653px"
+    },
+    {
+      "test": "Imágenes OK en mobile",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "test": "Responsive tablet (768px) — overflow horizontal",
+      "status": "FAIL",
+      "detail": "body width: 2304px"
+    },
+    {
+      "test": "Imágenes OK en tablet",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "test": "Responsive desktop (1440px) — overflow horizontal",
+      "status": "FAIL",
+      "detail": "body width: 4320px"
+    },
+    {
+      "test": "Imágenes OK en desktop",
+      "status": "PASS",
+      "detail": ""
+    }
+  ],
+  "screenshots": "C:/Users/juanp/AGENCIA DIGITAL/projects/jpr-web/qa-screenshots"
+}

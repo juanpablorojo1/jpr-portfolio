@@ -149,7 +149,7 @@ export default function Skills() {
               {/* Métricas TraumaVision — solo cluster AI */}
               {i === 0 && (
                 <p className="mt-4 pt-3 border-t border-border font-mono text-xs text-off-white tracking-wide">
-                  AUC-ROC 0.973 · mAP50 0.892 · Clinical deployment
+                  AUC-ROC 0.973 · mAP50 0.919 · Clinical deployment
                 </p>
               )}
             </div>

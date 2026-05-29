@@ -87,8 +87,8 @@ export default function Projects() {
       gsap.registerPlugin(ScrollTrigger);
       if (cleanup) return;
 
-      // Scroll horizontal: pinea el contenedor sticky y mueve el rail
-      if (horizontalRef.current && railRef.current) {
+      // Scroll horizontal: pinea el contenedor sticky y mueve el rail (desktop only)
+      if (horizontalRef.current && railRef.current && window.innerWidth >= 1024) {
         gsap.to(railRef.current, {
           x: () => -(railRef.current!.offsetWidth - window.innerWidth),
           ease: 'none',
@@ -146,11 +146,97 @@ export default function Projects() {
 
   return (
     <>
+      {/* ── Mobile layout (<lg): 3 proyectos apilados verticalmente ── */}
+      <section id="projects" className="block lg:hidden py-24 bg-bg">
+        <div className="max-w-7xl mx-auto px-6">
+          <p className="font-mono text-xs text-accent tracking-widest uppercase mb-16">{t('label')}</p>
+
+          {/* TraumaVision */}
+          <div className="mb-20 border-t border-border pt-8">
+            <div className="flex items-baseline gap-4 mb-6">
+              <span className="font-mono text-xs text-accent tracking-widest">01</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            <p className="font-mono text-xs text-accent tracking-widest uppercase mb-2">{t('traumavision.label')}</p>
+            <h2 className="font-display text-white uppercase leading-none mb-4" style={{ fontSize: 'clamp(2rem, 8vw, 4rem)' }}>{t('traumavision.title')}</h2>
+            <p className="font-ui text-off-white mb-6">{t('traumavision.subtitle')}</p>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {TRAUMAVISION_METRICS.map((metric) => (
+                <MetricCounter key={metric.key} value={metric.value} decimals={metric.decimals} suffix={metric.suffix} label={metricLabels[metric.key] || metric.key} duration={1.5} />
+              ))}
+            </div>
+            <div className="mb-4 border-l-2 border-accent pl-4">
+              <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">{t('traumavision.pipeline_label')}</p>
+              <p className="font-mono text-sm text-off-white">DICOM <span className="text-accent">→</span> YOLOv8 <span className="text-accent">→</span> Grad-CAM <span className="text-accent">→</span> Output</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {TRAUMAVISION_STACK.map((tech) => <StackBadge key={tech} label={tech} />)}
+            </div>
+          </div>
+
+          {/* Eleven */}
+          <div className="mb-20 border-t border-border pt-8">
+            <div className="flex items-baseline gap-4 mb-6">
+              <span className="font-mono text-xs text-accent tracking-widest">02</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            <p className="font-mono text-xs text-accent tracking-widest uppercase mb-2">{t('eleven.subtitle')}</p>
+            <h2 className="font-display text-white uppercase leading-none mb-4" style={{ fontSize: 'clamp(2rem, 8vw, 4rem)' }}>{t('eleven.title')}</h2>
+            <p className="font-ui text-off-white mb-6">{t('eleven.description_expanded')}</p>
+            <div className="flex gap-8 mb-6 border-l-2 border-accent pl-4">
+              {[
+                { value: t('eleven.stat_founded'), label: t('eleven.stat_founded_label') },
+                { value: t('eleven.stat_sites'), label: t('eleven.stat_sites_label') },
+                { value: t('eleven.stat_approach'), label: t('eleven.stat_approach_label') },
+              ].map((stat, i) => (
+                <div key={i}>
+                  <p className="font-mono text-lg text-white tracking-tight mb-0.5">{stat.value}</p>
+                  <p className="font-mono text-xs text-muted uppercase tracking-widest">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {ELEVEN_STACK.map((tech) => <StackBadge key={tech} label={tech} />)}
+            </div>
+            <a href="https://eleven-pagina.vercel.app" target="_blank" rel="noopener noreferrer" className="inline-block font-ui font-bold text-xs text-accent border border-accent px-4 py-2 tracking-widest uppercase transition-all duration-150 hover:bg-accent hover:text-white">{t('eleven.cta')}</a>
+          </div>
+
+          {/* Hackathon */}
+          <div className="border-t border-border pt-8">
+            <div className="flex items-baseline gap-4 mb-6">
+              <span className="font-mono text-xs text-accent tracking-widest">03</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            <div className="flex items-center gap-3 mb-2">
+              <p className="font-mono text-xs text-accent tracking-widest uppercase">{t('hackathon.subtitle')}</p>
+              <span className="font-mono text-xs text-white bg-accent px-2 py-0.5">{t('hackathon.badge')}</span>
+            </div>
+            <h2 className="font-display text-white uppercase leading-none mb-4" style={{ fontSize: 'clamp(2rem, 8vw, 4rem)' }}>{t('hackathon.title')}</h2>
+            <p className="font-ui text-off-white mb-6">{t('hackathon.description_expanded')}</p>
+            <div className="flex gap-8 mb-6 border-l-2 border-accent pl-4">
+              {[
+                { value: t('hackathon.event_stat_place'), label: 'Result' },
+                { value: t('hackathon.event_stat_team'), label: 'Team' },
+              ].map((stat, i) => (
+                <div key={i}>
+                  <p className="font-mono text-lg text-white tracking-tight mb-0.5">{stat.value}</p>
+                  <p className="font-mono text-xs text-muted uppercase tracking-widest">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {HACKATHON_STACK.map((tech) => <StackBadge key={tech} label={tech} />)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Desktop layout (lg+): horizontal scroll ── */}
       <section
-        id="projects"
         ref={sectionRef}
-        className="py-0 bg-bg"
+        className="hidden lg:block py-0 bg-bg"
         style={{ height: '300vh' }}
+        aria-hidden="true"
       >
         {/* Sticky container — se pina y hace scroll horizontal */}
         <div
@@ -459,7 +545,7 @@ export default function Projects() {
       {/* ─────────────────────────────────────────────────────────── */}
       {elevenLightboxIndex !== null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-[100] flex items-center justify-center"
           style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
           onClick={() => setElevenLightboxIndex(null)}
           role="dialog"
@@ -510,7 +596,7 @@ export default function Projects() {
       {/* ─────────────────────────────────────────────────────────── */}
       {lightboxIndex !== null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-[100] flex items-center justify-center"
           style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
           onClick={() => setLightboxIndex(null)}
           role="dialog"
