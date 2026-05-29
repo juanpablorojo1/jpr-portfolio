@@ -9,6 +9,7 @@ import Projects from '../../components/sections/Projects';
 import Skills from '../../components/sections/Skills';
 import Experience from '../../components/sections/Experience';
 import Contact from '../../components/sections/Contact';
+import TransitionZone from '../../components/motion/TransitionZone';
 
 const LoadingScreen = dynamic(() => import('../../components/loading/LoadingScreen'), {
   ssr: false,
@@ -28,19 +29,12 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Custom cursor (desktop only) */}
       <CustomCursor />
-
-      {/* Scroll progress bar — fixed top */}
       <ScrollProgressBar />
-
-      {/* Active section label — fixed left side */}
       <SectionLabel />
 
-      {/* Loading screen — rendered on top, slides away */}
       {isLoading && <LoadingScreen onComplete={onLoadingComplete} />}
 
-      {/* Main content — always rendered, fades in when loading completes */}
       <main
         style={{
           opacity: isLoading ? 0 : 1,
@@ -49,31 +43,32 @@ export default function HomePage() {
       >
         <Navbar />
 
-        {/* Card stack — each section sticks at top and gets covered by the next */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 10, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+        {/* Card stack with cinematic transitions —
+            each section sticks, gets a watermark anchor word + connecting line,
+            covered by the next as the user scrolls. */}
+        <TransitionZone sectionId="hero" zIndex={10}>
           <Hero />
-        </div>
+        </TransitionZone>
 
-        <div style={{ position: 'sticky', top: 0, zIndex: 20, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+        <TransitionZone sectionId="about" zIndex={20}>
           <About />
-        </div>
+        </TransitionZone>
 
-        {/* Projects: overflow:clip preserves inner sticky top-0 for horizontal scroll */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 30, overflow: 'clip', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+        <TransitionZone sectionId="projects" zIndex={30} overflowClip>
           <Projects />
-        </div>
+        </TransitionZone>
 
-        <div style={{ position: 'sticky', top: 0, zIndex: 40, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+        <TransitionZone sectionId="skills" zIndex={40}>
           <Skills />
-        </div>
+        </TransitionZone>
 
-        <div style={{ position: 'sticky', top: 0, zIndex: 50, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+        <TransitionZone sectionId="experience" zIndex={50}>
           <Experience />
-        </div>
+        </TransitionZone>
 
-        <div style={{ position: 'sticky', top: 0, zIndex: 60, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+        <TransitionZone sectionId="contact" zIndex={60}>
           <Contact />
-        </div>
+        </TransitionZone>
       </main>
     </>
   );
