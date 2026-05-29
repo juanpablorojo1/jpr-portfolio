@@ -145,9 +145,9 @@ export default function Projects() {
   };
 
   return (
-    <>
+    <div id="projects">
       {/* ── Mobile layout (<lg): 3 proyectos apilados verticalmente ── */}
-      <section id="projects" className="block lg:hidden py-24 bg-bg">
+      <section className="block lg:hidden py-24 bg-bg">
         <div className="max-w-7xl mx-auto px-6">
           <p className="font-mono text-xs text-accent tracking-widest uppercase mb-16">{t('label')}</p>
 
@@ -159,7 +159,8 @@ export default function Projects() {
             </div>
             <p className="font-mono text-xs text-accent tracking-widest uppercase mb-2">{t('traumavision.label')}</p>
             <h2 className="font-display text-white uppercase leading-none mb-4" style={{ fontSize: 'clamp(2rem, 8vw, 4rem)' }}>{t('traumavision.title')}</h2>
-            <p className="font-ui text-off-white mb-6">{t('traumavision.subtitle')}</p>
+            <p className="font-ui text-off-white mb-2">{t('traumavision.subtitle')}</p>
+            <p className="font-ui text-muted text-sm mb-6">{t('traumavision.description')}</p>
             <div className="grid grid-cols-2 gap-4 mb-6">
               {TRAUMAVISION_METRICS.map((metric) => (
                 <MetricCounter key={metric.key} value={metric.value} decimals={metric.decimals} suffix={metric.suffix} label={metricLabels[metric.key] || metric.key} duration={1.5} />
@@ -167,7 +168,7 @@ export default function Projects() {
             </div>
             <div className="mb-4 border-l-2 border-accent pl-4">
               <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">{t('traumavision.pipeline_label')}</p>
-              <p className="font-mono text-sm text-off-white">DICOM <span className="text-accent">→</span> YOLOv8 <span className="text-accent">→</span> Grad-CAM <span className="text-accent">→</span> Output</p>
+              <p className="font-mono text-sm text-off-white">DICOM <span className="text-accent">→</span> CLAHE <span className="text-accent">→</span> YOLOv8m <span className="text-accent">→</span> Detection <span className="text-accent">→</span> Report</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {TRAUMAVISION_STACK.map((tech) => <StackBadge key={tech} label={tech} />)}
@@ -282,8 +283,11 @@ export default function Projects() {
                   >
                     {t('traumavision.title')}
                   </h2>
-                  <p className="font-ui text-off-white text-lg mb-8 max-w-lg">
+                  <p className="font-ui text-off-white text-lg mb-2 max-w-lg">
                     {t('traumavision.subtitle')}
+                  </p>
+                  <p className="font-ui text-muted text-sm mb-8 max-w-lg">
+                    {t('traumavision.description')}
                   </p>
 
                   {/* Métricas */}
@@ -306,7 +310,7 @@ export default function Projects() {
                       {t('traumavision.pipeline_label')}
                     </p>
                     <p className="font-mono text-sm text-off-white tracking-wide">
-                      DICOM <span className="text-accent">→</span> YOLOv8 <span className="text-accent">→</span> Grad-CAM <span className="text-accent">→</span> Output
+                      DICOM <span className="text-accent">→</span> CLAHE <span className="text-accent">→</span> YOLOv8m <span className="text-accent">→</span> Detection <span className="text-accent">→</span> Report
                     </p>
                   </div>
 
@@ -665,6 +669,6 @@ export default function Projects() {
           </button>
         </div>
       )}
-    </>
+    </div>
   );
 }

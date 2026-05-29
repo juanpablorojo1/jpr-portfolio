@@ -25,10 +25,6 @@ export default function Hero() {
   const photoRef0 = useRef<HTMLDivElement>(null);
   const photoRef1 = useRef<HTMLDivElement>(null);
 
-  // Metric callout refs
-  const callout0Ref = useRef<HTMLDivElement>(null);
-  const callout1Ref = useRef<HTMLDivElement>(null);
-  const callout2Ref = useRef<HTMLDivElement>(null);
 
   // Geometric float refs
   const floatRef1 = useRef<HTMLDivElement>(null);
@@ -80,47 +76,6 @@ export default function Hero() {
     return () => { cleanup = true; };
   }, []);
 
-  // GSAP — metric callouts fade in after name reveal, then scrub-fade out as hero exits
-  useEffect(() => {
-    let cleanup = false;
-
-    const animateCallouts = async () => {
-      const { default: gsap } = await import('gsap');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { ScrollTrigger } = await import('gsap/ScrollTrigger') as any;
-      if (cleanup) return;
-
-      gsap.registerPlugin(ScrollTrigger);
-
-      const callouts = [callout0Ref.current, callout1Ref.current, callout2Ref.current];
-
-      // Entry: fade in on load (unchanged)
-      gsap.set(callouts, { opacity: 0 });
-      gsap.to(callouts, {
-        opacity: 1,
-        duration: 0.8,
-        stagger: 0.15,
-        ease: 'power2.out',
-        delay: 1.5,
-      });
-
-      // Exit: scrub-driven fade out as hero bottom leaves viewport
-      gsap.to(callouts, {
-        opacity: 0,
-        y: -10,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: '#hero',
-          start: 'bottom 80%',
-          end: 'bottom 20%',
-          scrub: 1,
-        },
-      });
-    };
-
-    animateCallouts();
-    return () => { cleanup = true; };
-  }, []);
 
   // GSAP — geometric float parallax with ScrollTrigger
   useEffect(() => {
@@ -265,6 +220,7 @@ export default function Hero() {
             src={PHOTOS[1]}
             alt=""
             fill
+            priority
             className="object-cover object-center"
             style={{ filter: 'grayscale(80%) contrast(0.95)', opacity: 0.55 }}
             sizes="52vw"
@@ -394,31 +350,6 @@ export default function Hero() {
         </span>
       </div>
 
-      {/* Metric callouts — monitor readout aesthetic, desktop only */}
-      <div
-        ref={callout0Ref}
-        aria-hidden="true"
-        className="hidden lg:block absolute font-mono text-[10px] text-muted tracking-widest uppercase pointer-events-none"
-        style={{ top: '30%', right: '42%', zIndex: 2, opacity: 0 }}
-      >
-        AUC-ROC 0.973
-      </div>
-      <div
-        ref={callout1Ref}
-        aria-hidden="true"
-        className="hidden lg:block absolute font-mono text-[10px] text-muted tracking-widest uppercase pointer-events-none"
-        style={{ bottom: '20%', left: '2%', zIndex: 2, opacity: 0 }}
-      >
-        mAP50 91.9% · Recall 86.6%
-      </div>
-      <div
-        ref={callout2Ref}
-        aria-hidden="true"
-        className="hidden lg:block absolute font-mono text-[10px] text-muted tracking-widest uppercase pointer-events-none"
-        style={{ top: '50%', right: '2%', zIndex: 2, opacity: 0 }}
-      >
-        TraumaVision · Clinical-Grade CDSS
-      </div>
 
       {/* Geometric float elements — parallax decorative, desktop only */}
       <div
@@ -464,13 +395,6 @@ export default function Hero() {
         }}
       />
 
-      {/* Editorial number watermark */}
-      <span
-        aria-hidden="true"
-        className="absolute bottom-8 right-6 lg:right-12 font-display text-[10rem] lg:text-[16rem] text-white opacity-[0.04] pointer-events-none select-none leading-none hidden lg:block"
-      >
-        01
-      </span>
     </section>
   );
 }

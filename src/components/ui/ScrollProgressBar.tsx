@@ -2,26 +2,29 @@
 
 import { useEffect, useRef } from 'react';
 
-// ECG path — 6 cardiac cycles, each 200px wide, viewBox width = 1200
-// Baseline y=24 (center of 48px height)
-// One cycle: baseline → P-wave → PR segment → QRS complex → ST segment → T-wave → TP baseline
+// ECG path — vertical orientation, top-to-bottom
+// viewBox: 48w × 1200h; baseline x=24 (center); deflects left/right
+// 6 cardiac cycles, each 200px tall
 const buildEcgPath = (): string => {
-  // Single cycle template (x offsets, y=24 is baseline center)
-  // Each cycle is 200px wide
-  const cycle = (ox: number): string =>
-    `L${ox + 20},24` +                          // baseline pre-P
-    `Q${ox + 27},19 ${ox + 34},24` +             // P-wave (smooth bump up)
-    `L${ox + 50},24` +                           // PR segment
-    `L${ox + 60},28` +                           // Q (small dip down)
-    `L${ox + 68},6` +                            // R peak (tall spike up — y=6)
-    `L${ox + 76},28` +                           // S (dip down)
-    `L${ox + 82},24` +                           // return to baseline
-    `L${ox + 100},26` +                          // ST segment (slightly elevated)
-    `Q${ox + 115},32 ${ox + 130},24` +           // T-wave (smooth bump down)
-    `L${ox + 200},24`;                           // TP baseline to next cycle
+  // Single cycle: 200px tall, baseline x=24
+  // P-wave: gentle rightward curve
+  // QRS: Q dip left → dramatic R spike right → S dip left
+  // T-wave: smooth rightward hump
+  // ST: slightly elevated before T
+  const cycle = (oy: number): string =>
+    `L24,${oy + 22}` +                              // baseline pre-P
+    `Q30,${oy + 28} 24,${oy + 36}` +               // P-wave (gentle right bump)
+    `L24,${oy + 52}` +                              // PR segment
+    `L18,${oy + 61}` +                              // Q (left dip)
+    `L42,${oy + 70}` +                              // R peak (dramatic right spike)
+    `L10,${oy + 79}` +                              // S (deep left dip)
+    `L24,${oy + 86}` +                              // return baseline
+    `L25,${oy + 104}` +                             // ST segment
+    `Q32,${oy + 118} 24,${oy + 135}` +             // T-wave (smooth right hump)
+    `L24,${oy + 200}`;                              // TP baseline
 
   return [
-    'M0,24',
+    'M24,0',
     cycle(0),
     cycle(200),
     cycle(400),
@@ -36,18 +39,22 @@ const ECG_PATH = buildEcgPath();
 export default function ScrollProgressBar() {
   const pathRef = useRef<SVGPathElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<SVGPathElement>(null);
 
   useEffect(() => {
     const path = pathRef.current;
+    const glow = glowRef.current;
     const container = containerRef.current;
     if (!path || !container) return;
 
-    // Calculate total path length for stroke-dasharray animation
     const totalLength = path.getTotalLength();
 
-    // Initial state: path fully hidden (dashoffset = totalLength)
     path.style.strokeDasharray = `${totalLength}`;
     path.style.strokeDashoffset = `${totalLength}`;
+    if (glow) {
+      glow.style.strokeDasharray = `${totalLength}`;
+      glow.style.strokeDashoffset = `${totalLength}`;
+    }
 
     let rafId: number | null = null;
 
@@ -56,12 +63,11 @@ export default function ScrollProgressBar() {
       const docHeight = document.body.scrollHeight - window.innerHeight;
       const progress = docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0;
 
-      // Draw path left-to-right: dashoffset goes from totalLength → 0
-      path.style.strokeDashoffset = `${totalLength * (1 - progress)}`;
+      const offset = `${totalLength * (1 - progress)}`;
+      path.style.strokeDashoffset = offset;
+      if (glow) glow.style.strokeDashoffset = offset;
 
-      // Fade in as soon as user scrolls
       container.style.opacity = progress > 0.005 ? '1' : '0';
-
       rafId = null;
     };
 
@@ -86,9 +92,9 @@ export default function ScrollProgressBar() {
       style={{
         position: 'fixed',
         top: 0,
-        left: 0,
         right: 0,
-        height: '48px',
+        bottom: 0,
+        width: '36px',
         zIndex: 200,
         pointerEvents: 'none',
         opacity: 0,
@@ -96,13 +102,34 @@ export default function ScrollProgressBar() {
       }}
     >
       <svg
-        width="100%"
-        height="48"
-        viewBox="0 0 1200 48"
+        width="36"
+        height="100%"
+        viewBox="0 0 48 1200"
         preserveAspectRatio="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
+        <defs>
+          <filter id="ecg-glow" x="-100%" y="-10%" width="300%" height="120%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        {/* Glow layer */}
+        <path
+          ref={glowRef}
+          d={ECG_PATH}
+          stroke="#E8272A"
+          strokeWidth="4"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity="0.25"
+          filter="url(#ecg-glow)"
+        />
+
+        {/* Main line */}
         <path
           ref={pathRef}
           d={ECG_PATH}

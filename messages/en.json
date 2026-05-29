@@ -9,18 +9,18 @@
   "hero": {
     "title": "JUAN PABLO",
     "surname": "ROJO",
-    "role": "I build clinical AI — then ship it as a product.",
-    "tagline": "From Fracture Detection to Full-Stack. End-to-End.",
+    "role": "Biomedical Engineer. I build clinical AI — and ship it as a product.",
+    "tagline": "From Hospital Equipment to Clinical AI, Web Products, and Digital Automation.",
     "cta1": "View My Work",
     "cta2": "Download CV"
   },
   "about": {
     "label": "About",
     "headline": "From Biology to Code, From Lab to Product",
-    "p1": "I'm a Biomedical Engineer finishing my degree at UNC Córdoba, specializing in AI for medical imaging. My thesis — TraumaVision — is a clinical decision support system that detects fractures in X-rays with 97.18% accuracy.",
-    "p2": "In 2025 I founded Eleven, an AI-first digital agency. We build web products and AI agents for SMBs. It runs on Next.js, Claude API, and GSAP — the same stack I use for everything.",
-    "p3": "Two seasons working ski resorts in California. Funded my own degree. First place, Rocking the Industry hackathon — 40 engineers, real industrial problems, 2025.",
-    "p4": "Cross-disciplinary isn't a weakness. It's the feature.",
+    "p1": "I'm a Biomedical Engineer finishing my degree at UNC Córdoba, specializing in AI for medical imaging. My thesis — TraumaVision — is a clinical decision support system that detects fractures in X-rays with 97.18% accuracy and 86.6% sensitivity.",
+    "p2": "In 2026 I founded Eleven, an AI-first digital agency. We build web products, AI agents, and AI-generated digital content for SMBs.",
+    "p3": "First place at Rocking the Industry — the world's first industrial hackathon by RTS Group. 150 multidisciplinary teams of 5 people, 2025.",
+    "p4": "24 years old, based in Córdoba, Argentina. Native Spanish, English certified at LTC Eastbourne Language School. Eight months working in California.",
     "sub_tagline": "Where Biology Meets the Algorithm."
   },
   "projects": {
@@ -28,8 +28,8 @@
     "traumavision": {
       "label": "Thesis Project — UNC Córdoba, 2025",
       "title": "TraumaVision AI",
-      "subtitle": "Clinical Support System for Fracture Detection in Emergency X-Rays",
-      "description": "End-to-end CDSS for fracture detection in X-ray images. YOLOv8-based fracture detection pipeline. Full-stack: FastAPI + SQLite + Google OAuth + PDF reports.",
+      "subtitle": "Clinical Decision Support System for Fracture Detection in X-Rays",
+      "description": "End-to-end CDSS for fracture detection in X-ray images. 97.18% accuracy, 86.6% sensitivity, AUC-ROC 0.973. Currently competing in entrepreneurship programs (EmprendeU and others) seeking investment to launch TraumaVision to market.",
       "metric_auc": "AUC-ROC",
       "metric_map50": "mAP@50",
       "metric_recall": "Recall",
@@ -41,11 +41,11 @@
       "title": "Eleven Estudio Digital",
       "subtitle": "AI-First Digital Agency · Argentina",
       "description": "Founded and operate an AI-first digital agency building web products and AI agents for SMBs. Claude API integration, GSAP animations, Supabase backends.",
-      "description_expanded": "Founded and operate an AI-native digital agency. Built a multi-agent pipeline with Claude API: automated discovery, strategy, brand, dev, and QA. 2 client products live in production. Argentina, 2025.",
+      "description_expanded": "Founded and operate an AI-native digital agency. Built a 38-agent coordinated pipeline using Claude API — Sonnet 4.6, Haiku 4.5, and Opus 4.7 with aggressive prompt caching, extended thinking, tool use, and MCP server integrations (Playwright, Google Drive, Gmail, Calendar, Canva, Vercel). 4 products live in production. Argentina, 2026.",
       "role": "Founder",
       "role_label": "Role",
-      "stat_founded": "2025",
-      "stat_sites": "2 LIVE",
+      "stat_founded": "2026",
+      "stat_sites": "4 LIVE",
       "stat_approach": "AI-FIRST",
       "stat_founded_label": "Founded",
       "stat_sites_label": "Sites in Prod",
@@ -57,8 +57,8 @@
     "hackathon": {
       "title": "Rocking the Industry",
       "subtitle": "Industrial Hackathon — RTS Group",
-      "description": "First industrial hackathon run by RTS Group. Team Algarroba LID placed first solving complex industrial engineering problems under real-world conditions.",
-      "description_expanded": "World's first industrial hackathon, organized by RTS Group. 40+ engineers competing in real industrial engineering challenges. Team Algarroba LID took first place with a precision manufacturing optimization proposal.",
+      "description": "World's first industrial hackathon by RTS Group. 150 multidisciplinary teams of 5 people each. Team Algarroba LID placed first.",
+      "description_expanded": "World's first industrial hackathon, organized by RTS Group. 150 multidisciplinary teams of 5 people competing in real industrial engineering challenges. Team Algarroba LID took first place with a proposal for automating human-in-the-loop agents for sensor control in a nuclear power plant.",
       "badge": "1st Place · 2025",
       "event_stat_place": "1ST PLACE",
       "event_stat_team": "ALGARROBA LID",
@@ -69,43 +69,47 @@
     "label": "Tech Stack",
     "cluster_ai": {
       "title": "AI / ML",
-      "items": ["PyTorch", "YOLOv8", "Claude API", "Scikit-learn", "NumPy", "Pandas"]
+      "items": ["PyTorch · CUDA", "YOLOv8m · Ultralytics", "Claude API · Anthropic SDK", "Claude Sonnet · Haiku · Opus", "OpenCV · CLAHE", "PyDICOM · DICOM", "Scikit-learn", "NumPy · Pandas", "Jupyter · Matplotlib", "Prompt Engineering", "Prompt Caching · Extended Thinking", "Tool Use · Function Calling", "Multi-agent Orchestration", "RAG Systems", "Gemini Imagen 3", "DALL-E 3 · GPT-4o", "Replicate · Real-ESRGAN"]
     },
     "cluster_web": {
       "title": "Web Dev",
-      "items": ["Next.js", "React", "FastAPI", "Supabase", "GSAP", "Vercel", "SQLite", "Python"]
+      "items": ["Next.js · React", "TypeScript · JavaScript", "FastAPI · Uvicorn · Python", "Supabase · PostgreSQL · SQLite", "GSAP · ScrollTrigger", "Tailwind CSS · shadcn/ui", "OGL · WebGL", "Vercel · GitHub · Git", "VS Code · GitHub Copilot", "Playwright MCP", "MCP Protocol · Claude Code CLI", "Meta API · WhatsApp Business", "next-intl · i18n", "REST APIs · JSON", "Node.js", "Resend · Email APIs", "HTML · CSS · SVG"]
+    },
+    "cluster_content": {
+      "title": "Content & Media",
+      "items": ["HyperFrames · Video from HTML", "Remotion", "Canva MCP", "Video Editing", "Social Media Production", "AI-generated Images", "Animated Presentations", "Instagram · Reels · Stories", "Brand System Design", "Copywriting · AIDA · PAS"]
     },
     "cluster_bio": {
       "title": "Biomedical",
-      "items": ["CDSS / SaMD", "JCI Compliance", "ISO / IEC", "ANMAT", "Medical Devices", "ICU Equipment"]
+      "items": ["CDSS / SaMD", "JCI Compliance", "ANMAT · ISO 13485 · ISO 62304", "Corrective & Preventive Maintenance", "Adult ICU · CCU · OR", "Pediatric ICU · NICU", "Endoscopy · Wards · Outpatient", "Defibrillators · Multiparametric Monitors", "Infusion Pumps · IABP", "Incubators · Servo-Cribs", "Electrical Safety · Fluke", "Neovero CMMS · Inventory", "Biomedical Instrumentation", "Clinical Regulations"]
     }
   },
   "experience": {
     "label": "Experience",
     "items": [
       {
-        "year": "2025–present",
+        "year": "2026–present",
         "company": "Eleven Estudio Digital",
         "role": "Founder",
-        "description": "Founded and operate an AI-native agency running a 38-agent coordinated pipeline — discovery, strategy, brand, dev, QA. 2 products live in production. Stack: Next.js, Claude API, Supabase."
+        "description": "Founded and operate an AI-native digital agency. 38-agent coordinated pipeline — discovery, strategy, brand, dev, QA. 4 products live in production. AI-generated digital content for clients."
       },
       {
         "year": "2024",
         "company": "Sanatorio Allende S.A.",
         "role": "Biomedical Engineer Intern",
-        "description": "ICU and OR equipment maintenance at a JCI-accredited hospital. Direct exposure to the regulatory environment where clinical decision support systems must operate."
+        "description": "Corrective and preventive maintenance of biomedical equipment at Sanatorio Allende (JCI accreditation process). Sectors: adult ICU/CCU, OR, pediatric ICU, NICU, endoscopy, wards, outpatient. Equipment: defibrillators (Philips/Feas), multiparametric monitors, infusion pumps (Braun), surgical tables (Steris), incubators (Medix/Atom), IABP Datascope, endoscopes, fetal monitors, ECG/SpO2/capnography. Calibrations with Fluke. Inventory traceability with Neovero CMMS."
       },
       {
         "year": "2023–2024",
-        "company": "UNC",
-        "role": "Undergraduate TA — Human Physiology",
-        "description": "TA for Human Physiology. Taught the biological layer that AI models eventually learn to read."
+        "company": "UNC — Faculty of Medical Sciences",
+        "role": "Teaching Assistant — Human Physiology",
+        "description": "Teaching assistant for Human Physiology at the Faculty of Medical Sciences, UNC. Supported theoretical and practical classes, exam preparation, and student mentoring."
       },
       {
         "year": "2022–2023",
-        "company": "Snow Summit LLC",
-        "role": "Rentals Technician",
-        "description": "Two ski seasons in California. Built field-tested English fluency and funded degree independence."
+        "company": "Snow Summit Mountain Resort",
+        "role": "Ski & Snowboard Equipment Technician",
+        "description": "8 months in customer service at Snow Summit, Big Bear Lake, California — entirely in English. That's where I actually learned the language."
       }
     ],
     "education_label": "Education",
@@ -126,12 +130,14 @@
   },
   "contact": {
     "label": "Contact",
-    "headline_1": "LET'S",
-    "headline_2": "BUILD.",
-    "subtitle": "Open to AI/ML, medtech, and full-stack roles where precision matters. Remote-first.",
+    "headline_1": "CONTACT",
+    "headline_2": "METHODS.",
+    "subtitle": "Open to AI/ML, biomedical engineering, and full-stack roles — remote worldwide or on-site in Córdoba, Argentina.",
     "email_label": "Email",
     "linkedin_label": "LinkedIn",
     "github_label": "GitHub",
+    "instagram_label": "Instagram",
+    "phone_label": "WhatsApp",
     "copyright": "© 2026 Juan Pablo Rojo"
   }
 }

@@ -142,32 +142,20 @@ export default function Experience() {
     <section
       id="experience"
       ref={sectionRef}
-      className="relative py-32 lg:py-40 bg-bg"
+      className="relative pt-8 pb-6 lg:pt-10 lg:pb-8 bg-bg"
     >
-      <span
-        aria-hidden="true"
-        className="absolute top-8 right-6 lg:right-12 font-display text-[10rem] lg:text-[14rem] text-white opacity-[0.07] pointer-events-none select-none leading-none hidden lg:block"
-      >
-        04
-      </span>
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <p className="font-mono text-xs text-accent tracking-widest uppercase mb-6">
+        <p className="font-mono text-xs text-accent tracking-widest uppercase mb-4">
           {t('label')}
         </p>
 
-        <div className="grid lg:grid-cols-2 gap-20">
+        <div className="grid lg:grid-cols-2 gap-12">
           {/* Work experience */}
           <div>
-            <div className="flex items-baseline gap-4 mb-8">
+            <div className="flex items-baseline gap-4 mb-4">
               <span className="font-mono text-xs text-accent tracking-widest uppercase">Work</span>
               <div className="flex-1 h-px bg-border" />
             </div>
-            <h2
-              className="font-display text-white uppercase leading-none mb-10"
-              style={{ fontSize: 'clamp(3rem, 5vw, 5rem)' }}
-            >
-              Experience
-            </h2>
 
             <div className="relative" ref={itemsRef}>
               {/* Vertical line */}
@@ -177,7 +165,7 @@ export default function Experience() {
                 style={{ transformOrigin: 'top center' }}
               />
 
-              <div className="flex flex-col gap-12 pl-6">
+              <div className="flex flex-col gap-5 pl-6">
                 {experienceItems.map((item, i) => (
                   <div key={i} className="timeline-item relative">
                     {/* Dot — rombo */}
@@ -191,14 +179,14 @@ export default function Experience() {
                     </p>
                     <p
                       className="font-display text-white uppercase leading-none mb-1"
-                      style={{ fontSize: 'clamp(1.8rem, 3vw, 2.5rem)' }}
+                      style={{ fontSize: 'clamp(1.4rem, 2.5vw, 2rem)' }}
                     >
                       {item.company}
                     </p>
                     <p className="font-ui text-off-white text-base font-bold tracking-wide uppercase mb-1">
                       {item.role}
                     </p>
-                    <p className="font-ui text-muted text-base leading-relaxed">
+                    <p className="font-ui text-muted text-sm leading-snug">
                       {item.description}
                     </p>
                   </div>
@@ -209,12 +197,12 @@ export default function Experience() {
 
           {/* Education */}
           <div>
-            <div className="flex items-baseline gap-4 mb-8">
+            <div className="flex items-baseline gap-4 mb-5">
               <span className="font-mono text-xs text-accent tracking-widest uppercase">Education</span>
               <div className="flex-1 h-px bg-border" />
             </div>
 
-            <div className="flex flex-col gap-10">
+            <div className="flex flex-col gap-6">
               {educationItems.map((item, i) => (
                 <div
                   key={i}

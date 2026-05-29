@@ -123,13 +123,6 @@ export default function About() {
       ref={sectionRef}
       className="relative py-24 lg:py-32 bg-bg overflow-hidden"
     >
-      {/* Editorial number watermark */}
-      <span
-        aria-hidden="true"
-        className="absolute top-4 right-6 font-display text-[10rem] lg:text-[14rem] text-white opacity-[0.07] pointer-events-none select-none leading-none"
-      >
-        02
-      </span>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Section label */}
@@ -176,10 +169,7 @@ export default function About() {
               <p className="font-ui text-off-white text-body-lg leading-relaxed">
                 {t('p3')}
               </p>
-              <p
-                className="font-display text-white uppercase leading-tight"
-                style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)' }}
-              >
+              <p className="font-ui text-off-white text-body-lg leading-relaxed">
                 {t('p4')}
               </p>
             </div>

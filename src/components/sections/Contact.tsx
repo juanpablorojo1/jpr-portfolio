@@ -41,18 +41,14 @@ export default function Contact() {
           }
         );
 
-        // Pin del headline — momento dramático de cierre (independiente del scrub)
-        ScrollTrigger.create({
-          trigger: headlineRef.current,
-          start: 'top 40%',
-          end: '+=150',
-          pin: true,
-          pinSpacing: true,
-        });
+        // Pin removido — el card stack (TransitionZone) ya es sticky con overflow:hidden,
+        // GSAP pin inserta un .pin-spacer que queda clippeado y hace invisible el headline.
       }
 
       if (contentRef.current) {
-        // Content fade — scrub-driven
+        // Content fade — scrub-driven.
+        // immediateRender: false previene que GSAP aplique opacity:0 antes de que
+        // el ScrollTrigger calcule si el trigger ya paso (evita flash invisible en reload).
         gsap.fromTo(
           contentRef.current,
           { opacity: 0, y: 20 },
@@ -60,6 +56,7 @@ export default function Contact() {
             opacity: 1,
             y: 0,
             ease: 'none',
+            immediateRender: false,
             scrollTrigger: {
               trigger: contentRef.current,
               start: 'top bottom',
@@ -80,9 +77,9 @@ export default function Contact() {
       id="contact"
       className="py-24 lg:py-32 bg-bg"
     >
-      {/* Full-bleed headline */}
-      <div className="w-full px-6 lg:px-16 mb-10 overflow-hidden">
-        <p className="max-w-7xl mx-auto font-mono text-xs text-accent tracking-widest uppercase mb-6">
+      {/* Headline — alineado con el contenido */}
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 mb-10 overflow-hidden">
+        <p className="font-mono text-xs text-accent tracking-widest uppercase mb-6">
           {t('label')}
         </p>
         <div ref={headlineRef} className="overflow-hidden">
@@ -141,7 +138,7 @@ export default function Contact() {
           </div>
 
           {/* Numbered links — formato editorial */}
-          <div className="flex gap-8 mb-8">
+          <div className="flex flex-wrap gap-6 mb-8">
             <a
               href={`mailto:${SOCIAL_LINKS.email}`}
               className="group flex items-center gap-2 font-mono text-xs text-muted hover:text-accent transition-colors duration-150 tracking-widest uppercase"
@@ -166,6 +163,24 @@ export default function Contact() {
             >
               <span className="text-accent">03</span>
               <span>/ GitHub</span>
+            </a>
+            <a
+              href={SOCIAL_LINKS.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-2 font-mono text-xs text-muted hover:text-accent transition-colors duration-150 tracking-widest uppercase"
+            >
+              <span className="text-accent">04</span>
+              <span>/ Instagram</span>
+            </a>
+            <a
+              href={SOCIAL_LINKS.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-2 font-mono text-xs text-muted hover:text-accent transition-colors duration-150 tracking-widest uppercase"
+            >
+              <span className="text-accent">05</span>
+              <span>/ WhatsApp {SOCIAL_LINKS.phone}</span>
             </a>
           </div>
 
@@ -198,6 +213,20 @@ export default function Contact() {
               "
             >
               {t('github_label')} ↗
+            </a>
+            <a
+              href={SOCIAL_LINKS.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+                font-ui font-bold text-sm text-white
+                border border-border px-6 py-3
+                tracking-widest uppercase
+                transition-all duration-200
+                hover:border-accent hover:text-accent
+              "
+            >
+              {t('instagram_label')} ↗
             </a>
             <a
               href={cvHref}

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Bebas_Neue, Barlow_Condensed, JetBrains_Mono } from 'next/font/google';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '../../../i18n';
 import '../globals.css';
@@ -101,6 +101,9 @@ export default async function LocaleLayout({ children, params: { locale } }: Pro
     notFound();
   }
 
+  // Required by next-intl v4 so getMessages() and useTranslations() read the correct locale
+  setRequestLocale(locale);
+
   // Provide messages to client components
   const messages = await getMessages();
 
@@ -110,7 +113,7 @@ export default async function LocaleLayout({ children, params: { locale } }: Pro
       className={`${bebasNeue.variable} ${barlowCondensed.variable} ${jetBrainsMono.variable}`}
     >
       <body className="bg-bg text-white font-ui">
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (

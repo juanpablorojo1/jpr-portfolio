@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import LanguageSelector from '../ui/LanguageSelector';
 
@@ -52,27 +51,7 @@ export default function Navbar() {
       `}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between h-16">
-        {/* Logo */}
-        <a href="#hero" onClick={(e) => handleNavClick(e, '#hero')} className="flex items-center">
-          {/* Desktop: wordmark */}
-          <Image
-            src="/logos/logo-wordmark.svg"
-            alt="Juan Pablo Rojo"
-            width={120}
-            height={32}
-            className="hidden md:block h-7 w-auto"
-            priority
-          />
-          {/* Mobile: monogram */}
-          <Image
-            src="/logos/logo-jpr-monogram.svg"
-            alt="JPR"
-            width={48}
-            height={32}
-            className="block md:hidden h-7 w-auto"
-            priority
-          />
-        </a>
+        <div />
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-8">

@@ -9,18 +9,18 @@
   "hero": {
     "title": "JUAN PABLO",
     "surname": "ROJO",
-    "role": "Construyo AI clínica — y los productos que la despliegan.",
-    "tagline": "De la Detección de Fracturas al Full-Stack. End-to-End.",
+    "role": "Ingeniero Biomédico. Construyo AI clínica — y los productos que la despliegan.",
+    "tagline": "Del equipamiento hospitalario a la AI clínica, productos web y automatización digital.",
     "cta1": "Ver mi trabajo",
     "cta2": "Descargar CV"
   },
   "about": {
     "label": "Sobre mí",
     "headline": "De la Biología al Código, del Laboratorio al Producto",
-    "p1": "Soy Ingeniero Biomédico terminando mi carrera en la UNC Córdoba, especializado en AI para imágenes médicas. Mi tesis — TraumaVision — es un sistema de soporte clínico que detecta fracturas en radiografías con un 97,18% de precisión.",
-    "p2": "En 2025 fundé Eleven, una agencia digital AI-first. Construimos productos web y agentes de IA para pymes. Corre sobre Next.js, Claude API y GSAP — el mismo stack que uso para todo.",
-    "p3": "Dos temporadas trabajando en resorts de ski en California. Me autofinancié la carrera. Primer puesto, hackathon Rocking the Industry — 40 ingenieros, problemas industriales reales, 2025.",
-    "p4": "La interdisciplina no es una debilidad. Es el diferencial.",
+    "p1": "Soy Ingeniero Biomédico terminando mi carrera en la UNC Córdoba, especializado en AI para imágenes médicas. Mi tesis — TraumaVision — es un sistema de soporte clínico que detecta fracturas en radiografías con un 97,18% de precisión y 86,6% de sensibilidad.",
+    "p2": "En 2026 fundé Eleven, una agencia digital AI-first. Construimos productos web, agentes de IA y contenido digital generado con IA para pymes.",
+    "p3": "Primer puesto en Rocking the Industry — el primer hackathon industrial del mundo por RTS Group. 150 equipos multidisciplinarios de 5 personas, 2025.",
+    "p4": "Tengo 24 años y vivo en Córdoba, Argentina. Español nativo, inglés certificado en LTC Eastbourne Language School. Ocho meses trabajando en California.",
     "sub_tagline": "Donde la Biología se Encuentra con el Algoritmo."
   },
   "projects": {
@@ -28,8 +28,8 @@
     "traumavision": {
       "label": "Tesis de Grado — UNC Córdoba, 2025",
       "title": "TraumaVision AI",
-      "subtitle": "Sistema de Soporte Clínico para Detección de Fracturas en Radiografías de Emergencia",
-      "description": "CDSS end-to-end para detección de fracturas en radiografías. Pipeline de detección de fracturas basado en YOLOv8. Full-stack: FastAPI + SQLite + Google OAuth + reportes PDF.",
+      "subtitle": "Sistema de Soporte Clínico para Detección de Fracturas en Radiografías",
+      "description": "CDSS end-to-end para detección de fracturas en radiografías. 97,18% de precisión, 86,6% de sensibilidad, AUC-ROC 0,973. Actualmente participando en concursos de emprendedores (EmprendeU y otros) buscando inversión para lanzar TraumaVision al mercado.",
       "metric_auc": "AUC-ROC",
       "metric_map50": "mAP@50",
       "metric_recall": "Recall",
@@ -41,11 +41,11 @@
       "title": "Eleven Estudio Digital",
       "subtitle": "Agencia Digital AI-First · Argentina",
       "description": "Fundé y opero una agencia digital AI-first que construye productos web y agentes de IA para pymes. Integración con Claude API, animaciones GSAP, backends en Supabase.",
-      "description_expanded": "Fundé y opero una agencia digital AI-nativa. Construí un pipeline multi-agente con Claude API: discovery, estrategia, brand, dev y QA automatizados. 2 productos live en producción. Argentina, 2025.",
+      "description_expanded": "Fundé y opero una agencia digital AI-nativa. Pipeline de 38 agentes coordinados con Claude API — modelos Sonnet 4.6, Haiku 4.5 y Opus 4.7 con prompt caching agresivo, extended thinking, tool use e integraciones MCP (Playwright, Google Drive, Gmail, Calendar, Canva, Vercel). 4 productos live en producción. Argentina, 2026.",
       "role": "Fundador",
       "role_label": "Rol",
-      "stat_founded": "2025",
-      "stat_sites": "2 LIVE",
+      "stat_founded": "2026",
+      "stat_sites": "4 LIVE",
       "stat_approach": "AI-FIRST",
       "stat_founded_label": "Fundado",
       "stat_sites_label": "Sitios en Prod",
@@ -57,8 +57,8 @@
     "hackathon": {
       "title": "Rocking the Industry",
       "subtitle": "Hackathon Industrial — RTS Group",
-      "description": "Primer hackathon industrial de RTS Group. El equipo Algarroba LID obtuvo el primer puesto resolviendo problemas complejos de ingeniería industrial en condiciones reales.",
-      "description_expanded": "El primer hackathon industrial del mundo, organizado por RTS Group. Más de 40 ingenieros compitiendo en desafíos reales de ingeniería industrial. El equipo Algarroba LID ganó el primer puesto con una propuesta de optimización de manufactura de precisión.",
+      "description": "Primer hackathon industrial del mundo por RTS Group. 150 equipos multidisciplinarios de 5 personas. El equipo Algarroba LID obtuvo el primer puesto.",
+      "description_expanded": "Primer hackathon industrial del mundo, organizado por RTS Group. 150 equipos multidisciplinarios de 5 personas cada uno compitiendo en desafíos de ingeniería industrial real. El equipo Algarroba LID ganó el primer puesto con una propuesta de automatización de agentes human-in-the-loop para el control de sensores en una planta de energía nuclear.",
       "badge": "1er Puesto · 2025",
       "event_stat_place": "1ER PUESTO",
       "event_stat_team": "ALGARROBA LID",
@@ -69,43 +69,47 @@
     "label": "Tech Stack",
     "cluster_ai": {
       "title": "AI / ML",
-      "items": ["PyTorch", "YOLOv8", "Claude API", "Scikit-learn", "NumPy", "Pandas"]
+      "items": ["PyTorch · CUDA", "YOLOv8m · Ultralytics", "Claude API · Anthropic SDK", "Claude Sonnet · Haiku · Opus", "OpenCV · CLAHE", "PyDICOM · DICOM", "Scikit-learn", "NumPy · Pandas", "Jupyter · Matplotlib", "Prompt Engineering", "Prompt Caching · Extended Thinking", "Tool Use · Function Calling", "Orquestación Multi-agente", "Sistemas RAG", "Gemini Imagen 3", "DALL-E 3 · GPT-4o", "Replicate · Real-ESRGAN"]
     },
     "cluster_web": {
       "title": "Desarrollo Web",
-      "items": ["Next.js", "React", "FastAPI", "Supabase", "GSAP", "Vercel", "SQLite", "Python"]
+      "items": ["Next.js · React", "TypeScript · JavaScript", "FastAPI · Uvicorn · Python", "Supabase · PostgreSQL · SQLite", "GSAP · ScrollTrigger", "Tailwind CSS · shadcn/ui", "OGL · WebGL", "Vercel · GitHub · Git", "VS Code · GitHub Copilot", "Playwright MCP", "Protocolo MCP · Claude Code CLI", "Meta API · WhatsApp Business", "next-intl · i18n", "REST APIs · JSON", "Node.js", "Resend · APIs de Email", "HTML · CSS · SVG"]
+    },
+    "cluster_content": {
+      "title": "Contenido & Media",
+      "items": ["HyperFrames · Video desde HTML", "Remotion", "Canva MCP", "Edición de Video", "Producción para Redes Sociales", "Imágenes Generadas con IA", "Presentaciones Animadas", "Instagram · Reels · Stories", "Diseño de Sistema de Marca", "Copywriting · AIDA · PAS"]
     },
     "cluster_bio": {
       "title": "Biomédica",
-      "items": ["CDSS / SaMD", "Cumplimiento JCI", "ISO / IEC", "ANMAT", "Dispositivos Médicos", "Equipamiento UCI"]
+      "items": ["CDSS / SaMD", "Cumplimiento JCI", "ANMAT · ISO 13485 · ISO 62304", "Mantenimiento Correctivo y Preventivo", "UTI Adultos · UCO · Quirófano", "UTI Pediátrica · Neonatológico", "Endoscopía · Internación · Consultorios", "Desfibriladores · Monitores Multiparamétricos", "Bombas de Infusión · Balón IABP", "Incubadoras · Servocunas", "Seguridad Eléctrica · Fluke", "Neovero CMMS · Trazabilidad", "Instrumentación Biomédica", "Normativa Clínica"]
     }
   },
   "experience": {
     "label": "Experiencia",
     "items": [
       {
-        "year": "2025–presente",
+        "year": "2026–presente",
         "company": "Eleven Estudio Digital",
         "role": "Fundador",
-        "description": "Fundé y opero una agencia AI-nativa con un pipeline de 38 agentes coordinados — discovery, estrategia, brand, dev, QA. 2 productos live en producción. Stack: Next.js, Claude API, Supabase."
+        "description": "Fundé y opero una agencia digital AI-nativa. Pipeline de 38 agentes coordinados — discovery, estrategia, brand, dev, QA. 4 productos live en producción. Producción de contenido digital generado con IA."
       },
       {
         "year": "2024",
         "company": "Sanatorio Allende S.A.",
         "role": "Pasante Ingeniería Biomédica",
-        "description": "Mantenimiento de equipos críticos en UCI y quirófano de un hospital con acreditación JCI. Exposición directa al entorno regulatorio donde deben operar los sistemas de soporte clínico."
+        "description": "Mantenimiento correctivo y preventivo en Sanatorio Allende (proceso de acreditación JCI). Sectores: UTI adultos/UCO, quirófano, UTI pediátrica, neonatológico, endoscopía, internación, consultorios externos. Equipos: desfibriladores (Philips/Feas), monitores multiparamétricos, bombas de infusión (Braun), mesas de cirugía (Steris), incubadoras (Medix/Atom), balón IABP Datascope, endoscopios, monitores fetales, ECG/SpO2/capnografía. Calibraciones con Fluke. Trazabilidad de inventario con Neovero CMMS."
       },
       {
         "year": "2023–2024",
-        "company": "UNC",
+        "company": "UNC — Facultad de Ciencias Médicas",
         "role": "Ayudante de Cátedra — Fisiología Humana",
-        "description": "Ayudante de cátedra en Fisiología Humana. Enseñé la capa biológica que los modelos de AI eventualmente aprenden a leer."
+        "description": "Ayudante de cátedra de Fisiología Humana en la Facultad de Ciencias Médicas, UNC. Clases prácticas, preparación de exámenes y orientación a alumnos sobre fundamentos fisiológicos aplicados a sistemas biomédicos."
       },
       {
         "year": "2022–2023",
-        "company": "Snow Summit LLC",
-        "role": "Técnico de Equipos de Alquiler",
-        "description": "Dos temporadas en California. Inglés de campo, no de aula. Me autofinancié durante la carrera."
+        "company": "Snow Summit Mountain Resort",
+        "role": "Técnico de Equipos de Ski y Snowboard",
+        "description": "8 meses en atención al público en Snow Summit, Big Bear Lake, California — todo en inglés. Ahí fue donde realmente aprendí el idioma."
       }
     ],
     "education_label": "Educación",
@@ -126,12 +130,14 @@
   },
   "contact": {
     "label": "Contacto",
-    "headline_1": "CONSTRUYAMOS",
-    "headline_2": "ALGO.",
-    "subtitle": "Disponible para roles remotos en AI/ML, medtech o full-stack donde la precisión es requisito.",
+    "headline_1": "MEDIOS DE",
+    "headline_2": "CONTACTO.",
+    "subtitle": "Disponible para roles en AI/ML, ingeniería biomédica y desarrollo web — remoto o presencial en Córdoba, Argentina.",
     "email_label": "Email",
     "linkedin_label": "LinkedIn",
     "github_label": "GitHub",
+    "instagram_label": "Instagram",
+    "phone_label": "WhatsApp",
     "copyright": "© 2026 Juan Pablo Rojo"
   }
 }

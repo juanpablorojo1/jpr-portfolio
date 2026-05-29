@@ -1,9 +1,13 @@
 // Static content data (images, links, etc. — strings come from i18n messages)
 
 export const SOCIAL_LINKS = {
-  email: 'juan.pablo.rojo@mi.unc.edu.ar',
+  email: 'juanpablorojo1@gmail.com',
+  emailAlt: 'juan.pablo.rojo@mi.unc.edu.ar',
   linkedin: 'https://linkedin.com/in/juan-pablo-rojo',
-  github: 'https://github.com/juanpablorojo',
+  github: 'https://github.com/juanpablorojo1',
+  instagram: 'https://www.instagram.com/juampi_rojo/',
+  phone: '+54 385 514 3413',
+  whatsapp: 'https://wa.me/543855143413',
 } as const;
 
 export const TRAUMAVISION_METRICS = [
@@ -14,7 +18,9 @@ export const TRAUMAVISION_METRICS = [
 ] as const;
 
 export const TRAUMAVISION_STACK = [
-  'Python', 'PyTorch', 'YOLOv8', 'FastAPI', 'SQLite',
+  'Python', 'PyTorch', 'YOLOv8m', 'Ultralytics', 'FastAPI', 'Uvicorn',
+  'OpenCV', 'NumPy', 'Pillow', 'PyDICOM', 'React', 'TypeScript', 'Vite',
+  'VS Code', 'GitHub Copilot',
 ] as const;
 
 export const TRAUMAVISION_SCREENSHOTS = [
@@ -50,7 +56,13 @@ export const TRAUMAVISION_SCREENSHOTS = [
   },
 ] as const;
 
-export const ELEVEN_STACK = ['Next.js', 'Claude API', 'Supabase', 'GSAP', 'Vercel', 'Tailwind'] as const;
+export const ELEVEN_STACK = [
+  'Next.js', 'TypeScript', 'Tailwind CSS', 'Supabase', 'GSAP', 'Vercel', 'GitHub',
+  'Claude Sonnet · Haiku · Opus', 'Prompt Caching', 'Extended Thinking',
+  'Tool Use · Function Calling', 'Multi-agent Pipeline', 'Claude Code CLI',
+  'Playwright MCP', 'Google Drive MCP', 'Gmail MCP', 'Google Calendar MCP',
+  'Canva MCP', 'Vercel MCP', 'next-intl', 'Resend', 'VS Code', 'GitHub Copilot',
+] as const;
 
 export const ELEVEN_SCREENSHOTS = [
   { src: '/images/eleven-01-hero.jpg', alt: 'Eleven — Hero con logo y mascota robot', label: 'HERO' },
