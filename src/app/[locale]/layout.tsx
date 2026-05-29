@@ -55,10 +55,26 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
       siteName: 'Juan Pablo Rojo',
       type: 'website',
       locale: isEn ? 'en_US' : 'es_AR',
+      images: [
+        {
+          url: `/og/og-${locale}.png`,
+          width: 1200,
+          height: 630,
+          alt: isEn
+            ? 'Juan Pablo Rojo — Biomedical Engineer · AI Developer · Founder'
+            : 'Juan Pablo Rojo — Ingeniero Biomédico · AI Developer · Fundador',
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: 'Juan Pablo Rojo — Portfolio',
+      images: [`/og/og-${locale}.png`],
+      title: isEn
+        ? 'Juan Pablo Rojo — Biomedical Engineer · AI Developer · Founder'
+        : 'Juan Pablo Rojo — Ingeniero Biomédico · AI Developer · Fundador',
+      description: isEn
+        ? 'From Fracture Detection to Full-Stack. End-to-End.'
+        : 'De la Detección de Fracturas al Full-Stack. End-to-End.',
     },
     robots: {
       index: true,

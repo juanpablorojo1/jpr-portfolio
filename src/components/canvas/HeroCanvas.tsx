@@ -25,7 +25,7 @@ export default function HeroCanvas() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const PARTICLE_COUNT = 120;
+    const PARTICLE_COUNT = 55;
     const ACCENT_COLOR = '232, 39, 42';
 
     const resize = () => {
@@ -109,8 +109,8 @@ export default function HeroCanvas() {
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 80) {
-            const lineOpacity = (1 - dist / 80) * 0.06;
+          if (dist < 60) {
+            const lineOpacity = (1 - dist / 60) * 0.06;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);

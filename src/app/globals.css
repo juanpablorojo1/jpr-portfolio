@@ -8,7 +8,7 @@
   --color-surface: #1C1C1C;
   --color-surface-alt: #262626;
   --color-accent: #E8272A;
-  --color-accent-dark: #B01E20;
+  --color-accent-dark: #8B1517;
   --color-accent-glow: rgba(232, 39, 42, 0.20);
   --color-accent-border: rgba(232, 39, 42, 0.30);
   --color-white: #FFFFFF;
@@ -26,7 +26,7 @@
 
   /* Shadows */
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.6);
-  --shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 24px rgba(232, 39, 42, 0.15);
+  --shadow-card-hover: 0 0 24px rgba(232, 39, 42, 0.12), 0 0 0 1px #E8272A;
   --shadow-accent-glow: 0 0 16px rgba(232, 39, 42, 0.4), 0 0 48px rgba(232, 39, 42, 0.15);
   --shadow-text-glow: 0 0 20px rgba(232, 39, 42, 0.6);
   --shadow-metric-glow: 0 0 20px rgba(232, 39, 42, 0.30);
@@ -57,7 +57,7 @@ body {
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 2px;
 }
 ::-webkit-scrollbar-track {
   background: var(--color-bg);
@@ -67,13 +67,6 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-accent);
-}
-
-/* Tech grid background utility */
-.bg-tech-grid {
-  background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 39px, var(--color-grid) 39px, var(--color-grid) 40px),
-    repeating-linear-gradient(90deg, transparent, transparent 39px, var(--color-grid) 39px, var(--color-grid) 40px);
 }
 
 /* Clip-path reveal classes for GSAP */
@@ -87,5 +80,22 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+/* Marquee animation — Skills section */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* Prefers reduced motion — accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

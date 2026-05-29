@@ -13,7 +13,7 @@ const config: Config = {
         surface: "#1C1C1C",
         "surface-alt": "#262626",
         accent: "#E8272A",
-        "accent-dark": "#B01E20",
+        "accent-dark": "#8B1517",
         "off-white": "#E8E4DE",
         muted: "#666666",
         border: "#2A2A2A",

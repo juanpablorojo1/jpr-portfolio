@@ -9,7 +9,7 @@
   "hero": {
     "title": "JUAN PABLO",
     "surname": "ROJO",
-    "role": "Biomedical Engineer · AI Developer · Founder",
+    "role": "I build clinical AI — then ship it as a product.",
     "tagline": "From Fracture Detection to Full-Stack. End-to-End.",
     "cta1": "View My Work",
     "cta2": "Download CV"
@@ -19,7 +19,7 @@
     "headline": "From Biology to Code, From Lab to Product",
     "p1": "I'm a Biomedical Engineer finishing my degree at UNC Córdoba, specializing in AI for medical imaging. My thesis — TraumaVision — is a clinical decision support system that detects fractures in X-rays with 97.18% accuracy.",
     "p2": "In 2025 I founded Eleven, an AI-first digital agency. We build web products and AI agents for SMBs. It runs on Next.js, Claude API, and GSAP — the same stack I use for everything.",
-    "p3": "I've spent two seasons working in California, which means my English is real, not classroom. I won first place at Rocking the Industry, the first industrial hackathon run by RTS Group.",
+    "p3": "Two seasons working ski resorts in California. Funded my own degree. First place, Rocking the Industry hackathon — 40 engineers, real industrial problems, 2025.",
     "p4": "Cross-disciplinary isn't a weakness. It's the feature.",
     "sub_tagline": "Where Biology Meets the Algorithm."
   },
@@ -29,33 +29,47 @@
       "label": "Thesis Project — UNC Córdoba, 2025",
       "title": "TraumaVision AI",
       "subtitle": "Clinical Support System for Fracture Detection in Emergency X-Rays",
-      "description": "End-to-end CDSS for fracture detection in X-ray images. DenseNet + YOLOv8 backbone with Grad-CAM explainability. Full-stack: FastAPI + SQLite + Google OAuth + PDF reports.",
+      "description": "End-to-end CDSS for fracture detection in X-ray images. YOLOv8-based fracture detection pipeline. Full-stack: FastAPI + SQLite + Google OAuth + PDF reports.",
       "metric_auc": "AUC-ROC",
-      "metric_accuracy": "Accuracy",
-      "metric_sensitivity": "Sensitivity",
+      "metric_map50": "mAP@50",
+      "metric_recall": "Recall",
       "metric_f1": "F1 Score",
       "pipeline_label": "Pipeline",
       "stack_label": "Stack"
     },
     "eleven": {
       "title": "Eleven Estudio Digital",
-      "subtitle": "AI-First Digital Agency",
+      "subtitle": "AI-First Digital Agency · Argentina",
       "description": "Founded and operate an AI-first digital agency building web products and AI agents for SMBs. Claude API integration, GSAP animations, Supabase backends.",
-      "role": "Founder & Co-founder",
+      "description_expanded": "Founded and operate an AI-native digital agency. Built a multi-agent pipeline with Claude API: automated discovery, strategy, brand, dev, and QA. 2 client products live in production. Argentina, 2025.",
+      "role": "Founder",
+      "role_label": "Role",
+      "stat_founded": "2025",
+      "stat_sites": "2 LIVE",
+      "stat_approach": "AI-FIRST",
+      "stat_founded_label": "Founded",
+      "stat_sites_label": "Sites in Prod",
+      "stat_approach_label": "Approach",
+      "services_label": "Services",
+      "services_list": "Web Products · AI Agents · Growth Content",
       "cta": "View Site"
     },
     "hackathon": {
       "title": "Rocking the Industry",
       "subtitle": "Industrial Hackathon — RTS Group",
       "description": "First industrial hackathon run by RTS Group. Team Algarroba LID placed first solving complex industrial engineering problems under real-world conditions.",
-      "badge": "1st Place · 2025"
+      "description_expanded": "World's first industrial hackathon, organized by RTS Group. 40+ engineers competing in real industrial engineering challenges. Team Algarroba LID took first place with a precision manufacturing optimization proposal.",
+      "badge": "1st Place · 2025",
+      "event_stat_place": "1ST PLACE",
+      "event_stat_team": "ALGARROBA LID",
+      "event_stat_organizer": "RTS GROUP · 2025"
     }
   },
   "skills": {
     "label": "Tech Stack",
     "cluster_ai": {
       "title": "AI / ML",
-      "items": ["PyTorch", "DenseNet", "YOLOv8", "Grad-CAM", "Claude API", "Scikit-learn", "NumPy", "Pandas"]
+      "items": ["PyTorch", "YOLOv8", "Claude API", "Scikit-learn", "NumPy", "Pandas"]
     },
     "cluster_web": {
       "title": "Web Dev",
@@ -73,25 +87,25 @@
         "year": "2025–present",
         "company": "Eleven Estudio Digital",
         "role": "Founder",
-        "description": "AI-first digital agency. Web dev, AI agents, Meta/Google Ads."
+        "description": "Founded and operate an AI-native agency running a 38-agent coordinated pipeline — discovery, strategy, brand, dev, QA. 2 products live in production. Stack: Next.js, Claude API, Supabase."
       },
       {
         "year": "2024",
         "company": "Sanatorio Allende S.A.",
         "role": "Biomedical Engineer Intern",
-        "description": "ICU and OR equipment maintenance. JCI compliance. Córdoba, Argentina."
+        "description": "ICU and OR equipment maintenance at a JCI-accredited hospital. Direct exposure to the regulatory environment where clinical decision support systems must operate."
       },
       {
         "year": "2023–2024",
         "company": "UNC",
         "role": "Undergraduate TA — Human Physiology",
-        "description": "Teaching assistant for Human Physiology."
+        "description": "TA for Human Physiology. Taught the biological layer that AI models eventually learn to read."
       },
       {
         "year": "2022–2023",
         "company": "Snow Summit LLC",
         "role": "Rentals Technician",
-        "description": "Two seasons in Big Bear Lake, California, USA."
+        "description": "Two ski seasons in California. Built field-tested English fluency and funded degree independence."
       }
     ],
     "education_label": "Education",
@@ -112,9 +126,9 @@
   },
   "contact": {
     "label": "Contact",
-    "headline_1": "LET'S BUILD",
-    "headline_2": "SOMETHING.",
-    "subtitle": "Available for international remote opportunities.",
+    "headline_1": "LET'S",
+    "headline_2": "BUILD.",
+    "subtitle": "Open to AI/ML, medtech, and full-stack roles where precision matters. Remote-first.",
     "email_label": "Email",
     "linkedin_label": "LinkedIn",
     "github_label": "GitHub",
