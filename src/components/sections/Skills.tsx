@@ -77,7 +77,7 @@ export default function Skills() {
     <section
       id="skills"
       ref={sectionRef}
-      className="py-24 lg:py-32 bg-bg"
+      className="py-14 lg:py-32 bg-bg"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <p className="font-mono text-xs text-accent tracking-widest uppercase mb-6">

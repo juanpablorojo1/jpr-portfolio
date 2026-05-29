@@ -75,7 +75,7 @@ export default function Contact() {
   return (
     <section
       id="contact"
-      className="py-24 lg:py-32 bg-bg"
+      className="py-14 lg:py-32 bg-bg"
     >
       {/* Headline — alineado con el contenido */}
       <div className="max-w-7xl mx-auto px-6 lg:px-12 mb-10 overflow-hidden">

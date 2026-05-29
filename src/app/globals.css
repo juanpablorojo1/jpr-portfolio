@@ -83,6 +83,27 @@ body {
   }
 }
 
+/* ── MOBILE OVERRIDES (< 1024px) ── */
+@media (max-width: 1023px) {
+  /* Disable card stack sticky — show sections normally */
+  .transition-zone {
+    position: relative !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+
+  /* Bigger base text on mobile */
+  body {
+    font-size: 17px;
+  }
+
+  /* Readable paragraphs */
+  .font-ui {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+}
+
 /* Marquee animation — Skills section */
 @keyframes marquee {
   from { transform: translateX(0); }

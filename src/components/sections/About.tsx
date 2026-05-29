@@ -121,7 +121,7 @@ export default function About() {
     <section
       id="about"
       ref={sectionRef}
-      className="relative py-24 lg:py-32 bg-bg overflow-hidden"
+      className="relative py-14 lg:py-32 bg-bg overflow-hidden"
     >
 
       <div className="max-w-7xl mx-auto px-6 lg:px-12">

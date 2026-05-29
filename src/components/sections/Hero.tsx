@@ -336,6 +336,23 @@ export default function Hero() {
         </div>
       </div>
 
+      {/* Mobile hero photo — below text, portrait */}
+      <div className="block lg:hidden w-full px-6 pb-12 mt-4" aria-hidden="true">
+        <div className="relative w-full aspect-[3/4] max-h-[50vh] overflow-hidden">
+          <Image
+            src={PHOTOS[0]}
+            alt=""
+            fill
+            priority
+            className="object-cover object-top"
+            style={{ filter: 'grayscale(70%) contrast(0.9)', opacity: 0.75 }}
+            sizes="100vw"
+          />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 60%, #080808 100%)' }} />
+          <div className="absolute inset-0" style={{ background: 'rgba(232,39,42,0.06)', mixBlendMode: 'screen' }} />
+        </div>
+      </div>
+
       {/* Scroll indicator — lateral editorial */}
       <div
         className="absolute bottom-8 left-6 hidden lg:flex flex-col items-center gap-3 opacity-35"
