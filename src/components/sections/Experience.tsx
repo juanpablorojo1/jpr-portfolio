@@ -93,7 +93,7 @@ export default function Experience() {
         );
       }
 
-      // Timeline items
+      // Timeline items — scrub-driven
       if (itemsRef.current) {
         const items = itemsRef.current.querySelectorAll('.timeline-item');
         const dots = itemsRef.current.querySelectorAll('.timeline-dot');
@@ -104,27 +104,30 @@ export default function Experience() {
           {
             opacity: 1,
             x: 0,
-            duration: 0.5,
-            ease: 'power2.out',
-            stagger: 0.1,
+            ease: 'none',
+            stagger: 0.08,
             scrollTrigger: {
               trigger: itemsRef.current,
-              start: 'top 80%',
+              start: 'top bottom',
+              end: 'top 20%',
+              scrub: 1.5,
             },
           }
         );
 
+        // elastic.out is incompatible with scrub — use back.out instead
         gsap.fromTo(
           dots,
           { scale: 0 },
           {
             scale: 1,
-            duration: 0.4,
-            ease: 'elastic.out(1, 0.3)',
-            stagger: 0.1,
+            ease: 'back.out(1.7)',
+            stagger: 0.08,
             scrollTrigger: {
               trigger: itemsRef.current,
-              start: 'top 80%',
+              start: 'top bottom',
+              end: 'top 30%',
+              scrub: 1,
             },
           }
         );
@@ -139,47 +142,63 @@ export default function Experience() {
     <section
       id="experience"
       ref={sectionRef}
-      className="py-24 lg:py-32 bg-bg border-t border-border"
+      className="relative py-32 lg:py-40 bg-bg"
     >
+      <span
+        aria-hidden="true"
+        className="absolute top-8 right-6 lg:right-12 font-display text-[10rem] lg:text-[14rem] text-white opacity-[0.07] pointer-events-none select-none leading-none hidden lg:block"
+      >
+        04
+      </span>
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <p className="font-mono text-xs text-accent tracking-widest uppercase mb-4">
+        <p className="font-mono text-xs text-accent tracking-widest uppercase mb-6">
           {t('label')}
         </p>
 
-        <div className="grid lg:grid-cols-2 gap-16">
+        <div className="grid lg:grid-cols-2 gap-20">
           {/* Work experience */}
           <div>
+            <div className="flex items-baseline gap-4 mb-8">
+              <span className="font-mono text-xs text-accent tracking-widest uppercase">Work</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
             <h2
               className="font-display text-white uppercase leading-none mb-10"
-              style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}
+              style={{ fontSize: 'clamp(3rem, 5vw, 5rem)' }}
             >
-              Work
+              Experience
             </h2>
 
             <div className="relative" ref={itemsRef}>
               {/* Vertical line */}
               <div
                 ref={lineRef}
-                className="absolute left-0 top-0 bottom-0 w-px bg-border"
+                className="absolute left-0 top-0 bottom-0 w-0.5 bg-border"
                 style={{ transformOrigin: 'top center' }}
               />
 
-              <div className="flex flex-col gap-8 pl-6">
+              <div className="flex flex-col gap-12 pl-6">
                 {experienceItems.map((item, i) => (
                   <div key={i} className="timeline-item relative">
-                    {/* Dot */}
-                    <div className="timeline-dot absolute -left-[1.625rem] top-1 w-2 h-2 rounded-full bg-accent" />
+                    {/* Dot — rombo */}
+                    <div
+                      className="timeline-dot absolute -left-[1.75rem] top-2 w-3 h-3 bg-accent"
+                      style={{ transform: 'rotate(45deg)' }}
+                    />
 
-                    <p className="font-mono text-xs text-accent tracking-widest uppercase mb-1">
+                    <p className="font-mono text-sm text-accent tracking-widest uppercase mb-2">
                       {item.year}
                     </p>
-                    <p className="font-ui font-bold text-white text-lg leading-tight">
+                    <p
+                      className="font-display text-white uppercase leading-none mb-1"
+                      style={{ fontSize: 'clamp(1.8rem, 3vw, 2.5rem)' }}
+                    >
                       {item.company}
                     </p>
-                    <p className="font-ui text-off-white text-sm font-bold tracking-wide uppercase mb-1">
+                    <p className="font-ui text-off-white text-base font-bold tracking-wide uppercase mb-1">
                       {item.role}
                     </p>
-                    <p className="font-ui text-muted text-sm leading-relaxed">
+                    <p className="font-ui text-muted text-base leading-relaxed">
                       {item.description}
                     </p>
                   </div>
@@ -190,37 +209,28 @@ export default function Experience() {
 
           {/* Education */}
           <div>
-            <h2
-              className="font-display text-white uppercase leading-none mb-10"
-              style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}
-            >
-              Education
-            </h2>
+            <div className="flex items-baseline gap-4 mb-8">
+              <span className="font-mono text-xs text-accent tracking-widest uppercase">Education</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
 
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-10">
               {educationItems.map((item, i) => (
                 <div
                   key={i}
-                  className="p-5 bg-surface border border-border"
-                  style={{ transition: 'border-color 0.2s ease' }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = '#E8272A';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = '#2A2A2A';
-                  }}
+                  className="pl-6 border-l-2 border-border py-2"
                 >
                   <p className="font-mono text-xs text-accent tracking-widest uppercase mb-1">
                     {item.year}
                   </p>
-                  <p className="font-ui font-bold text-white text-lg leading-tight">
+                  <p className="font-ui font-bold text-white text-2xl leading-tight">
                     {item.institution}
                   </p>
-                  <p className="font-ui text-off-white text-sm font-bold tracking-wide uppercase mb-1">
+                  <p className="font-ui text-off-white text-base font-bold tracking-wide uppercase mb-1">
                     {item.degree}
                   </p>
                   {item.detail && (
-                    <p className="font-mono text-xs text-muted mt-2">
+                    <p className="font-mono text-sm text-muted mt-2">
                       {item.detail}
                     </p>
                   )}

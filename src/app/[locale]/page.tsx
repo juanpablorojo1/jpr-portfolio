@@ -2,7 +2,6 @@
 
 import dynamic from 'next/dynamic';
 import { useLoadingScreen } from '../../hooks/useLoadingScreen';
-import { useLenis } from '../../hooks/useLenis';
 import Navbar from '../../components/layout/Navbar';
 import Hero from '../../components/sections/Hero';
 import About from '../../components/sections/About';
@@ -17,17 +16,26 @@ const LoadingScreen = dynamic(() => import('../../components/loading/LoadingScre
 const CustomCursor = dynamic(() => import('../../components/ui/CustomCursor'), {
   ssr: false,
 });
+const ScrollProgressBar = dynamic(() => import('../../components/ui/ScrollProgressBar'), {
+  ssr: false,
+});
+const SectionLabel = dynamic(() => import('../../components/ui/SectionLabel'), {
+  ssr: false,
+});
 
 export default function HomePage() {
   const { isLoading, onLoadingComplete } = useLoadingScreen();
-
-  // Initialize smooth scroll
-  useLenis();
 
   return (
     <>
       {/* Custom cursor (desktop only) */}
       <CustomCursor />
+
+      {/* Scroll progress bar — fixed top */}
+      <ScrollProgressBar />
+
+      {/* Active section label — fixed left side */}
+      <SectionLabel />
 
       {/* Loading screen — rendered on top, slides away */}
       {isLoading && <LoadingScreen onComplete={onLoadingComplete} />}
@@ -40,12 +48,32 @@ export default function HomePage() {
         }}
       >
         <Navbar />
-        <Hero />
-        <About />
-        <Projects />
-        <Skills />
-        <Experience />
-        <Contact />
+
+        {/* Card stack — each section sticks at top and gets covered by the next */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 10, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+          <Hero />
+        </div>
+
+        <div style={{ position: 'sticky', top: 0, zIndex: 20, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+          <About />
+        </div>
+
+        {/* Projects: overflow:clip preserves inner sticky top-0 for horizontal scroll */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 30, overflow: 'clip', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+          <Projects />
+        </div>
+
+        <div style={{ position: 'sticky', top: 0, zIndex: 40, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+          <Skills />
+        </div>
+
+        <div style={{ position: 'sticky', top: 0, zIndex: 50, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+          <Experience />
+        </div>
+
+        <div style={{ position: 'sticky', top: 0, zIndex: 60, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+          <Contact />
+        </div>
       </main>
     </>
   );

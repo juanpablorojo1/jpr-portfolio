@@ -7,7 +7,7 @@ import Image from 'next/image';
 export default function About() {
   const t = useTranslations('about');
   const sectionRef = useRef<HTMLElement>(null);
-  const headlineRef = useRef<HTMLHeadingElement>(null);
+  const headlineRef = useRef<HTMLDivElement>(null);
   const paragraphsRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLDivElement>(null);
   const subTaglineRef = useRef<HTMLParagraphElement>(null);
@@ -21,24 +21,27 @@ export default function About() {
       gsap.registerPlugin(ScrollTrigger);
       if (cleanup) return;
 
-      // Headline reveal
+      // Headline reveal — scrub-driven, animates in as section enters viewport
       if (headlineRef.current) {
+        const lines = headlineRef.current.querySelectorAll('.headline-line');
         gsap.fromTo(
-          headlineRef.current,
-          { clipPath: 'inset(0 100% 0 0)', opacity: 1 },
+          lines,
+          { clipPath: 'inset(100% 0 0 0)', opacity: 1 },
           {
-            clipPath: 'inset(0 0% 0 0)',
-            duration: 1,
-            ease: 'power3.out',
+            clipPath: 'inset(0% 0 0 0)',
+            ease: 'none',
+            stagger: 0.08,
             scrollTrigger: {
               trigger: headlineRef.current,
-              start: 'top 85%',
+              start: 'top bottom',
+              end: 'top 30%',
+              scrub: 1.5,
             },
           }
         );
       }
 
-      // Paragraphs fade up
+      // Paragraphs fade up — scrub-driven
       if (paragraphsRef.current) {
         const paras = paragraphsRef.current.querySelectorAll('p');
         gsap.fromTo(
@@ -47,18 +50,19 @@ export default function About() {
           {
             opacity: 1,
             y: 0,
-            duration: 0.6,
-            ease: 'power2.out',
-            stagger: 0.15,
+            ease: 'none',
+            stagger: 0.1,
             scrollTrigger: {
               trigger: paragraphsRef.current,
-              start: 'top 80%',
+              start: 'top bottom',
+              end: 'top 20%',
+              scrub: 1,
             },
           }
         );
       }
 
-      // Sub-tagline
+      // Sub-tagline — scrub-driven
       if (subTaglineRef.current) {
         gsap.fromTo(
           subTaglineRef.current,
@@ -66,17 +70,18 @@ export default function About() {
           {
             opacity: 1,
             y: 0,
-            duration: 0.6,
-            ease: 'power2.out',
+            ease: 'none',
             scrollTrigger: {
               trigger: subTaglineRef.current,
-              start: 'top 85%',
+              start: 'top bottom',
+              end: 'top 30%',
+              scrub: 1,
             },
           }
         );
       }
 
-      // Photo parallax
+      // Photo entrance — scrub-driven
       if (photoRef.current) {
         gsap.fromTo(
           photoRef.current,
@@ -84,15 +89,17 @@ export default function About() {
           {
             opacity: 1,
             x: 0,
-            duration: 0.8,
-            ease: 'power2.out',
+            ease: 'none',
             scrollTrigger: {
               trigger: photoRef.current,
-              start: 'top 80%',
+              start: 'top bottom',
+              end: 'top 20%',
+              scrub: 1,
             },
           }
         );
 
+        // Parallax — scrub already in place
         gsap.to(photoRef.current, {
           y: -30,
           ease: 'none',
@@ -114,8 +121,16 @@ export default function About() {
     <section
       id="about"
       ref={sectionRef}
-      className="relative py-24 lg:py-32 bg-bg border-t border-border overflow-hidden"
+      className="relative py-24 lg:py-32 bg-bg overflow-hidden"
     >
+      {/* Editorial number watermark */}
+      <span
+        aria-hidden="true"
+        className="absolute top-4 right-6 font-display text-[10rem] lg:text-[14rem] text-white opacity-[0.07] pointer-events-none select-none leading-none"
+      >
+        02
+      </span>
+
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Section label */}
         <p className="font-mono text-xs text-accent tracking-widest uppercase mb-4">
@@ -125,16 +140,29 @@ export default function About() {
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-start">
           {/* Text side */}
           <div>
-            {/* Headline */}
+            {/* Headline — staggered line-by-line reveal */}
             <h2
-              ref={headlineRef}
-              className="font-display text-white uppercase leading-tight mb-8"
-              style={{
-                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
-                clipPath: 'inset(0 100% 0 0)',
-              }}
+              className="font-display uppercase leading-tight mb-8"
+              style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}
             >
-              {t('headline')}
+              <div ref={headlineRef}>
+                <div className="overflow-hidden">
+                  <div
+                    className="headline-line text-white"
+                    style={{ clipPath: 'inset(100% 0 0 0)' }}
+                  >
+                    From Biology to Code,
+                  </div>
+                </div>
+                <div className="overflow-hidden">
+                  <div
+                    className="headline-line"
+                    style={{ clipPath: 'inset(100% 0 0 0)', color: '#E8272A' }}
+                  >
+                    From Lab to Product
+                  </div>
+                </div>
+              </div>
             </h2>
 
             {/* Paragraphs */}
@@ -159,41 +187,35 @@ export default function About() {
             {/* Sub-tagline */}
             <p
               ref={subTaglineRef}
-              className="mt-8 font-mono text-sm text-accent tracking-wide italic"
+              className="mt-8 font-ui text-base text-accent italic"
             >
               — {t('sub_tagline')}
             </p>
           </div>
 
-          {/* Photo side */}
-          <div ref={photoRef} className="relative">
-            <div className="relative aspect-[3/4] max-w-sm mx-auto lg:mx-0">
-              {/* Corner bracket effect */}
-              <div className="absolute -top-3 -left-3 w-6 h-6 border-t-2 border-l-2 border-accent z-10" />
-              <div className="absolute -bottom-3 -right-3 w-6 h-6 border-b-2 border-r-2 border-accent z-10" />
-
+          {/* Photo side — sticky while text scrolls */}
+          <div ref={photoRef} className="relative lg:sticky lg:top-24 lg:self-start">
+            <div className="relative aspect-[4/5] max-w-md mx-auto lg:mx-0">
               <Image
                 src="/images/portrait.jpg"
                 alt="Juan Pablo Rojo"
                 fill
-                className="object-cover object-top grayscale hover:grayscale-0 transition-all duration-700"
+                className="object-cover object-top grayscale"
                 sizes="(max-width: 768px) 80vw, 40vw"
               />
-
-              {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-bg/60 to-transparent" />
             </div>
 
-            {/* Decorative info card */}
-            <div className="mt-6 p-4 bg-surface border border-border">
-              <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">Location</p>
-              <p className="font-ui font-bold text-white">Córdoba, Argentina</p>
-              <div className="mt-3 pt-3 border-t border-border">
-                <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">Status</p>
-                <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                  <p className="font-ui font-bold text-accent text-sm">Open to opportunities</p>
-                </div>
+            {/* Metadata bar */}
+            <div className="mt-6 flex items-center gap-6 border-t border-border pt-4">
+              <div>
+                <span className="font-mono text-xs text-muted uppercase tracking-widest">Location </span>
+                <span className="font-ui text-sm text-off-white">Córdoba, AR</span>
+              </div>
+              <div className="w-px h-4 bg-border" />
+              <div>
+                <span className="font-mono text-xs text-muted uppercase tracking-widest">Status </span>
+                <span className="font-ui text-sm text-accent">Available</span>
               </div>
             </div>
           </div>
