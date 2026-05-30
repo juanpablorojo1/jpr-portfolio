@@ -16,6 +16,9 @@ export default function Contact() {
     let cleanup = false;
 
     const animate = async () => {
+      // Skip GSAP scrub animations on mobile — elements render visible
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) return;
+
       const { default: gsap } = await import('gsap');
       const { ScrollTrigger } = await import('gsap/ScrollTrigger');
       gsap.registerPlugin(ScrollTrigger);
@@ -75,10 +78,10 @@ export default function Contact() {
   return (
     <section
       id="contact"
-      className="py-14 lg:py-32 bg-bg"
+      className="py-10 lg:py-32 bg-bg"
     >
       {/* Headline — alineado con el contenido */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 mb-10 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 mb-6 lg:mb-10 overflow-hidden">
         <p className="font-mono text-xs text-accent tracking-widest uppercase mb-6">
           {t('label')}
         </p>
@@ -87,8 +90,7 @@ export default function Contact() {
             <div
               className="headline-line font-display text-white uppercase leading-none"
               style={{
-                fontSize: 'clamp(4.5rem, 13vw, 11rem)',
-                clipPath: 'inset(100% 0 0 0)',
+                fontSize: 'clamp(2.8rem, 13vw, 11rem)',
               }}
             >
               {t('headline_1')}
@@ -98,9 +100,8 @@ export default function Contact() {
             <div
               className="headline-line font-display uppercase leading-none"
               style={{
-                fontSize: 'clamp(4.5rem, 13vw, 11rem)',
+                fontSize: 'clamp(2.8rem, 13vw, 11rem)',
                 color: '#E8272A',
-                clipPath: 'inset(100% 0 0 0)',
               }}
             >
               {t('headline_2')}
@@ -112,12 +113,12 @@ export default function Contact() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Content */}
         <div ref={contentRef}>
-          <p className="font-ui text-off-white text-lg mb-10 max-w-xl">
+          <p className="font-ui text-off-white text-base lg:text-lg mb-6 lg:mb-10 max-w-xl">
             {t('subtitle')}
           </p>
 
           {/* Email — CTA primario */}
-          <div className="mb-12">
+          <div className="mb-6 lg:mb-12">
             <p className="font-mono text-xs text-muted uppercase tracking-widest mb-3">
               {t('email_label')}
             </p>
@@ -138,7 +139,7 @@ export default function Contact() {
           </div>
 
           {/* Numbered links — formato editorial */}
-          <div className="flex flex-wrap gap-6 mb-8">
+          <div className="flex flex-wrap gap-4 lg:gap-6 mb-4 lg:mb-8">
             <a
               href={`mailto:${SOCIAL_LINKS.email}`}
               className="group flex items-center gap-2 font-mono text-xs text-muted hover:text-accent transition-colors duration-150 tracking-widest uppercase"
@@ -185,7 +186,7 @@ export default function Contact() {
           </div>
 
           {/* Secondary CTAs */}
-          <div className="flex flex-wrap gap-4 mb-16">
+          <div className="flex flex-wrap gap-4 mb-8 lg:mb-16">
             <a
               href={SOCIAL_LINKS.linkedin}
               target="_blank"
@@ -246,7 +247,7 @@ export default function Contact() {
         </div>
 
         {/* Logo-symbol ECG — bookend narrativo */}
-        <div className="flex justify-center py-16">
+        <div className="flex justify-center py-8 lg:py-16">
           <div
             style={{
               width: 80,

@@ -13,6 +13,9 @@ export default function Skills() {
     let cleanup = false;
 
     const animate = async () => {
+      // Skip GSAP scrub animations on mobile — elements render visible
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) return;
+
       const { default: gsap } = await import('gsap');
       const { ScrollTrigger } = await import('gsap/ScrollTrigger');
       gsap.registerPlugin(ScrollTrigger);
@@ -77,22 +80,22 @@ export default function Skills() {
     <section
       id="skills"
       ref={sectionRef}
-      className="py-14 lg:py-32 bg-bg"
+      className="py-10 lg:py-32 bg-bg"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <p className="font-mono text-xs text-accent tracking-widest uppercase mb-6">
+        <p className="font-mono text-xs text-accent tracking-widest uppercase mb-3 lg:mb-6">
           {t('label')}
         </p>
 
         <h2
-          className="font-display text-white uppercase leading-none mb-8"
-          style={{ fontSize: 'clamp(3rem, 7vw, 6rem)' }}
+          className="font-display text-white uppercase leading-none mb-4 lg:mb-8"
+          style={{ fontSize: 'clamp(2.5rem, 7vw, 6rem)' }}
         >
           Tech Stack
         </h2>
 
         {/* Marquee */}
-        <div className="relative overflow-hidden mb-16 border-y border-border py-3">
+        <div className="relative overflow-hidden mb-8 lg:mb-16 border-y border-border py-3">
           <div
             className="flex gap-8 whitespace-nowrap"
             style={{ animation: 'marquee 30s linear infinite', width: 'max-content' }}
@@ -105,10 +108,10 @@ export default function Skills() {
           </div>
         </div>
 
-        {/* 4-cluster grid — 2 cols on md+, 4 cols on xl */}
+        {/* 4-cluster grid — 2 cols mobile, 2 cols md+, 4 cols xl */}
         <div
           ref={clustersRef}
-          className="grid md:grid-cols-2 xl:grid-cols-4 gap-8"
+          className="grid grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-8"
         >
           {clusterKeys.map((key, i) => {
             const items = t.raw(`${key}.items`) as string[];
@@ -117,18 +120,18 @@ export default function Skills() {
             return (
               <div
                 key={key}
-                className="skill-cluster relative overflow-hidden pt-8 border-t border-border"
+                className="skill-cluster relative overflow-hidden pt-4 lg:pt-8 border-t border-border"
               >
-                <div className="mb-5 pb-4 border-b border-border">
-                  <h3 className="font-ui font-bold text-white text-xl tracking-wide uppercase">
+                <div className="mb-3 lg:mb-5 pb-3 lg:pb-4 border-b border-border">
+                  <h3 className="font-ui font-bold text-white text-base lg:text-xl tracking-wide uppercase">
                     {title}
                   </h3>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 lg:gap-2">
                   {items.map((item) => (
                     <span key={item} className="badge-item">
-                      <StackBadge label={item} />
+                      <StackBadge label={item} className="text-[10px] lg:text-xs px-1.5 lg:px-2 py-0.5 tracking-normal lg:tracking-widest" />
                     </span>
                   ))}
                 </div>
@@ -144,7 +147,7 @@ export default function Skills() {
         </div>
 
         {/* Languages row */}
-        <div className="mt-16 pt-8 border-t border-border flex flex-wrap gap-8">
+        <div className="mt-8 lg:mt-16 pt-6 lg:pt-8 border-t border-border flex flex-wrap gap-6 lg:gap-8">
           <div>
             <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">English</p>
             <p className="font-ui font-bold text-white text-base">B2 — LTC Eastbourne + California</p>

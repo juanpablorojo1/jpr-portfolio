@@ -16,6 +16,9 @@ export default function About() {
     let cleanup = false;
 
     const animate = async () => {
+      // Skip GSAP scrub animations on mobile — elements render visible via CSS
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) return;
+
       const { default: gsap } = await import('gsap');
       const { ScrollTrigger } = await import('gsap/ScrollTrigger');
       gsap.registerPlugin(ScrollTrigger);
@@ -121,7 +124,7 @@ export default function About() {
     <section
       id="about"
       ref={sectionRef}
-      className="relative py-14 lg:py-32 bg-bg overflow-hidden"
+      className="relative py-10 lg:py-32 bg-bg overflow-hidden"
     >
 
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
@@ -130,19 +133,18 @@ export default function About() {
           {t('label')}
         </p>
 
-        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-start">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-24 items-start">
           {/* Text side */}
           <div>
             {/* Headline — staggered line-by-line reveal */}
             <h2
-              className="font-display uppercase leading-tight mb-8"
-              style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}
+              className="font-display uppercase leading-tight mb-4 lg:mb-8"
+              style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)' }}
             >
               <div ref={headlineRef}>
                 <div className="overflow-hidden">
                   <div
                     className="headline-line text-white"
-                    style={{ clipPath: 'inset(100% 0 0 0)' }}
                   >
                     From Biology to Code,
                   </div>
@@ -150,7 +152,7 @@ export default function About() {
                 <div className="overflow-hidden">
                   <div
                     className="headline-line"
-                    style={{ clipPath: 'inset(100% 0 0 0)', color: '#E8272A' }}
+                    style={{ color: '#E8272A' }}
                   >
                     From Lab to Product
                   </div>
@@ -159,7 +161,7 @@ export default function About() {
             </h2>
 
             {/* Paragraphs */}
-            <div ref={paragraphsRef} className="flex flex-col gap-5">
+            <div ref={paragraphsRef} className="flex flex-col gap-3 lg:gap-5">
               <p className="font-ui text-off-white text-body-lg leading-relaxed">
                 {t('p1')}
               </p>
@@ -177,7 +179,7 @@ export default function About() {
             {/* Sub-tagline */}
             <p
               ref={subTaglineRef}
-              className="mt-8 font-ui text-base text-accent italic"
+              className="mt-4 lg:mt-8 font-ui text-base text-accent italic"
             >
               — {t('sub_tagline')}
             </p>

@@ -69,6 +69,9 @@ export default function Experience() {
     let cleanup = false;
 
     const animate = async () => {
+      // Skip GSAP scrub animations on mobile — elements render visible
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) return;
+
       const { default: gsap } = await import('gsap');
       const { ScrollTrigger } = await import('gsap/ScrollTrigger');
       gsap.registerPlugin(ScrollTrigger);
@@ -142,14 +145,14 @@ export default function Experience() {
     <section
       id="experience"
       ref={sectionRef}
-      className="relative pt-8 pb-6 lg:pt-10 lg:pb-8 bg-bg"
+      className="relative pt-10 pb-10 lg:pt-10 lg:pb-8 bg-bg"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <p className="font-mono text-xs text-accent tracking-widest uppercase mb-4">
+        <p className="font-mono text-xs text-accent tracking-widest uppercase mb-3 lg:mb-4">
           {t('label')}
         </p>
 
-        <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Work experience */}
           <div>
             <div className="flex items-baseline gap-4 mb-4">
@@ -165,7 +168,7 @@ export default function Experience() {
                 style={{ transformOrigin: 'top center' }}
               />
 
-              <div className="flex flex-col gap-5 pl-6">
+              <div className="flex flex-col gap-4 lg:gap-5 pl-6">
                 {experienceItems.map((item, i) => (
                   <div key={i} className="timeline-item relative">
                     {/* Dot — rombo */}
@@ -186,7 +189,7 @@ export default function Experience() {
                     <p className="font-ui text-off-white text-base font-bold tracking-wide uppercase mb-1">
                       {item.role}
                     </p>
-                    <p className="font-ui text-muted text-sm leading-snug">
+                    <p className="font-ui text-muted text-sm leading-snug line-clamp-3 lg:line-clamp-none">
                       {item.description}
                     </p>
                   </div>
@@ -202,7 +205,7 @@ export default function Experience() {
               <div className="flex-1 h-px bg-border" />
             </div>
 
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4 lg:gap-6">
               {educationItems.map((item, i) => (
                 <div
                   key={i}

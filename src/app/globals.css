@@ -90,6 +90,8 @@ body {
     position: relative !important;
     overflow: visible !important;
     box-shadow: none !important;
+    z-index: auto !important;
+    top: auto !important;
   }
 
   /* Bigger base text on mobile */
@@ -101,6 +103,52 @@ body {
   .font-ui {
     font-size: 1rem;
     line-height: 1.65;
+  }
+
+  /* ── GSAP scrub animations: force visible on mobile ──
+     GSAP inicia estos elementos con opacity:0 / clipPath hidden para animar
+     con scroll. En mobile deshabilitamos las animaciones scrub pero GSAP
+     ya aplicó el estado inicial — forzamos visible para que el contenido
+     se vea sin depender del scroll position. */
+
+  /* About — paragraphs, sub-tagline, photo */
+  #about p,
+  #about .headline-line {
+    opacity: 1 !important;
+    clip-path: none !important;
+    transform: none !important;
+  }
+
+  /* Skills — clusters y badges */
+  #skills .skill-cluster,
+  #skills .badge-item {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Experience — timeline items y dots */
+  #experience .timeline-item,
+  #experience .timeline-dot {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Contact — headline lines y content */
+  #contact .headline-line,
+  #contact [ref] {
+    opacity: 1 !important;
+    clip-path: none !important;
+    transform: none !important;
+  }
+
+  /* Selector general: cualquier elemento que GSAP haya dejado en opacity:0
+     dentro de secciones mobile — reset conservador */
+  #about > *,
+  #skills > *,
+  #experience > *,
+  #contact > * {
+    /* No forzamos opacity aquí porque puede afectar elementos que SÍ deben
+       estar ocultos (eg. modales cerrados). Solo los elementos específicos arriba. */
   }
 }
 

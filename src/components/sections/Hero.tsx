@@ -189,7 +189,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-bg"
+      className="relative flex flex-col justify-center overflow-hidden bg-bg min-h-screen lg:min-h-screen"
     >
       {/* Particle canvas */}
       <HeroCanvas />
@@ -249,8 +249,8 @@ export default function Hero() {
       </div>
 
       {/* Grid layout: 60/40 desktop, columna unica mobile */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 pt-24 pb-16 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-0 items-center min-h-[calc(100vh-10rem)]">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 pt-24 pb-8 lg:pb-16 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-0 items-center lg:min-h-[calc(100vh-10rem)]">
 
           {/* LEFT — contenido de texto */}
           <div className="flex flex-col justify-center pr-0 lg:pr-8">
