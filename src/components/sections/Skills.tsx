@@ -120,7 +120,7 @@ export default function Skills() {
             return (
               <div
                 key={key}
-                className="skill-cluster relative overflow-hidden pt-4 lg:pt-8 border-t border-border"
+                className="skill-cluster relative overflow-visible lg:overflow-hidden pt-4 lg:pt-8 border-t border-border"
               >
                 <div className="mb-3 lg:mb-5 pb-3 lg:pb-4 border-b border-border">
                   <h3 className="font-ui font-bold text-white text-base lg:text-xl tracking-wide uppercase">
