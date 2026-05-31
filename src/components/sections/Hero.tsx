@@ -31,7 +31,7 @@ export default function Hero() {
   const floatRef2 = useRef<HTMLDivElement>(null);
   const floatRef3 = useRef<HTMLDivElement>(null);
 
-  // GSAP — nombre reveal + texto fade-up (preservado intacto)
+  // GSAP — char-by-char stagger on name (premium Awwwards pattern)
   useEffect(() => {
     let cleanup = false;
 
@@ -39,36 +39,53 @@ export default function Hero() {
       const { default: gsap } = await import('gsap');
       if (cleanup) return;
 
-      const tl = gsap.timeline({ delay: 0.1 });
+      const titleEl = titleRef.current;
+      const surnameEl = surnameRef.current;
+      if (!titleEl || !surnameEl) return;
 
-      tl.fromTo(
-        titleRef.current,
-        { clipPath: 'inset(100% 0 0 0)', opacity: 1 },
-        { clipPath: 'inset(0% 0 0 0)', duration: 0.8, ease: 'expo.out' }
-      );
-      tl.fromTo(
-        surnameRef.current,
-        { clipPath: 'inset(100% 0 0 0)', opacity: 1 },
-        { clipPath: 'inset(0% 0 0 0)', duration: 0.8, ease: 'expo.out' },
-        '-=0.6'
-      );
+      const splitChars = (el: HTMLDivElement) => {
+        const text = el.textContent ?? '';
+        el.innerHTML = text.split('').map(ch =>
+          ch === ' '
+            ? '<span style="display:inline-block;width:0.28em"> </span>'
+            : `<span style="overflow:hidden;display:inline-block;vertical-align:top"><span class="char" style="display:inline-block;clip-path:inset(105% 0 0 0)">${ch}</span></span>`
+        ).join('');
+      };
+
+      splitChars(titleEl);
+      splitChars(surnameEl);
+
+      const tl = gsap.timeline({ delay: 0.05 });
+
+      tl.to(titleEl.querySelectorAll('.char'), {
+        clipPath: 'inset(0% 0 0 0)',
+        duration: 0.55,
+        ease: 'expo.out',
+        stagger: 0.035,
+      });
+      tl.to(surnameEl.querySelectorAll('.char'), {
+        clipPath: 'inset(0% 0 0 0)',
+        duration: 0.55,
+        ease: 'expo.out',
+        stagger: 0.035,
+      }, '-=0.38');
       tl.fromTo(
         roleRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' },
-        '-=0.3'
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' },
+        '-=0.18'
       );
       tl.fromTo(
         taglineRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' },
-        '-=0.4'
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' },
+        '-=0.38'
       );
       tl.fromTo(
         ctasRef.current,
         { opacity: 0, y: 10 },
-        { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' },
-        '-=0.3'
+        { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' },
+        '-=0.28'
       );
     };
 
@@ -111,6 +128,51 @@ export default function Hero() {
 
     initFloats();
     return () => { cleanup = true; };
+  }, []);
+
+  // GSAP — magnetic CTAs (desktop pointer:fine only)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+    if (!ctasRef.current) return;
+
+    let cleanup = false;
+    const controllers: Array<{
+      el: HTMLAnchorElement;
+      move: (e: MouseEvent) => void;
+      leave: () => void;
+    }> = [];
+
+    const init = async () => {
+      const { default: gsap } = await import('gsap');
+      if (cleanup) return;
+
+      const btns = ctasRef.current!.querySelectorAll('a');
+      btns.forEach((btn) => {
+        const move = (e: MouseEvent) => {
+          const rect = btn.getBoundingClientRect();
+          const dx = e.clientX - rect.left - rect.width / 2;
+          const dy = e.clientY - rect.top - rect.height / 2;
+          gsap.to(btn, { x: dx * 0.22, y: dy * 0.22, duration: 0.28, ease: 'power2.out' });
+        };
+        const leave = () => {
+          gsap.to(btn, { x: 0, y: 0, duration: 0.55, ease: 'elastic.out(1, 0.35)' });
+        };
+        btn.addEventListener('mousemove', move);
+        btn.addEventListener('mouseleave', leave);
+        controllers.push({ el: btn, move, leave });
+      });
+    };
+
+    init();
+
+    return () => {
+      cleanup = true;
+      controllers.forEach(({ el, move, leave }) => {
+        el.removeEventListener('mousemove', move);
+        el.removeEventListener('mouseleave', leave);
+      });
+    };
   }, []);
 
   // GSAP — parallax foto derecha con ScrollTrigger
@@ -261,7 +323,6 @@ export default function Hero() {
                 className="font-display text-white leading-none tracking-widest uppercase"
                 style={{
                   fontSize: 'clamp(4rem, 10vw, 8rem)',
-                  clipPath: 'inset(100% 0 0 0)',
                 }}
               >
                 {t('title')}
@@ -274,7 +335,6 @@ export default function Hero() {
                 style={{
                   fontSize: 'clamp(4rem, 10vw, 8rem)',
                   color: '#E8272A',
-                  clipPath: 'inset(100% 0 0 0)',
                 }}
               >
                 {t('surname')}
@@ -355,10 +415,18 @@ export default function Hero() {
 
       {/* Scroll indicator — lateral editorial */}
       <div
-        className="absolute bottom-8 left-6 hidden lg:flex flex-col items-center gap-3 opacity-35"
+        className="absolute bottom-8 left-6 hidden lg:flex flex-col items-center gap-3"
+        style={{ opacity: 0.65 }}
         aria-hidden="true"
       >
-        <div className="w-px h-16 bg-gradient-to-b from-accent to-transparent" />
+        <div
+          className="w-px bg-gradient-to-b from-accent to-transparent"
+          style={{
+            height: '64px',
+            animation: 'scroll-pulse 2s ease-in-out infinite',
+            transformOrigin: 'top center',
+          }}
+        />
         <span
           className="font-mono text-[10px] text-muted tracking-widest uppercase"
           style={{ writingMode: 'vertical-lr', transform: 'rotate(180deg)' }}

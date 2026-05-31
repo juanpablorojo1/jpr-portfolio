@@ -168,3 +168,39 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Film grain overlay — premium texture */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  pointer-events: none;
+  opacity: 0.032;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  animation: grain-shift 0.25s steps(1) infinite;
+}
+
+@keyframes grain-shift {
+  0%   { transform: translate(0, 0); }
+  10%  { transform: translate(-3%, -2%); }
+  20%  { transform: translate(2%, 3%); }
+  30%  { transform: translate(-1%, 4%); }
+  40%  { transform: translate(3%, -3%); }
+  50%  { transform: translate(-2%, 1%); }
+  60%  { transform: translate(1%, -4%); }
+  70%  { transform: translate(-4%, 2%); }
+  80%  { transform: translate(4%, -1%); }
+  90%  { transform: translate(-2%, 3%); }
+  100% { transform: translate(3%, -2%); }
+}
+
+@keyframes scroll-pulse {
+  0%, 100% { opacity: 0.4; transform: scaleY(0.95); transform-origin: top center; }
+  50%       { opacity: 1;   transform: scaleY(1.05); transform-origin: top center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after { animation: none !important; }
+}
