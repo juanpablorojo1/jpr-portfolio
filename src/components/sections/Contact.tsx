@@ -124,10 +124,10 @@ export default function Contact() {
             </p>
             <a
               href={`mailto:${SOCIAL_LINKS.email}`}
-              className="group flex items-center justify-between border-b border-border pb-4 hover:border-accent transition-colors duration-300"
+              className="group flex items-center justify-between border-b border-border pb-4 hover:border-accent transition-colors duration-500"
             >
               <span
-                className="font-display text-white uppercase"
+                className="font-display text-white uppercase transition-colors duration-300 group-hover:text-accent"
                 style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)' }}
               >
                 {SOCIAL_LINKS.email}
@@ -144,7 +144,7 @@ export default function Contact() {
               href={`mailto:${SOCIAL_LINKS.email}`}
               className="group flex items-center gap-2 font-mono text-xs text-muted hover:text-accent transition-colors duration-150 tracking-widest uppercase"
             >
-              <span className="text-accent">01</span>
+              <span className="text-accent transition-transform duration-150 group-hover:translate-x-1 inline-block">01</span>
               <span className="group-hover:text-accent">/ Email</span>
             </a>
             <a
@@ -153,7 +153,7 @@ export default function Contact() {
               rel="noopener noreferrer"
               className="group flex items-center gap-2 font-mono text-xs text-muted hover:text-accent transition-colors duration-150 tracking-widest uppercase"
             >
-              <span className="text-accent">02</span>
+              <span className="text-accent transition-transform duration-150 group-hover:translate-x-1 inline-block">02</span>
               <span>/ LinkedIn</span>
             </a>
             <a
@@ -162,7 +162,7 @@ export default function Contact() {
               rel="noopener noreferrer"
               className="group flex items-center gap-2 font-mono text-xs text-muted hover:text-accent transition-colors duration-150 tracking-widest uppercase"
             >
-              <span className="text-accent">03</span>
+              <span className="text-accent transition-transform duration-150 group-hover:translate-x-1 inline-block">03</span>
               <span>/ GitHub</span>
             </a>
             <a
@@ -171,7 +171,7 @@ export default function Contact() {
               rel="noopener noreferrer"
               className="group flex items-center gap-2 font-mono text-xs text-muted hover:text-accent transition-colors duration-150 tracking-widest uppercase"
             >
-              <span className="text-accent">04</span>
+              <span className="text-accent transition-transform duration-150 group-hover:translate-x-1 inline-block">04</span>
               <span>/ Instagram</span>
             </a>
             <a
@@ -180,7 +180,7 @@ export default function Contact() {
               rel="noopener noreferrer"
               className="group flex items-center gap-2 font-mono text-xs text-muted hover:text-accent transition-colors duration-150 tracking-widest uppercase"
             >
-              <span className="text-accent">05</span>
+              <span className="text-accent transition-transform duration-150 group-hover:translate-x-1 inline-block">05</span>
               <span>/ WhatsApp {SOCIAL_LINKS.phone}</span>
             </a>
           </div>

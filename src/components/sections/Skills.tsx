@@ -67,13 +67,13 @@ export default function Skills() {
     return () => { cleanup = true; };
   }, []);
 
-  const clusterKeys = ['cluster_ai', 'cluster_web', 'cluster_content', 'cluster_bio'] as const;
+  const clusterKeys = ['cluster_ai', 'cluster_web', 'cluster_tools', 'cluster_bio'] as const;
 
   const MARQUEE_ITEMS = [
     'PyTorch', 'YOLOv8m', 'Claude API', 'Next.js', 'FastAPI', 'Supabase', 'GSAP',
     'HyperFrames', 'Gemini Imagen 3', 'DALL-E 3', 'Tailwind', 'Playwright MCP',
-    'Multi-agent', 'Prompt Caching', 'Vercel', 'TypeScript', 'OGL · WebGL',
-    'PyDICOM', 'VS Code', 'GitHub Copilot', 'Remotion', 'Meta API',
+    'Multi-agent Orchestration', 'Prompt Caching', 'Vercel', 'TypeScript', 'WebGL',
+    'PyDICOM', 'Anthropic SDK', 'MCP Protocol', 'Remotion', 'Extended Thinking',
   ];
 
   return (
