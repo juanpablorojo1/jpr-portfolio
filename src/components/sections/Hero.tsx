@@ -480,6 +480,27 @@ export default function Hero() {
         }}
       />
 
+      {/* Reverse marquee strip — desktop only, decorative */}
+      <div
+        className="hidden lg:block absolute bottom-20 left-0 right-0 overflow-hidden pointer-events-none"
+        style={{ opacity: 0.15 }}
+        aria-hidden="true"
+      >
+        <div
+          className="flex gap-12 whitespace-nowrap font-mono text-[10px] tracking-[0.3em] uppercase text-muted"
+          style={{ animation: 'marquee-reverse 25s linear infinite', width: 'max-content' }}
+        >
+          {(['BIOMEDICAL ENGINEER', 'AI DEVELOPER', 'FOUNDER', 'CLINICAL AI', 'FULL-STACK', 'CÓRDOBA AR'] as const).flatMap((label, i) => [
+            <span key={`a${i}`}>{label}</span>,
+            <span key={`d${i}`} style={{ color: '#E8272A' }}>·</span>,
+          ])}
+          {(['BIOMEDICAL ENGINEER', 'AI DEVELOPER', 'FOUNDER', 'CLINICAL AI', 'FULL-STACK', 'CÓRDOBA AR'] as const).flatMap((label, i) => [
+            <span key={`b${i}`}>{label}</span>,
+            <span key={`e${i}`} style={{ color: '#E8272A' }}>·</span>,
+          ])}
+        </div>
+      </div>
+
     </section>
   );
 }

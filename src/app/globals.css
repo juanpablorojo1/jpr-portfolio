@@ -161,6 +161,12 @@ body {
   to { transform: translateX(-50%); }
 }
 
+/* Reverse marquee — Hero section */
+@keyframes marquee-reverse {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
 /* Prefers reduced motion — accesibilidad */
 @media (prefers-reduced-motion: reduce) {
   *,
