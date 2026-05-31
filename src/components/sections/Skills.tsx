@@ -95,9 +95,9 @@ export default function Skills() {
         </h2>
 
         {/* Marquee */}
-        <div className="relative overflow-hidden mb-8 lg:mb-16 border-y border-border py-3">
+        <div className="marquee-container relative overflow-hidden mb-8 lg:mb-16 border-y border-border py-3">
           <div
-            className="flex gap-8 whitespace-nowrap"
+            className="marquee-content flex gap-8 whitespace-nowrap"
             style={{ animation: 'marquee 30s linear infinite', width: 'max-content' }}
           >
             {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((tech, i) => (

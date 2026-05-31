@@ -161,6 +161,11 @@ body {
   to { transform: translateX(-50%); }
 }
 
+/* Skills marquee — pause on hover */
+.marquee-container:hover .marquee-content {
+  animation-play-state: paused;
+}
+
 /* Contact headline_2 — force accent on mobile (GSAP color shift skipped on mobile) */
 @media (max-width: 1023px) {
   #contact .headline-line-accent {
