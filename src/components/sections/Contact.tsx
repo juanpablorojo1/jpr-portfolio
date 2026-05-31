@@ -11,6 +11,7 @@ export default function Contact() {
   const cvHref = locale === 'es' ? '/CV_Juan_Pablo_Rojo_ES.pdf' : '/CV_Juan_Pablo_Rojo_EN.pdf';
   const headlineRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const headline2Ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cleanup = false;
@@ -46,6 +47,24 @@ export default function Contact() {
 
         // Pin removido — el card stack (TransitionZone) ya es sticky con overflow:hidden,
         // GSAP pin inserta un .pin-spacer que queda clippeado y hace invisible el headline.
+      }
+
+      // headline_2 color shift — off-white to accent red with scrub
+      if (headline2Ref.current) {
+        gsap.fromTo(
+          headline2Ref.current,
+          { color: '#E8E4DE' },
+          {
+            color: '#E8272A',
+            ease: 'none',
+            scrollTrigger: {
+              trigger: headline2Ref.current,
+              start: 'top bottom',
+              end: 'top 40%',
+              scrub: 2,
+            },
+          }
+        );
       }
 
       if (contentRef.current) {
@@ -98,10 +117,11 @@ export default function Contact() {
           </div>
           <div className="overflow-hidden">
             <div
-              className="headline-line font-display uppercase leading-none"
+              ref={headline2Ref}
+              className="headline-line headline-line-accent font-display uppercase leading-none"
               style={{
                 fontSize: 'clamp(2.8rem, 13vw, 11rem)',
-                color: '#E8272A',
+                color: '#E8E4DE',
               }}
             >
               {t('headline_2')}
