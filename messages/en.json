@@ -17,10 +17,10 @@
   "about": {
     "label": "About",
     "headline": "From Biology to Code, From Lab to Product",
-    "p1": "I'm a Biomedical Engineer finishing my degree at UNC Córdoba, specializing in AI for medical imaging. My thesis — TraumaVision — is a clinical decision support system that detects fractures in X-rays with 97.18% accuracy and 86.6% sensitivity.",
-    "p2": "In 2026 I founded Eleven, an AI-first digital agency. We build web products, AI agents, and AI-generated digital content for SMBs.",
-    "p3": "First place at Rocking the Industry — the world's first industrial hackathon by RTS Group. 150 multidisciplinary teams of 5 people, 2025.",
-    "p4": "24 years old, based in Córdoba, Argentina. Native Spanish, English certified at LTC Eastbourne Language School. Eight months working in California.",
+    "p1": "Biomedical Engineer finishing at UNC Córdoba. My thesis — TraumaVision — detects bone fractures in X-rays with 97.18% accuracy and AUC-ROC 0.973. Clinical-grade AI, built from scratch.",
+    "p2": "In 2026 I founded Eleven: an AI-native digital agency. 38-agent coordinated pipeline, Claude API at its core, 4 products live in production.",
+    "p3": "1st place at Rocking the Industry — world's first industrial hackathon by RTS Group. 150 multidisciplinary teams. Team Algarroba LID.",
+    "p4": "24 years old. Córdoba, Argentina. 8 months working in California — that's where I actually learned English.",
     "sub_tagline": "Where Biology Meets the Algorithm."
   },
   "projects": {
@@ -75,9 +75,20 @@
       "title": "Web Dev",
       "items": ["Next.js · React", "TypeScript · JavaScript", "FastAPI · Uvicorn · Python", "Supabase · PostgreSQL · SQLite", "GSAP · ScrollTrigger", "Tailwind CSS · shadcn/ui", "OGL · WebGL", "Vercel · GitHub · Git", "VS Code · GitHub Copilot", "Playwright MCP", "MCP Protocol · Claude Code CLI", "Meta API · WhatsApp Business", "next-intl · i18n", "REST APIs · JSON", "Node.js", "Resend · Email APIs", "HTML · CSS · SVG"]
     },
-    "cluster_content": {
-      "title": "Content & Media",
-      "items": ["HyperFrames · Video from HTML", "Remotion", "Canva MCP", "Video Editing", "Social Media Production", "AI-generated Images", "Animated Presentations", "Instagram · Reels · Stories", "Brand System Design", "Copywriting · AIDA · PAS"]
+    "cluster_tools": {
+      "title": "Tools & Automation",
+      "items": [
+        "HyperFrames · Video from HTML",
+        "Remotion",
+        "Canva MCP",
+        "Playwright MCP",
+        "Meta API · WhatsApp Business",
+        "AI-generated Images",
+        "Brand System Design",
+        "Copywriting · AIDA · PAS",
+        "Video Editing",
+        "Animated Presentations"
+      ]
     },
     "cluster_bio": {
       "title": "Biomedical",
@@ -130,8 +141,8 @@
   },
   "contact": {
     "label": "Contact",
-    "headline_1": "CONTACT",
-    "headline_2": "METHODS.",
+    "headline_1": "LET'S BUILD",
+    "headline_2": "SOMETHING.",
     "subtitle": "Open to AI/ML, biomedical engineering, and full-stack roles — remote worldwide or on-site in Córdoba, Argentina.",
     "email_label": "Email",
     "linkedin_label": "LinkedIn",
