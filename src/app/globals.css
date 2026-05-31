@@ -126,11 +126,14 @@ body {
     transform: none !important;
   }
 
-  /* Experience — timeline items y dots */
+  /* Experience — timeline items, dots, per-item lines, and role reveals */
   #experience .timeline-item,
-  #experience .timeline-dot {
+  #experience .timeline-dot,
+  #experience .timeline-item-line,
+  #experience .timeline-role {
     opacity: 1 !important;
     transform: none !important;
+    clip-path: none !important;
   }
 
   /* Contact — headline lines y content */

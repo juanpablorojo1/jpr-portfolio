@@ -134,11 +134,82 @@ export default function Experience() {
             },
           }
         );
+
+        // Per-item vertical lines — scaleY scrub (each grows as its item enters)
+        const itemLines = itemsRef.current.querySelectorAll('.timeline-item-line');
+        itemLines.forEach((line, idx) => {
+          const item = items[idx];
+          if (!item) return;
+          gsap.fromTo(
+            line,
+            { scaleY: 0 },
+            {
+              scaleY: 1,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: item,
+                start: 'top 85%',
+                end: 'bottom 60%',
+                scrub: 1.2,
+              },
+            }
+          );
+        });
+
+        // Role clip-path reveal — horizontal wipe with scrub
+        const roles = itemsRef.current.querySelectorAll('.timeline-role');
+        roles.forEach((role, idx) => {
+          const item = items[idx];
+          if (!item) return;
+          gsap.fromTo(
+            role,
+            { clipPath: 'inset(0 100% 0 0)' },
+            {
+              clipPath: 'inset(0 0% 0 0)',
+              ease: 'none',
+              scrollTrigger: {
+                trigger: item,
+                start: 'top 80%',
+                end: 'top 40%',
+                scrub: 1.5,
+              },
+            }
+          );
+        });
       }
     };
 
     animate();
     return () => { cleanup = true; };
+  }, []);
+
+  // Dot ping on enter — one-shot IntersectionObserver
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.innerWidth < 1024) return;
+    const pings = itemsRef.current?.querySelectorAll('.timeline-dot-ping');
+    if (!pings) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const el = entry.target as HTMLElement;
+            el.style.opacity = '0.6';
+            el.classList.add('animate-ping');
+            // Remove ping after one cycle so it doesn't loop forever
+            setTimeout(() => {
+              el.classList.remove('animate-ping');
+              el.style.opacity = '0';
+            }, 900);
+            observer.unobserve(el);
+          }
+        });
+      },
+      { threshold: 0.8 }
+    );
+
+    pings.forEach((ping) => observer.observe(ping));
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -171,11 +242,24 @@ export default function Experience() {
               <div className="flex flex-col gap-4 lg:gap-5 pl-6">
                 {experienceItems.map((item, i) => (
                   <div key={i} className="timeline-item relative">
-                    {/* Dot — rombo */}
+                    {/* Per-item vertical connector — grows scaleY with scroll */}
                     <div
-                      className="timeline-dot absolute -left-[1.75rem] top-2 w-3 h-3 bg-accent"
-                      style={{ transform: 'rotate(45deg)' }}
+                      className="timeline-item-line absolute left-0 top-0 bottom-0 w-0.5 bg-border -translate-x-6"
+                      style={{ transformOrigin: 'top center' }}
                     />
+
+                    {/* Dot — rombo with one-shot ping ring */}
+                    <div className="absolute -left-[1.75rem] top-2">
+                      {/* Ping ring — revealed via IntersectionObserver */}
+                      <div
+                        className="timeline-dot-ping absolute inset-0 w-3 h-3 bg-accent opacity-0"
+                        style={{ transform: 'rotate(45deg)', animationDuration: '1s' }}
+                      />
+                      <div
+                        className="timeline-dot w-3 h-3 bg-accent"
+                        style={{ transform: 'rotate(45deg)' }}
+                      />
+                    </div>
 
                     <p className="font-mono text-sm text-accent tracking-widest uppercase mb-2">
                       {item.year}
@@ -186,9 +270,14 @@ export default function Experience() {
                     >
                       {item.company}
                     </p>
-                    <p className="font-ui text-off-white text-base font-bold tracking-wide uppercase mb-1">
-                      {item.role}
-                    </p>
+                    <div className="overflow-hidden">
+                      <p
+                        className="timeline-role font-ui text-off-white text-base font-bold tracking-wide uppercase mb-1"
+                        style={{ clipPath: 'inset(0 100% 0 0)' }}
+                      >
+                        {item.role}
+                      </p>
+                    </div>
                     <p className="font-ui text-muted text-sm leading-snug line-clamp-3 lg:line-clamp-none">
                       {item.description}
                     </p>
