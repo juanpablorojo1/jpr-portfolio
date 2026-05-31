@@ -58,9 +58,11 @@ export default function HomePage() {
           <Projects />
         </TransitionZone>
 
-        <TransitionZone sectionId="skills" zIndex={40}>
+        {/* Skills — outside card stack so all content is reachable via normal scroll.
+            Experience (zIndex 50) still slides over it naturally as the user scrolls. */}
+        <div style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
           <Skills />
-        </TransitionZone>
+        </div>
 
         <TransitionZone sectionId="experience" zIndex={50}>
           <Experience />
