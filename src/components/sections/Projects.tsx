@@ -82,6 +82,8 @@ export default function Projects() {
     let cleanup = false;
 
     const animate = async () => {
+      // Respect prefers-reduced-motion — skip scroll-driven GSAP animations
+      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const { default: gsap } = await import('gsap');
       const { ScrollTrigger } = await import('gsap/ScrollTrigger');
       gsap.registerPlugin(ScrollTrigger);

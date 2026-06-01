@@ -17,7 +17,7 @@
   "about": {
     "label": "About",
     "headline": "From Biology to Code, From Lab to Product",
-    "p1": "Biomedical Engineer finishing at UNC Córdoba. My thesis — TraumaVision — detects bone fractures in X-rays with 97.18% accuracy and AUC-ROC 0.973. Clinical-grade AI, built from scratch.",
+    "p1": "Biomedical Engineer finishing at UNC Córdoba. My thesis — TraumaVision — detects bone fractures in X-rays with 97.18% accuracy and Recall 86.6%. Clinical-grade AI, built from scratch.",
     "p2": "In 2026 I founded Eleven: an AI-native digital agency. 38-agent coordinated pipeline, Claude API at its core, 4 products live in production.",
     "p3": "1st place at Rocking the Industry — world's first industrial hackathon by RTS Group. 150 multidisciplinary teams. Team Algarroba LID.",
     "p4": "24 years old. Córdoba, Argentina. 8 months working in California — that's where I actually learned English.",
@@ -112,9 +112,9 @@
       },
       {
         "year": "2023–2024",
-        "company": "UNC — Faculty of Medical Sciences",
+        "company": "UNC — Faculty of Exact, Physical and Natural Sciences",
         "role": "Teaching Assistant — Human Physiology",
-        "description": "Teaching assistant for Human Physiology at the Faculty of Medical Sciences, UNC. Supported theoretical and practical classes, exam preparation, and student mentoring."
+        "description": "Teaching assistant for Human Physiology at the Faculty of Exact, Physical and Natural Sciences, UNC. Supported theoretical and practical classes, exam preparation, and student mentoring."
       },
       {
         "year": "2022–2023",

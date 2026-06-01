@@ -15,6 +15,8 @@ export default function Skills() {
     const animate = async () => {
       // Skip GSAP scrub animations on mobile — elements render visible
       if (typeof window !== 'undefined' && window.innerWidth < 1024) return;
+      // Respect prefers-reduced-motion — elements render fully visible via CSS fallback
+      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       const { default: gsap } = await import('gsap');
       const { ScrollTrigger } = await import('gsap/ScrollTrigger');
@@ -138,7 +140,7 @@ export default function Skills() {
 
                 {i === 0 && (
                   <p className="mt-4 pt-3 border-t border-border font-mono text-xs text-off-white tracking-wide">
-                    AUC-ROC 0.973 · mAP50 0.919
+                    Recall 86.6% · mAP50 91.9%
                   </p>
                 )}
               </div>

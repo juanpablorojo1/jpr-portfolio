@@ -20,6 +20,8 @@ export default function About() {
     const animate = async () => {
       // Skip GSAP scrub animations on mobile — elements render visible via CSS
       if (typeof window !== 'undefined' && window.innerWidth < 1024) return;
+      // Respect prefers-reduced-motion — elements render fully visible via CSS fallback
+      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       const { default: gsap } = await import('gsap');
       const { ScrollTrigger } = await import('gsap/ScrollTrigger');

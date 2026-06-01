@@ -36,6 +36,8 @@ export default function Hero() {
     let cleanup = false;
 
     const animate = async () => {
+      // Respect prefers-reduced-motion — skip all GSAP animations
+      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const { default: gsap } = await import('gsap');
       if (cleanup) return;
 
@@ -100,6 +102,7 @@ export default function Hero() {
 
     const initFloats = async () => {
       if (typeof window === 'undefined' || window.innerWidth <= 1024) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       const { default: gsap } = await import('gsap');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -144,6 +147,7 @@ export default function Hero() {
     }> = [];
 
     const init = async () => {
+      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const { default: gsap } = await import('gsap');
       if (cleanup) return;
 
@@ -180,6 +184,7 @@ export default function Hero() {
     let cleanup = false;
 
     const initParallax = async () => {
+      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const { default: gsap } = await import('gsap');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { ScrollTrigger } = await import('gsap/ScrollTrigger') as any;
@@ -213,6 +218,7 @@ export default function Hero() {
     let intervalId: ReturnType<typeof setInterval>;
 
     const initCrossfade = async () => {
+      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const { default: gsap } = await import('gsap');
       if (cleanup) return;
 
