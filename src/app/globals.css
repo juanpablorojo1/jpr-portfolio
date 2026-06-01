@@ -13,8 +13,8 @@
   --color-accent-border: rgba(232, 39, 42, 0.30);
   --color-white: #FFFFFF;
   --color-off-white: #E8E4DE;
-  --color-muted: #666666;
-  --color-border: #2A2A2A;
+  --color-muted: #888888;
+  --color-border: #3A3A3A;
   --color-border-subtle: rgba(255, 255, 255, 0.06);
   --color-grid: rgba(255, 255, 255, 0.04);
   --color-scanline: rgba(255, 255, 255, 0.03);
@@ -25,7 +25,7 @@
   --font-mono: var(--font-jetbrains-mono), 'Fira Code', monospace;
 
   /* Shadows */
-  --shadow-card: 0 0 0 1px #2A2A2A;
+  --shadow-card: 0 0 0 1px #3A3A3A;
   --shadow-card-hover: 0 0 24px rgba(232, 39, 42, 0.12), 0 0 0 1px #E8272A;
   --shadow-accent-glow: 0 0 16px rgba(232, 39, 42, 0.4), 0 0 48px rgba(232, 39, 42, 0.15);
   --shadow-text-glow: 0 0 20px rgba(232, 39, 42, 0.6);
@@ -187,6 +187,11 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* Hero: ensure GSAP opacity-0 initial state is overridden when animations are skipped */
+  #hero .opacity-0 {
+    opacity: 1 !important;
   }
 }
 

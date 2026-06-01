@@ -235,7 +235,8 @@ export default function About() {
                 src="/images/portrait.jpg"
                 alt="Juan Pablo Rojo"
                 fill
-                className="object-cover object-top grayscale"
+                className="object-cover object-top"
+                style={{ filter: 'grayscale(85%) contrast(1.05)' }}
                 sizes="(max-width: 768px) 80vw, 40vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-bg/60 to-transparent" />

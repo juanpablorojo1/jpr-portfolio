@@ -26,8 +26,8 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
       onComplete();
     };
 
-    // Absolute fallback — always fires at 3.5s no matter what
-    const fallback = setTimeout(complete, 3500);
+    // Absolute fallback — always fires at 2.8s no matter what
+    const fallback = setTimeout(complete, 2800);
 
     const run = async () => {
       try {
@@ -46,7 +46,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
         tl.fromTo(
           progress,
           { scaleX: 0 },
-          { scaleX: 1, duration: 1.8, ease: 'power2.inOut', transformOrigin: 'left center' },
+          { scaleX: 1, duration: 1.2, ease: 'power2.inOut', transformOrigin: 'left center' },
           0.3
         );
 
@@ -59,7 +59,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
             ease: 'expo.inOut',
             onComplete: complete,
           },
-          2.2
+          1.6
         );
       } catch {
         // GSAP failed — fire complete after CSS transition

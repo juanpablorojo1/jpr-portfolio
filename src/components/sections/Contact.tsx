@@ -296,10 +296,10 @@ export default function Contact() {
             height={28}
             className="h-7 w-auto opacity-60"
           />
-          <p className="font-mono text-xs text-border hidden sm:block">
+          <p className="font-mono text-xs text-muted hidden sm:block">
             Built with Next.js · GSAP · Tailwind
           </p>
-          <p className="font-mono text-xs text-border">
+          <p className="font-mono text-xs text-muted">
             {t('copyright')}
           </p>
         </div>

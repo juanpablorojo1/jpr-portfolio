@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 
@@ -14,6 +14,8 @@ const PHOTOS = [
 
 export default function Hero() {
   const t = useTranslations('hero');
+  const locale = useLocale();
+  const cvHref = locale === 'es' ? '/CV_Juan_Pablo_Rojo_ES.pdf' : '/CV_Juan_Pablo_Rojo_EN.pdf';
   const titleRef = useRef<HTMLDivElement>(null);
   const surnameRef = useRef<HTMLDivElement>(null);
   const roleRef = useRef<HTMLDivElement>(null);
@@ -37,7 +39,15 @@ export default function Hero() {
 
     const animate = async () => {
       // Respect prefers-reduced-motion — skip all GSAP animations
-      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        // Ensure opacity-0 elements are visible when animations are skipped
+        const { default: gsap } = await import('gsap');
+        gsap.set(
+          [roleRef.current, taglineRef.current, ctasRef.current].filter(Boolean),
+          { opacity: 1, y: 0, clearProps: 'transform' }
+        );
+        return;
+      }
       const { default: gsap } = await import('gsap');
       if (cleanup) return;
 
@@ -358,7 +368,7 @@ export default function Hero() {
             {/* Tagline */}
             <div
               ref={taglineRef}
-              className="font-ui text-off-white text-xl md:text-3xl font-light leading-snug mb-10 max-w-2xl opacity-0"
+              className="font-ui text-off-white text-xl md:text-3xl leading-snug mb-10 max-w-2xl opacity-0"
             >
               {t('tagline')}
             </div>
@@ -380,7 +390,7 @@ export default function Hero() {
                 {t('cta1')}
               </a>
               <a
-                href="/CV_Juan_Pablo_Rojo_EN.pdf"
+                href={cvHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="

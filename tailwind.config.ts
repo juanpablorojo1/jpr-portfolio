@@ -15,8 +15,8 @@ const config: Config = {
         accent: "#E8272A",
         "accent-dark": "#8B1517",
         "off-white": "#E8E4DE",
-        muted: "#666666",
-        border: "#2A2A2A",
+        muted: "#888888",
+        border: "#3A3A3A",
       },
       fontFamily: {
         display: ["var(--font-bebas-neue)", "Arial Narrow", "sans-serif"],

@@ -113,10 +113,10 @@ export default function Projects() {
             trigger: sectionRef.current,
             start: `${i * 33.33}% top`,
             end: `${(i + 1) * 33.33}% top`,
-            onEnter: () => { dot.style.background = '#E8272A'; },
-            onLeave: () => { dot.style.background = '#2A2A2A'; },
-            onEnterBack: () => { dot.style.background = '#E8272A'; },
-            onLeaveBack: () => { dot.style.background = '#2A2A2A'; },
+            onEnter: () => { dot.style.background = '#E8272A'; dot.style.width = '12px'; },
+            onLeave: () => { dot.style.background = '#555555'; dot.style.width = '6px'; },
+            onEnterBack: () => { dot.style.background = '#E8272A'; dot.style.width = '12px'; },
+            onLeaveBack: () => { dot.style.background = '#555555'; dot.style.width = '6px'; },
           });
         });
       }
@@ -149,7 +149,7 @@ export default function Projects() {
   return (
     <div id="projects">
       {/* ── Mobile layout (<lg): 3 proyectos apilados verticalmente ── */}
-      <section className="block lg:hidden py-24 bg-bg">
+      <section className="block lg:hidden py-24 bg-bg" aria-hidden="true">
         <div className="max-w-7xl mx-auto px-6">
           <p className="font-mono text-xs text-accent tracking-widest uppercase mb-16">{t('label')}</p>
 
@@ -239,7 +239,7 @@ export default function Projects() {
         ref={sectionRef}
         className="hidden lg:block py-0 bg-bg"
         style={{ height: '300vh' }}
-        aria-hidden="true"
+        aria-label="Projects"
       >
         {/* Sticky container — se pina y hace scroll horizontal */}
         <div
@@ -537,8 +537,8 @@ export default function Projects() {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="w-1.5 h-1.5 bg-border"
-                style={{ transition: 'background 0.3s' }}
+                className="h-1.5 bg-[#555555]"
+                style={{ transition: 'background 0.3s, width 0.3s', width: '6px' }}
                 data-dot={i}
               />
             ))}
