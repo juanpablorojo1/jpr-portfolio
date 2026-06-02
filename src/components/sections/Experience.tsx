@@ -218,7 +218,7 @@ export default function Experience() {
     <section
       id="experience"
       ref={sectionRef}
-      className="relative pt-10 pb-10 lg:pt-10 lg:pb-8 bg-bg"
+      className="relative bg-bg pt-10 pb-10 lg:py-0 lg:min-h-screen lg:flex lg:flex-col lg:justify-center"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <p className="font-mono text-xs text-accent tracking-widest uppercase mb-3 lg:mb-4">

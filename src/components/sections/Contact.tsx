@@ -188,21 +188,12 @@ export default function Contact() {
               <span>/ GitHub</span>
             </a>
             <a
-              href={SOCIAL_LINKS.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center gap-2 font-mono text-xs text-muted hover:text-accent transition-colors duration-150 tracking-widest uppercase"
-            >
-              <span className="text-accent transition-transform duration-150 group-hover:translate-x-1 inline-block">04</span>
-              <span>/ Instagram</span>
-            </a>
-            <a
               href={SOCIAL_LINKS.whatsapp}
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center gap-2 font-mono text-xs text-muted hover:text-accent transition-colors duration-150 tracking-widest uppercase"
             >
-              <span className="text-accent transition-transform duration-150 group-hover:translate-x-1 inline-block">05</span>
+              <span className="text-accent transition-transform duration-150 group-hover:translate-x-1 inline-block">04</span>
               <span>/ WhatsApp {SOCIAL_LINKS.phone}</span>
             </a>
           </div>
@@ -236,20 +227,6 @@ export default function Contact() {
               "
             >
               {t('github_label')} ↗
-            </a>
-            <a
-              href={SOCIAL_LINKS.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="
-                font-ui font-bold text-sm text-white
-                border border-border px-6 py-3
-                tracking-widest uppercase
-                transition-all duration-200
-                hover:border-accent hover:text-accent
-              "
-            >
-              {t('instagram_label')} ↗
             </a>
             <a
               href={cvHref}

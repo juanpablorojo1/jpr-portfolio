@@ -93,7 +93,7 @@ export default function Skills() {
           className="font-display text-white uppercase leading-none mb-4 lg:mb-8"
           style={{ fontSize: 'clamp(2.5rem, 7vw, 6rem)' }}
         >
-          Tech Stack
+          {t('headline')}
         </h2>
 
         {/* Marquee */}

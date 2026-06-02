@@ -67,6 +67,7 @@
   },
   "skills": {
     "label": "Tech Stack",
+    "headline": "Clinical Stack",
     "cluster_ai": {
       "title": "AI / ML",
       "items": ["PyTorch · CUDA", "YOLOv8m · Ultralytics", "Claude API · Anthropic SDK", "Claude Sonnet · Haiku · Opus", "OpenCV · CLAHE", "PyDICOM · DICOM", "Scikit-learn", "NumPy · Pandas", "Jupyter · Matplotlib", "Prompt Engineering", "Prompt Caching · Extended Thinking", "Tool Use · Function Calling", "Multi-agent Orchestration", "RAG Systems", "Gemini Imagen 3", "DALL-E 3 · GPT-4o", "Replicate · Real-ESRGAN"]
