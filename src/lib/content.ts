@@ -73,6 +73,22 @@ export const ELEVEN_SCREENSHOTS = [
   { src: '/images/eleven-06-contacto.jpg', alt: 'Eleven — Sección contacto y footer', label: 'CONTACTO' },
 ] as const;
 
+export const KIBBO_STACK = [
+  'Next.js', 'TypeScript', 'Tailwind CSS', 'SSR · SSG',
+  'GSAP', 'ScrollSmoother', 'ScrollTrigger', 'gsap.matchMedia',
+  'Scrollytelling', 'Mask Reveals', 'View Transitions', 'Custom Cursor',
+  'Brand Preloader', 'next/font · Montserrat · Inter', 'WebP Assets',
+  'AWS Amplify', 'Vercel', 'Playwright MCP', 'Claude in Chrome', 'Lighthouse 93+',
+] as const;
+
+export const KIBBO_SCREENSHOTS = [
+  { src: '/images/kibbo-01-hero.jpg', alt: 'KIBBO — Hero con wordmark de marca y red de constelaciones', label: 'HERO' },
+  { src: '/images/kibbo-02-quees.jpg', alt: 'KIBBO — Qué es KIBBO, mockup de laptop con la marca', label: '¿QUÉ ES?' },
+  { src: '/images/kibbo-03-inventario.jpg', alt: 'KIBBO — Inventario del parque: serial, QR, servicio y estado', label: 'INVENTARIO' },
+  { src: '/images/kibbo-04-dashboard.jpg', alt: 'KIBBO — Dashboard de operatividad en laptop y app móvil', label: 'DASHBOARD' },
+  { src: '/images/kibbo-05-resenas.jpg', alt: 'KIBBO — Opiniones de usuarios de bioingeniería hospitalaria', label: 'RESEÑAS' },
+] as const;
+
 export const HACKATHON_STACK = ['Team: Algarroba LID', 'RTS Group', '2025'] as const;
 
 export const HACKATHON_PHOTOS = [

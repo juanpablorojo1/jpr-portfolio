@@ -63,6 +63,21 @@
       "event_stat_place": "1ER PUESTO",
       "event_stat_team": "ALGARROBA LID",
       "event_stat_organizer": "RTS GROUP · 2025"
+    },
+    "kibbo": {
+      "title": "KIBBO",
+      "subtitle": "SaaS de Equipos Médicos · Construido vía Eleven",
+      "description": "Sitio nivel awwwards de KIBBO, un SaaS de gestión de equipos médicos hospitalarios. Scrollytelling pesado con GSAP sobre Next.js SSR.",
+      "description_expanded": "Diseñé y construí el sitio nivel awwwards de KIBBO, un SaaS de gestión de equipos médicos hospitalarios: inventario, hoja de vida por equipo, mantenimientos preventivos y correctivos, órdenes de trabajo y dashboard de operatividad. Scrollytelling pesado con GSAP y ScrollSmoother, reveals por máscara, cursor custom, preloader de marca y transiciones de página con view-transitions, sobre Next.js con SSR. Lead Developer vía Eleven. Argentina, 2026.",
+      "role": "Lead Developer",
+      "role_label": "Rol",
+      "stat_role": "LEAD DEV",
+      "stat_role_label": "Rol",
+      "stat_product": "SAAS B2B",
+      "stat_product_label": "Producto",
+      "stat_live": "LIVE",
+      "stat_live_label": "Estado",
+      "cta": "Ver sitio"
     }
   },
   "skills": {
