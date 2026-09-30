@@ -30,7 +30,7 @@
       "label": "Thesis Project — UNC Córdoba, 2025",
       "title": "TraumaVision AI",
       "subtitle": "Clinical Decision Support System for Fracture Detection in X-Rays",
-      "description": "End-to-end CDSS for fracture detection in X-ray images. 97.18% accuracy, 86.6% sensitivity, AUC-ROC 0.973. Currently competing in entrepreneurship programs (EmprendeU and others) seeking investment to launch TraumaVision to market.",
+      "description": "End-to-end CDSS for fracture detection in X-ray images. 97.18% accuracy, 86.6% sensitivity, AUC-ROC 0.973. Now scaling: extending detection from the wrist to the whole body, and taking TraumaVision through entrepreneurship programs such as Emprende U 2026.",
       "metric_auc": "AUC-ROC",
       "metric_map50": "mAP@50",
       "metric_recall": "Recall",
@@ -291,8 +291,14 @@
       {
         "year": "2026",
         "institution": "Emprende U 2026",
-        "degree": "Semifinalist — University category",
-        "detail": "TraumaVision AI · Federal competition run by six Argentine national universities"
+        "degree": "University category · TraumaVision AI",
+        "detail": "Federal competition run by six Argentine national universities"
+      },
+      {
+        "year": "2025",
+        "institution": "Rocking the Industry — RTS Group",
+        "degree": "1st place · Team Algarroba LID",
+        "detail": "World's first industrial hackathon · 150 multidisciplinary teams"
       }
     ]
   },
