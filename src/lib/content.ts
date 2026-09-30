@@ -107,10 +107,12 @@ export const LEEX_STACK = [
   'pdfplumber + OCR', 'pytest', 'Vitest', 'GitHub Actions', 'Vercel',
 ] as const;
 
+// Opens with the verdict (the product's core); the detection shot, which shows the
+// "incomplete sweep" warning, sits 3rd with a caption that frames it as a decision.
 export const LEEX_SCREENSHOTS = [
-  '/images/leex-01-deteccion.jpg',
   '/images/leex-02-veredicto.jpg',
   '/images/leex-03-mi-trabajo.jpg',
+  '/images/leex-01-deteccion.jpg',
   '/images/leex-04-tablero.jpg',
   '/images/leex-05-fuentes.jpg',
 ] as const;

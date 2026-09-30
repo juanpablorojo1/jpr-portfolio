@@ -78,7 +78,8 @@
         "close": "[ESC] Close",
         "close_aria": "Close screenshot viewer",
         "prev": "Previous screenshot",
-        "next": "Next screenshot"
+        "next": "Next screenshot",
+        "full_size": "Open full size ↗"
       }
     },
     "kibbo": {
@@ -144,9 +145,9 @@
       ],
       "blur_note": "Client data and amounts blurred",
       "shots": [
-        { "label": "Detection", "caption": "Automatic detection — the day's batch, already triaged." },
         { "label": "Verdict", "caption": "The file — a verdict drafted per requirement, with cited evidence." },
         { "label": "My work", "caption": "My work — due today, on time and past opening, across the whole team." },
+        { "label": "Detection", "caption": "Automatic detection — when a sweep comes back incomplete, the system says so instead of hiding it." },
         { "label": "Board", "caption": "The board — due soon, unassigned, in progress, detected." },
         { "label": "Sources", "caption": "Source health — 'nothing there' is not 'couldn't see'." }
       ]
@@ -155,7 +156,9 @@
   "videos": {
     "label": "Motion & Video",
     "headline": "Frame by Frame",
-    "intro": "Short pieces, one idea each. Tap to play with sound.",
+    "intro": "Short pieces, one idea each.",
+    "intro_click": "Click to play with sound.",
+    "intro_tap": "Tap to play with sound.",
     "play": "Play",
     "play_aria": "Play video: {title}",
     "audio_es": "Audio ES",

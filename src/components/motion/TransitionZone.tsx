@@ -28,6 +28,7 @@ export default function TransitionZone({
   return (
     <div
       className="transition-zone"
+      data-section={sectionId}
       style={{
         position: 'sticky',
         top: 0,

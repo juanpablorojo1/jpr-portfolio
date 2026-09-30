@@ -44,6 +44,9 @@ export default function Projects() {
   const metricsRef = useRef<HTMLDivElement>(null);
   const horizontalRef = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
+  // Scroll position where the rail starts moving (from its ScrollTrigger). The section
+  // lives inside a sticky card, so its bounding rect can't tell us that.
+  const railStartRef = useRef<() => number | null>(() => null);
 
   // Lightbox state: null = closed, number = index of open screenshot
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -113,7 +116,7 @@ export default function Projects() {
 
       // Scroll horizontal: pinea el contenedor sticky y mueve el rail (desktop only)
       if (horizontalRef.current && railRef.current && window.innerWidth >= 1024) {
-        gsap.to(railRef.current, {
+        const tween = gsap.to(railRef.current, {
           x: () => -(railRef.current!.offsetWidth - window.innerWidth),
           ease: 'none',
           scrollTrigger: {
@@ -124,6 +127,7 @@ export default function Projects() {
             invalidateOnRefresh: true,
           },
         });
+        railStartRef.current = () => tween.scrollTrigger?.start ?? null;
       }
 
       // Progress dots — one per project. Panels can be wider than 100vw (case
@@ -163,6 +167,59 @@ export default function Projects() {
       cleanup = true;
       window.removeEventListener('scroll', onScroll);
       // No necesitamos matar ScrollTriggers aquí — GSAP los maneja en unmount
+    };
+  }, []);
+
+  // Keyboard: when focus lands on something in an off-screen part of the rail, scroll the
+  // page to the spread that contains it (the rail follows the page scroll).
+  useEffect(() => {
+    const rail = railRef.current;
+    const section = sectionRef.current;
+    if (!rail || !section) return;
+    const onFocusIn = (e: FocusEvent) => {
+      if (window.innerWidth < 1024) return;
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const r = target.getBoundingClientRect();
+      // Mouse clicks / focus on something already on screen: leave the page alone
+      if (r.left >= 0 && r.right <= window.innerWidth) return;
+      // Position inside the rail (independent of the current GSAP offset)
+      const x = r.left - rail.getBoundingClientRect().left;
+      const unit = Math.min(Math.max(Math.floor(x / window.innerWidth), 0), RAIL_UNITS - 1);
+      const sync = () => {
+        const start = railStartRef.current();
+        if (start === null) return;
+        const top = start + unit * window.innerHeight;
+        if (Math.abs(window.scrollY - top) > 2) {
+          window.scrollTo({ top, behavior: 'instant' as ScrollBehavior });
+        }
+      };
+      // The browser's own focus-scroll runs after focusin (smoothly, html has
+      // scroll-behavior: smooth) and would override us: wait until the page scroll
+      // settles, then sync.
+      clearTimeout(settleTimer);
+      window.removeEventListener('scroll', onScrollSettle);
+      pendingSync = sync;
+      window.addEventListener('scroll', onScrollSettle, { passive: true });
+      settleTimer = window.setTimeout(flush, 180);
+    };
+    let settleTimer = 0;
+    let pendingSync: (() => void) | null = null;
+    const flush = () => {
+      window.removeEventListener('scroll', onScrollSettle);
+      const fn = pendingSync;
+      pendingSync = null;
+      fn?.();
+    };
+    const onScrollSettle = () => {
+      clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(flush, 180);
+    };
+    rail.addEventListener('focusin', onFocusIn);
+    return () => {
+      rail.removeEventListener('focusin', onFocusIn);
+      window.removeEventListener('scroll', onScrollSettle);
+      clearTimeout(settleTimer);
     };
   }, []);
 
@@ -212,8 +269,9 @@ export default function Projects() {
 
   return (
     <div id="projects">
-      {/* ── Mobile layout (<lg): proyectos apilados verticalmente ── */}
-      <section className="block lg:hidden py-24 bg-bg">
+      {/* ── Mobile layout (<lg) — and desktop with prefers-reduced-motion, where the
+          horizontal rail would never move: proyectos apilados verticalmente ── */}
+      <section className="block lg:hidden lg:motion-reduce:block py-24 bg-bg">
         <div className="max-w-7xl mx-auto px-6">
           <p className="font-mono text-xs text-accent tracking-widest uppercase mb-16">{t('label')}</p>
 
@@ -307,15 +365,17 @@ export default function Projects() {
       {/* ── Desktop layout (lg+): horizontal scroll ── */}
       <section
         ref={sectionRef}
-        className="hidden lg:block py-0 bg-bg"
+        className="hidden lg:block lg:motion-reduce:hidden py-0 bg-bg"
         style={{ height: `${RAIL_UNITS * 100}vh` }}
         aria-label="Projects"
       >
         {/* Sticky container — se pina y hace scroll horizontal */}
         <div
           ref={horizontalRef}
-          className="sticky top-0 overflow-hidden"
-          style={{ height: '100vh' }}
+          className="sticky top-0"
+          // clip (not hidden): no scroll container, so focusing an off-screen thumbnail
+          // can't shift scrollLeft and desync the rail from the page scroll.
+          style={{ height: '100vh', overflow: 'clip' }}
         >
           {/* Section label — esquina superior izquierda, fijo dentro del sticky */}
           <div className="absolute top-8 left-6 lg:left-12 z-10">

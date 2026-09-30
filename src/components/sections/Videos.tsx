@@ -78,7 +78,8 @@ function VideoCard({ item }: { item: VideoItem }) {
             src={item.poster}
             alt=""
             fill
-            className="object-cover motion-safe:transition-transform motion-safe:duration-500 group-hover:scale-[1.03]"
+            // Landscape posters carry text to the edge: no hover zoom there (it would crop it)
+            className={`object-cover ${landscape ? '' : 'motion-safe:transition-transform motion-safe:duration-500 group-hover:scale-[1.03]'}`}
             sizes={landscape ? '(min-width: 1024px) 70vw, 90vw' : '(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 80vw'}
           />
           <span
@@ -153,12 +154,15 @@ export default function Videos() {
             </h2>
           </div>
           <p className="lg:col-span-2 lg:self-end font-ui text-muted text-base lg:text-lg mt-4 lg:mt-0 max-w-md">
-            {t('intro')}
+            {t('intro')}{' '}
+            {/* Fine pointer (mouse) says "click", touch says "tap" */}
+            <span className="hidden [@media(pointer:fine)]:inline">{t('intro_click')}</span>
+            <span className="[@media(pointer:fine)]:hidden">{t('intro_tap')}</span>
           </p>
         </div>
 
         {/* Mobile: horizontal snap strip (contained overflow). sm+: grid. */}
-        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-6 sm:scroll-px-0 -mx-6 px-6 pb-2 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 lg:gap-y-12">
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-6 sm:scroll-px-0 -mx-6 px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 lg:gap-y-12">
           {VIDEOS.map((item) => (
             <VideoCard key={item.id} item={item} />
           ))}

@@ -156,8 +156,29 @@ function Gallery({
   );
 }
 
+// Mobile: featured shot + thumbnails in a horizontal snap strip (same pattern as the
+// video strip). No filler tile.
+function StripGallery({ data, onOpen, viewLabel }: { data: CaseStudyData; onOpen: (i: number) => void; viewLabel: string }) {
+  const [featured, ...thumbs] = data.shots;
+  return (
+    <div>
+      <div className="max-w-4xl lg:max-w-3xl">
+        <ShotButton shot={featured} index={0} onOpen={onOpen} sizes="(min-width: 1024px) 900px, 100vw" viewLabel={viewLabel} />
+      </div>
+      <div className="flex gap-2 mt-2 overflow-x-auto snap-x snap-mandatory scroll-px-6 -mx-6 px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {thumbs.map((shot, i) => (
+          <div key={shot.src} className="shrink-0 w-[42vw] sm:w-[28vw] lg:w-[14rem] snap-start">
+            <ShotButton shot={shot} index={i + 1} onOpen={onOpen} sizes="42vw" viewLabel={viewLabel} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Stats({ stats, size }: { stats: CaseStat[]; size: 'lg' | 'sm' }) {
-  const cols = stats.length >= 4 ? (size === 'lg' ? 'grid-cols-4' : 'grid-cols-2') : 'grid-cols-3';
+  // 4 stats read as a 2×2 (long labels stay at ≤ 2 lines); 3 stay in one row.
+  const cols = stats.length >= 4 ? 'grid-cols-2' : 'grid-cols-3';
   return (
     <div className={`grid ${cols} gap-x-6 gap-y-4 border-l-2 border-accent ${size === 'lg' ? 'pl-6' : 'pl-4'}`}>
       {stats.map((s) => (
@@ -237,13 +258,17 @@ function Stack({ stack }: { stack: readonly string[] }) {
 export function CaseStudyPanel({ data, onOpen, onMouseMove, onMouseLeave }: PanelProps) {
   const t = useTranslations('projects.case');
   const spread = 'relative flex flex-col justify-center';
-  const spreadStyle = { width: '100vw', height: '100vh', padding: '6rem 3rem 3rem' } as const;
+  // Header line is pinned at the same height in both spreads (no step while the rail
+  // moves); content centres in the space below it and keeps clear of the dots.
+  const spreadStyle = { width: '100vw', height: '100vh', padding: '8.25rem 3rem 4.5rem' } as const;
+  const headerClass = 'absolute left-12 right-12 flex items-baseline gap-4';
+  const headerStyle = { top: '6rem' } as const;
 
   return (
     <div className="relative flex" style={{ width: '200vw', height: '100vh' }}>
       {/* Spread A — problem + role + screens */}
       <div className={spread} style={spreadStyle}>
-        <div className="flex items-baseline gap-4 mb-6">
+        <div className={headerClass} style={headerStyle}>
           <span className="font-mono text-xs text-accent tracking-widest">{data.number}</span>
           <div className="flex-1 h-px bg-border" />
         </div>
@@ -297,7 +322,7 @@ export function CaseStudyPanel({ data, onOpen, onMouseMove, onMouseLeave }: Pane
 
       {/* Spread B — key decisions + result */}
       <div className={spread} style={spreadStyle}>
-        <div className="flex items-baseline gap-4 mb-6">
+        <div className={headerClass} style={headerStyle}>
           <span className="font-mono text-xs text-muted tracking-widest uppercase">
             <span className="text-accent">{data.number}</span> · {data.title}
           </span>
@@ -314,7 +339,10 @@ export function CaseStudyPanel({ data, onOpen, onMouseMove, onMouseLeave }: Pane
 
           <div className="flex flex-col gap-6">
             <div>
-              <BlockLabel n="04">{t('result')}</BlockLabel>
+              <div className="flex items-start justify-between gap-6">
+                <BlockLabel n="04">{t('result')}</BlockLabel>
+                {data.cta && <Cta cta={data.cta} />}
+              </div>
               <p className="font-ui text-off-white text-lg leading-snug mb-5">{data.result}</p>
               <Stats stats={data.stats} size="lg" />
             </div>
@@ -327,12 +355,6 @@ export function CaseStudyPanel({ data, onOpen, onMouseMove, onMouseLeave }: Pane
             )}
 
             <SeoBlock data={data} onOpen={onOpen} viewLabel={t('view_shot')} sizes="22vw" />
-
-            {data.cta && (
-              <div>
-                <Cta cta={data.cta} />
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -359,37 +381,29 @@ export function CaseStudyMobile({ data, onOpen, isLast }: { data: CaseStudyData;
       <h2 className="font-display text-white uppercase leading-none mb-4" style={{ fontSize: 'clamp(2rem, 8vw, 4rem)' }}>{data.title}</h2>
       <p className="font-ui text-off-white text-lg leading-snug mb-6">{data.subtitle}</p>
 
-      <div className="mb-8">
-        <Gallery
-          data={data}
-          onOpen={onOpen}
-          viewLabel={t('view_shot')}
-          screensLabel={t('screens')}
-          cols={2}
-          sizesFeatured="(min-width: 768px) 90vw, 100vw"
-          sizesThumb="50vw"
-        />
+      {/* Story first: problem + role, then the screens, then decisions */}
+      <div className="md:grid md:grid-cols-2 md:gap-10">
+        <div className="mb-6">
+          <BlockLabel n="01">{t('problem')}</BlockLabel>
+          <p className="font-ui text-muted leading-relaxed">{data.problem}</p>
+        </div>
+        <div className="mb-8">
+          <BlockLabel n="02">{t('role')}</BlockLabel>
+          <p className="font-ui text-off-white leading-relaxed">{data.role}</p>
+        </div>
+      </div>
+
+      <div className="mb-10">
+        <StripGallery data={data} onOpen={onOpen} viewLabel={t('view_shot')} />
         {data.shotsNote && (
           <p className="font-mono text-[10px] text-muted uppercase tracking-widest mt-3">* {data.shotsNote}</p>
         )}
       </div>
 
-      <div className="md:grid md:grid-cols-2 md:gap-10">
-        <div>
-          <div className="mb-6">
-            <BlockLabel n="01">{t('problem')}</BlockLabel>
-            <p className="font-ui text-muted leading-relaxed">{data.problem}</p>
-          </div>
-          <div className="mb-8">
-            <BlockLabel n="02">{t('role')}</BlockLabel>
-            <p className="font-ui text-off-white leading-relaxed">{data.role}</p>
-          </div>
-        </div>
-        <div className="mb-8">
-          <BlockLabel n="03">{t('decisions')}</BlockLabel>
-          <div className="mt-4">
-            <Decisions decisions={data.decisions} compact />
-          </div>
+      <div className="mb-8">
+        <BlockLabel n="03">{t('decisions')}</BlockLabel>
+        <div className="mt-4 md:[&_ol]:grid md:[&_ol]:grid-cols-2 md:[&_ol]:gap-x-10 md:[&_ol]:gap-y-6 md:[&_ol>li]:!mt-0">
+          <Decisions decisions={data.decisions} compact />
         </div>
       </div>
 

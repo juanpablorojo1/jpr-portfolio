@@ -78,7 +78,8 @@
         "close": "[ESC] Cerrar",
         "close_aria": "Cerrar visor de capturas",
         "prev": "Captura anterior",
-        "next": "Captura siguiente"
+        "next": "Captura siguiente",
+        "full_size": "Ver en tamaño completo ↗"
       }
     },
     "kibbo": {
@@ -138,15 +139,15 @@
       "result": "Corre internamente sobre datos reales: la primera pasada completa fue del barrido al triaje y a veredictos firmados por una persona. Próximo paso: sumar al equipo de Ventas.",
       "stats": [
         { "value": "33", "label": "Fuentes de compras barridas" },
-        { "value": "19", "label": "Fuentes que la herramienta anterior no veía" },
+        { "value": "19", "label": "Fuentes que antes no se veían" },
         { "value": "28", "label": "Categorías de producto" },
         { "value": "10k+", "label": "Tests automatizados" }
       ],
       "blur_note": "Datos de clientes y montos difuminados",
       "shots": [
-        { "label": "Detección", "caption": "Detección automática: el lote del día, ya triado." },
         { "label": "Veredicto", "caption": "La ficha: veredicto requisito por requisito, con evidencia citada." },
         { "label": "Mi trabajo", "caption": "Mi trabajo: vence hoy, en plazo y apertura pasada, de todo el equipo." },
+        { "label": "Detección", "caption": "Detección automática: si un barrido vuelve incompleto, el sistema lo avisa en vez de esconderlo." },
         { "label": "Tablero", "caption": "El tablero: por vencer, sin asignar, en gestión, detectadas." },
         { "label": "Fuentes", "caption": "Salud de fuentes: «no hay nada» no es «no pude ver»." }
       ]
@@ -155,7 +156,9 @@
   "videos": {
     "label": "Motion y video",
     "headline": "Cuadro por cuadro",
-    "intro": "Piezas cortas, una idea por pieza. Tocá para reproducir con sonido.",
+    "intro": "Piezas cortas, una idea por pieza.",
+    "intro_click": "Hacé click para reproducir con sonido.",
+    "intro_tap": "Tocá para reproducir con sonido.",
     "play": "Reproducir",
     "play_aria": "Reproducir video: {title}",
     "audio_es": "Audio ES",

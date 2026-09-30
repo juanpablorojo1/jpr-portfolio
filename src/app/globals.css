@@ -83,6 +83,17 @@ body {
   }
 }
 
+/* ── REDUCED MOTION (desktop) ──
+   Projects shows its stacked layout instead of the GSAP rail. That layout is taller
+   than the viewport, so the Projects card must scroll normally instead of sticking
+   (a stuck tall card hides everything below its first screen). */
+@media (prefers-reduced-motion: reduce) {
+  .transition-zone[data-section="projects"] {
+    position: relative !important;
+    top: auto !important;
+  }
+}
+
 /* ── MOBILE OVERRIDES (< 1024px) ── */
 @media (max-width: 1023px) {
   /* Disable card stack sticky — show sections normally */
