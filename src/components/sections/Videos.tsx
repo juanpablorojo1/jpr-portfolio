@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import StackBadge from '../ui/StackBadge';
 import { VIDEOS, type VideoItem } from '../../lib/content';
 
 // Motion & Video — data-driven from VIDEOS (src/lib/content.ts) + messages videos.items.<id>.
@@ -20,6 +21,7 @@ function VideoCard({ item }: { item: VideoItem }) {
   const title = t(`items.${item.id}.title`);
   const eyebrow = t(`items.${item.id}.eyebrow`);
   const caption = t(`items.${item.id}.caption`);
+  const madeWith = t(`items.${item.id}.made_with`);
   const landscape = item.orientation === 'landscape';
 
   const start = () => {
@@ -117,6 +119,24 @@ function VideoCard({ item }: { item: VideoItem }) {
       <p className="font-mono text-[10px] sm:text-xs text-accent uppercase tracking-widest mb-1.5">{eyebrow}</p>
       <h3 className="font-ui font-bold text-off-white text-lg leading-snug mb-2">{title}</h3>
       <p className="font-ui text-muted text-sm leading-relaxed">{caption}</p>
+      {/* Tools per piece — deliberately quiet so it never competes with title/caption */}
+      <p className="font-mono text-[10px] text-muted/80 leading-relaxed mt-3">{madeWith}</p>
+      {item.creditHref && (
+        <p className="font-mono text-[10px] text-muted/80 leading-relaxed mt-1">
+          {t.rich(`items.${item.id}.credit`, {
+            license: (chunks) => (
+              <a
+                href={item.creditHref}
+                target="_blank"
+                rel="noopener noreferrer license"
+                className="underline decoration-border underline-offset-2 hover:text-accent hover:decoration-accent transition-colors duration-150"
+              >
+                {chunks}
+              </a>
+            ),
+          })}
+        </p>
+      )}
     </div>
   );
 
@@ -153,12 +173,21 @@ export default function Videos() {
               {t('headline')}
             </h2>
           </div>
-          <p className="lg:col-span-2 lg:self-end font-ui text-muted text-base lg:text-lg mt-4 lg:mt-0 max-w-md">
-            {t('intro')}{' '}
-            {/* Fine pointer (mouse) says "click", touch says "tap" */}
-            <span className="hidden [@media(pointer:fine)]:inline">{t('intro_click')}</span>
-            <span className="[@media(pointer:fine)]:hidden">{t('intro_tap')}</span>
-          </p>
+          <div className="lg:col-span-2 lg:self-end mt-4 lg:mt-0">
+            {/* How the pieces are made: AI post-production note + section stack */}
+            <p className="font-ui text-off-white text-base lg:text-lg leading-snug max-w-xl">{t('note')}</p>
+            <p className="font-mono text-xs text-muted uppercase tracking-widest mt-3">
+              {/* Fine pointer (mouse) says "click", touch says "tap" */}
+              <span className="hidden [@media(pointer:fine)]:inline">{t('intro_click')}</span>
+              <span className="[@media(pointer:fine)]:hidden">{t('intro_tap')}</span>
+            </p>
+            <div className="mt-5">
+              <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-2">{t('stack_label')}</p>
+              <div className="flex flex-wrap gap-2">
+                {(t.raw('stack') as string[]).map((tool) => <StackBadge key={tool} label={tool} />)}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Mobile: horizontal snap strip (contained overflow). sm+: grid. */}

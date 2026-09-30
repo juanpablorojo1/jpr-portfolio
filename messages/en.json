@@ -156,9 +156,11 @@
   "videos": {
     "label": "Motion & Video",
     "headline": "Frame by Frame",
-    "intro": "Short pieces, one idea each.",
     "intro_click": "Click to play with sound.",
     "intro_tap": "Tap to play with sound.",
+    "note": "Post-production by AI agents: Claude Code cuts, animates, builds the 3D and renders every piece in Remotion. The MRI explainer and the model comparison are 100% AI-made; the three product reels start from footage shot on an iPhone.",
+    "stack_label": "Stack",
+    "stack": ["Claude Code", "Remotion", "React Three Fiber", "Three.js", "faster-whisper", "edge-tts", "Python / NumPy audio", "FFmpeg", "CapCut"],
     "play": "Play",
     "play_aria": "Play video: {title}",
     "audio_es": "Audio ES",
@@ -167,27 +169,33 @@
       "b6_story": {
         "eyebrow": "LEEX · B6 incubator",
         "title": "Where the incubator came from",
-        "caption": "In 1878, a Paris obstetrician had a zoo's poultry incubator adapted for babies; premature mortality fell from 66% to 38% with controlled heat alone. Today that idea is LEEX's B6."
+        "caption": "In 1878, a Paris obstetrician had a zoo's poultry incubator adapted for babies; premature mortality fell from 66% to 38% with controlled heat alone. Today that idea is LEEX's B6.",
+        "made_with": "Made with: Claude Code · Remotion · React Three Fiber · faster-whisper · FFmpeg · CapCut — iPhone footage, Wellcome Collection engravings",
+        "credit": "Engravings: Wellcome Collection, via Wikimedia Commons · <license>CC BY 4.0</license> · cropped, color-treated, camera-animated."
       },
       "kibbo_film": {
         "eyebrow": "KIBBO · Product reel",
         "title": "Preventive maintenance, from plan to execution",
-        "caption": "The maintenance plan takes a week to build, but the first surprise pulls schedule and staff apart. KIBBO puts every preventive task in one filterable list the whole team can see."
+        "caption": "The maintenance plan takes a week to build, but the first surprise pulls schedule and staff apart. KIBBO puts every preventive task in one filterable list the whole team can see.",
+        "made_with": "Made with: Claude Code · Remotion · faster-whisper · Python audio · FFmpeg · CapCut — iPhone footage, UI rebuilt in code"
       },
       "v8v_cpr": {
         "eyebrow": "LEEX · V8v bed",
         "title": "One button to resuscitate",
-        "caption": "How long does a hospital bed take to be ready for resuscitation? On LEEX's V8v electric bed, one button: press it and the bed goes fully flat, ready for CPR, because in a cardiac arrest there's no time to lose."
+        "caption": "How long does a hospital bed take to be ready for resuscitation? On LEEX's V8v electric bed, one button: press it and the bed goes fully flat, ready for CPR, because in a cardiac arrest there's no time to lose.",
+        "made_with": "Made with: Claude Code · Remotion · faster-whisper · Python-synthesized SFX · FFmpeg — iPhone footage, Mixkit music"
       },
       "mri_explainer": {
-        "eyebrow": "Explainer · Remotion",
+        "eyebrow": "Explainer",
         "title": "How an MRI works",
-        "caption": "No cameras, no X-rays: your body is full of water, and every hydrogen nucleus is a tiny magnet. A huge magnet, a radio pulse tuned to their rhythm and gradient coils turn that signal into an image. It's not a photo; it's the hydrogen in your body, made visible."
+        "caption": "No cameras, no X-rays: your body is full of water, and every hydrogen nucleus is a tiny magnet. A huge magnet, a radio pulse tuned to their rhythm and gradient coils turn that signal into an image. It's not a photo; it's the hydrogen in your body, made visible.",
+        "made_with": "Made with: Claude Code · Remotion · React Three Fiber · edge-tts · faster-whisper · NumPy-synthesized score — 100% AI, no stock"
       },
       "model_comparison": {
-        "eyebrow": "AI models · Remotion",
+        "eyebrow": "AI models",
         "title": "Same prompt, three models",
-        "caption": "One prompt, three models (Sonnet 5, Opus 5.5 and Astra 6): a 3D gummy citrus slice you can stretch and twist. Real, side-by-side recordings show how each result behaves, alongside the time and tokens each model took."
+        "caption": "One prompt, three models (Sonnet 5, Opus 5.5 and Astra 6): a 3D gummy citrus slice you can stretch and twist. Real, side-by-side recordings show how each result behaves, alongside the time and tokens each model took.",
+        "made_with": "Made with: Sonnet 5 · Opus 5.5 · Astra 6 (WebGPU builds) · OBS · Remotion · Claude Code"
       }
     }
   },

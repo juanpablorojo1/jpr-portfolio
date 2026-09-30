@@ -131,10 +131,15 @@ export interface VideoItem {
   height: number;
   duration: string; // m:ss, shown on the card
   audioLang: 'es' | 'en' | 'none';
+  /** License link for third-party material credited in messages videos.items.<id>.credit */
+  creditHref?: string;
 }
 
+// Link required by the CC BY 4.0 attribution of the archive engravings in the B6 reel
+export const CC_BY_4_URL = 'https://creativecommons.org/licenses/by/4.0/';
+
 export const VIDEOS: readonly VideoItem[] = [
-  { id: 'b6_story', src: '/videos/b6-story.mp4', poster: '/videos/b6-story-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:46', audioLang: 'es' },
+  { id: 'b6_story', src: '/videos/b6-story.mp4', poster: '/videos/b6-story-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:46', audioLang: 'es', creditHref: CC_BY_4_URL },
   { id: 'kibbo_film', src: '/videos/kibbo-film.mp4', poster: '/videos/kibbo-film-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:46', audioLang: 'es' },
   { id: 'v8v_cpr', src: '/videos/v8v-rcp.mp4', poster: '/videos/v8v-rcp-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:18', audioLang: 'es' },
   { id: 'mri_explainer', src: '/videos/mri-explainer.mp4', poster: '/videos/mri-explainer-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '1:00', audioLang: 'es' },

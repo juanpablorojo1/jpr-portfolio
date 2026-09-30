@@ -156,9 +156,11 @@
   "videos": {
     "label": "Motion y video",
     "headline": "Cuadro por cuadro",
-    "intro": "Piezas cortas, una idea por pieza.",
     "intro_click": "Hacé click para reproducir con sonido.",
     "intro_tap": "Tocá para reproducir con sonido.",
+    "note": "Posproducción hecha por agentes de IA: Claude Code corta, anima, arma el 3D y renderiza cada pieza en Remotion. El explicativo de resonancia y la comparación de modelos son 100 % IA; los tres reels de producto parten de tomas filmadas con iPhone.",
+    "stack_label": "Stack",
+    "stack": ["Claude Code", "Remotion", "React Three Fiber", "Three.js", "faster-whisper", "edge-tts", "Audio en Python / NumPy", "FFmpeg", "CapCut"],
     "play": "Reproducir",
     "play_aria": "Reproducir video: {title}",
     "audio_es": "Audio ES",
@@ -167,27 +169,33 @@
       "b6_story": {
         "eyebrow": "LEEX · Incubadora B6",
         "title": "De dónde salió la incubadora",
-        "caption": "En 1878, un obstetra de París hizo adaptar para bebés una incubadora de pollos del zoológico: la mortalidad de los prematuros bajó del 66 % al 38 % solo controlando el calor. Hoy esa idea es la B6 de LEEX."
+        "caption": "En 1878, un obstetra de París hizo adaptar para bebés una incubadora de pollos del zoológico: la mortalidad de los prematuros bajó del 66 % al 38 % solo controlando el calor. Hoy esa idea es la B6 de LEEX.",
+        "made_with": "Hecho con: Claude Code · Remotion · React Three Fiber · faster-whisper · FFmpeg · CapCut — tomas con iPhone, grabados de Wellcome Collection",
+        "credit": "Grabados: Wellcome Collection, vía Wikimedia Commons · <license>CC BY 4.0</license> · recortados, con tratamiento de color y animación de cámara."
       },
       "kibbo_film": {
         "eyebrow": "KIBBO · Reel de producto",
         "title": "Mantenimiento preventivo: cómo pasar del plan a la ejecución",
-        "caption": "El plan de mantenimiento se arma en una semana, pero ante el primer imprevisto el cronograma y el personal dejan de coincidir. KIBBO junta todos los preventivos en una lista filtrable, a la vista de todo el equipo."
+        "caption": "El plan de mantenimiento se arma en una semana, pero ante el primer imprevisto el cronograma y el personal dejan de coincidir. KIBBO junta todos los preventivos en una lista filtrable, a la vista de todo el equipo.",
+        "made_with": "Hecho con: Claude Code · Remotion · faster-whisper · audio en Python · FFmpeg · CapCut — tomas con iPhone, UI reconstruida en código"
       },
       "v8v_cpr": {
         "eyebrow": "LEEX · Cama V8v",
         "title": "Un botón para reanimar",
-        "caption": "¿Cuánto tarda una cama en estar lista para reanimar? En la cama eléctrica V8v de LEEX, un botón: se aprieta y la cama queda totalmente horizontal, lista para la maniobra, porque en un paro cardíaco no hay tiempo que perder."
+        "caption": "¿Cuánto tarda una cama en estar lista para reanimar? En la cama eléctrica V8v de LEEX, un botón: se aprieta y la cama queda totalmente horizontal, lista para la maniobra, porque en un paro cardíaco no hay tiempo que perder.",
+        "made_with": "Hecho con: Claude Code · Remotion · faster-whisper · SFX sintetizados en Python · FFmpeg — tomas con iPhone, música de Mixkit"
       },
       "mri_explainer": {
-        "eyebrow": "Explicativo · Remotion",
+        "eyebrow": "Explicativo",
         "title": "Cómo funciona una resonancia",
-        "caption": "Sin cámaras ni rayos X: el cuerpo está lleno de agua y cada núcleo de hidrógeno es un imán diminuto. Un imán enorme, un pulso de radio a su ritmo y bobinas de gradiente convierten esa señal en imagen: no es una foto, es el hidrógeno de tu cuerpo hecho imagen."
+        "caption": "Sin cámaras ni rayos X: el cuerpo está lleno de agua y cada núcleo de hidrógeno es un imán diminuto. Un imán enorme, un pulso de radio a su ritmo y bobinas de gradiente convierten esa señal en imagen: no es una foto, es el hidrógeno de tu cuerpo hecho imagen.",
+        "made_with": "Hecho con: Claude Code · Remotion · React Three Fiber · edge-tts · faster-whisper · música sintetizada con NumPy — 100 % IA, sin stock"
       },
       "model_comparison": {
-        "eyebrow": "Modelos de IA · Remotion",
+        "eyebrow": "Modelos de IA",
         "title": "Mismo prompt, tres modelos",
-        "caption": "El mismo prompt a tres modelos (Sonnet 5, Opus 5.5 y Astra 6): una rodaja de gomita en 3D que se puede estirar y torcer. Las grabaciones reales muestran cómo responde cada resultado junto al tiempo y los tokens que le llevó a cada uno."
+        "caption": "El mismo prompt a tres modelos (Sonnet 5, Opus 5.5 y Astra 6): una rodaja de gomita en 3D que se puede estirar y torcer. Las grabaciones reales muestran cómo responde cada resultado junto al tiempo y los tokens que le llevó a cada uno.",
+        "made_with": "Hecho con: Sonnet 5 · Opus 5.5 · Astra 6 (páginas en WebGPU) · OBS · Remotion · Claude Code"
       }
     }
   },
