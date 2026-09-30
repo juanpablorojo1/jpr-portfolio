@@ -23,47 +23,9 @@ export default function Experience() {
   const lineRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<HTMLDivElement>(null);
 
-  const experienceItems: ExperienceItem[] = [
-    {
-      year: t('items.0.year'),
-      company: t('items.0.company'),
-      role: t('items.0.role'),
-      description: t('items.0.description'),
-    },
-    {
-      year: t('items.1.year'),
-      company: t('items.1.company'),
-      role: t('items.1.role'),
-      description: t('items.1.description'),
-    },
-    {
-      year: t('items.2.year'),
-      company: t('items.2.company'),
-      role: t('items.2.role'),
-      description: t('items.2.description'),
-    },
-    {
-      year: t('items.3.year'),
-      company: t('items.3.company'),
-      role: t('items.3.role'),
-      description: t('items.3.description'),
-    },
-  ];
-
-  const educationItems: EducationItem[] = [
-    {
-      year: t('education.0.year'),
-      institution: t('education.0.institution'),
-      degree: t('education.0.degree'),
-      detail: t('education.0.detail'),
-    },
-    {
-      year: t('education.1.year'),
-      institution: t('education.1.institution'),
-      degree: t('education.1.degree'),
-      detail: t('education.1.detail'),
-    },
-  ];
+  const experienceItems = t.raw('items') as ExperienceItem[];
+  const educationItems = t.raw('education') as EducationItem[];
+  const recognitionItems = t.raw('recognition') as EducationItem[];
 
   useEffect(() => {
     let cleanup = false;
@@ -91,7 +53,7 @@ export default function Experience() {
             scrollTrigger: {
               trigger: sectionRef.current,
               start: 'top 70%',
-              end: 'bottom 80%',
+              end: 'bottom bottom', // complete when the card is fully shown (pin moment)
               scrub: 1,
             },
           }
@@ -150,8 +112,8 @@ export default function Experience() {
               ease: 'none',
               scrollTrigger: {
                 trigger: item,
-                start: 'top 85%',
-                end: 'bottom 60%',
+                start: 'top bottom',
+                end: 'bottom bottom',
                 scrub: 1.2,
               },
             }
@@ -171,8 +133,8 @@ export default function Experience() {
               ease: 'none',
               scrollTrigger: {
                 trigger: item,
-                start: 'top 80%',
-                end: 'top 40%',
+                start: 'top bottom',
+                end: 'bottom bottom', // fully revealed before Contact can cover the item
                 scrub: 1.5,
               },
             }
@@ -183,6 +145,30 @@ export default function Experience() {
 
     animate();
     return () => { cleanup = true; };
+  }, []);
+
+  // Tall-card guard (desktop card stack). The TransitionZone sticks at top:0, so if
+  // this section is taller than the viewport its bottom would never scroll into view
+  // before Contact covers it. When it overflows, stick at top = -(overflow): the card
+  // scrolls until its bottom meets the viewport bottom, then pins and Contact slides
+  // over as before. When it fits, top stays 0 (unchanged behaviour). Mobile ignores
+  // this: the card stack is disabled there via CSS (!important).
+  useEffect(() => {
+    const zone = sectionRef.current?.closest('.transition-zone') as HTMLElement | null;
+    if (!zone) return;
+    const update = () => {
+      const overflow = zone.offsetHeight - window.innerHeight;
+      zone.style.top = window.innerWidth >= 1024 && overflow > 0 ? `${-overflow}px` : '0px';
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(zone);
+    window.addEventListener('resize', update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+      zone.style.top = '0px';
+    };
   }, []);
 
   // Dot ping on enter — one-shot IntersectionObserver
@@ -229,7 +215,7 @@ export default function Experience() {
           {/* Work experience */}
           <div>
             <div className="flex items-baseline gap-4 mb-4">
-              <span className="font-mono text-xs text-accent tracking-widest uppercase">Work</span>
+              <span className="font-mono text-xs text-accent tracking-widest uppercase">{t('work_label')}</span>
               <div className="flex-1 h-px bg-border" />
             </div>
 
@@ -289,36 +275,43 @@ export default function Experience() {
             </div>
           </div>
 
-          {/* Education */}
-          <div>
-            <div className="flex items-baseline gap-4 mb-5">
-              <span className="font-mono text-xs text-accent tracking-widest uppercase">Education</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-
-            <div className="flex flex-col gap-4 lg:gap-6">
-              {educationItems.map((item, i) => (
-                <div
-                  key={i}
-                  className="pl-6 border-l-2 border-border py-2"
-                >
-                  <p className="font-mono text-xs text-accent tracking-widest uppercase mb-1">
-                    {item.year}
-                  </p>
-                  <p className="font-ui font-bold text-white text-2xl leading-tight">
-                    {item.institution}
-                  </p>
-                  <p className="font-ui text-off-white text-base font-bold tracking-wide uppercase mb-1">
-                    {item.degree}
-                  </p>
-                  {item.detail && (
-                    <p className="font-mono text-sm text-muted mt-2">
-                      {item.detail}
-                    </p>
-                  )}
+          {/* Education + Recognition */}
+          <div className="flex flex-col gap-8 lg:gap-10">
+            {[
+              { label: t('education_label'), items: educationItems },
+              { label: t('recognition_label'), items: recognitionItems },
+            ].map((group) => (
+              <div key={group.label}>
+                <div className="flex items-baseline gap-4 mb-5">
+                  <span className="font-mono text-xs text-accent tracking-widest uppercase">{group.label}</span>
+                  <div className="flex-1 h-px bg-border" />
                 </div>
-              ))}
-            </div>
+
+                <div className="flex flex-col gap-4 lg:gap-6">
+                  {group.items.map((item, i) => (
+                    <div
+                      key={i}
+                      className="pl-6 border-l-2 border-border py-2"
+                    >
+                      <p className="font-mono text-xs text-accent tracking-widest uppercase mb-1">
+                        {item.year}
+                      </p>
+                      <p className="font-ui font-bold text-white text-2xl leading-tight">
+                        {item.institution}
+                      </p>
+                      <p className="font-ui text-off-white text-base font-bold tracking-wide uppercase mb-1">
+                        {item.degree}
+                      </p>
+                      {item.detail && (
+                        <p className="font-mono text-sm text-muted mt-2">
+                          {item.detail}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

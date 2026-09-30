@@ -232,7 +232,20 @@
   },
   "experience": {
     "label": "Experiencia",
+    "work_label": "Trabajo",
     "items": [
+      {
+        "year": "ago. 2026–presente",
+        "company": "LEEX",
+        "role": "Especialista en automatización",
+        "description": "Automatización con IA del flujo de licitaciones de la empresa. Desarrollo web para SEO y GEO/AEO, contenido con IA para redes, blogs y newsletters con validación humana antes de publicar, y agentes de IA en las webs y redes de las marcas para generar leads."
+      },
+      {
+        "year": "ago. 2026–presente",
+        "company": "KIBBO",
+        "role": "AI Engineer",
+        "description": "Desarrollo de kibbo.io en español e inglés, optimizado para SEO y GEO (búsqueda con IA). Creación de contenido con IA para la marca."
+      },
       {
         "year": "2026–presente",
         "company": "Eleven Estudio Digital",
@@ -271,6 +284,15 @@
         "institution": "Coursera / Universidad de Michigan",
         "degree": "Applied Data Science with Python",
         "detail": ""
+      }
+    ],
+    "recognition_label": "Reconocimientos",
+    "recognition": [
+      {
+        "year": "2026",
+        "institution": "Emprende U 2026",
+        "degree": "Semifinalista — Categoría Universitario",
+        "detail": "TraumaVision AI · Concurso federal de seis universidades nacionales"
       }
     ]
   },

@@ -3,7 +3,7 @@
 export const SOCIAL_LINKS = {
   email: 'juanpablorojo1@gmail.com',
   emailAlt: 'juan.pablo.rojo@mi.unc.edu.ar',
-  linkedin: 'https://linkedin.com/in/juan-pablo-rojo',
+  linkedin: 'https://www.linkedin.com/in/juan-pablo-rojo-83b843243',
   github: 'https://github.com/juanpablorojo1',
   instagram: 'https://www.instagram.com/juampi_rojo/',
   phone: '+54 385 514 3413',

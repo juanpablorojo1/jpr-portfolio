@@ -232,7 +232,20 @@
   },
   "experience": {
     "label": "Experience",
+    "work_label": "Work",
     "items": [
+      {
+        "year": "Aug 2026–present",
+        "company": "LEEX",
+        "role": "Automation Specialist",
+        "description": "AI automation of the company's public-tender workflow. Websites developed for SEO and GEO/AEO, AI content for social, blogs and newsletters with human review before publishing, and AI agents on the brands' web and social channels to generate leads."
+      },
+      {
+        "year": "Aug 2026–present",
+        "company": "KIBBO",
+        "role": "AI Engineer",
+        "description": "Built kibbo.io in Spanish and English, optimized for SEO and GEO (AI search). AI content creation for the brand."
+      },
       {
         "year": "2026–present",
         "company": "Eleven Estudio Digital",
@@ -271,6 +284,15 @@
         "institution": "Coursera / University of Michigan",
         "degree": "Applied Data Science with Python",
         "detail": ""
+      }
+    ],
+    "recognition_label": "Recognition",
+    "recognition": [
+      {
+        "year": "2026",
+        "institution": "Emprende U 2026",
+        "degree": "Semifinalist — University category",
+        "detail": "TraumaVision AI · Federal competition run by six Argentine national universities"
       }
     ]
   },
