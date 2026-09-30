@@ -6,6 +6,7 @@ import Navbar from '../../components/layout/Navbar';
 import Hero from '../../components/sections/Hero';
 import About from '../../components/sections/About';
 import Projects from '../../components/sections/Projects';
+import Videos from '../../components/sections/Videos';
 import Skills from '../../components/sections/Skills';
 import Experience from '../../components/sections/Experience';
 import Contact from '../../components/sections/Contact';
@@ -57,6 +58,12 @@ export default function HomePage() {
         <TransitionZone sectionId="projects" zIndex={30} overflowClip>
           <Projects />
         </TransitionZone>
+
+        {/* Videos — outside the card stack, same pattern as Skills: normal flow over the
+            sticky Projects card, so the horizontal rail and the stack stay untouched. */}
+        <div style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
+          <Videos />
+        </div>
 
         {/* Skills — outside card stack so all content is reachable via normal scroll.
             Experience (zIndex 50) still slides over it naturally as the user scrolls. */}

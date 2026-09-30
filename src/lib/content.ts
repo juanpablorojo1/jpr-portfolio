@@ -73,21 +73,75 @@ export const ELEVEN_SCREENSHOTS = [
   { src: '/images/eleven-06-contacto.jpg', alt: 'Eleven — Sección contacto y footer', label: 'CONTACTO' },
 ] as const;
 
+// ── Case studies (KIBBO, LEEX) ──
+// Screenshots: src here; label + caption (also used as alt) live in
+// messages/<locale>.json under projects.<case>.shots[i], same order.
+
+export const KIBBO_URL = 'https://kibbo.io/en';
+
 export const KIBBO_STACK = [
-  'Next.js', 'TypeScript', 'Tailwind CSS', 'SSR · SSG',
-  'GSAP', 'ScrollSmoother', 'ScrollTrigger', 'gsap.matchMedia',
-  'Scrollytelling', 'Mask Reveals', 'View Transitions', 'Custom Cursor',
-  'Brand Preloader', 'next/font · Montserrat · Inter', 'WebP Assets',
-  'AWS Amplify', 'Vercel', 'Playwright MCP', 'Claude in Chrome', 'Lighthouse 93+',
+  'Next.js 16', 'React 19', 'TypeScript', 'Tailwind CSS v4', 'GSAP',
+  'JSON-LD', 'GA4', 'AWS Amplify', 'Claude Code',
 ] as const;
 
 export const KIBBO_SCREENSHOTS = [
-  { src: '/images/kibbo-01-hero.jpg', alt: 'KIBBO — Hero con wordmark de marca y red de constelaciones', label: 'HERO' },
-  { src: '/images/kibbo-02-quees.jpg', alt: 'KIBBO — Qué es KIBBO, mockup de laptop con la marca', label: '¿QUÉ ES?' },
-  { src: '/images/kibbo-03-inventario.jpg', alt: 'KIBBO — Inventario del parque: serial, QR, servicio y estado', label: 'INVENTARIO' },
-  { src: '/images/kibbo-04-dashboard.jpg', alt: 'KIBBO — Dashboard de operatividad en laptop y app móvil', label: 'DASHBOARD' },
-  { src: '/images/kibbo-05-resenas.jpg', alt: 'KIBBO — Opiniones de usuarios de bioingeniería hospitalaria', label: 'RESEÑAS' },
+  '/images/kibbo-en-01-hero.jpg',
+  '/images/kibbo-en-02-problems.jpg',
+  '/images/kibbo-en-03-on-the-floor.jpg',
+  '/images/kibbo-en-04-dashboard.jpg',
+  '/images/kibbo-en-05-community.jpg',
+  '/images/kibbo-en-06-trust.jpg',
+  '/images/kibbo-en-07-resource.jpg',
+  '/images/kibbo-en-08-mobile.jpg',
 ] as const;
+
+// SEO / GEO evidence — label + caption in projects.kibbo.seo_shots[i]
+export const KIBBO_SEO_SCREENSHOTS = [
+  '/images/kibbo-seo-schema.jpg',
+  '/images/kibbo-seo-hreflang.jpg',
+] as const;
+
+export const LEEX_STACK = [
+  'Python 3.12', 'Next.js 16', 'React 19', 'TypeScript',
+  'Supabase (PostgreSQL + RLS)', 'pgvector', 'Claude (Haiku · Sonnet)',
+  'pdfplumber + OCR', 'pytest', 'Vitest', 'GitHub Actions', 'Vercel',
+] as const;
+
+export const LEEX_SCREENSHOTS = [
+  '/images/leex-01-deteccion.jpg',
+  '/images/leex-02-veredicto.jpg',
+  '/images/leex-03-mi-trabajo.jpg',
+  '/images/leex-04-tablero.jpg',
+  '/images/leex-05-fuentes.jpg',
+] as const;
+
+// ── Motion & Video ──
+// Add a piece = add an entry here + messages videos.items.<id> {eyebrow, title, caption}.
+// orientation drives the card layout (portrait 9:16 cards, landscape spans a full row).
+export type VideoOrientation = 'portrait' | 'landscape';
+
+export interface VideoItem {
+  id: string;
+  src: string;
+  poster: string;
+  orientation: VideoOrientation;
+  width: number;
+  height: number;
+  duration: string; // m:ss, shown on the card
+  audioLang: 'es' | 'en' | 'none';
+}
+
+export const VIDEOS: readonly VideoItem[] = [
+  { id: 'b6_story', src: '/videos/b6-story.mp4', poster: '/videos/b6-story-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:46', audioLang: 'es' },
+  { id: 'kibbo_film', src: '/videos/kibbo-film.mp4', poster: '/videos/kibbo-film-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:46', audioLang: 'es' },
+  { id: 'v8v_cpr', src: '/videos/v8v-rcp.mp4', poster: '/videos/v8v-rcp-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:18', audioLang: 'es' },
+  { id: 'mri_explainer', src: '/videos/mri-explainer.mp4', poster: '/videos/mri-explainer-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '1:00', audioLang: 'es' },
+  { id: 'model_comparison', src: '/videos/model-comparison.mp4', poster: '/videos/model-comparison-poster.jpg', orientation: 'landscape', width: 1920, height: 1080, duration: '0:10', audioLang: 'none' },
+] as const;
+
+// Desktop Projects rail: width of each panel in viewport units (1 = 100vw of rail
+// = 100vh of scroll). Case studies with two spreads take 2. Order = panel order.
+export const PROJECT_PANEL_WIDTHS = [1, 1, 1, 2, 2] as const;
 
 export const HACKATHON_STACK = ['Team: Algarroba LID', 'RTS Group', '2025'] as const;
 

@@ -1,29 +1,45 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import MetricCounter from '../ui/MetricCounter';
 import StackBadge from '../ui/StackBadge';
+import CaseLightbox, { type CaseShot } from '../ui/CaseLightbox';
+import { CaseStudyPanel, CaseStudyMobile, type CaseStudyData, type CaseDecision, type CaseStat } from './CaseStudy';
 import {
   TRAUMAVISION_METRICS,
   TRAUMAVISION_STACK,
   TRAUMAVISION_SCREENSHOTS,
   ELEVEN_STACK,
   ELEVEN_SCREENSHOTS,
+  KIBBO_URL,
   KIBBO_STACK,
   KIBBO_SCREENSHOTS,
+  KIBBO_SEO_SCREENSHOTS,
+  LEEX_STACK,
+  LEEX_SCREENSHOTS,
+  PROJECT_PANEL_WIDTHS,
   HACKATHON_STACK,
   HACKATHON_PHOTOS,
 } from '../../lib/content';
 
+
+// Rail math (desktop): section height = RAIL_UNITS × 100vh, rail width = RAIL_UNITS × 100vw.
+const RAIL_UNITS: number = PROJECT_PANEL_WIDTHS.reduce((a: number, b: number) => a + b, 0);
+const PANEL_STARTS: number[] = PROJECT_PANEL_WIDTHS.map((_, i) =>
+  PROJECT_PANEL_WIDTHS.slice(0, i).reduce((a: number, b: number) => a + b, 0)
+);
+
+type ShotCopy = { label: string; caption: string };
+const withSrc = (srcs: readonly string[], copy: ShotCopy[]): CaseShot[] =>
+  srcs.map((src, i) => ({ src, label: copy[i]?.label ?? '', caption: copy[i]?.caption ?? '' }));
 
 export default function Projects() {
   const t = useTranslations('projects');
   const sectionRef = useRef<HTMLElement>(null);
   const traumavisionRef = useRef<HTMLDivElement>(null);
   const elevenRef = useRef<HTMLDivElement>(null);
-  const kibboRef = useRef<HTMLDivElement>(null);
   const hackathonRef = useRef<HTMLDivElement>(null);
   const metricsRef = useRef<HTMLDivElement>(null);
   const horizontalRef = useRef<HTMLDivElement>(null);
@@ -33,7 +49,9 @@ export default function Projects() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [elevenLightboxIndex, setElevenLightboxIndex] = useState<number | null>(null);
   const [kibboLightboxIndex, setKibboLightboxIndex] = useState<number | null>(null);
-
+  const [leexLightboxIndex, setLeexLightboxIndex] = useState<number | null>(null);
+  const openKibbo = useCallback((i: number | null) => setKibboLightboxIndex(i), []);
+  const openLeex = useCallback((i: number | null) => setLeexLightboxIndex(i), []);
   // Scroll guard — skip 3D handler during GSAP scroll
   const isScrollingRef = useRef(false);
 
@@ -82,18 +100,6 @@ export default function Projects() {
     return () => window.removeEventListener('keydown', handler);
   }, [elevenLightboxIndex]);
 
-  // Close Kibbo lightbox on Escape/arrows
-  useEffect(() => {
-    if (kibboLightboxIndex === null) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setKibboLightboxIndex(null);
-      if (e.key === 'ArrowRight') setKibboLightboxIndex((i) => i !== null ? (i + 1) % KIBBO_SCREENSHOTS.length : null);
-      if (e.key === 'ArrowLeft') setKibboLightboxIndex((i) => i !== null ? (i - 1 + KIBBO_SCREENSHOTS.length) % KIBBO_SCREENSHOTS.length : null);
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [kibboLightboxIndex]);
-
   useEffect(() => {
     let cleanup = false;
 
@@ -120,15 +126,20 @@ export default function Projects() {
         });
       }
 
-      // Progress dots — actualizar según posición
+      // Progress dots — one per project. Panels can be wider than 100vw (case
+      // studies = 2 spreads), so each dot's range is its panel's share of the rail.
       if (railRef.current) {
-        [0, 1, 2, 3].forEach((i) => {
+        PANEL_STARTS.forEach((startUnits, i) => {
           const dot = document.querySelector(`[data-dot="${i}"]`) as HTMLElement;
           if (!dot) return;
+          // Switch dots at mid-transition (next panel ≥ 50% in view), not at the exact edge.
+          const isLast = i === PANEL_STARTS.length - 1;
+          const from = startUnits - 0.5; // i = 0 → lights up as the rail docks
+          const to = isLast ? RAIL_UNITS : startUnits + PROJECT_PANEL_WIDTHS[i] - 0.5;
           ScrollTrigger.create({
             trigger: sectionRef.current,
-            start: `${i * 25}% top`,
-            end: `${(i + 1) * 25}% top`,
+            start: `${(from / RAIL_UNITS) * 100}% top`,
+            end: `${(to / RAIL_UNITS) * 100}% top`,
             onEnter: () => { dot.style.background = '#E8272A'; dot.style.width = '12px'; },
             onLeave: () => { dot.style.background = '#555555'; dot.style.width = '6px'; },
             onEnterBack: () => { dot.style.background = '#E8272A'; dot.style.width = '12px'; },
@@ -155,6 +166,43 @@ export default function Projects() {
     };
   }, []);
 
+  const kibboShots = withSrc(KIBBO_SCREENSHOTS, t.raw('kibbo.shots') as ShotCopy[]);
+  const kibboSeoShots = withSrc(KIBBO_SEO_SCREENSHOTS, t.raw('kibbo.seo_shots') as ShotCopy[]);
+  const kibbo: CaseStudyData = {
+    number: '04',
+    eyebrow: t('kibbo.eyebrow'),
+    title: t('kibbo.title'),
+    subtitle: t('kibbo.subtitle'),
+    problem: t('kibbo.problem'),
+    role: t('kibbo.role'),
+    decisions: t.raw('kibbo.decisions') as CaseDecision[],
+    result: t('kibbo.result'),
+    stats: t.raw('kibbo.stats') as CaseStat[],
+    stack: KIBBO_STACK,
+    stackSpread: 'a',
+    shots: kibboShots,
+    seo: { label: t('kibbo.seo_label'), items: t.raw('kibbo.seo_items') as string[], shots: kibboSeoShots },
+    cta: { href: KIBBO_URL, label: t('kibbo.cta') },
+  };
+  const kibboLightboxShots = [...kibboShots, ...kibboSeoShots];
+
+  const leex: CaseStudyData = {
+    number: '05',
+    eyebrow: t('leex.eyebrow'),
+    title: t('leex.title'),
+    subtitle: t('leex.subtitle'),
+    badge: t('leex.badge'),
+    problem: t('leex.problem'),
+    role: t('leex.role'),
+    decisions: t.raw('leex.decisions') as CaseDecision[],
+    result: t('leex.result'),
+    stats: t.raw('leex.stats') as CaseStat[],
+    stack: LEEX_STACK,
+    stackSpread: 'b',
+    shots: withSrc(LEEX_SCREENSHOTS, t.raw('leex.shots') as ShotCopy[]),
+    shotsNote: t('leex.blur_note'),
+  };
+
   const metricLabels: Record<string, string> = {
     auc: t('traumavision.metric_auc'),
     map50: t('traumavision.metric_map50'),
@@ -164,8 +212,8 @@ export default function Projects() {
 
   return (
     <div id="projects">
-      {/* ── Mobile layout (<lg): 3 proyectos apilados verticalmente ── */}
-      <section className="block lg:hidden py-24 bg-bg" aria-hidden="true">
+      {/* ── Mobile layout (<lg): proyectos apilados verticalmente ── */}
+      <section className="block lg:hidden py-24 bg-bg">
         <div className="max-w-7xl mx-auto px-6">
           <p className="font-mono text-xs text-accent tracking-widest uppercase mb-16">{t('label')}</p>
 
@@ -248,32 +296,11 @@ export default function Projects() {
             </div>
           </div>
 
-          {/* Kibbo */}
-          <div className="border-t border-border pt-8">
-            <div className="flex items-baseline gap-4 mb-6">
-              <span className="font-mono text-xs text-accent tracking-widest">04</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            <p className="font-mono text-xs text-accent tracking-widest uppercase mb-2">{t('kibbo.subtitle')}</p>
-            <h2 className="font-display text-white uppercase leading-none mb-4" style={{ fontSize: 'clamp(2rem, 8vw, 4rem)' }}>{t('kibbo.title')}</h2>
-            <p className="font-ui text-off-white mb-6">{t('kibbo.description_expanded')}</p>
-            <div className="flex gap-8 mb-6 border-l-2 border-accent pl-4">
-              {[
-                { value: t('kibbo.stat_role'), label: t('kibbo.stat_role_label') },
-                { value: t('kibbo.stat_product'), label: t('kibbo.stat_product_label') },
-                { value: t('kibbo.stat_live'), label: t('kibbo.stat_live_label') },
-              ].map((stat, i) => (
-                <div key={i}>
-                  <p className="font-mono text-lg text-white tracking-tight mb-0.5">{stat.value}</p>
-                  <p className="font-mono text-xs text-muted uppercase tracking-widest">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {KIBBO_STACK.map((tech) => <StackBadge key={tech} label={tech} />)}
-            </div>
-            <a href="https://kibbo.io" target="_blank" rel="noopener noreferrer" className="inline-block font-ui font-bold text-xs text-accent border border-accent px-4 py-2 tracking-widest uppercase transition-all duration-150 hover:bg-accent hover:text-white">{t('kibbo.cta')}</a>
-          </div>
+          {/* KIBBO — case study */}
+          <CaseStudyMobile data={kibbo} onOpen={openKibbo} />
+
+          {/* LEEX — case study */}
+          <CaseStudyMobile data={leex} onOpen={openLeex} isLast />
         </div>
       </section>
 
@@ -281,7 +308,7 @@ export default function Projects() {
       <section
         ref={sectionRef}
         className="hidden lg:block py-0 bg-bg"
-        style={{ height: '400vh' }}
+        style={{ height: `${RAIL_UNITS * 100}vh` }}
         aria-label="Projects"
       >
         {/* Sticky container — se pina y hace scroll horizontal */}
@@ -297,11 +324,11 @@ export default function Projects() {
             </p>
           </div>
 
-          {/* Rail de proyectos — 4 paneles horizontales */}
+          {/* Rail de proyectos — paneles horizontales (anchos en PROJECT_PANEL_WIDTHS) */}
           <div
             ref={railRef}
             className="flex"
-            style={{ width: '400vw', height: '100%' }}
+            style={{ width: `${RAIL_UNITS * 100}vw`, height: '100%' }}
           >
             {/* ── Panel 1: TraumaVision ── */}
             <div
@@ -574,102 +601,16 @@ export default function Projects() {
               </div>
             </div>
 
-            {/* ── Panel 4: Kibbo ── */}
-            <div
-              ref={kibboRef}
-              className="relative flex flex-col justify-center"
-              style={{ width: '100vw', height: '100vh', padding: '6rem 3rem 3rem' }}
-            >
-              <div className="flex items-baseline gap-4 mb-6">
-                <span className="font-mono text-xs text-accent tracking-widest">04</span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
+            {/* ── Panel 4: KIBBO case study (200vw, 2 spreads) ── */}
+            <CaseStudyPanel data={kibbo} onOpen={openKibbo} onMouseMove={handle3DMove} onMouseLeave={handle3DLeave} />
 
-              <div className="grid lg:grid-cols-2 gap-12 items-start max-w-7xl mx-auto w-full">
-                {/* LEFT */}
-                <div>
-                  <p className="font-mono text-xs text-accent tracking-widest uppercase mb-2">
-                    {t('kibbo.subtitle')}
-                  </p>
-                  <h2
-                    className="font-display text-white uppercase leading-none mb-4"
-                    style={{ fontSize: 'clamp(2.5rem, 5vw, 5rem)' }}
-                  >
-                    {t('kibbo.title')}
-                  </h2>
-                  <p className="font-ui text-off-white text-lg mb-8 max-w-lg">
-                    {t('kibbo.description_expanded')}
-                  </p>
-
-                  {/* Stats */}
-                  <div className="flex gap-12 mb-8 border-l-2 border-accent pl-6">
-                    {[
-                      { value: t('kibbo.stat_role'), label: t('kibbo.stat_role_label') },
-                      { value: t('kibbo.stat_product'), label: t('kibbo.stat_product_label') },
-                      { value: t('kibbo.stat_live'), label: t('kibbo.stat_live_label') },
-                    ].map((stat, i) => (
-                      <div key={i}>
-                        <p className="font-mono text-2xl text-white tracking-tight mb-1">{stat.value}</p>
-                        <p className="font-mono text-xs text-muted uppercase tracking-widest">{stat.label}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Stack */}
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {KIBBO_STACK.map((tech) => (
-                      <StackBadge key={tech} label={tech} />
-                    ))}
-                  </div>
-
-                  <a
-                    href="https://kibbo.io"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block font-ui font-bold text-xs text-accent border border-accent px-4 py-2 tracking-widest uppercase transition-all duration-150 hover:bg-accent hover:text-white"
-                  >
-                    {t('kibbo.cta')}
-                  </a>
-                </div>
-
-                {/* RIGHT: screenshots */}
-                <div
-                  className="grid grid-cols-2 gap-2 items-end"
-                  style={{ transformStyle: 'preserve-3d' }}
-                  onMouseMove={handle3DMove}
-                  onMouseLeave={handle3DLeave}
-                >
-                  {KIBBO_SCREENSHOTS.map((shot, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setKibboLightboxIndex(i)}
-                      className="group relative overflow-hidden border border-border hover:border-accent transition-colors duration-150 focus:outline-none"
-                      style={{ aspectRatio: '16/10', transform: `translateY(${STAGGER_Y[i]}px)`, transition: 'transform 0.3s ease' }}
-                      aria-label={`View screenshot: ${shot.label}`}
-                    >
-                      <Image
-                        src={shot.src}
-                        alt={shot.alt}
-                        fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        sizes="25vw"
-                      />
-                      <div className="absolute inset-0 bg-bg/0 group-hover:bg-bg/60 transition-colors duration-200 flex items-end p-2">
-                        <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <span className="text-accent">{String(i + 1).padStart(2, '0')}</span>
-                          <span className="text-off-white"> / {shot.label}</span>
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {/* ── Panel 5: LEEX case study (200vw, 2 spreads) ── */}
+            <CaseStudyPanel data={leex} onOpen={openLeex} onMouseMove={handle3DMove} onMouseLeave={handle3DLeave} />
           </div>
 
           {/* Indicador de progreso — puntitos abajo */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-10">
-            {[0, 1, 2, 3].map((i) => (
+            {PROJECT_PANEL_WIDTHS.map((_, i) => (
               <div
                 key={i}
                 className="h-1.5 bg-[#555555]"
@@ -732,56 +673,9 @@ export default function Projects() {
         </div>
       )}
 
-      {/* ─────────────────────────────────────────────────────────── */}
-      {/* Lightbox — Kibbo screenshots                                */}
-      {/* ─────────────────────────────────────────────────────────── */}
-      {kibboLightboxIndex !== null && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
-          onClick={() => setKibboLightboxIndex(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Screenshot viewer"
-        >
-          <button
-            className="absolute top-4 right-6 font-mono text-sm text-off-white hover:text-accent transition-colors duration-150 z-10"
-            onClick={() => setKibboLightboxIndex(null)}
-            aria-label="Close screenshot viewer"
-          >
-            [ESC] CLOSE
-          </button>
-          <button
-            className="absolute left-4 top-1/2 -translate-y-1/2 font-mono text-2xl text-off-white hover:text-accent transition-colors duration-150 z-10 px-3 py-2"
-            onClick={(e) => { e.stopPropagation(); setKibboLightboxIndex((i) => i !== null ? (i - 1 + KIBBO_SCREENSHOTS.length) % KIBBO_SCREENSHOTS.length : null); }}
-            aria-label="Previous screenshot"
-          >←</button>
-          <div
-            className="relative max-w-5xl w-full mx-16 border border-accent"
-            style={{ aspectRatio: '16/9' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Image
-              src={KIBBO_SCREENSHOTS[kibboLightboxIndex].src}
-              alt={KIBBO_SCREENSHOTS[kibboLightboxIndex].alt}
-              fill
-              className="object-contain"
-              sizes="100vw"
-              priority
-            />
-            <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center gap-2" style={{ backgroundColor: 'rgba(8,8,8,0.85)' }}>
-              <span className="font-mono text-xs text-accent">{String(kibboLightboxIndex + 1).padStart(2, '0')}</span>
-              <span className="font-mono text-xs text-off-white">/ {KIBBO_SCREENSHOTS[kibboLightboxIndex].label}</span>
-              <span className="font-mono text-xs text-muted ml-auto">{kibboLightboxIndex + 1} / {KIBBO_SCREENSHOTS.length}</span>
-            </div>
-          </div>
-          <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-2xl text-off-white hover:text-accent transition-colors duration-150 z-10 px-3 py-2"
-            onClick={(e) => { e.stopPropagation(); setKibboLightboxIndex((i) => i !== null ? (i + 1) % KIBBO_SCREENSHOTS.length : null); }}
-            aria-label="Next screenshot"
-          >→</button>
-        </div>
-      )}
+      {/* Lightbox — KIBBO (site + SEO/GEO) and LEEX screenshots */}
+      <CaseLightbox shots={kibboLightboxShots} index={kibboLightboxIndex} onChange={openKibbo} />
+      <CaseLightbox shots={leex.shots} index={leexLightboxIndex} onChange={openLeex} />
 
       {/* ─────────────────────────────────────────────────────────── */}
       {/* Lightbox — TraumaVision screenshots                         */}

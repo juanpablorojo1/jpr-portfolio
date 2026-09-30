@@ -1,6 +1,7 @@
 {
   "nav": {
     "projects": "Projects",
+    "video": "Video",
     "skills": "Skills",
     "experience": "Experience",
     "contact": "Contact",
@@ -64,20 +65,127 @@
       "event_stat_team": "ALGARROBA LID",
       "event_stat_organizer": "RTS GROUP · 2025"
     },
+    "case": {
+      "problem": "Problem",
+      "role": "My role",
+      "decisions": "Key decisions",
+      "result": "Result",
+      "stack": "Stack",
+      "screens": "Screens",
+      "view_shot": "View screenshot",
+      "lightbox": {
+        "viewer": "Screenshot viewer",
+        "close": "[ESC] Close",
+        "close_aria": "Close screenshot viewer",
+        "prev": "Previous screenshot",
+        "next": "Next screenshot"
+      }
+    },
     "kibbo": {
+      "eyebrow": "Case Study · B2B SaaS · Built via Eleven · 2026",
       "title": "KIBBO",
-      "subtitle": "Medical Equipment SaaS · Built via Eleven",
-      "description": "Awwwards-tier marketing site for KIBBO, a hospital equipment management SaaS. Heavy GSAP scrollytelling on Next.js SSR.",
-      "description_expanded": "Designed and built the awwwards-tier site for KIBBO, a hospital equipment management SaaS: inventory, per-unit life history, preventive and corrective maintenance, work orders and an operability dashboard. Heavy GSAP scrollytelling with ScrollSmoother, mask reveals, a custom cursor, a branded preloader and view-transition page changes, on Next.js SSR. Lead Developer via Eleven. Argentina, 2026.",
-      "role": "Lead Developer",
-      "role_label": "Role",
-      "stat_role": "LEAD DEV",
-      "stat_role_label": "Role",
-      "stat_product": "SAAS B2B",
-      "stat_product_label": "Product",
-      "stat_live": "LIVE",
-      "stat_live_label": "Status",
-      "cta": "View Site"
+      "subtitle": "A working hospital-equipment platform, and the website it never had.",
+      "problem": "KIBBO is a management platform (CMMS) for hospital medical equipment. The product worked, but kibbo.io still ran an old WordPress site that didn't explain it and throttled search crawlers. A biomedical engineer had nowhere to understand KIBBO, see it running, or check who already uses it.",
+      "role": "Through Eleven, I led design, front-end development, SEO/GEO and the English edition. The build ran on our AI-agent pipeline, with my review and sign-off at every checkpoint.",
+      "decisions": [
+        { "title": "Write to the technician, not the buyer.", "body": "Third person, no hype, every claim shown on a real product screen, because the reader is the one who will run it every day." },
+        { "title": "Keep KIBBO and LEEX apart.", "body": "The hardware maker's figures are credited to LEEX, so KIBBO stands as its own product and never claims what it can't back." },
+        { "title": "Give mobile its own system.", "body": "\"Expediente\" reads each page like a case file instead of squeezing the desktop scroll into a phone." },
+        { "title": "Make English a real edition.", "body": "Own slugs, reciprocal hreflang and an untouched Spanish canonical; user quotes stay verbatim in Spanish with a labelled translation, so no one is misquoted." }
+      ],
+      "result": "Live on kibbo.io in Spanish and English, replacing the legacy WordPress, with GA4 measuring from launch.",
+      "stats": [
+        { "value": "ES · EN", "label": "Live on kibbo.io" },
+        { "value": "11", "label": "Pages in English" },
+        { "value": "23", "label": "URLs in the sitemap" }
+      ],
+      "seo_label": "SEO / GEO",
+      "seo_items": [
+        "JSON-LD: Organization, SoftwareApplication, FAQPage; ratings only where shown.",
+        "Reciprocal ES/EN hreflang, x-default and a canonical per language.",
+        "Sitemap built from one route registry, dated by real edits.",
+        "Citable guides: CMMS explainer, tender checklist, country records (ES)."
+      ],
+      "cta": "View site →",
+      "shots": [
+        { "label": "Home", "caption": "Home — full control of the hospital equipment fleet." },
+        { "label": "Problems", "caption": "Five fleet problems, each answered on a real product screen." },
+        { "label": "How it works", "caption": "How it works — inventory, history file, preventive, work orders." },
+        { "label": "Dashboard", "caption": "/en/how-it-works — \"The institution's real state, on one dashboard.\"" },
+        { "label": "Community", "caption": "/en/cases-and-network — \"No one manages a fleet alone.\"" },
+        { "label": "Trust", "caption": "/en/trust-and-security — \"How the information travels.\"" },
+        { "label": "Resource", "caption": "A resource guide written to be cited by search and AI." },
+        { "label": "Mobile", "caption": "Mobile: the «Expediente» system, not a shrunk desktop." }
+      ],
+      "seo_shots": [
+        { "label": "JSON-LD", "caption": "JSON-LD served on kibbo.io/en — Organization graph and FAQPage." },
+        { "label": "Hreflang", "caption": "The /en head, robots.txt and sitemap pairs — reciprocal ES/EN hreflang." }
+      ]
+    },
+    "leex": {
+      "badge": "In development — launching soon",
+      "eyebrow": "Case Study · Internal B2B System · LEEX · 2026",
+      "title": "LEEX Tender System",
+      "subtitle": "Finds public tenders across 33 sources and helps sales decide which to bid.",
+      "problem": "LEEX, an Argentine medical equipment company, sells mainly through public tenders: demand isn't generated, it's detected across dozens of government portals, each with its own format and deadlines. Seeing a tender late means never having it; seeing it without knowing if you qualify means losing it. The previous tool was a single-user script feeding a spreadsheet.",
+      "role": "I led it end to end: scoped it with sales and management, designed the architecture, and built the engine and web app with a pipeline of AI coding agents under my direction.",
+      "decisions": [
+        { "title": "Code before AI.", "body": "A deterministic dictionary-plus-vector match filters first and a Claude model judges only what survives, because that keeps it cheap, testable and explainable." },
+        { "title": "A person signs every verdict.", "body": "The model drafts a requirement-by-requirement case citing the tender and the product sheet, and sales decides, because a missed tender costs far more than a review." },
+        { "title": "Three sweep states, not two.", "body": "\"Nothing there\", \"couldn't see\" and \"saw far less than usual\", because the expensive failure is the silent one." },
+        { "title": "Public first.", "body": "The engine reads each portal's public view and logs in only as a documented last resort, which cut credential exposure and let the build start without waiting on access." }
+      ],
+      "result": "Running internally on real data: the first full pass went from sweep to triage to human-signed verdicts. Next step: onboarding the sales team.",
+      "stats": [
+        { "value": "33", "label": "Procurement sources swept" },
+        { "value": "19", "label": "Sources the old tool never reached" },
+        { "value": "28", "label": "Product categories matched" },
+        { "value": "10k+", "label": "Automated tests" }
+      ],
+      "blur_note": "Client data and amounts blurred",
+      "shots": [
+        { "label": "Detection", "caption": "Automatic detection — the day's batch, already triaged." },
+        { "label": "Verdict", "caption": "The file — a verdict drafted per requirement, with cited evidence." },
+        { "label": "My work", "caption": "My work — due today, on time and past opening, across the whole team." },
+        { "label": "Board", "caption": "The board — due soon, unassigned, in progress, detected." },
+        { "label": "Sources", "caption": "Source health — 'nothing there' is not 'couldn't see'." }
+      ]
+    }
+  },
+  "videos": {
+    "label": "Motion & Video",
+    "headline": "Frame by Frame",
+    "intro": "Short pieces, one idea each. Tap to play with sound.",
+    "play": "Play",
+    "play_aria": "Play video: {title}",
+    "audio_es": "Audio ES",
+    "audio_en": "Audio EN",
+    "items": {
+      "b6_story": {
+        "eyebrow": "LEEX · B6 incubator",
+        "title": "Where the incubator came from",
+        "caption": "In 1878, a Paris obstetrician had a zoo's poultry incubator adapted for babies; premature mortality fell from 66% to 38% with controlled heat alone. Today that idea is LEEX's B6."
+      },
+      "kibbo_film": {
+        "eyebrow": "KIBBO · Product reel",
+        "title": "Preventive maintenance, from plan to execution",
+        "caption": "The maintenance plan takes a week to build, but the first surprise pulls schedule and staff apart. KIBBO puts every preventive task in one filterable list the whole team can see."
+      },
+      "v8v_cpr": {
+        "eyebrow": "LEEX · V8v bed",
+        "title": "One button to resuscitate",
+        "caption": "How long does a hospital bed take to be ready for resuscitation? On LEEX's V8v electric bed, one button: press it and the bed goes fully flat, ready for CPR, because in a cardiac arrest there's no time to lose."
+      },
+      "mri_explainer": {
+        "eyebrow": "Explainer · Remotion",
+        "title": "How an MRI works",
+        "caption": "No cameras, no X-rays: your body is full of water, and every hydrogen nucleus is a tiny magnet. A huge magnet, a radio pulse tuned to their rhythm and gradient coils turn that signal into an image. It's not a photo; it's the hydrogen in your body, made visible."
+      },
+      "model_comparison": {
+        "eyebrow": "AI models · Remotion",
+        "title": "Same prompt, three models",
+        "caption": "One prompt, three models (Sonnet 5, Opus 5.5 and Astra 6): a 3D gummy citrus slice you can stretch and twist. Real, side-by-side recordings show how each result behaves, alongside the time and tokens each model took."
+      }
     }
   },
   "skills": {

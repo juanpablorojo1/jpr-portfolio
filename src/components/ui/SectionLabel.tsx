@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-type SectionId = 'hero' | 'about' | 'projects' | 'skills' | 'experience' | 'contact';
+type SectionId = 'hero' | 'about' | 'projects' | 'videos' | 'skills' | 'experience' | 'contact';
 
 const SECTION_LABELS: Record<SectionId, string> = {
   hero: '// HERO',
   about: '// ABOUT',
   projects: '// PROJECTS',
+  videos: '// VIDEO',
   skills: '// SKILLS',
   experience: '// EXPERIENCE',
   contact: '// CONTACT',
@@ -17,6 +18,7 @@ const SECTION_IDS: SectionId[] = [
   'hero',
   'about',
   'projects',
+  'videos',
   'skills',
   'experience',
   'contact',

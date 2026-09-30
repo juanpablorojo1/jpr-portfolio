@@ -23,6 +23,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '#projects', label: t('projects') },
+    { href: '#videos', label: t('video') },
     { href: '#skills', label: t('skills') },
     { href: '#experience', label: t('experience') },
     { href: '#contact', label: t('contact') },
@@ -54,7 +55,7 @@ export default function Navbar() {
         <div />
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-5 lg:gap-8">
           {navLinks.map((link) => (
             <a
               key={link.href}
@@ -81,7 +82,7 @@ export default function Navbar() {
             target="_blank"
             rel="noopener noreferrer"
             className="
-              font-ui font-bold text-xs text-white
+              font-ui font-bold text-xs text-white whitespace-nowrap
               border border-accent px-4 py-1.5
               tracking-widest uppercase
               transition-all duration-200

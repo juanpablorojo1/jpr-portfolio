@@ -89,6 +89,10 @@ body {
   .transition-zone {
     position: relative !important;
     overflow: visible !important;
+    /* Clip the watermark anchor words horizontally (they leaked ~330px of
+       horizontal scroll at 768). clip ≠ hidden: no scroll container, so nothing
+       inside changes behaviour. */
+    overflow-x: clip !important;
     box-shadow: none !important;
     z-index: auto !important;
     top: auto !important;

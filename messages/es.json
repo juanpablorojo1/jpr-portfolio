@@ -1,6 +1,7 @@
 {
   "nav": {
     "projects": "Proyectos",
+    "video": "Video",
     "skills": "Skills",
     "experience": "Experiencia",
     "contact": "Contacto",
@@ -64,20 +65,127 @@
       "event_stat_team": "ALGARROBA LID",
       "event_stat_organizer": "RTS GROUP · 2025"
     },
+    "case": {
+      "problem": "Problema",
+      "role": "Mi rol",
+      "decisions": "Decisiones clave",
+      "result": "Resultado",
+      "stack": "Stack",
+      "screens": "Pantallas",
+      "view_shot": "Ver captura",
+      "lightbox": {
+        "viewer": "Visor de capturas",
+        "close": "[ESC] Cerrar",
+        "close_aria": "Cerrar visor de capturas",
+        "prev": "Captura anterior",
+        "next": "Captura siguiente"
+      }
+    },
     "kibbo": {
+      "eyebrow": "Caso · SaaS B2B · Hecho vía Eleven · 2026",
       "title": "KIBBO",
-      "subtitle": "SaaS de Equipos Médicos · Construido vía Eleven",
-      "description": "Sitio nivel awwwards de KIBBO, un SaaS de gestión de equipos médicos hospitalarios. Scrollytelling pesado con GSAP sobre Next.js SSR.",
-      "description_expanded": "Diseñé y construí el sitio nivel awwwards de KIBBO, un SaaS de gestión de equipos médicos hospitalarios: inventario, hoja de vida por equipo, mantenimientos preventivos y correctivos, órdenes de trabajo y dashboard de operatividad. Scrollytelling pesado con GSAP y ScrollSmoother, reveals por máscara, cursor custom, preloader de marca y transiciones de página con view-transitions, sobre Next.js con SSR. Lead Developer vía Eleven. Argentina, 2026.",
-      "role": "Lead Developer",
-      "role_label": "Rol",
-      "stat_role": "LEAD DEV",
-      "stat_role_label": "Rol",
-      "stat_product": "SAAS B2B",
-      "stat_product_label": "Producto",
-      "stat_live": "LIVE",
-      "stat_live_label": "Estado",
-      "cta": "Ver sitio"
+      "subtitle": "Una plataforma de equipos hospitalarios que funcionaba, y la web que nunca tuvo.",
+      "problem": "KIBBO es una plataforma de gestión (CMMS) de equipamiento médico hospitalario. El producto funcionaba, pero kibbo.io seguía en un WordPress viejo que no lo explicaba y le frenaba el paso a los buscadores. Un bioingeniero no tenía dónde entender KIBBO, verlo andando ni ver quién ya lo usa.",
+      "role": "Desde Eleven lideré diseño, desarrollo front-end, SEO/GEO y la edición en inglés. El build corrió sobre nuestro pipeline de agentes IA, con mi revisión y aprobación en cada checkpoint.",
+      "decisions": [
+        { "title": "Hablarle al técnico, no al comprador.", "body": "Tercera persona, sin humo, cada afirmación mostrada en una pantalla real del producto, porque quien lee es quien lo va a usar todos los días." },
+        { "title": "Separar KIBBO de LEEX.", "body": "Las cifras del fabricante se atribuyen a LEEX, así KIBBO se sostiene como producto propio y no afirma nada que no pueda respaldar." },
+        { "title": "Darle al móvil un sistema propio.", "body": "«Expediente» lee cada página como una ficha, en vez de meter el scroll de escritorio en un teléfono." },
+        { "title": "Hacer del inglés una edición real.", "body": "Slugs propios, hreflang recíproco y el canonical en español intacto; las citas de usuarios quedan textuales en español con traducción rotulada, para no ponerle palabras en la boca a nadie." }
+      ],
+      "result": "En vivo en kibbo.io en español e inglés, reemplazando el WordPress viejo, con GA4 midiendo desde el lanzamiento.",
+      "stats": [
+        { "value": "ES · EN", "label": "En vivo en kibbo.io" },
+        { "value": "11", "label": "Páginas en inglés" },
+        { "value": "23", "label": "URLs en el sitemap" }
+      ],
+      "seo_label": "SEO / GEO",
+      "seo_items": [
+        "JSON-LD: Organization, SoftwareApplication, FAQPage; puntajes solo donde se ven.",
+        "Hreflang ES/EN recíproco, x-default y canonical por idioma.",
+        "Sitemap desde un único registro de rutas, fechado por ediciones reales.",
+        "Guías citables: qué es un CMMS, pliego de licitación, registros por país."
+      ],
+      "cta": "Ver sitio →",
+      "shots": [
+        { "label": "Inicio", "caption": "Home: control total del parque de equipos del hospital." },
+        { "label": "Problemas", "caption": "Cinco problemas del parque, cada uno resuelto en una pantalla real." },
+        { "label": "Cómo funciona", "caption": "Cómo funciona: inventario, hoja de vida, preventivos, órdenes." },
+        { "label": "Tablero", "caption": "/en/how-it-works: «The institution's real state, on one dashboard»." },
+        { "label": "Comunidad", "caption": "/en/cases-and-network: «No one manages a fleet alone»." },
+        { "label": "Confianza", "caption": "/en/trust-and-security: «How the information travels»." },
+        { "label": "Recurso", "caption": "Una guía de recursos escrita para que la citen buscadores e IA." },
+        { "label": "Móvil", "caption": "Móvil: el sistema «Expediente», no un escritorio achicado." }
+      ],
+      "seo_shots": [
+        { "label": "JSON-LD", "caption": "JSON-LD servido en kibbo.io/en: grafo Organization y FAQPage." },
+        { "label": "Hreflang", "caption": "Head de /en, robots.txt y pares del sitemap: hreflang ES/EN recíproco." }
+      ]
+    },
+    "leex": {
+      "badge": "En desarrollo — lanzamiento próximo",
+      "eyebrow": "Caso · Sistema interno B2B · LEEX · 2026",
+      "title": "Sistema de Licitaciones LEEX",
+      "subtitle": "Encuentra licitaciones públicas en 33 fuentes y ayuda a Ventas a decidir a cuáles ir.",
+      "problem": "LEEX, empresa argentina de equipamiento médico, vende sobre todo por licitación pública: la demanda no se genera, se detecta, en decenas de portales del Estado con formatos y plazos propios. Ver una licitación tarde es no haberla tenido; verla sin saber si calificás es perderla. La herramienta anterior era un script de un solo usuario que llenaba una planilla.",
+      "role": "Lo lideré de punta a punta: definí el alcance con Ventas y la gerencia, diseñé la arquitectura y construí el motor y la web app con un pipeline de agentes IA de programación bajo mi dirección.",
+      "decisions": [
+        { "title": "Código antes que IA.", "body": "Un match determinístico por diccionario y vectores filtra primero y un modelo de Claude juzga solo lo que sobrevive, porque así es barato, testeable y explicable." },
+        { "title": "Cada veredicto lo firma una persona.", "body": "El modelo arma un borrador requisito por requisito citando el pliego y la ficha técnica, y decide Ventas, porque perder una licitación cuesta mucho más que revisarla." },
+        { "title": "Tres estados de barrido, no dos.", "body": "«No hay nada», «no pude ver» y «vi mucho menos que siempre», porque la falla cara es la silenciosa." },
+        { "title": "Lo público primero.", "body": "El motor lee la vista pública de cada portal y entra con login solo como último recurso documentado, lo que redujo la exposición de credenciales y permitió arrancar sin esperar accesos." }
+      ],
+      "result": "Corre internamente sobre datos reales: la primera pasada completa fue del barrido al triaje y a veredictos firmados por una persona. Próximo paso: sumar al equipo de Ventas.",
+      "stats": [
+        { "value": "33", "label": "Fuentes de compras barridas" },
+        { "value": "19", "label": "Fuentes que la herramienta anterior no veía" },
+        { "value": "28", "label": "Categorías de producto" },
+        { "value": "10k+", "label": "Tests automatizados" }
+      ],
+      "blur_note": "Datos de clientes y montos difuminados",
+      "shots": [
+        { "label": "Detección", "caption": "Detección automática: el lote del día, ya triado." },
+        { "label": "Veredicto", "caption": "La ficha: veredicto requisito por requisito, con evidencia citada." },
+        { "label": "Mi trabajo", "caption": "Mi trabajo: vence hoy, en plazo y apertura pasada, de todo el equipo." },
+        { "label": "Tablero", "caption": "El tablero: por vencer, sin asignar, en gestión, detectadas." },
+        { "label": "Fuentes", "caption": "Salud de fuentes: «no hay nada» no es «no pude ver»." }
+      ]
+    }
+  },
+  "videos": {
+    "label": "Motion y video",
+    "headline": "Cuadro por cuadro",
+    "intro": "Piezas cortas, una idea por pieza. Tocá para reproducir con sonido.",
+    "play": "Reproducir",
+    "play_aria": "Reproducir video: {title}",
+    "audio_es": "Audio ES",
+    "audio_en": "Audio EN",
+    "items": {
+      "b6_story": {
+        "eyebrow": "LEEX · Incubadora B6",
+        "title": "De dónde salió la incubadora",
+        "caption": "En 1878, un obstetra de París hizo adaptar para bebés una incubadora de pollos del zoológico: la mortalidad de los prematuros bajó del 66 % al 38 % solo controlando el calor. Hoy esa idea es la B6 de LEEX."
+      },
+      "kibbo_film": {
+        "eyebrow": "KIBBO · Reel de producto",
+        "title": "Mantenimiento preventivo: cómo pasar del plan a la ejecución",
+        "caption": "El plan de mantenimiento se arma en una semana, pero ante el primer imprevisto el cronograma y el personal dejan de coincidir. KIBBO junta todos los preventivos en una lista filtrable, a la vista de todo el equipo."
+      },
+      "v8v_cpr": {
+        "eyebrow": "LEEX · Cama V8v",
+        "title": "Un botón para reanimar",
+        "caption": "¿Cuánto tarda una cama en estar lista para reanimar? En la cama eléctrica V8v de LEEX, un botón: se aprieta y la cama queda totalmente horizontal, lista para la maniobra, porque en un paro cardíaco no hay tiempo que perder."
+      },
+      "mri_explainer": {
+        "eyebrow": "Explicativo · Remotion",
+        "title": "Cómo funciona una resonancia",
+        "caption": "Sin cámaras ni rayos X: el cuerpo está lleno de agua y cada núcleo de hidrógeno es un imán diminuto. Un imán enorme, un pulso de radio a su ritmo y bobinas de gradiente convierten esa señal en imagen: no es una foto, es el hidrógeno de tu cuerpo hecho imagen."
+      },
+      "model_comparison": {
+        "eyebrow": "Modelos de IA · Remotion",
+        "title": "Mismo prompt, tres modelos",
+        "caption": "El mismo prompt a tres modelos (Sonnet 5, Opus 5.5 y Astra 6): una rodaja de gomita en 3D que se puede estirar y torcer. Las grabaciones reales muestran cómo responde cada resultado junto al tiempo y los tokens que le llevó a cada uno."
+      }
     }
   },
   "skills": {
