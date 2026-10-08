@@ -264,7 +264,7 @@ export default function Projects() {
     auc: t('traumavision.metric_auc'),
     map50: t('traumavision.metric_map50'),
     recall: t('traumavision.metric_recall'),
-    f1: t('traumavision.metric_f1'),
+    specificity: t('traumavision.metric_specificity'),
   };
 
   const tvShotLabels = t.raw('traumavision.shot_labels') as string[];

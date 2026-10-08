@@ -11,16 +11,16 @@ export const SOCIAL_LINKS = {
 } as const;
 
 export const TRAUMAVISION_METRICS = [
-  { key: 'auc', value: 0.973, decimals: 3, suffix: '' },
-  { key: 'map50', value: 91.9, decimals: 1, suffix: '%' },
-  { key: 'recall', value: 86.6, decimals: 1, suffix: '%' },
-  { key: 'f1', value: 92.36, decimals: 2, suffix: '%' },
+  { key: 'auc', value: 0.987, decimals: 3, suffix: '' },
+  { key: 'map50', value: 0.944, decimals: 3, suffix: '' },
+  { key: 'recall', value: 96.7, decimals: 1, suffix: '%' },
+  { key: 'specificity', value: 93.1, decimals: 1, suffix: '%' },
 ] as const;
 
 export const TRAUMAVISION_STACK = [
   'Python', 'PyTorch', 'YOLOv8m', 'Ultralytics', 'FastAPI', 'Uvicorn',
-  'OpenCV', 'NumPy', 'Pillow', 'PyDICOM', 'React', 'TypeScript', 'Vite',
-  'VS Code', 'GitHub Copilot',
+  'OpenCV', 'NumPy', 'Pillow', 'PyDICOM', 'SQLAlchemy', 'Jinja2', 'ReportLab',
+  'Chart.js', 'GSAP', 'pytest',
 ] as const;
 
 export const TRAUMAVISION_SCREENSHOTS = [
@@ -36,7 +36,7 @@ export const TRAUMAVISION_SCREENSHOTS = [
   },
   {
     src: '/images/traumavision-analisis.jpg',
-    alt: 'TraumaVision — Fracture detection with bounding box, 84% probability',
+    alt: 'TraumaVision — Fracture detection with bounding box and a 0.84 detection score',
     label: 'ANÁLISIS',
   },
   {
@@ -51,14 +51,14 @@ export const TRAUMAVISION_SCREENSHOTS = [
   },
   {
     src: '/images/traumavision-metrics.jpg',
-    alt: 'TraumaVision — Confusion matrix and performance metrics (YOLOv8m, test set 3,035 X-rays)',
+    alt: 'TraumaVision — Confusion matrix and performance metrics (YOLOv8m, test set of 3,038 X-rays)',
     label: 'MÉTRICAS',
   },
 ] as const;
 
 export const ELEVEN_STACK = [
   'Next.js', 'TypeScript', 'Tailwind CSS', 'Supabase', 'GSAP', 'Vercel', 'GitHub',
-  'Claude Sonnet · Haiku · Opus', 'Prompt Caching', 'Extended Thinking',
+  'Claude API', 'Prompt Caching', 'Extended Thinking',
   'Tool Use · Function Calling', 'Multi-agent Pipeline', 'Claude Code CLI',
   'Playwright MCP', 'Google Drive MCP', 'Gmail MCP', 'Google Calendar MCP',
   'Canva MCP', 'Vercel MCP', 'next-intl', 'Resend', 'VS Code', 'GitHub Copilot',
@@ -103,7 +103,7 @@ export const KIBBO_SEO_SCREENSHOTS = [
 
 export const LEEX_STACK = [
   'Python 3.12', 'Next.js 16', 'React 19', 'TypeScript',
-  'Supabase (PostgreSQL + RLS)', 'pgvector', 'Claude (Haiku · Sonnet)',
+  'Supabase (PostgreSQL + RLS)', 'pgvector', 'Claude API',
   'pdfplumber + OCR', 'pytest', 'Vitest', 'GitHub Actions', 'Vercel',
 ] as const;
 

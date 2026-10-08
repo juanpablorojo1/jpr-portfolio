@@ -11,21 +11,22 @@
   "hero": {
     "title": "JUAN PABLO",
     "surname": "ROJO",
-    "role": "Ingeniero Biomédico. Construyo IA clínica, del modelo al producto.",
+    "role": "Ingeniería biomédica. Construyo IA, automatizaciones y productos web.",
     "tagline": "Del equipamiento hospitalario a la AI clínica, productos web y automatización digital.",
     "cta1": "Ver proyectos",
-    "cta2": "Descargar CV"
+    "cta2": "Descargar CV",
+    "marquee": ["INGENIERÍA BIOMÉDICA", "AI ENGINEER", "AUTOMATIZACIÓN", "PRODUCTOS WEB", "FUNDADOR", "CÓRDOBA AR"]
   },
   "about": {
     "label": "Sobre mí",
     "headline": "De la biología al código, del laboratorio al producto",
     "headline_1": "De la biología al código,",
     "headline_2": "del laboratorio al producto",
-    "p1": "Último año de Ingeniería Biomédica en la UNC Córdoba. Mi tesis, TraumaVision, detecta fracturas óseas en radiografías con 97,18% de exactitud y AUC-ROC 0,973. La desarrollé de punta a punta: modelo, API y aplicación web.",
-    "p2": "En 2026 fundé Eleven, una agencia digital AI-first. Funciona sobre un pipeline de 38 agentes que construí con Claude API y tiene 4 productos en producción.",
+    "p1": "Ingeniería Biomédica en la UNC Córdoba: tesis entregada, defensa pendiente. TraumaVision, mi proyecto integrador, es un prototipo académico que detecta fracturas de muñeca pediátrica en radiografías. Lo desarrollé de punta a punta: modelo, API y aplicación web.",
+    "p2": "Desde agosto de 2026: Especialista en automatización en LEEX y AI Engineer en KIBBO. También fundé Eleven, una agencia AI-first que funciona sobre un pipeline de 38 agentes que construí con Claude API.",
     "p3": "Primer puesto en Rocking the Industry (RTS Group, 2025) con el equipo Algarroba LID, entre 150 equipos multidisciplinarios.",
-    "p4": "Vivo en Córdoba, Argentina. Inglés profesional tras dos temporadas (8 meses) de trabajo a tiempo completo en California.",
-    "sub_tagline": "Contexto clínico. Código en producción.",
+    "p4": "Vivo en Córdoba, Argentina. Inglés profesional tras trabajar a tiempo completo en California.",
+    "sub_tagline": "Base en salud. Software en producción.",
     "meta_location": "Ubicación",
     "meta_location_value": "Córdoba, AR",
     "meta_status": "Estado",
@@ -35,14 +36,14 @@
   "projects": {
     "label": "Proyectos",
     "traumavision": {
-      "label": "Tesis de grado · UNC Córdoba · 2025",
+      "label": "Tesis de grado · UNC Córdoba · 2026",
       "title": "TraumaVision AI",
-      "subtitle": "Sistema de soporte a la decisión clínica para detectar fracturas en radiografías",
-      "description": "Desarrollado de punta a punta, del entrenamiento del modelo a la aplicación web. 97,18% de exactitud y AUC-ROC 0,973 en detección de fracturas. Hoy en etapa de escalado: extender la detección de la muñeca a todo el cuerpo y desarrollar TraumaVision como emprendimiento en programas como Emprende U 2026.",
+      "subtitle": "Soporte a la decisión clínica: fracturas de muñeca pediátrica en radiografías",
+      "description": "Prototipo académico desarrollado de punta a punta: detector YOLOv8m y aplicación web en FastAPI con informes PDF. Test aislado de 3.038 imágenes: sensibilidad 96,7%, especificidad 93,1%. Test externo sin reentrenar: 97,4% / 88,3%. En escalado con Emprende U 2026; luego, más regiones anatómicas.",
       "metric_auc": "AUC-ROC",
       "metric_map50": "mAP@50",
-      "metric_recall": "Recall",
-      "metric_f1": "F1 Score",
+      "metric_recall": "Sensibilidad",
+      "metric_specificity": "Especificidad",
       "pipeline_label": "Pipeline",
       "stack_label": "Stack",
       "shot_labels": ["LOGIN", "INICIO", "ANÁLISIS", "HISTORIAL", "TABLERO", "MÉTRICAS"]
@@ -51,14 +52,14 @@
       "title": "Eleven Estudio Digital",
       "subtitle": "Agencia digital AI-first · Argentina",
       "description": "Fundé y dirijo una agencia digital AI-first que desarrolla productos web y agentes de IA para pymes, sobre Next.js, Supabase y Claude API.",
-      "description_expanded": "Fundé y dirijo una agencia digital AI-first. Construí su pipeline de 38 agentes sobre Claude API (Sonnet 4.6, Haiku 4.5 y Opus 4.7), con prompt caching, extended thinking, tool use e integraciones MCP (Playwright, Google Drive, Gmail, Calendar, Canva, Vercel). 4 productos en producción. Argentina, 2026.",
+      "description_expanded": "Fundé y dirijo una agencia digital AI-first. Construí su pipeline de 38 agentes sobre Claude API, con prompt caching, extended thinking, tool use e integraciones MCP (Playwright, Google Drive, Gmail, Calendar, Canva, Vercel). Argentina, 2026.",
       "role": "Fundador",
       "role_label": "Rol",
       "stat_founded": "2026",
-      "stat_sites": "4",
+      "stat_sites": "PYMES",
       "stat_approach": "AI-FIRST",
       "stat_founded_label": "Fundación",
-      "stat_sites_label": "En producción",
+      "stat_sites_label": "Clientes",
       "stat_approach_label": "Enfoque",
       "services_label": "Servicios",
       "services_list": "Productos web · Agentes de IA · Contenido",
@@ -144,7 +145,7 @@
       "problem": "LEEX, empresa argentina de equipamiento médico, vende sobre todo por licitación pública: la demanda no se genera, se detecta, en decenas de portales del Estado con formatos y plazos propios. Ver una licitación tarde es no haberla tenido; verla sin saber si la empresa califica es perderla. La herramienta anterior era un script de un solo usuario que alimentaba una planilla.",
       "role": "Lo lideré de punta a punta: definí el alcance con Ventas y la gerencia, diseñé la arquitectura y construí el motor y la aplicación web con un pipeline de agentes de IA de programación bajo mi dirección.",
       "decisions": [
-        { "title": "Código antes que IA.", "body": "Un match determinístico por diccionario y vectores filtra primero y un modelo de Claude evalúa solo lo que pasa ese filtro, porque así es barato, testeable y explicable." },
+        { "title": "Código antes que IA.", "body": "Un match determinístico por diccionario y vectores filtra primero y un LLM evalúa solo lo que pasa ese filtro, porque así es barato, testeable y explicable." },
         { "title": "Cada veredicto lo firma una persona.", "body": "El modelo arma un borrador requisito por requisito citando el pliego y la ficha técnica, y decide Ventas, porque perder una licitación cuesta mucho más que revisarla." },
         { "title": "Tres estados de barrido, no dos.", "body": "«No hay nada», «no pude ver» y «vi mucho menos que siempre», porque la falla cara es la silenciosa." },
         { "title": "Lo público primero.", "body": "El motor lee la vista pública de cada portal y entra con login solo como último recurso documentado, lo que redujo la exposición de credenciales y permitió arrancar sin esperar accesos." }
@@ -207,21 +208,22 @@
       "model_comparison": {
         "eyebrow": "Modelos de IA",
         "title": "Mismo prompt, tres modelos",
-        "caption": "El mismo prompt a tres modelos (Sonnet 5, Opus 5.5 y Astra 6): una rodaja de gomita en 3D que se puede estirar y torcer. Grabaciones reales, lado a lado, muestran cómo se comporta cada resultado, con el tiempo y los tokens que usó cada modelo.",
-        "made_with": "Hecho con: Sonnet 5 · Opus 5.5 · Astra 6 (páginas en WebGPU) · OBS · Remotion · Claude Code"
+        "caption": "El mismo prompt a tres modelos de IA: una rodaja de gomita en 3D que se puede estirar y torcer. Grabaciones reales, lado a lado, muestran cómo se comporta cada resultado, con el tiempo y los tokens que usó cada modelo. 104.531 impresiones en LinkedIn.",
+        "made_with": "Hecho con: páginas en WebGPU de tres modelos de IA · OBS · Remotion · Claude Code"
       }
     }
   },
   "skills": {
     "label": "Tech Stack",
     "headline": "Stack clínico",
+    "ai_metrics": "TraumaVision · Sensibilidad 96,7% · mAP@50 0,944",
     "lang_en_label": "Inglés",
-    "lang_en_value": "B2 · Eastbourne (UK) + California",
+    "lang_en_value": "B2 · LTC Eastbourne (UK) + California",
     "lang_es_label": "Español",
     "lang_es_value": "Nativo",
     "cluster_ai": {
       "title": "IA / ML",
-      "items": ["PyTorch · CUDA", "YOLOv8m · Ultralytics", "Claude API · Anthropic SDK", "Claude Sonnet · Haiku · Opus", "OpenCV · CLAHE", "PyDICOM · DICOM", "Scikit-learn", "NumPy · Pandas", "Jupyter · Matplotlib", "Prompt engineering", "Prompt caching · Extended thinking", "Tool use · Function calling", "Orquestación multiagente", "Sistemas RAG", "Gemini Imagen 3", "DALL-E 3 · GPT-4o", "Replicate · Real-ESRGAN"]
+      "items": ["PyTorch · CUDA", "YOLOv8m · Ultralytics", "Claude API · Anthropic SDK", "OpenCV · CLAHE", "PyDICOM · DICOM", "Scikit-learn", "NumPy · Pandas", "Jupyter · Matplotlib", "Prompt engineering", "Prompt caching · Extended thinking", "Tool use · Function calling", "Orquestación multiagente", "Sistemas RAG", "Replicate · Real-ESRGAN"]
     },
     "cluster_web": {
       "title": "Desarrollo web",
@@ -255,37 +257,37 @@
         "year": "ago. 2026–presente",
         "company": "LEEX",
         "role": "Especialista en automatización",
-        "description": "Automatizo con IA el flujo de licitaciones públicas de la empresa. Desarrollo sitios web para SEO y GEO/AEO, contenido generado con IA para redes, blog y newsletter (con revisión humana antes de publicar) y agentes de IA en las webs y redes de las marcas para generar leads."
+        "description": "Automatizo con IA licitaciones y documentos comerciales. Desarrollo webs SEO/GEO y agentes de IA para generar leads, y optimizo campañas de Google y Meta Ads."
       },
       {
         "year": "ago. 2026–presente",
         "company": "KIBBO",
         "role": "AI Engineer",
-        "description": "Desarrollé kibbo.io en español e inglés, optimizado para SEO y GEO (búsqueda con IA). Contenido generado con IA para la marca."
+        "description": "Desarrollé kibbo.io en español e inglés para SEO y GEO (búsqueda con IA). Produzco contenido generado con IA y opero agentes de IA para generar leads."
       },
       {
         "year": "2026–presente",
         "company": "Eleven Estudio Digital",
         "role": "Fundador",
-        "description": "Fundé y dirijo una agencia digital AI-first. Construí un pipeline de 38 agentes que cubre discovery, estrategia, marca, desarrollo y QA. 4 productos en producción. Contenido generado con IA para clientes."
+        "description": "Fundé y dirijo una agencia digital AI-first para pymes. Construí un pipeline de 38 agentes que cubre discovery, estrategia, marca, desarrollo y QA."
       },
       {
         "year": "2024",
         "company": "Sanatorio Allende S.A.",
         "role": "Pasante de Ingeniería Biomédica",
-        "description": "Realicé mantenimiento correctivo y preventivo de equipamiento médico durante el proceso de acreditación JCI del sanatorio. Áreas: UTI adultos/UCO, quirófano, UTI pediátrica, neonatología, endoscopía, internación, consultorios externos. Equipos: desfibriladores (Philips/Feas), monitores multiparamétricos, bombas de infusión (Braun), mesas de cirugía (Steris), incubadoras (Medix/Atom), balón IABP Datascope, endoscopios, monitores fetales, ECG/SpO2/capnografía. Calibraciones con Fluke. Trazabilidad de inventario en Neovero CMMS."
+        "description": "Realicé mantenimiento correctivo y preventivo en UTI de adultos y pediátrica, quirófano e internación, bajo estándares de la Joint Commission (JCI). Equipos: desfibriladores (Philips/Feas), monitores multiparamétricos, bombas de infusión (Braun), mesas de cirugía (Steris), incubadoras (Medix/Atom), balón IABP Datascope, endoscopios, monitores fetales, ECG/SpO2/capnografía. Calibraciones con Fluke. Trazabilidad de inventario en Neovero CMMS."
       },
       {
-        "year": "2023–2024",
+        "year": "2023",
         "company": "UNC — Facultad de Ciencias Exactas, Físicas y Naturales",
         "role": "Ayudante de Cátedra — Fisiología Humana",
-        "description": "Ayudé en clases teóricas y prácticas, preparación de exámenes y tutoría de alumnos de ingeniería en Fisiología Humana. Coordiné grupos de estudio de más de 15 alumnos."
+        "description": "Preparé y di clases de apoyo de Fisiología Humana para alumnos de ingeniería, y tuve a cargo un grupo de estudio de más de 15 alumnos."
       },
       {
-        "year": "2022–2023",
-        "company": "Snow Summit Mountain Resort",
-        "role": "Técnico de Equipos de Ski y Snowboard",
-        "description": "Trabajé dos temporadas (8 meses) en Snow Summit, Big Bear Lake, California: alquiler de equipos, mantenimiento técnico y atención al público, todo en inglés."
+        "year": "dic. 2023–mar. 2024",
+        "company": "Big Bear Mountain Resort",
+        "role": "Técnico de alquiler de equipos",
+        "description": "Alquiler de equipos, mantenimiento técnico de rutina y atención al público, a tiempo completo en Big Bear Lake, California, en un entorno solo en inglés."
       }
     ],
     "education_label": "Educación",
@@ -294,7 +296,13 @@
         "year": "2020–2026",
         "institution": "Universidad Nacional de Córdoba",
         "degree": "Ingeniería Biomédica",
-        "detail": "Promedio 7,45/10 · Sin aplazos · 90% de la carrera aprobada"
+        "detail": "Tesis entregada, defensa pendiente · Promedio 7,45/10 · Sin aplazos"
+      },
+      {
+        "year": "2026",
+        "institution": "Anthropic Claude Academy",
+        "degree": "11 certificaciones",
+        "detail": "Claude API · Claude Code · MCP · AI Fluency · Equipos humano-agente"
       },
       {
         "year": "2023",
@@ -308,8 +316,8 @@
       {
         "year": "2026",
         "institution": "Emprende U 2026",
-        "degree": "Categoría Universitario · TraumaVision AI",
-        "detail": "Concurso federal de seis universidades nacionales argentinas"
+        "degree": "TraumaVision AI",
+        "detail": "Concurso nacional de emprendimientos de estudiantes universitarios y secundarios"
       },
       {
         "year": "2025",
@@ -323,7 +331,7 @@
     "label": "Contacto",
     "headline_1": "TRABAJEMOS",
     "headline_2": "JUNTOS.",
-    "subtitle": "IA clínica, productos web y automatización, del modelo a producción. Remoto o presencial en Córdoba, Argentina.",
+    "subtitle": "IA aplicada, productos web, automatización y equipamiento hospitalario. Remoto o presencial en Córdoba, Argentina.",
     "email_label": "Email",
     "linkedin_label": "LinkedIn",
     "github_label": "GitHub",
@@ -334,7 +342,7 @@
     "copyright": "© 2026 Juan Pablo Rojo"
   },
   "meta": {
-    "title": "Juan Pablo Rojo — Ingeniero Biomédico · AI Engineer · Fundador",
-    "description": "Ingeniero biomédico: IA clínica, web y automatización. TraumaVision, mi tesis, detecta fracturas en radiografías con 97,18% de exactitud. Fundador de Eleven."
+    "title": "Juan Pablo Rojo — Ingeniería Biomédica · AI Engineer · Fundador",
+    "description": "Ingeniería biomédica, IA aplicada, automatización y web. Tesis: TraumaVision, detección de fracturas de muñeca pediátrica (AUC-ROC 0,987). Fundador de Eleven."
   }
 }

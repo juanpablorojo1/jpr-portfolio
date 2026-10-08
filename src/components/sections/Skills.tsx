@@ -73,8 +73,8 @@ export default function Skills() {
 
   const MARQUEE_ITEMS = [
     'PyTorch', 'YOLOv8m', 'Claude API', 'Next.js', 'FastAPI', 'Supabase', 'GSAP',
-    'HyperFrames', 'Gemini Imagen 3', 'DALL-E 3', 'Tailwind', 'Playwright MCP',
-    'Multi-agent Orchestration', 'Prompt Caching', 'Vercel', 'TypeScript', 'WebGL',
+    'HyperFrames', 'Tailwind', 'Playwright MCP',
+    'Multi-Agent Orchestration', 'Prompt Caching', 'Vercel', 'TypeScript', 'WebGL',
     'PyDICOM', 'Anthropic SDK', 'MCP Protocol', 'Remotion', 'Extended Thinking',
   ];
 
@@ -140,7 +140,7 @@ export default function Skills() {
 
                 {i === 0 && (
                   <p className="mt-4 pt-3 border-t border-border font-mono text-xs text-off-white tracking-wide">
-                    Recall 86.6% · mAP50 91.9%
+                    {t('ai_metrics')}
                   </p>
                 )}
               </div>

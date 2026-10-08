@@ -506,11 +506,11 @@ export default function Hero() {
           className="flex gap-12 whitespace-nowrap font-mono text-[10px] tracking-[0.3em] uppercase text-muted"
           style={{ animation: 'marquee-reverse 25s linear infinite', width: 'max-content' }}
         >
-          {(['BIOMEDICAL ENGINEER', 'AI DEVELOPER', 'FOUNDER', 'CLINICAL AI', 'FULL-STACK', 'CÓRDOBA AR'] as const).flatMap((label, i) => [
+          {(t.raw('marquee') as string[]).flatMap((label, i) => [
             <span key={`a${i}`}>{label}</span>,
             <span key={`d${i}`} style={{ color: '#E8272A' }}>·</span>,
           ])}
-          {(['BIOMEDICAL ENGINEER', 'AI DEVELOPER', 'FOUNDER', 'CLINICAL AI', 'FULL-STACK', 'CÓRDOBA AR'] as const).flatMap((label, i) => [
+          {(t.raw('marquee') as string[]).flatMap((label, i) => [
             <span key={`b${i}`}>{label}</span>,
             <span key={`e${i}`} style={{ color: '#E8272A' }}>·</span>,
           ])}

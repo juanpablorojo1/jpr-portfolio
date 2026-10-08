@@ -11,21 +11,22 @@
   "hero": {
     "title": "JUAN PABLO",
     "surname": "ROJO",
-    "role": "Biomedical Engineer. I build clinical AI, from model to product.",
+    "role": "Biomedical engineering. I build AI, automation and web products.",
     "tagline": "From Hospital Equipment to Clinical AI, Web Products, and Digital Automation.",
     "cta1": "View Projects",
-    "cta2": "Download CV"
+    "cta2": "Download CV",
+    "marquee": ["BIOMEDICAL ENGINEERING", "AI ENGINEER", "AUTOMATION", "WEB PRODUCTS", "FOUNDER", "CÓRDOBA AR"]
   },
   "about": {
     "label": "About",
     "headline": "From Biology to Code, From Lab to Product",
     "headline_1": "From Biology to Code,",
     "headline_2": "From Lab to Product",
-    "p1": "Final year of Biomedical Engineering at UNC Córdoba. My thesis, TraumaVision, detects bone fractures on X-rays with 97.18% accuracy and AUC-ROC 0.973. I built it end to end: model, API and web app.",
-    "p2": "In 2026 I founded Eleven, an AI-first digital agency. It runs on a 38-agent pipeline I built on the Claude API and has 4 products in production.",
+    "p1": "Biomedical Engineering at UNC Córdoba: thesis submitted, defense pending. TraumaVision, my capstone project, is an academic prototype that detects pediatric wrist fractures on X-rays. I built it end to end: model, API and web app.",
+    "p2": "Since August 2026: Automation Specialist at LEEX and AI Engineer at KIBBO. I also founded Eleven, an AI-first agency that runs on a 38-agent pipeline I built on the Claude API.",
     "p3": "First place at Rocking the Industry (RTS Group, 2025) with team Algarroba LID, out of 150 multidisciplinary teams.",
-    "p4": "Based in Córdoba, Argentina. Professional English from two seasons (8 months) of full-time work in California.",
-    "sub_tagline": "Clinical context. Production code.",
+    "p4": "Based in Córdoba, Argentina. Professional English from full-time work in California.",
+    "sub_tagline": "Healthcare roots. Production software.",
     "meta_location": "Location",
     "meta_location_value": "Córdoba, AR",
     "meta_status": "Status",
@@ -35,14 +36,14 @@
   "projects": {
     "label": "Projects",
     "traumavision": {
-      "label": "Undergraduate Thesis · UNC Córdoba · 2025",
+      "label": "Thesis · UNC Córdoba · 2026",
       "title": "TraumaVision AI",
-      "subtitle": "Clinical Decision Support System for Fracture Detection on X-Rays",
-      "description": "Built end to end, from model training to the web app. 97.18% accuracy and AUC-ROC 0.973 on fracture detection. Now scaling: extending detection from the wrist to the whole body, and developing TraumaVision as a venture through programs such as Emprende U 2026.",
+      "subtitle": "Clinical Decision Support for Pediatric Wrist Fractures on X-Rays",
+      "description": "Academic prototype, built end to end: a YOLOv8m detector and a FastAPI web app with PDF reports. Held-out test of 3,038 images: 96.7% sensitivity, 93.1% specificity. External test without retraining: 97.4% / 88.3%. Now scaling through Emprende U 2026; next: more anatomical regions.",
       "metric_auc": "AUC-ROC",
       "metric_map50": "mAP@50",
-      "metric_recall": "Recall",
-      "metric_f1": "F1 Score",
+      "metric_recall": "Sensitivity",
+      "metric_specificity": "Specificity",
       "pipeline_label": "Pipeline",
       "stack_label": "Stack",
       "shot_labels": ["LOGIN", "HOME", "ANALYSIS", "HISTORY", "DASHBOARD", "METRICS"]
@@ -51,14 +52,14 @@
       "title": "Eleven Estudio Digital",
       "subtitle": "AI-First Digital Agency · Argentina",
       "description": "I founded and run an AI-first digital agency that builds web products and AI agents for SMBs, on Next.js, Supabase and the Claude API.",
-      "description_expanded": "I founded and run an AI-first digital agency. I built its 38-agent pipeline on the Claude API (Sonnet 4.6, Haiku 4.5 and Opus 4.7), using prompt caching, extended thinking, tool use and MCP integrations (Playwright, Google Drive, Gmail, Calendar, Canva, Vercel). 4 products in production. Argentina, 2026.",
+      "description_expanded": "I founded and run an AI-first digital agency. I built its 38-agent pipeline on the Claude API, using prompt caching, extended thinking, tool use and MCP integrations (Playwright, Google Drive, Gmail, Calendar, Canva, Vercel). Argentina, 2026.",
       "role": "Founder",
       "role_label": "Role",
       "stat_founded": "2026",
-      "stat_sites": "4",
+      "stat_sites": "SMBs",
       "stat_approach": "AI-FIRST",
       "stat_founded_label": "Founded",
-      "stat_sites_label": "In production",
+      "stat_sites_label": "Clients",
       "stat_approach_label": "Approach",
       "services_label": "Services",
       "services_list": "Web Products · AI Agents · Digital Content",
@@ -144,7 +145,7 @@
       "problem": "LEEX, an Argentine medical equipment company, sells mainly through public tenders: demand isn't generated, it's detected across dozens of government portals, each with its own format and deadlines. Seeing a tender late means never having it; seeing it without knowing whether you qualify means losing it. The previous tool was a single-user script feeding a spreadsheet.",
       "role": "I led it end to end: scoped it with sales and management, designed the architecture, and built the engine and web app with a pipeline of AI coding agents under my direction.",
       "decisions": [
-        { "title": "Code before AI.", "body": "A deterministic dictionary-plus-vector match filters first and a Claude model judges only what survives, because that keeps it cheap, testable and explainable." },
+        { "title": "Code before AI.", "body": "A deterministic dictionary-plus-vector match filters first and an LLM judges only what survives, because that keeps it cheap, testable and explainable." },
         { "title": "A person signs every verdict.", "body": "The model drafts a requirement-by-requirement case citing the tender and the product sheet, and sales decides, because a missed tender costs far more than a review." },
         { "title": "Three sweep states, not two.", "body": "\"Nothing there\", \"couldn't see\" and \"saw far less than usual\", because the expensive failure is the silent one." },
         { "title": "Public first.", "body": "The engine reads each portal's public view and logs in only as a documented last resort, which reduced credential exposure and let the build start without waiting on access." }
@@ -207,21 +208,22 @@
       "model_comparison": {
         "eyebrow": "AI models",
         "title": "Same prompt, three models",
-        "caption": "One prompt, three models (Sonnet 5, Opus 5.5 and Astra 6): a 3D gummy citrus slice you can stretch and twist. Real side-by-side recordings show how each result behaves, with the time and tokens each model used.",
-        "made_with": "Made with: Sonnet 5 · Opus 5.5 · Astra 6 (WebGPU builds) · OBS · Remotion · Claude Code"
+        "caption": "One prompt, three AI models: a 3D gummy citrus slice you can stretch and twist. Real side-by-side recordings show how each result behaves, with the time and tokens each model used. 104,531 impressions on LinkedIn.",
+        "made_with": "Made with: WebGPU builds from three AI models · OBS · Remotion · Claude Code"
       }
     }
   },
   "skills": {
     "label": "Tech Stack",
     "headline": "Clinical Stack",
+    "ai_metrics": "TraumaVision · Sensitivity 96.7% · mAP@50 0.944",
     "lang_en_label": "English",
-    "lang_en_value": "B2 · Eastbourne (UK) + California",
+    "lang_en_value": "B2 · LTC Eastbourne (UK) + California",
     "lang_es_label": "Spanish",
     "lang_es_value": "Native",
     "cluster_ai": {
       "title": "AI / ML",
-      "items": ["PyTorch · CUDA", "YOLOv8m · Ultralytics", "Claude API · Anthropic SDK", "Claude Sonnet · Haiku · Opus", "OpenCV · CLAHE", "PyDICOM · DICOM", "Scikit-learn", "NumPy · Pandas", "Jupyter · Matplotlib", "Prompt Engineering", "Prompt Caching · Extended Thinking", "Tool Use · Function Calling", "Multi-Agent Orchestration", "RAG Systems", "Gemini Imagen 3", "DALL-E 3 · GPT-4o", "Replicate · Real-ESRGAN"]
+      "items": ["PyTorch · CUDA", "YOLOv8m · Ultralytics", "Claude API · Anthropic SDK", "OpenCV · CLAHE", "PyDICOM · DICOM", "Scikit-learn", "NumPy · Pandas", "Jupyter · Matplotlib", "Prompt Engineering", "Prompt Caching · Extended Thinking", "Tool Use · Function Calling", "Multi-Agent Orchestration", "RAG Systems", "Replicate · Real-ESRGAN"]
     },
     "cluster_web": {
       "title": "Web Dev",
@@ -255,37 +257,37 @@
         "year": "Aug 2026–present",
         "company": "LEEX",
         "role": "Automation Specialist",
-        "description": "Automate the company's public-tender workflow with AI. Build websites for SEO and GEO/AEO, AI-generated content for social, blog and newsletter (human-reviewed before publishing), and AI agents on the brands' web and social channels for lead generation."
+        "description": "Automate tender workflows and sales documents with AI. Build SEO/GEO websites and AI agents for lead generation, and optimize Google and Meta Ads campaigns."
       },
       {
         "year": "Aug 2026–present",
         "company": "KIBBO",
         "role": "AI Engineer",
-        "description": "Built kibbo.io in Spanish and English, optimized for SEO and GEO (AI search). AI-generated content for the brand."
+        "description": "Built kibbo.io in Spanish and English for SEO and GEO (AI search). Produce AI-generated content and run AI agents for lead generation."
       },
       {
         "year": "2026–present",
         "company": "Eleven Estudio Digital",
         "role": "Founder",
-        "description": "Founded and run an AI-first digital agency. Built a 38-agent pipeline covering discovery, strategy, brand, development and QA. 4 products in production. AI-generated content for clients."
+        "description": "Founded and run an AI-first digital agency for SMBs. Built a 38-agent pipeline covering discovery, strategy, brand, development and QA."
       },
       {
         "year": "2024",
         "company": "Sanatorio Allende S.A.",
         "role": "Biomedical Engineering Intern",
-        "description": "Performed corrective and preventive maintenance of medical equipment during the hospital's JCI accreditation process. Areas: adult ICU/CCU, OR, pediatric ICU, NICU, endoscopy, wards, outpatient. Equipment: defibrillators (Philips/Feas), multiparameter monitors, infusion pumps (Braun), surgical tables (Steris), incubators (Medix/Atom), Datascope IABP, endoscopes, fetal monitors, ECG/SpO2/capnography. Calibrations with Fluke. Inventory traceability in Neovero CMMS."
+        "description": "Performed corrective and preventive maintenance in adult and pediatric ICU, OR and wards, under Joint Commission International (JCI) standards. Equipment: defibrillators (Philips/Feas), multiparameter monitors, infusion pumps (Braun), surgical tables (Steris), incubators (Medix/Atom), Datascope IABP, endoscopes, fetal monitors, ECG/SpO2/capnography. Calibrations with Fluke. Inventory traceability in Neovero CMMS."
       },
       {
-        "year": "2023–2024",
+        "year": "2023",
         "company": "UNC — Faculty of Exact, Physical and Natural Sciences",
         "role": "Teaching Assistant — Human Physiology",
-        "description": "Supported lectures and practical sessions, exam preparation and student mentoring in Human Physiology for engineering students. Coordinated study groups of 15+ students."
+        "description": "Designed and taught support classes in Human Physiology for engineering students, and led a study group of more than 15 students."
       },
       {
-        "year": "2022–2023",
-        "company": "Snow Summit Mountain Resort",
-        "role": "Ski & Snowboard Equipment Technician",
-        "description": "Worked two seasons (8 months) at Snow Summit, Big Bear Lake, California: equipment rentals, routine technical maintenance and customer service, entirely in English."
+        "year": "Dec 2023–Mar 2024",
+        "company": "Big Bear Mountain Resort",
+        "role": "Rentals Technician",
+        "description": "Full-time equipment rentals, routine technical maintenance and customer service at Big Bear Lake, California, in an English-only environment."
       }
     ],
     "education_label": "Education",
@@ -294,7 +296,13 @@
         "year": "2020–2026",
         "institution": "Universidad Nacional de Córdoba",
         "degree": "Biomedical Engineering",
-        "detail": "GPA 7.45/10 · No failed courses · 90% complete"
+        "detail": "Thesis submitted, defense pending · GPA 7.45/10 · No failed courses"
+      },
+      {
+        "year": "2026",
+        "institution": "Anthropic Claude Academy",
+        "degree": "11 certifications",
+        "detail": "Claude API · Claude Code · MCP · AI Fluency · Human-agent teams"
       },
       {
         "year": "2023",
@@ -308,8 +316,8 @@
       {
         "year": "2026",
         "institution": "Emprende U 2026",
-        "degree": "University category · TraumaVision AI",
-        "detail": "Federal competition run by six Argentine national universities"
+        "degree": "TraumaVision AI",
+        "detail": "National entrepreneurship competition for university and high-school students"
       },
       {
         "year": "2025",
@@ -323,7 +331,7 @@
     "label": "Contact",
     "headline_1": "LET'S WORK",
     "headline_2": "TOGETHER.",
-    "subtitle": "Clinical AI, web products and automation, from model to production. Remote worldwide or on-site in Córdoba, Argentina.",
+    "subtitle": "Applied AI, web products, automation and hospital equipment. Remote worldwide or on-site in Córdoba, Argentina.",
     "email_label": "Email",
     "linkedin_label": "LinkedIn",
     "github_label": "GitHub",
@@ -334,7 +342,7 @@
     "copyright": "© 2026 Juan Pablo Rojo"
   },
   "meta": {
-    "title": "Juan Pablo Rojo — Biomedical Engineer · AI Engineer · Founder",
-    "description": "Biomedical engineer building clinical AI, web products and automation. Thesis: TraumaVision, X-ray fracture detection at 97.18% accuracy. Founder of Eleven."
+    "title": "Juan Pablo Rojo — Biomedical Engineering · AI Engineer · Founder",
+    "description": "Biomedical engineering, applied AI, automation and web products. Thesis: TraumaVision, pediatric wrist fracture detection (AUC-ROC 0.987). Founder of Eleven."
   }
 }
