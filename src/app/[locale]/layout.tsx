@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Bebas_Neue, Barlow_Condensed, JetBrains_Mono } from 'next/font/google';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '../../../i18n';
 import '../globals.css';
@@ -35,23 +35,18 @@ type Props = {
 
 export async function generateMetadata({ params: { locale } }: Props): Promise<Metadata> {
   const isEn = locale === 'en';
+  const t = await getTranslations({ locale, namespace: 'meta' });
+  const title = t('title');
+  const description = t('description');
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
   return {
-    title: isEn
-      ? 'Juan Pablo Rojo — Biomedical Engineer · AI Developer · Founder'
-      : 'Juan Pablo Rojo — Ingeniero Biomédico · AI Developer · Fundador',
-    description: isEn
-      ? 'From Fracture Detection to Full-Stack. End-to-End.'
-      : 'De la Detección de Fracturas al Full-Stack. End-to-End.',
+    title: title,
+    description: description,
     metadataBase: new URL(siteUrl),
     openGraph: {
-      title: isEn
-        ? 'Juan Pablo Rojo — Biomedical Engineer · AI Developer · Founder'
-        : 'Juan Pablo Rojo — Ingeniero Biomédico · AI Developer · Fundador',
-      description: isEn
-        ? 'From Fracture Detection to Full-Stack. End-to-End.'
-        : 'De la Detección de Fracturas al Full-Stack. End-to-End.',
+      title: title,
+      description: description,
       url: `${siteUrl}/${locale}`,
       siteName: 'Juan Pablo Rojo',
       type: 'website',
@@ -61,21 +56,15 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
           url: `/og/og-${locale}.png`,
           width: 1200,
           height: 630,
-          alt: isEn
-            ? 'Juan Pablo Rojo — Biomedical Engineer · AI Developer · Founder'
-            : 'Juan Pablo Rojo — Ingeniero Biomédico · AI Developer · Fundador',
+          alt: title,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
       images: [`/og/og-${locale}.png`],
-      title: isEn
-        ? 'Juan Pablo Rojo — Biomedical Engineer · AI Developer · Founder'
-        : 'Juan Pablo Rojo — Ingeniero Biomédico · AI Developer · Fundador',
-      description: isEn
-        ? 'From Fracture Detection to Full-Stack. End-to-End.'
-        : 'De la Detección de Fracturas al Full-Stack. End-to-End.',
+      title: title,
+      description: description,
     },
     robots: {
       index: true,

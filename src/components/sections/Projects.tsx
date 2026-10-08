@@ -267,6 +267,9 @@ export default function Projects() {
     f1: t('traumavision.metric_f1'),
   };
 
+  const tvShotLabels = t.raw('traumavision.shot_labels') as string[];
+  const elevenShotLabels = t.raw('eleven.shot_labels') as string[];
+
   return (
     <div id="projects">
       {/* ── Mobile layout (<lg) — and desktop with prefers-reduced-motion, where the
@@ -340,8 +343,8 @@ export default function Projects() {
             <p className="font-ui text-off-white mb-6">{t('hackathon.description_expanded')}</p>
             <div className="flex gap-8 mb-6 border-l-2 border-accent pl-4">
               {[
-                { value: t('hackathon.event_stat_place'), label: 'Result' },
-                { value: t('hackathon.event_stat_team'), label: 'Team' },
+                { value: t('hackathon.event_stat_place'), label: t('hackathon.event_stat_place_label') },
+                { value: t('hackathon.event_stat_team'), label: t('hackathon.event_stat_team_label') },
               ].map((stat, i) => (
                 <div key={i}>
                   <p className="font-mono text-lg text-white tracking-tight mb-0.5">{stat.value}</p>
@@ -367,7 +370,7 @@ export default function Projects() {
         ref={sectionRef}
         className="hidden lg:block lg:motion-reduce:hidden py-0 bg-bg"
         style={{ height: `${RAIL_UNITS * 100}vh` }}
-        aria-label="Projects"
+        aria-label={t('label')}
       >
         {/* Sticky container — se pina y hace scroll horizontal */}
         <div
@@ -467,7 +470,7 @@ export default function Projects() {
                       onClick={() => setLightboxIndex(i)}
                       className="group relative overflow-hidden border border-border hover:border-accent transition-colors duration-150 focus:outline-none"
                       style={{ aspectRatio: '16/10', transform: `translateY(${STAGGER_Y[i]}px)`, transition: 'transform 0.3s ease' }}
-                      aria-label={`View screenshot: ${shot.label}`}
+                      aria-label={`${t('case.view_shot')}: ${tvShotLabels[i]}`}
                     >
                       <Image
                         src={shot.src}
@@ -479,7 +482,7 @@ export default function Projects() {
                       <div className="absolute inset-0 bg-bg/0 group-hover:bg-bg/60 transition-colors duration-200 flex items-end p-2">
                         <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <span className="text-accent">{String(i + 1).padStart(2, '0')}</span>
-                          <span className="text-off-white"> / {shot.label}</span>
+                          <span className="text-off-white"> / {tvShotLabels[i]}</span>
                         </span>
                       </div>
                     </button>
@@ -559,7 +562,7 @@ export default function Projects() {
                       onClick={() => setElevenLightboxIndex(i)}
                       className="group relative overflow-hidden border border-border hover:border-accent transition-colors duration-150 focus:outline-none"
                       style={{ aspectRatio: '16/10', transform: `translateY(${STAGGER_Y[i]}px)`, transition: 'transform 0.3s ease' }}
-                      aria-label={`View screenshot: ${shot.label}`}
+                      aria-label={`${t('case.view_shot')}: ${elevenShotLabels[i]}`}
                     >
                       <Image
                         src={shot.src}
@@ -571,7 +574,7 @@ export default function Projects() {
                       <div className="absolute inset-0 bg-bg/0 group-hover:bg-bg/60 transition-colors duration-200 flex items-end p-2">
                         <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <span className="text-accent">{String(i + 1).padStart(2, '0')}</span>
-                          <span className="text-off-white"> / {shot.label}</span>
+                          <span className="text-off-white"> / {elevenShotLabels[i]}</span>
                         </span>
                       </div>
                     </button>
@@ -615,9 +618,9 @@ export default function Projects() {
                   {/* Event stats */}
                   <div className="flex gap-12 mb-8 border-l-2 border-accent pl-6">
                     {[
-                      { value: t('hackathon.event_stat_place'), label: 'Result' },
-                      { value: t('hackathon.event_stat_team'), label: 'Team' },
-                      { value: t('hackathon.event_stat_organizer'), label: 'Event' },
+                      { value: t('hackathon.event_stat_place'), label: t('hackathon.event_stat_place_label') },
+                      { value: t('hackathon.event_stat_team'), label: t('hackathon.event_stat_team_label') },
+                      { value: t('hackathon.event_stat_organizer'), label: t('hackathon.event_stat_organizer_label') },
                     ].map((stat, i) => (
                       <div key={i}>
                         <p className="font-mono text-lg text-white tracking-tight mb-1">{stat.value}</p>
@@ -692,19 +695,19 @@ export default function Projects() {
           onClick={() => setElevenLightboxIndex(null)}
           role="dialog"
           aria-modal="true"
-          aria-label="Screenshot viewer"
+          aria-label={t('case.lightbox.viewer')}
         >
           <button
             className="absolute top-4 right-6 font-mono text-sm text-off-white hover:text-accent transition-colors duration-150 z-10"
             onClick={() => setElevenLightboxIndex(null)}
-            aria-label="Close screenshot viewer"
+            aria-label={t('case.lightbox.close_aria')}
           >
-            [ESC] CLOSE
+            {t('case.lightbox.close')}
           </button>
           <button
             className="absolute left-4 top-1/2 -translate-y-1/2 font-mono text-2xl text-off-white hover:text-accent transition-colors duration-150 z-10 px-3 py-2"
             onClick={(e) => { e.stopPropagation(); setElevenLightboxIndex((i) => i !== null ? (i - 1 + ELEVEN_SCREENSHOTS.length) % ELEVEN_SCREENSHOTS.length : null); }}
-            aria-label="Previous screenshot"
+            aria-label={t('case.lightbox.prev')}
           >←</button>
           <div
             className="relative max-w-5xl w-full mx-16 border border-accent"
@@ -721,14 +724,14 @@ export default function Projects() {
             />
             <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center gap-2" style={{ backgroundColor: 'rgba(8,8,8,0.85)' }}>
               <span className="font-mono text-xs text-accent">{String(elevenLightboxIndex + 1).padStart(2, '0')}</span>
-              <span className="font-mono text-xs text-off-white">/ {ELEVEN_SCREENSHOTS[elevenLightboxIndex].label}</span>
+              <span className="font-mono text-xs text-off-white">/ {elevenShotLabels[elevenLightboxIndex]}</span>
               <span className="font-mono text-xs text-muted ml-auto">{elevenLightboxIndex + 1} / {ELEVEN_SCREENSHOTS.length}</span>
             </div>
           </div>
           <button
             className="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-2xl text-off-white hover:text-accent transition-colors duration-150 z-10 px-3 py-2"
             onClick={(e) => { e.stopPropagation(); setElevenLightboxIndex((i) => i !== null ? (i + 1) % ELEVEN_SCREENSHOTS.length : null); }}
-            aria-label="Next screenshot"
+            aria-label={t('case.lightbox.next')}
           >→</button>
         </div>
       )}
@@ -747,15 +750,15 @@ export default function Projects() {
           onClick={() => setLightboxIndex(null)}
           role="dialog"
           aria-modal="true"
-          aria-label="Screenshot viewer"
+          aria-label={t('case.lightbox.viewer')}
         >
           {/* Close button */}
           <button
             className="absolute top-4 right-6 font-mono text-sm text-off-white hover:text-accent transition-colors duration-150 z-10"
             onClick={() => setLightboxIndex(null)}
-            aria-label="Close screenshot viewer"
+            aria-label={t('case.lightbox.close_aria')}
           >
-            [ESC] CLOSE
+            {t('case.lightbox.close')}
           </button>
 
           {/* Prev arrow */}
@@ -765,7 +768,7 @@ export default function Projects() {
               e.stopPropagation();
               setLightboxIndex((i) => i !== null ? (i - 1 + TRAUMAVISION_SCREENSHOTS.length) % TRAUMAVISION_SCREENSHOTS.length : null);
             }}
-            aria-label="Previous screenshot"
+            aria-label={t('case.lightbox.prev')}
           >
             ←
           </button>
@@ -790,7 +793,7 @@ export default function Projects() {
                 {String(lightboxIndex + 1).padStart(2, '0')}
               </span>
               <span className="font-mono text-xs text-off-white">
-                / {TRAUMAVISION_SCREENSHOTS[lightboxIndex].label}
+                / {tvShotLabels[lightboxIndex]}
               </span>
               <span className="font-mono text-xs text-muted ml-auto">
                 {lightboxIndex + 1} / {TRAUMAVISION_SCREENSHOTS.length}
@@ -805,7 +808,7 @@ export default function Projects() {
               e.stopPropagation();
               setLightboxIndex((i) => i !== null ? (i + 1) % TRAUMAVISION_SCREENSHOTS.length : null);
             }}
-            aria-label="Next screenshot"
+            aria-label={t('case.lightbox.next')}
           >
             →
           </button>

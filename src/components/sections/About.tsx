@@ -189,7 +189,7 @@ export default function About() {
                   <div
                     className="headline-line text-white"
                   >
-                    From Biology to Code,
+                    {t('headline_1')}
                   </div>
                 </div>
                 <div className="overflow-hidden">
@@ -197,7 +197,7 @@ export default function About() {
                     className="headline-line"
                     style={{ color: '#E8272A' }}
                   >
-                    From Lab to Product
+                    {t('headline_2')}
                   </div>
                 </div>
               </div>
@@ -245,23 +245,23 @@ export default function About() {
             {/* Metadata bar */}
             <div className="mt-6 flex items-center gap-6 border-t border-border pt-4">
               <div>
-                <span className="font-mono text-xs text-muted uppercase tracking-widest">Location </span>
-                <span className="font-ui text-sm text-off-white">Córdoba, AR</span>
+                <span className="font-mono text-xs text-muted uppercase tracking-widest">{t('meta_location')} </span>
+                <span className="font-ui text-sm text-off-white">{t('meta_location_value')}</span>
               </div>
               <div className="w-px h-4 bg-border" />
               <div>
-                <span className="font-mono text-xs text-muted uppercase tracking-widest">Status </span>
+                <span className="font-mono text-xs text-muted uppercase tracking-widest">{t('meta_status')} </span>
                 <span className="font-ui text-sm text-accent flex items-center gap-2">
                   <span className="relative flex h-2 w-2 flex-shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
                   </span>
-                  Available
+                  {t('meta_status_value')}
                 </span>
               </div>
               <div className="w-px h-4 bg-border" />
               <div>
-                <span className="font-mono text-xs text-muted uppercase tracking-widest">Age </span>
+                <span className="font-mono text-xs text-muted uppercase tracking-widest">{t('meta_age')} </span>
                 <span ref={ageDisplayRef} className="font-ui text-sm text-off-white">0</span>
               </div>
             </div>

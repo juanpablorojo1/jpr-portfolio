@@ -240,7 +240,7 @@ export default function Contact() {
                 hover:bg-accent-dark hover:shadow-btn-hover
               "
             >
-              Download CV ↓
+              {t('cv_cta')}
             </a>
           </div>
         </div>
@@ -274,7 +274,7 @@ export default function Contact() {
             className="h-7 w-auto opacity-60"
           />
           <p className="font-mono text-xs text-muted hidden sm:block">
-            Built with Next.js · GSAP · Tailwind
+            {t('built_with')}
           </p>
           <p className="font-mono text-xs text-muted">
             {t('copyright')}

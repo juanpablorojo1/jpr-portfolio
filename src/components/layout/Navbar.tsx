@@ -99,7 +99,7 @@ export default function Navbar() {
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="text-white w-8 h-8 flex flex-col items-center justify-center gap-1.5"
-            aria-label="Toggle menu"
+            aria-label={t('menu_aria')}
           >
             <span className={`block w-6 h-px bg-white transition-all duration-200 ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
             <span className={`block w-6 h-px bg-white transition-all duration-200 ${menuOpen ? 'opacity-0' : ''}`} />

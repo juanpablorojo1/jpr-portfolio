@@ -37,7 +37,7 @@ export const TRAUMAVISION_SCREENSHOTS = [
   {
     src: '/images/traumavision-analisis.jpg',
     alt: 'TraumaVision — Fracture detection with bounding box, 84% probability',
-    label: 'ANALISIS',
+    label: 'ANÁLISIS',
   },
   {
     src: '/images/traumavision-historial.jpg',

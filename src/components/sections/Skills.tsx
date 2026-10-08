@@ -151,13 +151,13 @@ export default function Skills() {
         {/* Languages row */}
         <div className="mt-8 lg:mt-16 pt-6 lg:pt-8 border-t border-border flex flex-wrap gap-6 lg:gap-8">
           <div>
-            <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">English</p>
-            <p className="font-ui font-bold text-white text-base">B2 — LTC Eastbourne + California</p>
+            <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">{t('lang_en_label')}</p>
+            <p className="font-ui font-bold text-white text-base">{t('lang_en_value')}</p>
           </div>
           <div className="w-px bg-border" />
           <div>
-            <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">Spanish</p>
-            <p className="font-ui font-bold text-white text-base">Native</p>
+            <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">{t('lang_es_label')}</p>
+            <p className="font-ui font-bold text-white text-base">{t('lang_es_value')}</p>
           </div>
         </div>
       </div>
