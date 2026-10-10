@@ -265,7 +265,9 @@ async function boot({ S, root, after, assetBase }, ctl) {
         const ta = (END_H + k * T * END_D) / (END_D - k * T * END_H); // tan del pitch hacia abajo que la deja en f
         const a = Math.atan(ta);
         const halfW = END_D * T * camera.aspect;
-        const x = -1.6 - halfW;                                    // la curva queda justo afuera del borde derecho
+        // el borde derecho cae en x −5, donde la cola ya es recta: con −1,6 entraba el final de la curva y la línea
+        // bajaba ~18 px en el borde derecho (1440). Con −5 los bordes quedan a ≤0,5 px del ancla (1200/1440/1920, mouse ±0,15).
+        const x = -5 - halfW;
         lay.endPos.set(x, y + END_H, -RAIL_Z + END_D);
         lay.endLook.set(x, y + END_H - Math.sin(a) * 10, -RAIL_Z + END_D - Math.cos(a) * 10);
         lay.anchored = true;
