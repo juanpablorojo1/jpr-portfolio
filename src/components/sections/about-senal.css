@@ -12,6 +12,8 @@
 .ab .ab-line { display: block; }
 .ab .ab-rail { display: block; height: 0; }
 .ab .ab-dot { display: none; }
+/* punto de estado: el mismo cuadrado rojo del rótulo, quieto, en todos los anchos (antes verde, redondo y con ping: fuera de paleta) */
+.ab .ab-status-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
 .ab .ab-img { filter: grayscale(85%) contrast(1.05); }
 .ab .ab-light, .ab .ab-matte { display: none; }
 
