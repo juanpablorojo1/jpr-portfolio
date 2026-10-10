@@ -433,6 +433,25 @@ async function boot({ S, root, after, assetBase }, ctl) {
   if (hud) hud.hidden = false;
   ctl.info = { backend, t: { rendererReady: Math.round(performance.now()) }, fps: () => (fpsBuf.length ? (fpsBuf.length / (fpsBuf.reduce((a, b) => a + b, 0) / 1000)).toFixed(1) : null), frames: 0, running: () => loopOn, dpr: () => renderer.getPixelRatio() };
   window.__senal = ctl.info;
+  // QA (?hud): dónde cae la traza en pantalla para un progreso dado, sin renderizar (sirve con la pestaña oculta).
+  // Devuelve el rango de y (px CSS) de la cinta principal entre x0 y x1. El frame siguiente rehace cámara y cintas.
+  // cam(): el progreso de la cámara en este momento.
+  if (hud) ctl.info.cam = () => cam.p;
+  if (hud) ctl.info.lineAt = (p, x0 = 0, x1 = innerWidth) => {
+    const t = S.now();
+    buildRibbons(t, updateCamera(t, 0, p));
+    camera.updateMatrixWorld();
+    const v = new THREE.Vector3();
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i < N; i++) {
+      v.set(P[i * 3], P[i * 3 + 1], P[i * 3 + 2]).project(camera);
+      if (v.z < -1 || v.z > 1) continue;
+      const x = ((v.x + 1) / 2) * innerWidth, y = ((1 - v.y) / 2) * innerHeight;
+      if (x < x0 || x > x1) continue;
+      lo = Math.min(lo, y); hi = Math.max(hi, y);
+    }
+    return { lo, hi };
+  };
   console.info('[senal] backend:', backend);
 
   function frame() {
@@ -444,6 +463,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     const st = S.state, t = S.now();             // hero-controller ya escribió la traza de este frame
     cam.p = S.damp(cam.p, cam.target, CAM_LAMBDA, dt);
     const p = cam.p;
+    st.cam = p;                                  // el About dispara su texto con la cámara (About.tsx)
     ctl.info.frames++;
 
     U.ignite.value = S.ign(t);

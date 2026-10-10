@@ -13,6 +13,7 @@ import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
+import { onSignal, type Senal } from '../hero/senal/signal';
 import './about-senal.css';
 
 gsap.registerPlugin(SplitText);
@@ -28,52 +29,98 @@ export default function About() {
     const mm = gsap.matchMedia();
     mm.add('(min-width: 1024px) and (prefers-reduced-motion: no-preference)', () => {
       const title = section.querySelector<HTMLElement>('.ab-title');
-      const rail = section.querySelector<HTMLElement>('[data-senal-rail]');
       const label = section.querySelector<HTMLElement>('.ab-label');
       const rest = Array.from(section.querySelectorAll<HTMLElement>('.ab-paras p, .ab-sub, .ab-frame, .ab-meta'));
-      if (!title || !rail || !label) return;
+      const zone = section.closest<HTMLElement>('.transition-zone');
+      if (!title || !label) return;
       let split: SplitText | null = null;
-      let ioTitle: IntersectionObserver | null = null;
-      let ioRest: IntersectionObserver | null = null;
       let tlTitle: gsap.core.Timeline | null = null;
-      let tlRest: gsap.core.Tween | null = null;
-      let titleAt = 0;
-      let dead = false;
+      let twRest: gsap.core.Tween | null = null;
+      let titleOn = false, restOn = false, pinned = false, titleAt = 0, alive = true;
+      let S: Senal | null = null;
+      const offSignal = onSignal((s) => { S = s; });
       gsap.set([label, ...rest], { opacity: 0, y: 14 });
       gsap.set(title, { visibility: 'hidden' });
+
+      // Aterrizaje (L): el borde superior del About llega al del viewport; el mismo `end` que la cámara en scene.js.
+      let land = 1, zoneH = 0;
+      const measure = () => {
+        let y = zone?.parentElement?.offsetTop ?? 0;
+        for (let el = zone?.previousElementSibling; el; el = el.previousElementSibling) y += (el as HTMLElement).offsetHeight;
+        land = Math.max(1, y);
+        zoneH = zone?.offsetHeight ?? innerHeight;
+      };
+      measure();
+      addEventListener('resize', measure);
+
+      // El texto sale con la cámara, no con el scroll del HTML. Con la escena viva detrás (data-see-through) el About
+      // queda fijo en su pose de aterrizaje durante el último viewport de la bajada (is-pinned, about-senal.css): la
+      // cámara termina de bajar y la recta se asienta debajo de un titular que ya está en su lugar, en vez de que el
+      // HTML suba atravesando un horizonte quieto (design-critic D-01). En L el About ya está arriba y es sticky:
+      // fijo y absoluto dan la misma posición, así que soltarlo no salta. Se suelta cuando Projects lo tapa entero.
+      // Umbrales en progreso de cámara (S.state.cam, con el mismo damp que la línea), medidos con __senal.lineAt (?hud)
+      // a 1024/1200/1440/1600/1920. La recta sube desde abajo y se asienta en el ancla; nunca pasa por encima del
+      // titular (su punto más alto queda 11–13 px debajo del pie del titular). El titular sale en 0,80, con la recta
+      // todavía viniendo. Los datos y la foto, en 0,92: la recta ya está 9–12 px arriba del borde de la foto y 20+ px
+      // arriba del cuerpo; la foto la tocaría por debajo de ~0,85 y el cuerpo por debajo de ~0,8. Al volver se van en
+      // 0,90 (histéresis) y el fijado no se suelta hasta que no queda nada a la vista.
+      const T_IN = 0.8, T_OUT = 0.76, R_IN = 0.92, R_OUT = 0.9;
+      const showTitle = () => {
+        if (!split) return;
+        titleOn = true; titleAt = performance.now();
+        tlTitle?.kill();
+        tlTitle = gsap.timeline()
+          .to(split.chars, { z: 0, y: 0, rotationX: 0, opacity: 1, duration: 1.2, ease: 'expo.out', stagger: 0.012 }, 0)
+          .to(label, { opacity: 1, y: 0, duration: 1.0, ease: 'expo.out' }, 0.1);
+      };
+      const hideTitle = () => {
+        if (!split) return;
+        titleOn = false;
+        tlTitle?.kill();
+        tlTitle = gsap.timeline()
+          .to(split.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0, duration: 0.5, ease: 'expo.out', stagger: 0.004 }, 0)
+          .to(label, { opacity: 0, y: 14, duration: 0.4, ease: 'expo.out' }, 0);
+      };
+      const showRest = () => {
+        restOn = true;
+        // 0,2 s detrás del titular (lo que falte), como antes
+        const lag = titleAt ? Math.max(0, 0.2 - (performance.now() - titleAt) / 1000) : 0;
+        twRest?.kill();
+        twRest = gsap.to(rest, { opacity: 1, y: 0, duration: 1.0, ease: 'expo.out', stagger: 0.06, delay: lag });
+      };
+      const hideRest = () => {
+        restOn = false;
+        twRest?.kill();
+        twRest = gsap.to(rest, { opacity: 0, y: 14, duration: 0.35, ease: 'expo.out' });
+      };
+      const tick = () => {
+        if (!split) return;
+        const sy = scrollY;
+        const live = !!zone?.hasAttribute('data-see-through');
+        const cam = live && S && !S.dead ? S.state.cam : -1;
+        const p = cam >= 0 ? cam : Math.min(1, Math.max(0, sy / land));   // sin escena: el scroll (el HTML se mueve con él)
+        if (!titleOn && p >= T_IN) showTitle(); else if (titleOn && p < T_OUT) hideTitle();
+        if (!restOn && p >= R_IN) showRest(); else if (restOn && p < R_OUT) hideRest();
+        const leaving = !!(tlTitle?.isActive() && !titleOn) || !!(twRest?.isActive() && !restOn);
+        const pin = live && sy < land + zoneH && (sy >= land - innerHeight || titleOn || restOn || leaving);
+        if (pin !== pinned) { pinned = pin; section.classList.toggle('is-pinned', pin); }
+      };
       document.fonts.ready.then(() => {
-        if (dead) return;
+        if (!alive) return;
         split = SplitText.create(title.querySelectorAll('.ab-line'), { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' });
         gsap.set(split.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 });
         gsap.set(title, { visibility: 'visible' });
-        // Dos tiempos, para que el final de la bajada no quede vacío:
-        // 1) el titular se ensambla apenas asoma (su borde superior pasa el 88 % del viewport), mientras la cámara
-        //    todavía está llegando; antes esperaba al riel en el 80 % y la pantalla quedaba con la línea sola.
-        // 2) los datos y la foto, cuando el riel entra en el 80 % superior (como antes), sin la espera fija de 0,35 s:
-        //    sólo lo que falte para ir 0,2 s detrás del titular.
-        ioTitle = new IntersectionObserver((entries) => {
-          if (!entries.some((e) => e.isIntersecting) || !split) return;
-          ioTitle?.disconnect();
-          titleAt = performance.now();
-          tlTitle = gsap.timeline()
-            .to(split.chars, { z: 0, y: 0, rotationX: 0, opacity: 1, duration: 1.2, ease: 'expo.out', stagger: 0.012 }, 0)
-            .to(label, { opacity: 1, y: 0, duration: 1.0, ease: 'expo.out' }, 0.1);
-        }, { rootMargin: '0px 0px -12% 0px', threshold: 0 });
-        ioTitle.observe(title);
-        ioRest = new IntersectionObserver((entries) => {
-          if (!entries.some((e) => e.isIntersecting)) return;
-          ioRest?.disconnect();
-          const lag = titleAt ? Math.max(0, 0.2 - (performance.now() - titleAt) / 1000) : 0;
-          tlRest = gsap.to(rest, { opacity: 1, y: 0, duration: 1.0, ease: 'expo.out', stagger: 0.06, delay: lag });
-        }, { rootMargin: '0px 0px -20% 0px', threshold: 0 });
-        ioRest.observe(rail);
+        measure();
+        gsap.ticker.add(tick);
       });
       return () => {
-        dead = true;
-        ioTitle?.disconnect();
-        ioRest?.disconnect();
+        alive = false;
+        gsap.ticker.remove(tick);
+        removeEventListener('resize', measure);
+        offSignal();
+        section.classList.remove('is-pinned');
         tlTitle?.kill();
-        tlRest?.kill();
+        twRest?.kill();
         if (split) { gsap.killTweensOf(split.chars); split.revert(); }
         gsap.set([label, ...rest], { clearProps: 'opacity,transform' });
         gsap.set(title, { clearProps: 'visibility' });

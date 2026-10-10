@@ -34,6 +34,9 @@
     .ab { --rail: 44svh; --ph: calc(100svh - var(--rail) - 6svh); height: 100svh; }
   }
   .ab .ab-wrap { position: absolute; inset: 0; max-width: none; margin: 0; padding: 0; }
+  /* último viewport de la bajada con la escena viva: el About queda fijo en su pose de aterrizaje (About.tsx, is-pinned)
+     y la cámara termina de bajar detrás; el HTML ya no sube atravesando la recta quieta (design-critic D-01) */
+  .transition-zone[data-see-through] .ab.is-pinned .ab-wrap { position: fixed; }
 
   /* titular apoyado sobre el riel */
   .ab .ab-top {
