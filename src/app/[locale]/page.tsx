@@ -1,6 +1,5 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import Navbar from '../../components/layout/Navbar';
 import Hero from '../../components/sections/Hero';
 import About from '../../components/sections/About';
@@ -11,26 +10,12 @@ import Experience from '../../components/sections/Experience';
 import Contact from '../../components/sections/Contact';
 import TransitionZone from '../../components/motion/TransitionZone';
 
-const CustomCursor = dynamic(() => import('../../components/ui/CustomCursor'), {
-  ssr: false,
-});
-const ScrollProgressBar = dynamic(() => import('../../components/ui/ScrollProgressBar'), {
-  ssr: false,
-});
-const SectionLabel = dynamic(() => import('../../components/ui/SectionLabel'), {
-  ssr: false,
-});
-
 export default function HomePage() {
   return (
     <>
-      <CustomCursor />
-      <ScrollProgressBar />
-      <SectionLabel />
-
       {/* Sin loading screen: el hero «Señal» es el intro (un latido en la oscuridad) y se ve desde el primer frame. */}
+      <Navbar />
       <main>
-        <Navbar />
 
         {/* Card stack with cinematic transitions —
             each section sticks, gets a watermark anchor word + connecting line,

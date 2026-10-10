@@ -1,0 +1,121 @@
+/* Menú «Señal» (rediseño 2026). Frame en reposo sobre el hero.
+   Composición: logo + links + idioma viven sobre la columna del texto (alineados al --pad del hero, misma
+   arista izquierda que «JUAN PABLO»); la columna de la foto queda libre; a la derecha, solo el CV.
+   Medido 2026-10-10 con el copy de fe0c09e: a 1200 ES el grupo izquierdo termina en x≈711 y la cabeza
+   empieza en x≈770; con idioma + CV a la derecha el bloque pisaba la columna de la cabeza por debajo de ~1385.
+   Sin blur ni velo sobre la foto. Rojo solo como acento (subrayado de hover, foco, borde de hover).
+   Pendiente en dispatches siguientes: estado al scrollear, menú abierto de celular, pulso de hover. */
+
+.jnav {
+  --bg: #080808;
+  --red: #e8272a;
+  --off: #e8e4de;
+  --white: #ffffff;
+  --line: #2a2a2a;
+  --line-strong: #3a3a3a;
+  --dim: rgba(232, 228, 222, 0.62);  /* ≈ #939190 sobre #080808: 6,6:1 */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --pad: 5.5vw;                       /* = --pad del hero (senal.css) */
+  --logo-h: 24px;
+
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;                       /* encima de las TransitionZone (10–60) */
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 11px; line-height: 1; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--dim);
+  border-bottom: 1px solid transparent;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+.jnav a { color: inherit; text-decoration: none; }
+.jnav :focus-visible { outline: 1px solid var(--red); outline-offset: 4px; }
+
+.jnav-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 80px; padding: 0 var(--pad);
+}
+.jnav-left, .jnav-right { display: flex; align-items: center; }
+.jnav-left { gap: 28px; }
+.jnav-right { gap: 32px; }
+.jnav-lang-compact { display: none; }
+
+/* ---------- slot del logo ---------- */
+.jnav-logo { display: inline-flex; align-items: center; height: var(--logo-h); color: var(--white); }
+.jnav-logo-mark { display: block; height: 100%; width: auto; }
+.jnav-logo-mark > svg { display: block; height: 100%; width: auto; }
+.jnav-logo-ph { font-size: 13px; letter-spacing: 0.32em; color: var(--off); margin-right: -0.32em; }
+
+/* hairline entre la firma y los links: separa marca de navegación, como el encabezado de un monitor */
+.jnav-rule { width: 1px; height: 14px; background: var(--line-strong); }
+
+/* ---------- links ---------- */
+.jnav-links { display: flex; align-items: center; gap: 30px; list-style: none; margin: 0; padding: 0; }
+.jnav-link {
+  position: relative; display: inline-block; padding: 8px 0;
+  transition: color 0.2s ease;
+}
+.jnav-link::after {
+  content: ''; position: absolute; left: 0; right: 0.14em; bottom: 1px; height: 1px; background: var(--red);
+  transform: scaleX(0); transform-origin: right; transition: transform 0.35s var(--ease-out);
+}
+.jnav-link:hover, .jnav-link:focus-visible { color: var(--white); }
+.jnav-link:hover::after { transform: scaleX(1); transform-origin: left; }
+.jnav-link[aria-current]::after { transform: scaleX(1); }
+.jnav-link[aria-current] { color: var(--white); }
+
+/* ---------- idioma ---------- */
+.jnav-lang { display: flex; align-items: center; gap: 10px; }
+.jnav-lang a { padding: 8px 2px; transition: color 0.2s ease; }
+.jnav-lang a:hover, .jnav-lang a:focus-visible, .jnav-lang a[aria-current] { color: var(--white); }
+.jnav-lang-sep { color: var(--line-strong); }
+
+/* ---------- CV ---------- */
+.jnav-cv {
+  display: inline-flex; align-items: center; gap: 10px;
+  height: 34px; padding: 0 14px 0 16px;
+  border: 1px solid var(--line-strong); color: var(--off);
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.12s ease;
+}
+.jnav-cv svg { width: 9px; height: 11px; flex: none; transition: transform 0.35s var(--ease-out); }
+.jnav-cv:hover, .jnav-cv:focus-visible { border-color: var(--red); color: var(--white); }
+.jnav-cv:hover svg { transform: translateY(2px); }
+.jnav-cv:active { transform: translateY(1px); }
+
+/* ---------- botón de menú (compacto) ---------- */
+.jnav-menu {
+  display: none; position: relative; width: 44px; height: 44px; margin-right: -12px;
+  background: none; border: 0; padding: 0; cursor: pointer; color: var(--off);
+}
+.jnav-menu i { position: absolute; right: 12px; height: 1px; background: currentColor; transition: transform 0.3s var(--ease-out), width 0.3s var(--ease-out); }
+.jnav-menu i:first-child { top: 18px; width: 20px; }
+.jnav-menu i:last-child { top: 25px; width: 12px; }
+.jnav-menu:hover i:last-child { width: 20px; }
+.jnav-menu[aria-expanded='true'] i:first-child { transform: translateY(3.5px) rotate(45deg); }
+.jnav-menu[aria-expanded='true'] i:last-child { width: 20px; transform: translateY(-3.5px) rotate(-45deg); }
+
+/* ---------- panel provisorio de celular (el diseño final viene en otro dispatch) ---------- */
+.jnav-panel {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 8px var(--pad) 24px; background: var(--bg); border-top: 1px solid var(--line);
+}
+.jnav-panel .jnav-link { padding: 12px 0; font-size: 12px; }
+.jnav-panel .jnav-cv { align-self: flex-start; margin-top: 12px; }
+
+/* ---------- estado provisorio al scrollear (se diseña en otro dispatch) ---------- */
+.jnav.is-scrolled { background: rgba(8, 8, 8, 0.92); border-bottom-color: var(--line); }
+
+/* Por debajo de 1200 px los links cruzarían la columna de la cara (la figura vive al 70% del ancho
+   hasta 899 px y centrada debajo): menú compacto. Medido con el copy EN/ES de fe0c09e. */
+@media (max-width: 1199px) {
+  .jnav-rule, .jnav-links, .jnav-lang-wide, .jnav-bar .jnav-cv { display: none; }
+  .jnav-lang-compact { display: block; }
+  .jnav-menu { display: block; }
+  .jnav-right { gap: 18px; }
+}
+@media (max-width: 899px) {
+  .jnav { --pad: 22px; --logo-h: 22px; }
+  .jnav-bar { height: 64px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jnav, .jnav *, .jnav *::after { transition: none !important; }
+}
