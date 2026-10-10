@@ -22,12 +22,12 @@
   .ab {
     --rail: 44vh;               /* el horizonte del About: la recta del riel cae acá */
     --pad: 5.5vw;               /* el mismo margen que el hero */
-    --ph: calc(100vh - var(--rail) - 4vh - 56px);   /* alto de la foto: del riel al pie, dejando lugar a la ficha */
+    --ph: calc(100vh - var(--rail) - 6vh);   /* alto de la foto: del riel al pie */
     height: 100vh;
     padding: 0;
   }
   @supports (height: 100svh) {
-    .ab { --rail: 44svh; --ph: calc(100svh - var(--rail) - 4svh - 56px); height: 100svh; }
+    .ab { --rail: 44svh; --ph: calc(100svh - var(--rail) - 6svh); height: 100svh; }
   }
   .ab .ab-wrap { position: absolute; inset: 0; max-width: none; margin: 0; padding: 0; }
 
@@ -71,11 +71,16 @@
   .ab .ab-body .ab-sub { margin: 0; break-inside: avoid; font-size: clamp(15px, 1.12vw, 18px); }
 
   /* la foto real, 2D plana, cuelga del riel */
-  .ab .ab-photo {
+  /* el bloque de la foto se disuelve (display: contents): la foto va a la derecha y la ficha al pie de la columna de texto;
+     bajo la foto, a 1200 en ES, la ficha se partía en dos filas y la edad quedaba fuera del frame */
+  .ab .ab-photo { display: contents; }
+  .ab .ab-frame {
     position: absolute; right: var(--pad); top: calc(var(--rail) + clamp(10px, 1.4vh, 16px));
-    width: calc(var(--ph) * .8); margin: 0;
+    width: calc(var(--ph) * .8); height: var(--ph); max-width: none; margin: 0; aspect-ratio: auto; overflow: hidden;
   }
-  .ab .ab-frame { width: 100%; height: var(--ph); max-width: none; margin: 0; aspect-ratio: auto; overflow: hidden; }
   .ab .ab-frame img { transform: scale(1.3); transform-origin: 50% 16%; }
-  .ab .ab-meta { margin-top: 14px; padding-top: 12px; gap: 6px 16px; flex-wrap: wrap; }
+  .ab .ab-meta {
+    position: absolute; left: var(--pad); bottom: clamp(20px, 4vh, 44px);
+    margin: 0; padding-top: 12px; gap: 16px; flex-wrap: nowrap;
+  }
 }

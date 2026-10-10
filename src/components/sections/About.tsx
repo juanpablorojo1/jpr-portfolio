@@ -31,7 +31,7 @@ export default function About() {
     mm.add('(min-width: 1024px) and (prefers-reduced-motion: no-preference)', () => {
       const title = section.querySelector<HTMLElement>('.ab-title');
       const rail = section.querySelector<HTMLElement>('[data-senal-rail]');
-      const rest = section.querySelectorAll<HTMLElement>('.ab-label, .ab-paras p, .ab-sub, .ab-photo');
+      const rest = section.querySelectorAll<HTMLElement>('.ab-label, .ab-paras p, .ab-sub, .ab-frame, .ab-meta');
       if (!title || !rail) return;
       let split: SplitText | null = null;
       let io: IntersectionObserver | null = null;
