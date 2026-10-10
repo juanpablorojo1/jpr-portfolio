@@ -41,6 +41,13 @@
 /* ---------- slot del logo ---------- */
 /* .jnav .jnav-logo: tiene que ganarle a «.jnav a { color: inherit }», si no las letras quedan en --dim (62 %). */
 .jnav .jnav-logo { display: inline-flex; align-items: center; height: var(--logo-h); color: var(--white); }
+/* Área de toque ≥44 px sin mover el dibujo: padding parejo compensado con margen negativo; el anillo de foco
+   se corre hacia adentro lo mismo, así queda donde estaba (4 px alrededor del logo). */
+.jnav .jnav-logo {
+  --hit: calc((44px - var(--logo-h)) / 2);   /* 8 px con 28 de alto, 10 con 24: 45×44 */
+  box-sizing: content-box; padding: var(--hit); margin: calc(-1 * var(--hit));
+}
+.jnav .jnav-logo:focus-visible { outline-offset: calc(4px - var(--hit)); }
 .jnav-logo-mark { display: block; height: 100%; width: auto; }
 .jnav-logo-mark > svg { display: block; height: 100%; width: auto; }
 .jnav-logo-ph { font-size: 13px; letter-spacing: 0.32em; color: var(--off); margin-right: -0.32em; }
@@ -96,7 +103,11 @@
 
 /* ---------- idioma ---------- */
 .jnav-lang { display: flex; align-items: center; gap: 10px; }
-.jnav-lang a { padding: 8px 2px; transition: color 0.2s ease; }
+/* Área de toque 44×51 sin mover nada: 12 px más de padding por lado, compensados con margen negativo (la caja de
+   layout sigue siendo la de «8px 2px») y el anillo de foco corrido 12 px hacia adentro. EN y ES quedan a 29 px:
+   las áreas no se pisan (12+12). */
+.jnav-lang a { padding: 20px 14px; margin: -12px; transition: color 0.2s ease; }
+.jnav .jnav-lang a:focus-visible { outline-offset: -8px; }
 .jnav-lang a:hover, .jnav-lang a:focus-visible, .jnav-lang a[aria-current] { color: var(--white); }
 .jnav-lang-sep { color: var(--line-strong); }
 
