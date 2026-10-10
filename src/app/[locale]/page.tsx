@@ -24,7 +24,8 @@ export default function HomePage() {
           <Hero />
         </TransitionZone>
 
-        <TransitionZone sectionId="about" zIndex={20}>
+        {/* About «Señal»: sin decoración del card stack; con la escena viva entra transparente (hero-controller) */}
+        <TransitionZone sectionId="about" zIndex={20} decor={false}>
           <About />
         </TransitionZone>
 

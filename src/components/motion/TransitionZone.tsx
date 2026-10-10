@@ -12,6 +12,9 @@ interface Props {
   zIndex: number;
   children: ReactNode;
   overflowClip?: boolean;
+  /** false: sin palabra de fondo ni línea conectora (About «Señal»: entra transparente sobre la escena 3D,
+      y el mix-blend-mode de la palabra sobre el canvas WebGPU cuesta fps). */
+  decor?: boolean;
 }
 
 // Card-stack wrapper. Sticky section with anchor word watermark + connecting line.
@@ -22,8 +25,9 @@ export default function TransitionZone({
   zIndex,
   children,
   overflowClip = false,
+  decor = true,
 }: Props) {
-  const hasAnchor = sectionId !== 'hero';
+  const hasAnchor = decor && sectionId !== 'hero';
 
   return (
     <div
