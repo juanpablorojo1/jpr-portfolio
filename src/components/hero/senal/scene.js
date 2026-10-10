@@ -103,6 +103,8 @@ async function boot({ S, root, after, assetBase }, ctl) {
   if (S.dead) return;
   const backend = renderer.backend.isWebGPUBackend ? 'webgpu' : 'webgl2';
   const isMobile = () => innerWidth < 900;
+  // la galería de Projects existe sólo ≥1024 (data-gallery, projects-senal.css); debajo, Projects queda apilado
+  const wideMQ = matchMedia('(min-width: 1024px)');
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));   // la cara nítida en retina (mobile y desktop)
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.setClearColor(0x080808, 1);
@@ -583,7 +585,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   }
   /* estado de la galería para un u: peso, cabezal, brillo de los planos (lo usan el loop y lineAt) */
   function updateGallery(g) {
-    const on = !isMobile() && !!lay.galCam;
+    const on = wideMQ.matches && !!lay.galCam;
     G.w = on ? smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.45, g) : 0;
     U.galW.value = G.w;
     if (!on) { planes.forEach(({ main, sec }) => { main.u.lit.value = 0; sec.u.lit.value = 0; }); lampOpacity.value = 0; return; }
@@ -624,7 +626,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const CAM_LAMBDA = 4;                          // ~0,25 s de constante de tiempo: sigue al dedo, con masa
   // galería (Projects): u = viewports de scroll desde el aterrizaje del About (trig.end); mismo damp que la cámara
   const gal = { p: 0, target: 0 };
-  const galTarget = () => (isMobile() ? 0 : Math.max(0, (scrollY - trig.end) / innerHeight));
+  const galTarget = () => (wideMQ.matches ? Math.max(0, (scrollY - trig.end) / innerHeight) : 0);
   gal.target = gal.p = galTarget();
 
   /* ---------- loop ---------- */
@@ -691,7 +693,8 @@ async function boot({ S, root, after, assetBase }, ctl) {
     const p = cam.p;
     st.cam = p;                                  // el About dispara su texto con la cámara (About.tsx)
     gal.target = galTarget();
-    gal.p = S.damp(gal.p, gal.target, CAM_LAMBDA, dt);
+    // debajo de 1024 no hay galería de la que volver: a 0 sin damp (un resize con el loop en pausa la dejaba vieja)
+    gal.p = wideMQ.matches ? S.damp(gal.p, gal.target, CAM_LAMBDA, dt) : 0;
     st.gal = gal.p;                              // Projects (ProjectsGallery.tsx) y el About leen la galería con la cámara
     ctl.info.frames++;
 
