@@ -133,6 +133,12 @@
   .jnav.is-scrolled .jnav-bar { height: 64px; }
 }
 
+/* Saltos a una sección (links del menú, CTA del hero, #hash): el destino queda debajo del menú sólido y no detrás.
+   Vive acá y no en las secciones para que sobreviva cuando se rehagan. = alto del menú al scrollear + borde de 1 px:
+   ≥1200 64+1; 900–1199 80+1; <900 64+1. Si cambian esos altos, cambia esto. */
+html { scroll-padding-top: 65px; }
+@media (min-width: 900px) and (max-width: 1199px) { html { scroll-padding-top: 81px; } }
+
 /* ---------- menú de celular: pantalla completa (<dialog> modal) ----------
    Entra como un barrido de monitor desde la barra (clip-path de arriba hacia abajo), los links suben en
    escalera de 45 ms y la traza del hero se dibuja de izquierda a derecha cruzando el espacio vacío.
