@@ -4,7 +4,7 @@
    solo el CV. Medido 2026-10-10 con el copy de fe0c09e: a 1200 ES el grupo izquierdo termina en x≈711 y la cabeza
    empieza en x≈770; con idioma + CV a la derecha el bloque pisaba la columna de la cabeza por debajo de ~1385.
    Sin blur ni velo sobre la foto. Rojo solo como acento (pulso de hover, punto de sección activa, foco, borde).
-   Al scrollear: fondo 95% + borde de 1 px; ≥1200 la barra baja de 80 a 64 px. */
+   Al scrollear: fondo sólido + borde de 1 px; ≥1200 la barra baja de 80 a 64 px. */
 
 .jnav {
   --bg: #080808;
@@ -119,8 +119,9 @@
 .jnav-menu[aria-expanded='true'] i:last-child { width: 20px; transform: translateY(-3.5px) rotate(-45deg); }
 
 /* ---------- al scrollear ---------- */
-/* Casi sólido (95%): al 92% los rótulos claros de las cards de Video se leían detrás de los links. Sin blur. */
-.jnav.is-scrolled { background: rgba(8, 8, 8, 0.95); border-bottom-color: var(--line); }
+/* Sólido: al 92% y al 95% los rótulos claros de las cards de Video se seguían leyendo detrás de los links
+   (medido a 1440, scroll 10300, 2026-10-10). Sin blur. */
+.jnav.is-scrolled { background: var(--bg); border-bottom-color: var(--line); }
 @media (min-width: 1200px) {
   .jnav-bar { transition: height 0.35s var(--ease-out); }
   .jnav.is-scrolled .jnav-bar { height: 64px; }

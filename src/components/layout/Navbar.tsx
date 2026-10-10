@@ -2,7 +2,7 @@
 
 /* Menú «Señal» (rediseño 2026). Estilos en ./navbar.css.
    - En reposo sobre el hero: transparente (frame aprobado por Juan, 607f16a: «A, menú así»).
-   - Al scrollear (cuando la tarjeta About llega al borde del menú): fondo sólido 95% sin blur + borde de 1 px,
+   - Al scrollear (cuando la tarjeta About llega al borde del menú): fondo sólido sin blur + borde de 1 px,
      y la sección activa con un punto rojo que late (IntersectionObserver, scroll nativo, aria-current).
    - Celular (<1200): menú a pantalla completa en un <dialog> modal (foco atrapado por el navegador, Escape cierra,
      el foco vuelve al botón), links grandes en Barlow Condensed y la traza del hero cruzando el fondo, plana.
