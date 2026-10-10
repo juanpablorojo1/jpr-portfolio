@@ -31,35 +31,53 @@ export default function About() {
     mm.add('(min-width: 1024px) and (prefers-reduced-motion: no-preference)', () => {
       const title = section.querySelector<HTMLElement>('.ab-title');
       const rail = section.querySelector<HTMLElement>('[data-senal-rail]');
-      const rest = section.querySelectorAll<HTMLElement>('.ab-label, .ab-paras p, .ab-sub, .ab-frame, .ab-meta');
-      if (!title || !rail) return;
+      const label = section.querySelector<HTMLElement>('.ab-label');
+      const rest = Array.from(section.querySelectorAll<HTMLElement>('.ab-paras p, .ab-sub, .ab-frame, .ab-meta'));
+      if (!title || !rail || !label) return;
       let split: SplitText | null = null;
-      let io: IntersectionObserver | null = null;
-      let tl: gsap.core.Timeline | null = null;
+      let ioTitle: IntersectionObserver | null = null;
+      let ioRest: IntersectionObserver | null = null;
+      let tlTitle: gsap.core.Timeline | null = null;
+      let tlRest: gsap.core.Tween | null = null;
+      let titleAt = 0;
       let dead = false;
-      gsap.set(rest, { opacity: 0, y: 14 });
+      gsap.set([label, ...rest], { opacity: 0, y: 14 });
       gsap.set(title, { visibility: 'hidden' });
       document.fonts.ready.then(() => {
         if (dead) return;
         split = SplitText.create(title.querySelectorAll('.ab-line'), { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' });
         gsap.set(split.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 });
         gsap.set(title, { visibility: 'visible' });
-        // el riel del About entra en el 80 % superior del viewport: la cámara está terminando de llegar
-        io = new IntersectionObserver((entries) => {
+        // Dos tiempos, para que el final de la bajada no quede vacío:
+        // 1) el titular se ensambla apenas asoma (su borde superior pasa el 88 % del viewport), mientras la cámara
+        //    todavía está llegando; antes esperaba al riel en el 80 % y la pantalla quedaba con la línea sola.
+        // 2) los datos y la foto, cuando el riel entra en el 80 % superior (como antes), sin la espera fija de 0,35 s:
+        //    sólo lo que falte para ir 0,2 s detrás del titular.
+        ioTitle = new IntersectionObserver((entries) => {
           if (!entries.some((e) => e.isIntersecting) || !split) return;
-          io?.disconnect();
-          tl = gsap.timeline()
+          ioTitle?.disconnect();
+          titleAt = performance.now();
+          tlTitle = gsap.timeline()
             .to(split.chars, { z: 0, y: 0, rotationX: 0, opacity: 1, duration: 1.2, ease: 'expo.out', stagger: 0.012 }, 0)
-            .to(rest, { opacity: 1, y: 0, duration: 1.0, ease: 'expo.out', stagger: 0.07 }, 0.35);
+            .to(label, { opacity: 1, y: 0, duration: 1.0, ease: 'expo.out' }, 0.1);
+        }, { rootMargin: '0px 0px -12% 0px', threshold: 0 });
+        ioTitle.observe(title);
+        ioRest = new IntersectionObserver((entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          ioRest?.disconnect();
+          const lag = titleAt ? Math.max(0, 0.2 - (performance.now() - titleAt) / 1000) : 0;
+          tlRest = gsap.to(rest, { opacity: 1, y: 0, duration: 1.0, ease: 'expo.out', stagger: 0.06, delay: lag });
         }, { rootMargin: '0px 0px -20% 0px', threshold: 0 });
-        io.observe(rail);
+        ioRest.observe(rail);
       });
       return () => {
         dead = true;
-        io?.disconnect();
-        tl?.kill();
+        ioTitle?.disconnect();
+        ioRest?.disconnect();
+        tlTitle?.kill();
+        tlRest?.kill();
         if (split) { gsap.killTweensOf(split.chars); split.revert(); }
-        gsap.set(rest, { clearProps: 'opacity,transform' });
+        gsap.set([label, ...rest], { clearProps: 'opacity,transform' });
         gsap.set(title, { clearProps: 'visibility' });
       };
     });
