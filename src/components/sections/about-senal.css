@@ -72,7 +72,8 @@
     margin: 0 0 1em; break-inside: avoid;
     font-size: clamp(15px, 1.12vw, 18px); line-height: 1.55; color: rgba(232, 228, 222, .82);
   }
-  .ab .ab-body .ab-sub { margin: 0; break-inside: avoid; font-size: clamp(15px, 1.12vw, 18px); }
+  /* texto grande (600, 19–22 px): el rojo da 4,40:1 sobre el fondo real de la escena (~#0D0D0D), así el piso es 3:1 */
+  .ab .ab-body .ab-sub { margin: 0; break-inside: avoid; font-weight: 600; font-size: clamp(19px, 1.3vw, 22px); }
 
   /* la foto real, 2D plana, cuelga del riel */
   /* el bloque de la foto se disuelve (display: contents): la foto va a la derecha y la ficha al pie de la columna de texto;
