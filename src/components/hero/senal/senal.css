@@ -193,6 +193,8 @@
 .senal.is-static .scroll-cue i { animation: none; }
 .senal.is-static .transit { height: 0; }
 .senal.is-static .rojo-glow { opacity: .35; }
+/* tapado por la sección siguiente: las animaciones CSS del hero también se pausan (los loops JS, en hero-controller) */
+.senal.is-offscreen .grain::before, .senal.is-offscreen .scroll-cue i { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) {
   .senal *, .senal *::before, .senal *::after { transition-duration: .01ms !important; animation: none !important; }
 }

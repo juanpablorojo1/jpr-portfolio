@@ -108,7 +108,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
       const leave = () => { qx(0); qy(0); };
       el.addEventListener('pointermove', move);
       el.addEventListener('pointerleave', leave);
-      cleanups.push(() => { el.removeEventListener('pointermove', move); el.removeEventListener('pointerleave', leave); gsap.set(el, { clearProps: 'transform' }); });
+      cleanups.push(() => { el.removeEventListener('pointermove', move); el.removeEventListener('pointerleave', leave); gsap.killTweensOf(el); gsap.set(el, { clearProps: 'transform' }); });
     });
   }
 
@@ -164,8 +164,9 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
   cleanups.push(() => removeEventListener('scroll', onScroll));
   let last = performance.now();
   let raf = 0;
+  let running = false;
   function tick(now: number) {
-    if (S.dead || disposed) return;
+    if (S.dead || disposed) { running = false; return; }
     const dt = Math.min((now - last) / 1000, 1 / 20); last = now;
     const t = S.now(); st.t = t;
     const sy = scrollY;
@@ -182,21 +183,49 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
     heroInner.style.opacity = (1 - S.smooth(0.01, 0.09, Math.min(1, Math.max(0, sy / (innerHeight * 3))))).toFixed(3);   // fade atado al scroll real (sin damping): el nombre se apaga antes de cruzar el nav
     heroInner.style.transform = `translate3d(0, ${(-p * 140).toFixed(2)}px, 0)`;
     if (!S.handoff) draw2D(t);
+    if (running) raf = requestAnimationFrame(tick);
+  }
+  function start() {
+    if (running || disposed || S.dead) return;
+    running = true;
+    last = performance.now(); st.lastScroll = scrollY;   // sin salto de dt ni pico de velocidad al volver
     raf = requestAnimationFrame(tick);
   }
-  raf = requestAnimationFrame(tick);
-  cleanups.push(() => cancelAnimationFrame(raf));
+  function stop() { running = false; cancelAnimationFrame(raf); }
+  start();
+  cleanups.push(stop);
+
+  /* ---------- pausa fuera de vista ----------
+     El canvas es fixed y el hero vive en un card sticky: el hero no sale del viewport, lo tapa la sección siguiente.
+     Se observa esa sección contra todo lo que queda por encima del borde superior del viewport
+     (rootMargin: arriba 10000 %, abajo -100 %): si la toca, el hero está tapado entero → se pausan el loop 2D/HTML,
+     el render 3D (S.onView → scene.js) y las animaciones CSS del hero. Sirve igual en celular, donde el card no es sticky. */
+  const cover = (root.closest('.transition-zone') ?? root).nextElementSibling;
+  if (cover && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      const e = entries[entries.length - 1];
+      const v = !e.isIntersecting;
+      if (v === S.inView || disposed) return;
+      S.inView = v;
+      root.classList.toggle('is-offscreen', !v);
+      if (v) start(); else stop();
+      S.onView(v);
+    }, { rootMargin: '10000% 0px -100% 0px', threshold: 0 });
+    io.observe(cover);
+    cleanups.push(() => io.disconnect());
+  }
 
   return () => {
     disposed = true;
     S.dead = true;
     S.goStatic = () => {};
     S.onLive = () => {};
+    S.onView = () => {};
     cleanups.forEach((f) => f());
     if (tl) tl.kill();
     if (nameSplit) nameSplit.revert();
     if (tagSplit) tagSplit.revert();
-    root.classList.remove('is-lit', 'is-live', 'is-handed');
+    root.classList.remove('is-lit', 'is-live', 'is-handed', 'is-offscreen');
     root.classList.add('is-loading');
     heroInner.style.opacity = ''; heroInner.style.transform = '';
   };

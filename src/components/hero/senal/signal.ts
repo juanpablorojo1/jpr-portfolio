@@ -33,6 +33,9 @@ export type Senal = {
   dead: boolean;
   goStatic: (reason?: string) => void;
   onLive: () => void;
+  /** false cuando lo que sigue al hero lo tapa entero (hero-controller, IntersectionObserver): los loops se pausan. */
+  inView: boolean;
+  onView: (v: boolean) => void;
   watchdog?: { remaining: () => number; running: () => boolean };
 };
 
@@ -127,6 +130,8 @@ export function createSignal(search: string): Senal {
     dead: false,
     goStatic: () => {},
     onLive: () => {},
+    inView: true,
+    onView: () => {},
   };
   return S;
 }

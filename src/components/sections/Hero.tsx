@@ -52,6 +52,8 @@ export default function Hero() {
       cancelled = true;
       stopHero();
       if (disposeScene) disposeScene();
+      const w = window as unknown as { SENAL?: unknown };
+      if (w.SENAL === S) delete w.SENAL;
     };
     // channels sale de messages y no cambia durante la vida de la página
     // eslint-disable-next-line react-hooks/exhaustive-deps

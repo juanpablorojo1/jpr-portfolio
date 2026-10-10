@@ -5,7 +5,7 @@
    Reloj, buffer de la traza y scroll vienen de signal.ts / hero-controller.ts (S): este módulo sólo renderiza.
    Port fiel de la maqueta a-senal/main.js (commit da8ae1b del repo de la agencia). Cambios respecto de la maqueta,
    todos de plumbing y ninguno visual: el canvas se crea acá (un contexto nuevo por montaje, StrictMode monta dos veces),
-   los listeners se pueden desmontar (dispose) y los assets salen de /senal/.
+   los listeners se pueden desmontar (dispose), el loop se pausa con el hero tapado (S.inView) y los assets salen de /senal/.
    Va en JS a propósito: el grafo TSL es el de la maqueta tal cual, sin tipar. */
 import * as THREE from 'three/webgpu';
 import {
@@ -16,18 +16,38 @@ import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 
 /** Arranca la escena. Devuelve { ready, dispose }. `after`: el canvas del intro 2D (el 3D se inserta después). */
 export function bootScene({ S, root, after, assetBase = '/senal/' }) {
-  const ctl = { disposed: false, offs: [], renderer: null, pipeline: null, canvas: null };
+  const ctl = { disposed: false, offs: [], renderer: null, pipeline: null, canvas: null, scene: null, texs: [], nodes: [], info: null };
   const ready = boot({ S, root, after, assetBase }, ctl).catch((e) => { if (!ctl.disposed) S.goStatic('boot error: ' + (e && e.message)); });
   function dispose() {
     if (ctl.disposed) return;
     ctl.disposed = true;
+    S.onView = () => {};
     ctl.offs.forEach((f) => f());
+    ctl.offs.length = 0;
     if (ctl.renderer) { try { ctl.renderer.setAnimationLoop(null); } catch (e) { /* noop */ } }
+    // recursos de la escena primero (avisan al renderer con su evento 'dispose'), después el post y el renderer
+    if (ctl.scene) {
+      ctl.scene.traverse((o) => {
+        if (o.geometry) o.geometry.dispose();
+        if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
+      });
+      ctl.scene.clear();
+    }
+    ctl.texs.forEach((t) => t.dispose());
+    ctl.nodes.forEach((n) => { try { n.dispose(); } catch (e) { /* noop */ } });
     if (ctl.pipeline && ctl.pipeline.dispose) { try { ctl.pipeline.dispose(); } catch (e) { /* noop */ } }
-    if (ctl.renderer) { try { ctl.renderer.dispose(); } catch (e) { /* noop */ } }
+    releaseRenderer(ctl);
     if (ctl.canvas) ctl.canvas.remove();
+    if (ctl.info && window.__senal === ctl.info) delete window.__senal;
   }
   return { ready, dispose };
+}
+
+// WebGPU: destruye el device. WebGL 2: pierde el contexto. renderer.dispose() es async y no libera nada si init()
+// no terminó: boot() la vuelve a llamar si el desmontaje llegó a mitad de init().
+function releaseRenderer(ctl) {
+  if (!ctl.renderer) return;
+  try { Promise.resolve(ctl.renderer.dispose()).catch(() => {}); } catch (e) { /* noop */ }
 }
 
 async function boot({ S, root, after, assetBase }, ctl) {
@@ -39,15 +59,24 @@ async function boot({ S, root, after, assetBase }, ctl) {
   after.after(canvas);
   ctl.canvas = canvas;
   let first = true;
-  // watchdog de 12 s: cuenta sólo con la página visible (una pestaña abierta en segundo plano no tiene rAF y no debe caer a estático)
-  let wdLeft = 12000, wdT0 = 0, wdId = 0;
-  const wdRun = () => { if (!first || wdId || document.hidden) return; wdT0 = performance.now(); wdId = setTimeout(() => { wdId = 0; wdLeft = 0; if (first) S.goStatic('watchdog timeout'); }, wdLeft); };
+  // el loop corre sólo con la pestaña visible y el hero a la vista (S.inView lo escribe hero-controller con un IntersectionObserver)
+  const shouldRun = () => !document.hidden && S.inView;
+  // watchdog de 12 s: cuenta sólo mientras el loop podría correr (pestaña en segundo plano o hero tapado no caen a estático)
+  let wdLeft = 12000, wdT0 = 0, wdId = 0, wdDone = false;
+  const wdRun = () => { if (!first || wdDone || wdId || !shouldRun()) return; wdT0 = performance.now(); wdId = setTimeout(() => { wdId = 0; wdLeft = 0; if (first) S.goStatic('watchdog timeout'); }, wdLeft); };
   const wdPause = () => { if (!wdId) return; clearTimeout(wdId); wdId = 0; wdLeft = Math.max(0, wdLeft - (performance.now() - wdT0)); };
-  const wdVis = () => (document.hidden ? wdPause() : wdRun());
-  const clearWatchdog = () => { clearTimeout(wdId); wdId = 0; document.removeEventListener('visibilitychange', wdVis); };
+  const clearWatchdog = () => { clearTimeout(wdId); wdId = 0; wdDone = true; };
   S.watchdog = { remaining: () => (wdId ? Math.max(0, wdLeft - (performance.now() - wdT0)) : wdLeft), running: () => !!wdId };
-  document.addEventListener('visibilitychange', wdVis);
   ctl.offs.push(clearWatchdog);
+  // pausa / reanudación: la disparan visibilitychange y S.onView. syncLoop la completa el loop, más abajo.
+  let syncLoop = () => {};
+  const sync = () => {
+    if (ctl.disposed || S.dead) return;
+    if (shouldRun()) wdRun(); else wdPause();
+    syncLoop();
+  };
+  on(document, 'visibilitychange', sync);
+  S.onView = sync;
   wdRun();
 
   let renderer;
@@ -56,7 +85,8 @@ async function boot({ S, root, after, assetBase }, ctl) {
     ctl.renderer = renderer;
     await renderer.init();
   } catch (e) { clearWatchdog(); return S.goStatic('renderer: ' + e.message); }
-  if (S.dead || ctl.disposed) return;
+  if (ctl.disposed) { releaseRenderer(ctl); return; }   // desmontado a mitad de init(): el dispose anterior no liberó el device/contexto
+  if (S.dead) return;
   const backend = renderer.backend.isWebGPUBackend ? 'webgpu' : 'webgl2';
   const isMobile = () => innerWidth < 900;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));   // la cara nítida en retina (mobile y desktop)
@@ -68,9 +98,11 @@ async function boot({ S, root, after, assetBase }, ctl) {
   let texs;
   try { texs = await Promise.all(['juan-2d.webp', 'juan-2d-rim.png'].map((f) => loader.loadAsync(assetBase + f))); }
   catch (e) { clearWatchdog(); return S.goStatic('textures: ' + e.message); }
-  if (ctl.disposed) return;
+  if (ctl.disposed) { texs.forEach((t) => t.dispose()); return; }
+  ctl.texs = texs;
 
   const scene = new THREE.Scene();
+  ctl.scene = scene;
   const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.05, 120);
   const { CAM_Z, TRACE_Z, N } = S;
 
@@ -234,6 +266,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const scenePass = pass(scene, camera);
   const col = scenePass.getTextureNode('output');
   const bl = bloom(col, 1.1, 0.55, 0.55);
+  ctl.nodes.push(bl, scenePass);   // render targets propios del bloom y del pass
   const vig = smoothstep(1.05, 0.25, length(screenUV.sub(0.5).mul(vec2(1.25, 1.0))).mul(1.35));
   pipeline.outputNode = (params.has('nobloom') ? col : col.add(bl)).mul(vig.mul(0.85).add(0.15));
 
@@ -310,10 +343,11 @@ async function boot({ S, root, after, assetBase }, ctl) {
   }
 
   /* ---------- loop ---------- */
-  const fpsBuf = []; let lastNow = performance.now(), adaptiveDone = false;
+  const fpsBuf = []; let lastNow = performance.now(), adaptiveDone = false, loopOn = false;
   const hud = params.has('hud') ? root.querySelector('.senal-hud') : null;
   if (hud) hud.hidden = false;
-  window.__senal = { backend, t: { rendererReady: Math.round(performance.now()) }, fps: () => (fpsBuf.length ? (fpsBuf.length / (fpsBuf.reduce((a, b) => a + b, 0) / 1000)).toFixed(1) : null) };
+  ctl.info = { backend, t: { rendererReady: Math.round(performance.now()) }, fps: () => (fpsBuf.length ? (fpsBuf.length / (fpsBuf.reduce((a, b) => a + b, 0) / 1000)).toFixed(1) : null), frames: 0, running: () => loopOn };
+  window.__senal = ctl.info;
   console.info('[senal] backend:', backend);
 
   function frame() {
@@ -323,6 +357,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     const dt = Math.min(dtMs / 1000, 1 / 20);
     fpsBuf.push(dtMs); if (fpsBuf.length > 120) fpsBuf.shift();
     const st = S.state, t = S.now(), p = st.p;     // hero.js ya escribió la traza y el scroll de este frame
+    ctl.info.frames++;
 
     U.ignite.value = S.ign(t);
     U.pulse.value = S.pulse(t);
@@ -350,11 +385,10 @@ async function boot({ S, root, after, assetBase }, ctl) {
   pipeline.render();
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   if (ctl.disposed || S.dead) return;
-  lastNow = performance.now();
-  renderer.setAnimationLoop(frame);
-  on(document, 'visibilitychange', () => {
-    if (ctl.disposed) return;
-    if (document.hidden) renderer.setAnimationLoop(null);
-    else { lastNow = performance.now(); renderer.setAnimationLoop(frame); }
-  });
+  syncLoop = () => {
+    if (ctl.disposed || S.dead) return;
+    if (shouldRun()) { if (!loopOn) { loopOn = true; lastNow = performance.now(); renderer.setAnimationLoop(frame); } }
+    else if (loopOn) { loopOn = false; renderer.setAnimationLoop(null); }
+  };
+  syncLoop();
 }
