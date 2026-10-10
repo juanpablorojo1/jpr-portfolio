@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Bebas_Neue, Barlow_Condensed, JetBrains_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
@@ -7,23 +7,24 @@ import { notFound } from 'next/navigation';
 import { routing } from '../../../i18n';
 import '../globals.css';
 
-const bebasNeue = Bebas_Neue({
-  weight: '400',
-  subsets: ['latin'],
+// Fuentes locales (public/fonts, las mismas woff2 que la maqueta «Señal»), mismas variables CSS de siempre.
+const bebasNeue = localFont({
+  src: [{ path: '../../../public/fonts/BebasNeue-400.woff2', weight: '400', style: 'normal' }],
   variable: '--font-bebas-neue',
   display: 'swap',
 });
 
-const barlowCondensed = Barlow_Condensed({
-  weight: ['400', '700'],
-  subsets: ['latin'],
+const barlowCondensed = localFont({
+  src: [
+    { path: '../../../public/fonts/BarlowCondensed-400.woff2', weight: '400', style: 'normal' },
+    { path: '../../../public/fonts/BarlowCondensed-700.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-barlow-condensed',
   display: 'swap',
 });
 
-const jetBrainsMono = JetBrains_Mono({
-  weight: ['400'],
-  subsets: ['latin'],
+const jetBrainsMono = localFont({
+  src: [{ path: '../../../public/fonts/JetBrainsMono-400.woff2', weight: '400', style: 'normal' }],
   variable: '--font-jetbrains-mono',
   display: 'swap',
 });

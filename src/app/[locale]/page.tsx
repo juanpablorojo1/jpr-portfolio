@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useLoadingScreen } from '../../hooks/useLoadingScreen';
 import Navbar from '../../components/layout/Navbar';
 import Hero from '../../components/sections/Hero';
 import About from '../../components/sections/About';
@@ -12,9 +11,6 @@ import Experience from '../../components/sections/Experience';
 import Contact from '../../components/sections/Contact';
 import TransitionZone from '../../components/motion/TransitionZone';
 
-const LoadingScreen = dynamic(() => import('../../components/loading/LoadingScreen'), {
-  ssr: false,
-});
 const CustomCursor = dynamic(() => import('../../components/ui/CustomCursor'), {
   ssr: false,
 });
@@ -26,22 +22,14 @@ const SectionLabel = dynamic(() => import('../../components/ui/SectionLabel'), {
 });
 
 export default function HomePage() {
-  const { isLoading, onLoadingComplete } = useLoadingScreen();
-
   return (
     <>
       <CustomCursor />
       <ScrollProgressBar />
       <SectionLabel />
 
-      {isLoading && <LoadingScreen onComplete={onLoadingComplete} />}
-
-      <main
-        style={{
-          opacity: isLoading ? 0 : 1,
-          transition: 'opacity 0.5s ease',
-        }}
-      >
+      {/* Sin loading screen: el hero «Señal» es el intro (un latido en la oscuridad) y se ve desde el primer frame. */}
+      <main>
         <Navbar />
 
         {/* Card stack with cinematic transitions —
