@@ -1,0 +1,81 @@
+/* About «Señal» — frame crudo del momento protagonista (escritorio ≥1024).
+   La traza del hero se vuelve el riel; la cámara lo recorre y aterriza con la recta del riel sobre [data-senal-rail]
+   (scene.js lee su alto dentro del About). Misma gramática que el hero: titular sobre la línea, datos debajo.
+   Debajo de 1024 queda el layout de siempre (Tailwind en About.tsx); el celular tendrá diseño propio más adelante.
+   CSS propio con prefijo .ab, como senal.css y navbar.css. */
+
+.ab .ab-title {
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  line-height: 1.05;           /* sin máscaras overflow:hidden: el titular no se puede cortar arriba */
+  font-weight: 400;
+}
+.ab .ab-line { display: block; }
+.ab .ab-rail { display: block; height: 0; }
+.ab .ab-dot { display: none; }
+
+/* Escena viva detrás (hero-controller pone data-see-through): el About entra transparente y la cámara
+   termina su recorrido detrás del texto. Sin sombra: sobre un card transparente la sombra dibuja una costura. */
+.transition-zone[data-see-through] { box-shadow: none !important; }
+.transition-zone[data-see-through] .ab { background: transparent; }
+
+@media (min-width: 1024px) {
+  .ab {
+    --rail: 44vh;               /* el horizonte del About: la recta del riel cae acá */
+    --pad: 5.5vw;               /* el mismo margen que el hero */
+    --ph: calc(100vh - var(--rail) - 4vh - 56px);   /* alto de la foto: del riel al pie, dejando lugar a la ficha */
+    height: 100vh;
+    padding: 0;
+  }
+  @supports (height: 100svh) {
+    .ab { --rail: 44svh; --ph: calc(100svh - var(--rail) - 4svh - 56px); height: 100svh; }
+  }
+  .ab .ab-wrap { position: absolute; inset: 0; max-width: none; margin: 0; padding: 0; }
+
+  /* titular apoyado sobre el riel */
+  .ab .ab-top {
+    position: absolute; left: var(--pad); right: var(--pad); top: 0; height: var(--rail);
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding-bottom: clamp(14px, 1.6vw, 26px);
+  }
+  .ab .ab-label {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 clamp(14px, 1.4vw, 22px);
+    font-size: 10.5px; letter-spacing: .2em; color: rgba(232, 228, 222, .6);
+  }
+  .ab .ab-dot { display: inline-block; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
+  .ab .ab-title {
+    margin: 0; font-size: clamp(64px, 7.2vw, 132px); line-height: .86; letter-spacing: .01em;
+    perspective: 900px;
+  }
+  .ab .ab-title .ab-line { transform-style: preserve-3d; }
+  .ab .ab-title .word { display: inline-block; white-space: nowrap; transform-style: preserve-3d; }
+  .ab .ab-title .char { display: inline-block; will-change: transform, opacity; }
+
+  /* ancla del riel: invisible con la escena viva (la línea es la del 3D); sin escena, una línea HTML digna */
+  .ab .ab-rail { position: absolute; left: 0; right: 0; top: var(--rail); height: 1px; pointer-events: none; }
+  .transition-zone:not([data-see-through]) .ab .ab-rail {
+    background: linear-gradient(90deg, transparent, rgba(232, 39, 42, .55) 12%, rgba(232, 39, 42, .55) 88%, transparent);
+  }
+
+  /* datos debajo del riel, en dos columnas */
+  .ab .ab-body {
+    position: absolute; left: var(--pad);
+    top: calc(var(--rail) + clamp(22px, 3.2vh, 40px));
+    width: calc(100vw - 2 * var(--pad) - var(--ph) * .8 - 6vw);
+    columns: 2; column-gap: clamp(28px, 3vw, 56px);
+  }
+  .ab .ab-body .ab-paras { display: block; }
+  .ab .ab-body .ab-paras p {
+    margin: 0 0 1em; break-inside: avoid;
+    font-size: clamp(15px, 1.12vw, 18px); line-height: 1.55; color: rgba(232, 228, 222, .82);
+  }
+  .ab .ab-body .ab-sub { margin: 0; break-inside: avoid; font-size: clamp(15px, 1.12vw, 18px); }
+
+  /* la foto real, 2D plana, cuelga del riel */
+  .ab .ab-photo {
+    position: absolute; right: var(--pad); top: calc(var(--rail) + clamp(10px, 1.4vh, 16px));
+    width: calc(var(--ph) * .8); margin: 0;
+  }
+  .ab .ab-frame { width: 100%; height: var(--ph); max-width: none; margin: 0; aspect-ratio: auto; overflow: hidden; }
+  .ab .ab-frame img { transform: scale(1.3); transform-origin: 50% 16%; }
+  .ab .ab-meta { margin-top: 14px; padding-top: 12px; gap: 6px 16px; flex-wrap: wrap; }
+}

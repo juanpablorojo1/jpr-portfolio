@@ -48,12 +48,32 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
     if (nameSplit) { gsap.killTweensOf(nameSplit.chars); nameSplit.revert(); nameSplit = null; }
     if (tagSplit) { gsap.killTweensOf(tagSplit.chars); tagSplit.revert(); tagSplit = null; }
     gsap.set(root.querySelectorAll('[data-reveal], .channel'), { clearProps: 'all' });
+    syncSeeThrough();
   }
   S.goStatic = goStatic;
 
+  /* ---------- conexión con la sección siguiente (About) ----------
+     Con la escena 3D viva y ≥1024 px, el About entra transparente (atributo data-see-through en su TransitionZone;
+     el CSS vive en about-senal.css): la cámara termina su recorrido detrás del About en lugar de quedar tapada.
+     Entonces lo que tapa la escena ya no es el About sino la sección que le sigue (Projects). */
+  const zone = root.closest('.transition-zone');
+  const nextZone = (zone ?? root).nextElementSibling as HTMLElement | null;
+  const afterZone = (nextZone?.nextElementSibling ?? null) as HTMLElement | null;
+  const wide = matchMedia('(min-width: 1024px)');
+  const covered = new Map<Element, boolean>();
+  let applyView: () => void = () => {};
+  function syncSeeThrough() {
+    if (!nextZone) return;
+    const on = !disposed && !S.dead && wide.matches && root.classList.contains('is-live');
+    nextZone.toggleAttribute('data-see-through', on);
+    applyView();
+  }
+  wide.addEventListener('change', syncSeeThrough);
+  cleanups.push(() => { wide.removeEventListener('change', syncSeeThrough); nextZone?.removeAttribute('data-see-through'); });
+
   if (root.classList.contains('is-static')) {
     goStatic(matchMedia('(prefers-reduced-motion: reduce)').matches ? 'prefers-reduced-motion' : '?static');
-    return () => { disposed = true; S.goStatic = () => {}; };
+    return () => { disposed = true; S.goStatic = () => {}; cleanups.forEach((f) => f()); };
   }
 
   document.fonts.ready.then(() => {
@@ -151,6 +171,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
   S.onLive = function () {
     if (S.dead || disposed) return;
     root.classList.add('is-live');               // el canvas 3D se funde encima (0,6 s)
+    syncSeeThrough();
     handTimer = window.setTimeout(() => { if (!S.dead) { root.classList.add('is-handed'); S.handoff = true; } }, 700);
   };
   cleanups.push(() => clearTimeout(handTimer));
@@ -197,21 +218,28 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
 
   /* ---------- pausa fuera de vista ----------
      El canvas es fixed y el hero vive en un card sticky: el hero no sale del viewport, lo tapa la sección siguiente.
-     Se observa esa sección contra todo lo que queda por encima del borde superior del viewport
-     (rootMargin: arriba 10000 %, abajo -100 %): si la toca, el hero está tapado entero → se pausan el loop 2D/HTML,
-     el render 3D (S.onView → scene.js) y las animaciones CSS del hero. Sirve igual en celular, donde el card no es sticky. */
-  const cover = (root.closest('.transition-zone') ?? root).nextElementSibling;
-  if (cover && 'IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => {
-      const e = entries[entries.length - 1];
-      const v = !e.isIntersecting;
-      if (v === S.inView || disposed) return;
+     Se observan las dos secciones que siguen contra todo lo que queda por encima del borde superior del viewport
+     (rootMargin: arriba 10000 %, abajo -100 %): si una la toca, cubre el viewport entero. La escena está tapada cuando
+     la cubre la sección de después del About (Projects) o el About opaco (sin data-see-through: celular, sin 3D).
+     Tapada → se pausan el loop 2D/HTML, el render 3D (S.onView → scene.js) y las animaciones CSS del hero.
+     Sirve igual en celular, donde los cards no son sticky. */
+  if (nextZone && 'IntersectionObserver' in window) {
+    applyView = () => {
+      if (disposed) return;
+      const hidden = !!(afterZone && covered.get(afterZone)) || (!!covered.get(nextZone) && !nextZone.hasAttribute('data-see-through'));
+      const v = !hidden;
+      if (v === S.inView) return;
       S.inView = v;
       root.classList.toggle('is-offscreen', !v);
       if (v) start(); else stop();
       S.onView(v);
+    };
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => covered.set(e.target, e.isIntersecting));
+      applyView();
     }, { rootMargin: '10000% 0px -100% 0px', threshold: 0 });
-    io.observe(cover);
+    io.observe(nextZone);
+    if (afterZone) io.observe(afterZone);
     cleanups.push(() => io.disconnect());
   }
 
