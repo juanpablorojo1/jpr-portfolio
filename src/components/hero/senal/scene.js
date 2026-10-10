@@ -393,10 +393,34 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const CAM_LAMBDA = 4;                          // ~0,25 s de constante de tiempo: sigue al dedo, con masa
 
   /* ---------- loop ---------- */
-  const fpsBuf = []; let lastNow = performance.now(), adaptiveDone = false, loopOn = false;
+  const fpsBuf = []; let lastNow = performance.now(), loopOn = false;
+  /* Calidad adaptativa (DPR), con ida y vuelta. Se mide en ventanas de 120 frames válidos (~2 s): un frame de más de
+     250 ms (pestaña oculta, ventana tapada, GC largo, vuelta de segundo plano) no es una medición y reinicia la ventana.
+     < 48 fps → DPR al piso. En el piso, ventanas seguidas ≥ 57 fps → DPR completo de nuevo. Si al subir vuelve a caer,
+     la próxima subida pide el doble de ventanas buenas (2 → 4 → 8 → 16): no oscila. */
+  const DPR_MAX = Math.min(devicePixelRatio, 2);
+  const aq = { n: 0, sum: 0, low: false, good: 0, need: 2 };
+  const setDpr = (d, f) => {
+    renderer.setPixelRatio(d); U.dpr.value = d;          // setPixelRatio ya rehace el tamaño del canvas
+    console.info('[senal] adaptive: dpr →', d, 'at', f.toFixed(1), 'fps');
+  };
+  function adaptive(dtMs, t) {
+    if (dtMs > 250 || document.hidden) { aq.n = 0; aq.sum = 0; return; }
+    if (t <= 6) return;                                     // el arranque (compilación, latido) no cuenta
+    aq.n++; aq.sum += dtMs;
+    if (aq.n < 120) return;
+    const f = (aq.n * 1000) / aq.sum;
+    aq.n = 0; aq.sum = 0;
+    const floor = isMobile() ? 1.5 : 1;                     // en mobile nunca por debajo de 1,5 (la cara se ablanda)
+    if (!aq.low) {
+      if (f < 48 && renderer.getPixelRatio() > floor) { aq.low = true; aq.good = 0; setDpr(floor, f); }
+    } else if (f >= 57) {
+      if (++aq.good >= aq.need) { aq.low = false; aq.need = Math.min(aq.need * 2, 16); setDpr(DPR_MAX, f); }
+    } else aq.good = 0;
+  }
   const hud = params.has('hud') ? root.querySelector('.senal-hud') : null;
   if (hud) hud.hidden = false;
-  ctl.info = { backend, t: { rendererReady: Math.round(performance.now()) }, fps: () => (fpsBuf.length ? (fpsBuf.length / (fpsBuf.reduce((a, b) => a + b, 0) / 1000)).toFixed(1) : null), frames: 0, running: () => loopOn };
+  ctl.info = { backend, t: { rendererReady: Math.round(performance.now()) }, fps: () => (fpsBuf.length ? (fpsBuf.length / (fpsBuf.reduce((a, b) => a + b, 0) / 1000)).toFixed(1) : null), frames: 0, running: () => loopOn, dpr: () => renderer.getPixelRatio() };
   window.__senal = ctl.info;
   console.info('[senal] backend:', backend);
 
@@ -405,7 +429,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     const now = performance.now();
     const dtMs = now - lastNow; lastNow = now;
     const dt = Math.min(dtMs / 1000, 1 / 20);
-    fpsBuf.push(dtMs); if (fpsBuf.length > 120) fpsBuf.shift();
+    if (dtMs <= 250) { fpsBuf.push(dtMs); if (fpsBuf.length > 120) fpsBuf.shift(); }   // HUD / __senal.fps(): sin pausas
     const st = S.state, t = S.now();             // hero-controller ya escribió la traza de este frame
     cam.p = S.damp(cam.p, cam.target, CAM_LAMBDA, dt);
     const p = cam.p;
@@ -424,12 +448,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
 
     if (first) { first = false; clearWatchdog(); window.__senal.t.firstFrame = Math.round(performance.now()); S.onLive(); }
     if (hud && (Math.round(t * 10) % 5 === 0)) hud.textContent = `${backend}  ${window.__senal.fps()} fps  dpr ${renderer.getPixelRatio().toFixed(2)}  p ${p.toFixed(3)}`;
-    if (!adaptiveDone && t > 6 && fpsBuf.length >= 120) {
-      adaptiveDone = true;
-      const f = Number(window.__senal.fps());
-      const floor = isMobile() ? 1.5 : 1;                 // en mobile nunca por debajo de 1,5 (la cara se ablanda)
-      if (f < 48 && renderer.getPixelRatio() > floor) { renderer.setPixelRatio(floor); U.dpr.value = floor; console.info('[senal] adaptive: dpr →', floor, 'at', f, 'fps'); }
-    }
+    adaptive(dtMs, t);
   }
   // warm-up: compilar todo antes de mostrar (sin tirones en el latido ni en el primer scroll)
   updateCamera(S.now(), 0, 0); buildRibbons(S.now(), 0);
