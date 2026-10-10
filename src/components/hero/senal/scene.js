@@ -54,6 +54,12 @@ function releaseRenderer(ctl) {
   try { Promise.resolve(ctl.renderer.dispose()).catch(() => {}); } catch (e) { /* noop */ }
 }
 
+// cede el hilo principal entre etapas del arranque: tareas más cortas, menos tiempo de bloqueo (TBT)
+const yieldToMain = () => new Promise((r) => {
+  const sch = globalThis.scheduler;
+  if (sch && typeof sch.yield === 'function') sch.yield().then(r); else setTimeout(r, 0);
+});
+
 async function boot({ S, root, after, assetBase }, ctl) {
   const params = S.params;
   const on = (target, type, fn, opt) => { target.addEventListener(type, fn, opt); ctl.offs.push(() => target.removeEventListener(type, fn, opt)); };
@@ -291,6 +297,8 @@ async function boot({ S, root, after, assetBase }, ctl) {
   on(window, 'resize', layout);
 
   /* ---------- post: bloom + viñeta ---------- */
+  await yieldToMain();                           // armado de la escena / post / compilación: tareas separadas (TBT)
+  if (ctl.disposed || S.dead) return;
   const pipeline = new THREE.RenderPipeline(renderer);
   ctl.pipeline = pipeline;
   const scenePass = pass(scene, camera);
@@ -451,6 +459,8 @@ async function boot({ S, root, after, assetBase }, ctl) {
     adaptive(dtMs, t);
   }
   // warm-up: compilar todo antes de mostrar (sin tirones en el latido ni en el primer scroll)
+  await yieldToMain();
+  if (ctl.disposed || S.dead) return;
   updateCamera(S.now(), 0, 0); buildRibbons(S.now(), 0);
   echoes.forEach((e) => { e.alpha.value = 0; });
   pipeline.render();

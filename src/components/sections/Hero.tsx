@@ -3,7 +3,8 @@
 /* Hero «Señal» (rediseño 2026, golden section). Port fiel de la maqueta aprobada
    clients/jpr-portfolio/maquetas/2026-10-09-redesign/a-senal/ (repo de la agencia, commit da8ae1b).
    - El HTML (nombre, tagline, CTAs, foto estática, traza 2D) se ve desde el primer frame.
-   - La escena 3D (three r186, WebGPU con fallback a WebGL2) se importa dinámicamente y se funde encima en 0,6 s.
+   - La escena 3D (three r186, WebGPU con fallback a WebGL2) se importa con la página cargada y el hilo libre
+     (afterLoadIdle) y se funde encima en 0,6 s.
    - Reduced motion y ?static van por el mismo camino estático, decidido antes del primer pintado. */
 
 import { useEffect, useRef } from 'react';
@@ -14,6 +15,27 @@ import '../hero/senal/senal.css';
 
 // Corre mientras se parsea el HTML, antes de pintar el hero: elige el camino estático.
 const STATIC_SCRIPT = `(function(){var r=document.getElementById('senal');if(!r)return;var rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;if(rm||/[?&]static\\b/.test(location.search))r.classList.add('is-static');})();`;
+
+/** Corre `fn` con el evento load ya disparado y el hilo principal libre (requestIdleCallback, tope 1,2 s).
+    Devuelve la cancelación. */
+function afterLoadIdle(fn: () => void): () => void {
+  let idleId = 0, timer = 0, done = false;
+  const hasRic = typeof window.requestIdleCallback === 'function';
+  const run = () => { if (!done) { done = true; fn(); } };
+  const schedule = () => {
+    if (hasRic) idleId = window.requestIdleCallback(run, { timeout: 1200 });
+    // red de seguridad: Chrome no entrega idle callbacks (ni su timeout) con la pestaña oculta
+    timer = window.setTimeout(run, hasRic ? 1500 : 1);
+  };
+  if (document.readyState === 'complete') schedule();
+  else window.addEventListener('load', schedule, { once: true });
+  return () => {
+    done = true;
+    window.removeEventListener('load', schedule);
+    if (idleId) window.cancelIdleCallback(idleId);
+    clearTimeout(timer);
+  };
+}
 
 export default function Hero() {
   const t = useTranslations('hero');
@@ -36,21 +58,28 @@ export default function Hero() {
 
     let cancelled = false;
     let disposeScene: (() => void) | null = null;
+    let cancelDefer = () => {};
     if (!root.classList.contains('is-static')) {
       const intro = root.querySelector<HTMLCanvasElement>('.senal-intro');
-      import('../hero/senal/scene')
-        .then(({ bootScene }) => {
-          if (cancelled || !intro) return;
-          const scene = bootScene({ S, root, after: intro, assetBase: '/senal/' });
-          disposeScene = scene.dispose;
-        })
-        .catch((e: unknown) => {
-          if (!cancelled) S.goStatic('scene import: ' + (e instanceof Error ? e.message : String(e)));
-        });
+      // El chunk 3D (three/webgpu, ~680 KB sin comprimir) se pide recién con la página cargada y el hilo libre:
+      // no compite con la hidratación ni con el texto del hero (TBT, delivery-auditor D-01). Mientras tanto el hero
+      // ya está entero en HTML/2D con la traza en canvas 2D; la escena se funde encima igual que antes, cuando llega.
+      cancelDefer = afterLoadIdle(() => {
+        import('../hero/senal/scene')
+          .then(({ bootScene }) => {
+            if (cancelled || !intro) return;
+            const scene = bootScene({ S, root, after: intro, assetBase: '/senal/' });
+            disposeScene = scene.dispose;
+          })
+          .catch((e: unknown) => {
+            if (!cancelled) S.goStatic('scene import: ' + (e instanceof Error ? e.message : String(e)));
+          });
+      });
     }
 
     return () => {
       cancelled = true;
+      cancelDefer();
       stopHero();
       if (disposeScene) disposeScene();
       const w = window as unknown as { SENAL?: unknown };
