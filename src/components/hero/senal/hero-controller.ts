@@ -226,7 +226,11 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
   if (nextZone && 'IntersectionObserver' in window) {
     applyView = () => {
       if (disposed) return;
-      const hidden = !!(afterZone && covered.get(afterZone)) || (!!covered.get(nextZone) && !nextZone.hasAttribute('data-see-through'));
+      // Escena todavía sin primer frame (recarga a mitad de página, scroll rápido): el About no cuenta como tapa,
+      // así el loop corre, la escena llega a is-live y el About pasa a transparente (si no, quedaba opaco para siempre).
+      const pending = wide.matches && !S.dead && !root.classList.contains('is-live');
+      const aboutOpaque = !nextZone.hasAttribute('data-see-through') && !pending;
+      const hidden = !!(afterZone && covered.get(afterZone)) || (!!covered.get(nextZone) && aboutOpaque);
       const v = !hidden;
       if (v === S.inView) return;
       S.inView = v;
