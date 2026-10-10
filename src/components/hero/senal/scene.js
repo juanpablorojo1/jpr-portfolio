@@ -54,10 +54,13 @@ function releaseRenderer(ctl) {
   try { Promise.resolve(ctl.renderer.dispose()).catch(() => {}); } catch (e) { /* noop */ }
 }
 
-// cede el hilo principal entre etapas del arranque: tareas más cortas, menos tiempo de bloqueo (TBT)
+// cede el hilo principal entre etapas del arranque: tareas más cortas, menos tiempo de bloqueo (TBT).
+// scheduler.yield() corre con setTimeout(0) en paralelo: con la pestaña oculta la continuación de yield() puede
+// quedar retenida y el arranque no debe colgarse de eso (gana el que llegue primero).
 const yieldToMain = () => new Promise((r) => {
   const sch = globalThis.scheduler;
-  if (sch && typeof sch.yield === 'function') sch.yield().then(r); else setTimeout(r, 0);
+  if (sch && typeof sch.yield === 'function') sch.yield().then(r, r);
+  setTimeout(r, 0);
 });
 
 async function boot({ S, root, after, assetBase }, ctl) {
