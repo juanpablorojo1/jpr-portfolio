@@ -5,6 +5,7 @@
   --bg: #080808;
   --surface: #1c1c1c;
   --red: #e8272a;
+  --red-cta: #e62529;      /* solo el fondo del botón sólido: blanco 14px da 4,51:1 (con #E8272A, 4,42:1) */
   --red-muted: #8b1517;
   --off: #e8e4de;
   --white: #ffffff;
@@ -150,7 +151,8 @@
   content: ''; position: absolute; inset: 0; background: var(--red);
   transform: scaleY(0); transform-origin: bottom; transition: transform .45s var(--ease-out);
 }
-.senal .btn-solid::before { transform: scaleY(1); }
+.senal .btn-solid { border-color: var(--red-cta); }
+.senal .btn-solid::before { transform: scaleY(1); background: var(--red-cta); }
 .senal .btn-solid:hover::before { transform: scaleY(0); transform-origin: top; }
 .senal .btn-ghost { border-color: var(--border); color: var(--off); }
 .senal .btn-ghost:hover { border-color: var(--red); color: var(--white); }
