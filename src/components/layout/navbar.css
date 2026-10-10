@@ -44,6 +44,11 @@
 .jnav-logo-mark { display: block; height: 100%; width: auto; }
 .jnav-logo-mark > svg { display: block; height: 100%; width: auto; }
 .jnav-logo-ph { font-size: 13px; letter-spacing: 0.32em; color: var(--off); margin-right: -0.32em; }
+/* Logo animado (LogoMark animated, solo la barra: #jpr-pierna): la pierna arranca sin dibujar y GSAP la dibuja con el
+   reloj del hero. Con reduced motion no se oculta nunca: estado final desde el primer pintado. */
+@media (prefers-reduced-motion: no-preference) {
+  #jpr-pierna { stroke-dasharray: 0 999; }
+}
 
 /* hairline entre la firma y los links: separa marca de navegación, como el encabezado de un monitor */
 .jnav-rule { width: 1px; height: 14px; background: var(--line-strong); }

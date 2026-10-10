@@ -190,7 +190,7 @@ export default function Navbar() {
     <header className={`jnav${scrolled ? ' is-scrolled' : ''}`}>
       <div className="jnav-bar">
         <div className="jnav-left">
-          <LogoSlot href={`/${locale}`} label={logoLabel} onClick={handleLogoClick} svg={<LogoMark />} />
+          <LogoSlot href={`/${locale}`} label={logoLabel} onClick={handleLogoClick} svg={<LogoMark animated />} />
           <span className="jnav-rule" aria-hidden="true" />
           <nav aria-label={t('menu_aria')}>
             <ul className="jnav-links">

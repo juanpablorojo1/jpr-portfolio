@@ -8,7 +8,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { createSignal } from '../hero/senal/signal';
+import { createSignal, publishSignal } from '../hero/senal/signal';
 import { initHero } from '../hero/senal/hero-controller';
 import '../hero/senal/senal.css';
 
@@ -32,6 +32,7 @@ export default function Hero() {
     const S = createSignal(location.search);
     (window as unknown as { SENAL: unknown }).SENAL = S;
     const stopHero = initHero(root, S, { channels });
+    publishSignal(S);   // después de initHero: en el camino estático S.dead ya es true y el logo queda entero
 
     let cancelled = false;
     let disposeScene: (() => void) | null = null;
@@ -54,6 +55,7 @@ export default function Hero() {
       if (disposeScene) disposeScene();
       const w = window as unknown as { SENAL?: unknown };
       if (w.SENAL === S) delete w.SENAL;
+      publishSignal(null);
     };
     // channels sale de messages y no cambia durante la vida de la página
     // eslint-disable-next-line react-hooks/exhaustive-deps

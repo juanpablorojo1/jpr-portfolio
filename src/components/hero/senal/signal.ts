@@ -135,3 +135,18 @@ export function createSignal(search: string): Senal {
   };
   return S;
 }
+
+/* La señal viva, para quien está fuera del hero (el logo del menú, LogoMark animated): el hero la publica al montar
+   y la retira al desmontar. Quien escucha recibe la actual en el acto y las siguientes (StrictMode monta dos veces).
+   Así el logo late con el mismo reloj (S.now) y el mismo latido (S.T_R0, S.pulse) que la traza, sin timeouts. */
+let published: Senal | null = null;
+const listeners = new Set<(S: Senal) => void>();
+export function publishSignal(S: Senal | null) {
+  published = S;
+  if (S) listeners.forEach((f) => f(S));
+}
+export function onSignal(f: (S: Senal) => void): () => void {
+  listeners.add(f);
+  if (published) f(published);
+  return () => { listeners.delete(f); };
+}
