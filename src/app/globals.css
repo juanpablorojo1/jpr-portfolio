@@ -45,6 +45,10 @@ html {
   background-color: var(--color-bg);
   color: var(--color-white);
 }
+/* Con reduced motion los saltos (nav, CTA, #hash) son instantáneos: con smooth acá, behavior:'auto' igual anima. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
 
 body {
   font-family: var(--font-ui);

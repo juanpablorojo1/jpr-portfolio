@@ -63,7 +63,8 @@ export default function Hero() {
 
   const handleViewWork = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' });
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.getElementById('projects')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
   };
 
   return (
