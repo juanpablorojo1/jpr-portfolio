@@ -157,7 +157,7 @@ export default function About() {
 
           {/* Sub-tagline */}
           <p className="ab-sub mt-4 font-ui text-base text-accent italic">
-            — {t('sub_tagline')}
+            {t('sub_tagline')}
           </p>
         </div>
 
