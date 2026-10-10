@@ -150,11 +150,14 @@ export default function About() {
               src="/images/portrait.jpg"
               alt="Juan Pablo Rojo"
               fill
-              className="object-cover object-top"
-              style={{ filter: 'grayscale(85%) contrast(1.05)' }}
+              className="ab-img object-cover object-top"
               sizes="(max-width: 1023px) 80vw, 30vw"
             />
+            {/* ≥1024: la pared clara de la toma cae a la oscuridad (recorte del hero como máscara) y la escena
+                ilumina la foto (viñeta, resto rojo del riel, filo); about-senal.css */}
+            <div className="ab-matte" aria-hidden="true" />
             <div className="absolute inset-0 bg-gradient-to-t from-bg/60 to-transparent" />
+            <div className="ab-light" aria-hidden="true" />
           </div>
 
           {/* Metadata bar */}
