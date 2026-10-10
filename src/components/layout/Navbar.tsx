@@ -4,9 +4,12 @@
    - En reposo sobre el hero: transparente (frame aprobado por Juan, 607f16a: «A, menú así»).
    - Al scrollear (cuando la tarjeta About llega al borde del menú): fondo sólido 95% sin blur + borde de 1 px,
      y la sección activa con un punto rojo que late (IntersectionObserver, scroll nativo, aria-current).
+   - Celular (<1200): menú a pantalla completa en un <dialog> modal (foco atrapado por el navegador, Escape cierra,
+     el foco vuelve al botón), links grandes en Barlow Condensed y la traza del hero cruzando el fondo, plana.
+     Entrada con @starting-style en navbar.css; sin soporte, abre sin animar.
    El logo vive en <LogoSlot> (componente propio): el concepto A se integra en el dispatch siguiente. */
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import LanguageSelector from '../ui/LanguageSelector';
@@ -23,6 +26,9 @@ type SectionKey = (typeof SECTION_IDS)[number];
 
 /* Alto del menú en reposo (navbar.css: 80 px; 64 px por debajo de 900). */
 const restBarHeight = () => (window.innerWidth < 900 ? 64 : 80);
+
+/* La misma traza que el hero (static-trace en Hero.tsx), plana y 2D. */
+const TRACE_D = 'M0 90 H340 l10 -6 l8 6 H372 l5 5 l9 -86 l9 96 l6 -15 H470 q22 -18 44 0 H1000';
 
 function CvLink({ href, label }: { href: string; label: string }) {
   return (
@@ -44,7 +50,10 @@ export default function Navbar() {
   const [active, setActive] = useState<SectionKey | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLDialogElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
+  const closeLabel = locale === 'es' ? 'Cerrar menú' : 'Close menu';
 
   /* Estado al scrollear: la raíz del observer es la franja del menú (alto en reposo, arriba de todo).
      Cuando la tarjeta About entra en esa franja, el hero quedó atrás. About queda sticky debajo del resto
@@ -88,6 +97,50 @@ export default function Navbar() {
     return () => io.disconnect();
   }, []);
 
+  /* ---------- menú de celular ---------- */
+  const unlockScroll = useCallback(() => {
+    const html = document.documentElement;
+    html.style.overflow = '';
+    html.style.paddingRight = '';
+  }, []);
+
+  const closeSheet = useCallback(() => {
+    sheetRef.current?.close(); // dispara 'close': ahí se sincroniza el estado y vuelve el foco
+    unlockScroll();
+  }, [unlockScroll]);
+
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet || !menuOpen || sheet.open) return;
+    const html = document.documentElement;
+    const gutter = window.innerWidth - html.clientWidth; // sin salto de layout al sacar la barra de scroll
+    html.style.overflow = 'hidden';
+    if (gutter > 0) html.style.paddingRight = `${gutter}px`;
+    sheet.showModal();
+    closeBtnRef.current?.focus();
+  }, [menuOpen]);
+
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    // Escape (cancel → close), el botón de cerrar o un link: siempre pasa por acá.
+    const onClose = () => {
+      setMenuOpen(false);
+      unlockScroll();
+      menuBtnRef.current?.focus({ preventScroll: true });
+    };
+    sheet.addEventListener('close', onClose);
+    // Si la ventana pasa a ≥1200 con el menú abierto, el botón desaparece: se cierra.
+    const mq = window.matchMedia('(min-width: 1200px)');
+    const onMq = () => { if (mq.matches && sheet.open) sheet.close(); };
+    mq.addEventListener('change', onMq);
+    return () => {
+      sheet.removeEventListener('close', onClose);
+      mq.removeEventListener('change', onMq);
+      unlockScroll();
+    };
+  }, [unlockScroll]);
+
   const navLinks: { id: SectionKey; label: string }[] = [
     { id: 'projects', label: t('projects') },
     { id: 'videos', label: t('video') },
@@ -106,8 +159,15 @@ export default function Navbar() {
     scrollToSection(id);
   };
 
+  const handleSheetNavClick = (e: MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    closeSheet();
+    scrollToSection(id);
+  };
+
   const handleLogoClick = (e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
+    if (sheetRef.current?.open) closeSheet();
     window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
   };
 
@@ -150,12 +210,54 @@ export default function Navbar() {
             aria-label={t('menu_aria')}
             aria-expanded={menuOpen}
             aria-controls={panelId}
-            onClick={() => setMenuOpen((v) => !v)}
+            onClick={() => setMenuOpen(true)}
           >
             <i /><i />
           </button>
         </div>
       </div>
+
+      {/* Menú de celular. Modal: el resto de la página queda inerte mientras está abierto. */}
+      <dialog ref={sheetRef} id={panelId} className="jnav-sheet" aria-label={t('menu_aria')}>
+        <div className="jnav-bar jnav-sheet-bar">
+          <LogoSlot href={`/${locale}`} label={logoLabel} onClick={handleLogoClick} />
+          <div className="jnav-right">
+            <LanguageSelector />
+            <button ref={closeBtnRef} type="button" className="jnav-menu jnav-close" aria-label={closeLabel} onClick={closeSheet}>
+              <i /><i />
+            </button>
+          </div>
+        </div>
+
+        <div className="jnav-sheet-signal" aria-hidden="true">
+          <svg viewBox="0 0 1000 120" preserveAspectRatio="none" focusable="false">
+            <path d={TRACE_D} />
+          </svg>
+        </div>
+
+        <nav className="jnav-sheet-nav" aria-label={t('menu_aria')}>
+          <ol className="jnav-sheet-links">
+            {navLinks.map((link, i) => (
+              <li key={link.id} style={{ ['--i' as string]: i }}>
+                <a
+                  className="jnav-sheet-link"
+                  href={`#${link.id}`}
+                  aria-current={active === link.id ? 'location' : undefined}
+                  onClick={(e) => handleSheetNavClick(e, link.id)}
+                >
+                  <span className="jnav-sheet-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="jnav-sheet-label">{link.label}</span>
+                  <span className="jnav-dot" aria-hidden="true" />
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+
+        <div className="jnav-sheet-foot">
+          <CvLink href={cvHref} label={t('downloadCV')} />
+        </div>
+      </dialog>
     </header>
   );
 }

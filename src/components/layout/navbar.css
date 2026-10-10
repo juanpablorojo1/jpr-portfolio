@@ -80,7 +80,7 @@
   opacity: 0; transform: scale(0.4);
   transition: opacity 0.25s ease, transform 0.35s var(--ease-out);
 }
-.jnav-link[aria-current] .jnav-dot { opacity: 1; transform: scale(1); animation: jnav-beat 1.6s 0.35s infinite; }
+.jnav-link[aria-current] .jnav-dot, .jnav-sheet-link[aria-current] .jnav-dot { opacity: 1; transform: scale(1); animation: jnav-beat 1.6s 0.35s infinite; }
 @keyframes jnav-beat {
   0%, 30%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(232, 39, 42, 0.7); }
   7%  { transform: scale(1.55); box-shadow: 0 0 12px rgba(232, 39, 42, 0.95); }
@@ -125,6 +125,85 @@
   .jnav-bar { transition: height 0.35s var(--ease-out); }
   .jnav.is-scrolled .jnav-bar { height: 64px; }
 }
+
+/* ---------- menú de celular: pantalla completa (<dialog> modal) ----------
+   Entra como un barrido de monitor desde la barra (clip-path de arriba hacia abajo), los links suben en
+   escalera de 45 ms y la traza del hero se dibuja de izquierda a derecha cruzando el espacio vacío.
+   Sale más rápido de lo que entra, recogiéndose hacia la barra. Sin @starting-style: abre sin animar. */
+.jnav-sheet {
+  position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+  margin: 0; padding: 0; border: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+  flex-direction: column;
+  background: var(--bg); color: var(--dim);
+  clip-path: inset(0 0 100% 0);
+  transition:
+    clip-path 0.26s cubic-bezier(0.32, 0.72, 0, 1),
+    display 0.26s allow-discrete, overlay 0.26s allow-discrete;
+}
+.jnav-sheet[open] {
+  display: flex;
+  clip-path: inset(0 0 0 0);
+  transition-duration: 0.5s;
+}
+@starting-style { .jnav-sheet[open] { clip-path: inset(0 0 100% 0); } }
+.jnav-sheet::backdrop { background: transparent; }
+
+.jnav-sheet-bar { flex: none; }
+.jnav-close i:first-child { transform: translateY(3.5px) rotate(45deg); }
+.jnav-close i:last-child { width: 20px; transform: translateY(-3.5px) rotate(-45deg); }
+.jnav-close:hover i:last-child { width: 20px; }
+
+/* La señal: ocupa el vacío entre la barra y los links, de borde a borde, y se encoge si falta alto. */
+.jnav-sheet-signal { flex: 1 1 auto; min-height: 56px; display: flex; align-items: center; }
+.jnav-sheet-signal svg { display: block; width: 100%; height: clamp(56px, 16vh, 140px); overflow: visible; }
+.jnav-sheet-signal path {
+  fill: none; stroke: var(--red); stroke-width: 1.5; vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+.jnav-sheet-signal svg {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 1.1s cubic-bezier(0.65, 0, 0.35, 1) 0.18s;
+}
+@starting-style { .jnav-sheet[open] .jnav-sheet-signal svg { clip-path: inset(0 100% 0 0); } }
+
+.jnav-sheet-nav { flex: none; padding: 0 var(--pad); }
+.jnav-sheet-links { list-style: none; margin: 0; padding: 0; border-bottom: 1px solid var(--line); }
+.jnav-sheet-links li {
+  border-top: 1px solid var(--line);
+  transition:
+    opacity 0.4s ease calc(0.14s + var(--i) * 0.045s),
+    transform 0.6s var(--ease-out) calc(0.14s + var(--i) * 0.045s);
+}
+@starting-style { .jnav-sheet[open] .jnav-sheet-links li { opacity: 0; transform: translateY(28px); } }
+
+.jnav-sheet-link {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 0 10px; min-height: 48px;
+  color: var(--off);
+  transition: color 0.2s ease;
+}
+.jnav-sheet-num { width: 22px; flex: none; align-self: flex-start; padding-top: 0.55em; color: var(--dim); font-size: 10px; letter-spacing: 0.1em; }
+.jnav-sheet-label {
+  font-family: var(--font-barlow-condensed), 'Arial Narrow', sans-serif; font-weight: 700;
+  font-size: min(12.5vw, 8.5svh, 92px); line-height: 0.9; letter-spacing: 0.005em; text-transform: uppercase;
+}
+.jnav-sheet-link .jnav-dot { position: static; flex: none; margin: 0 0 0 4px; width: 7px; height: 7px; }
+.jnav-sheet-link[aria-current] { color: var(--white); }
+.jnav-sheet-link[aria-current] .jnav-sheet-num { color: var(--red); }
+.jnav-sheet-link:active { color: var(--white); }
+@media (hover: hover) and (pointer: fine) {
+  .jnav-sheet-link:hover { color: var(--white); }
+}
+
+.jnav-sheet-foot {
+  flex: none; display: flex; align-items: center; justify-content: space-between;
+  padding: 22px var(--pad) max(22px, env(safe-area-inset-bottom));
+  transition: opacity 0.4s ease 0.4s;
+}
+.jnav-sheet-foot .jnav-cv { height: 44px; padding: 0 18px 0 20px; }
+@starting-style { .jnav-sheet[open] .jnav-sheet-foot { opacity: 0; } }
+
+@media (min-width: 1200px) { .jnav-sheet { display: none; } }
 
 /* Por debajo de 1200 px los links cruzarían la columna de la cara (la figura vive al 70% del ancho
    hasta 899 px y centrada debajo): menú compacto. Medido con el copy EN/ES de fe0c09e. */
