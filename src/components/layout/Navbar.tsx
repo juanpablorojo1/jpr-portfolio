@@ -56,18 +56,29 @@ export default function Navbar() {
   const closeLabel = locale === 'es' ? 'Cerrar menú' : 'Close menu';
 
   /* Estado al scrollear: la raíz del observer es la franja del menú (alto en reposo, arriba de todo).
-     Cuando la tarjeta About entra en esa franja, el hero quedó atrás. About queda sticky debajo del resto
-     de las tarjetas, así que sigue cortando la franja hasta volver arriba. Sin listener de scroll. */
+     «Pasado el hero» = algo que no es el hero ocupa la franja. En desktop las tarjetas son sticky: el hero
+     queda pegado debajo de About y About sigue en la franja hasta volver arriba. En celular (<900) las tarjetas
+     son relative: el hero sale de la franja. Regla única: About en la franja, o el hero fuera de ella.
+     Sin listener de scroll. */
   useEffect(() => {
+    const hero = document.querySelector('[data-section="hero"]');
     const about = document.querySelector('[data-section="about"]');
-    if (!about) return;
+    if (!hero || !about) return;
+    const inBand = new Map<Element, boolean>([[hero, true], [about, false]]);
     let io: IntersectionObserver | null = null;
     const build = () => {
       io?.disconnect();
       const bottom = Math.max(0, window.innerHeight - restBarHeight());
-      io = new IntersectionObserver(([entry]) => setScrolled(entry.isIntersecting), {
-        rootMargin: `0px 0px -${bottom}px 0px`,
-      });
+      // root: document = el viewport de ESTE documento (también dentro de un iframe), para que rootMargin
+      // se mida contra el mismo innerHeight que lo calcula.
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) inBand.set(e.target, e.isIntersecting);
+          setScrolled(!!inBand.get(about) || !inBand.get(hero));
+        },
+        { root: document, rootMargin: `0px 0px -${bottom}px 0px` },
+      );
+      io.observe(hero);
       io.observe(about);
     };
     build();
@@ -91,7 +102,7 @@ export default function Navbar() {
         const top = [...SECTION_IDS].reverse().find((id) => inBand.has(id)) ?? null;
         setActive(top);
       },
-      { rootMargin: '-45% 0px -54% 0px' },
+      { root: document, rootMargin: '-45% 0px -54% 0px' },
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
