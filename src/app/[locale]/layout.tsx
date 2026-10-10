@@ -78,6 +78,8 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
       languages: {
         'en': `${siteUrl}/en`,
         'es': `${siteUrl}/es`,
+        // La raíz / redirige (307) a /en: es la versión por defecto.
+        'x-default': `${siteUrl}/en`,
       },
     },
   };
