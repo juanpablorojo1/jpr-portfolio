@@ -20,8 +20,6 @@ gsap.registerPlugin(SplitText);
 export default function About() {
   const t = useTranslations('about');
   const sectionRef = useRef<HTMLElement>(null);
-  const ageDisplayRef = useRef<HTMLSpanElement>(null);
-  const ageAnimatedRef = useRef(false);
 
   // Llegada al riel (≥1024, sin reduced motion): titular desde la profundidad, después los datos y la foto.
   useEffect(() => {
@@ -82,45 +80,6 @@ export default function About() {
       };
     });
     return () => mm.revert();
-  }, []);
-
-  // Age counter — fires once when the metadata bar enters the viewport
-  useEffect(() => {
-    const el = ageDisplayRef.current;
-    if (!el) return;
-
-    const target = 24;
-    const durationMs = 1200;
-
-    const run = () => {
-      if (ageAnimatedRef.current) return;
-      ageAnimatedRef.current = true;
-      const startTime = performance.now();
-      const tick = (now: number) => {
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / durationMs, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        el.textContent = String(Math.round(eased * target));
-        if (progress < 1) requestAnimationFrame(tick);
-        else el.textContent = String(target);
-      };
-      requestAnimationFrame(tick);
-    };
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            run();
-            observer.disconnect();
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
   }, []);
 
   return (
@@ -195,7 +154,7 @@ export default function About() {
             <div className="w-px h-4 bg-border" />
             <div>
               <span className="font-mono text-xs text-muted uppercase tracking-widest">{t('meta_age')} </span>
-              <span ref={ageDisplayRef} className="font-ui text-sm text-off-white">0</span>
+              <span className="font-ui text-sm text-off-white">24</span>
             </div>
           </div>
         </div>
