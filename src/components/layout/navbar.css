@@ -1,10 +1,10 @@
-/* Menú «Señal» (rediseño 2026). Frame en reposo sobre el hero.
-   Composición: logo + links + idioma viven sobre la columna del texto (alineados al --pad del hero, misma
-   arista izquierda que «JUAN PABLO»); la columna de la foto queda libre; a la derecha, solo el CV.
-   Medido 2026-10-10 con el copy de fe0c09e: a 1200 ES el grupo izquierdo termina en x≈711 y la cabeza
+/* Menú «Señal» (rediseño 2026).
+   Composición en reposo (aprobada, 607f16a): logo + links + idioma viven sobre la columna del texto (alineados
+   al --pad del hero, misma arista izquierda que «JUAN PABLO»); la columna de la foto queda libre; a la derecha,
+   solo el CV. Medido 2026-10-10 con el copy de fe0c09e: a 1200 ES el grupo izquierdo termina en x≈711 y la cabeza
    empieza en x≈770; con idioma + CV a la derecha el bloque pisaba la columna de la cabeza por debajo de ~1385.
-   Sin blur ni velo sobre la foto. Rojo solo como acento (subrayado de hover, foco, borde de hover).
-   Pendiente en dispatches siguientes: estado al scrollear, menú abierto de celular, pulso de hover. */
+   Sin blur ni velo sobre la foto. Rojo solo como acento (pulso de hover, punto de sección activa, foco, borde).
+   Al scrollear: fondo 95% + borde de 1 px; ≥1200 la barra baja de 80 a 64 px. */
 
 .jnav {
   --bg: #080808;
@@ -53,14 +53,40 @@
   position: relative; display: inline-block; padding: 8px 0;
   transition: color 0.2s ease;
 }
+.jnav-link:focus-visible, .jnav-link[aria-current] { color: var(--white); }
+
+/* Pulso de hover: la línea se dibuja de izquierda a derecha y late una vez (un QRS de 14 px al arrancar),
+   la misma traza del hero en miniatura. Tramo plano + complejo + tramo plano, para que el complejo no cierre
+   un triángulo con la línea de base. */
 .jnav-link::after {
-  content: ''; position: absolute; left: 0; right: 0.14em; bottom: 1px; height: 1px; background: var(--red);
-  transform: scaleX(0); transform-origin: right; transition: transform 0.35s var(--ease-out);
+  content: ''; position: absolute; left: 0; right: 0.14em; bottom: 0; height: 7px; pointer-events: none;
+  background:
+    linear-gradient(var(--red), var(--red)) 0 100% / 10px 1px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 7'%3E%3Cpath d='M0 6.5H3.5L5.5 1L7.6 6.5L9 5.2L10.4 6.5H14' fill='none' stroke='%23e8272a' stroke-width='1'/%3E%3C/svg%3E") 10px 100% / 14px 7px no-repeat,
+    linear-gradient(var(--red), var(--red)) 24px 100% / calc(100% - 24px) 1px no-repeat;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.22s var(--ease-out);
 }
-.jnav-link:hover, .jnav-link:focus-visible { color: var(--white); }
-.jnav-link:hover::after { transform: scaleX(1); transform-origin: left; }
-.jnav-link[aria-current]::after { transform: scaleX(1); }
-.jnav-link[aria-current] { color: var(--white); }
+@media (hover: hover) and (pointer: fine) {
+  .jnav-link:hover { color: var(--white); }
+  .jnav-link:hover::after { clip-path: inset(0 0 0 0); transition-duration: 0.5s; }
+}
+
+/* Sección activa: el mismo indicador cuadrado del canal del hero (.ch-dot), latiendo como un monitor:
+   doble golpe (lub-dub) y pausa. Vive en el hueco de 30 px a la izquierda del link: no mueve el texto. */
+.jnav-dot {
+  position: absolute; left: -13px; top: 50%; width: 5px; height: 5px; margin-top: -3px;
+  background: var(--red); box-shadow: 0 0 8px rgba(232, 39, 42, 0.7);
+  opacity: 0; transform: scale(0.4);
+  transition: opacity 0.25s ease, transform 0.35s var(--ease-out);
+}
+.jnav-link[aria-current] .jnav-dot { opacity: 1; transform: scale(1); animation: jnav-beat 1.6s 0.35s infinite; }
+@keyframes jnav-beat {
+  0%, 30%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(232, 39, 42, 0.7); }
+  7%  { transform: scale(1.55); box-shadow: 0 0 12px rgba(232, 39, 42, 0.95); }
+  14% { transform: scale(1); }
+  21% { transform: scale(1.3); }
+}
 
 /* ---------- idioma ---------- */
 .jnav-lang { display: flex; align-items: center; gap: 10px; }
@@ -92,16 +118,13 @@
 .jnav-menu[aria-expanded='true'] i:first-child { transform: translateY(3.5px) rotate(45deg); }
 .jnav-menu[aria-expanded='true'] i:last-child { width: 20px; transform: translateY(-3.5px) rotate(-45deg); }
 
-/* ---------- panel provisorio de celular (el diseño final viene en otro dispatch) ---------- */
-.jnav-panel {
-  display: flex; flex-direction: column; gap: 4px;
-  padding: 8px var(--pad) 24px; background: var(--bg); border-top: 1px solid var(--line);
+/* ---------- al scrollear ---------- */
+/* Casi sólido (95%): al 92% los rótulos claros de las cards de Video se leían detrás de los links. Sin blur. */
+.jnav.is-scrolled { background: rgba(8, 8, 8, 0.95); border-bottom-color: var(--line); }
+@media (min-width: 1200px) {
+  .jnav-bar { transition: height 0.35s var(--ease-out); }
+  .jnav.is-scrolled .jnav-bar { height: 64px; }
 }
-.jnav-panel .jnav-link { padding: 12px 0; font-size: 12px; }
-.jnav-panel .jnav-cv { align-self: flex-start; margin-top: 12px; }
-
-/* ---------- estado provisorio al scrollear (se diseña en otro dispatch) ---------- */
-.jnav.is-scrolled { background: rgba(8, 8, 8, 0.92); border-bottom-color: var(--line); }
 
 /* Por debajo de 1200 px los links cruzarían la columna de la cara (la figura vive al 70% del ancho
    hasta 899 px y centrada debajo): menú compacto. Medido con el copy EN/ES de fe0c09e. */
@@ -117,5 +140,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jnav, .jnav *, .jnav *::after { transition: none !important; }
+  .jnav, .jnav *, .jnav *::before, .jnav *::after { transition: none !important; animation: none !important; }
 }

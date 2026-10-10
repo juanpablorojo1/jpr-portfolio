@@ -1,10 +1,12 @@
 'use client';
 
-/* Menú «Señal» (rediseño 2026), frame en reposo sobre el hero. Estilos en ./navbar.css.
-   El logo vive en <LogoSlot> (componente propio) para montar los conceptos sin tocar el menú.
-   Provisorio hasta los próximos dispatches: estado al scrollear y panel de celular. */
+/* Menú «Señal» (rediseño 2026). Estilos en ./navbar.css.
+   - En reposo sobre el hero: transparente (frame aprobado por Juan, 607f16a: «A, menú así»).
+   - Al scrollear (cuando la tarjeta About llega al borde del menú): fondo sólido 95% sin blur + borde de 1 px,
+     y la sección activa con un punto rojo que late (IntersectionObserver, scroll nativo, aria-current).
+   El logo vive en <LogoSlot> (componente propio): el concepto A se integra en el dispatch siguiente. */
 
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import LanguageSelector from '../ui/LanguageSelector';
@@ -13,6 +15,14 @@ import './navbar.css';
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Orden del documento. Las tarjetas del card stack quedan pegadas (sticky) debajo de la siguiente,
+   así que varias pueden cortar la banda a la vez: manda la última en el orden del documento. */
+const SECTION_IDS = ['projects', 'videos', 'skills', 'experience', 'contact'] as const;
+type SectionKey = (typeof SECTION_IDS)[number];
+
+/* Alto del menú en reposo (navbar.css: 80 px; 64 px por debajo de 900). */
+const restBarHeight = () => (window.innerWidth < 900 ? 64 : 80);
 
 function CvLink({ href, label }: { href: string; label: string }) {
   return (
@@ -31,105 +41,121 @@ export default function Navbar() {
   const locale = useLocale();
   const cvHref = locale === 'es' ? '/CV_Juan_Pablo_Rojo_ES.pdf' : '/CV_Juan_Pablo_Rojo_EN.pdf';
   const [scrolled, setScrolled] = useState(false);
+  const [active, setActive] = useState<SectionKey | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const sentinelRef = useRef<HTMLDivElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
 
-  // Estado al scrollear (provisorio): IntersectionObserver sobre un centinela en el tope del documento.
+  /* Estado al scrollear: la raíz del observer es la franja del menú (alto en reposo, arriba de todo).
+     Cuando la tarjeta About entra en esa franja, el hero quedó atrás. About queda sticky debajo del resto
+     de las tarjetas, así que sigue cortando la franja hasta volver arriba. Sin listener de scroll. */
   useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(([entry]) => setScrolled(!entry.isIntersecting));
-    io.observe(el);
+    const about = document.querySelector('[data-section="about"]');
+    if (!about) return;
+    let io: IntersectionObserver | null = null;
+    const build = () => {
+      io?.disconnect();
+      const bottom = Math.max(0, window.innerHeight - restBarHeight());
+      io = new IntersectionObserver(([entry]) => setScrolled(entry.isIntersecting), {
+        rootMargin: `0px 0px -${bottom}px 0px`,
+      });
+      io.observe(about);
+    };
+    build();
+    let raf = 0;
+    const onResize = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(build); };
+    window.addEventListener('resize', onResize);
+    return () => { io?.disconnect(); cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); };
+  }, []);
+
+  /* Sección activa: una banda fina al 45% del alto. De las secciones que la cortan, la última del documento
+     es la que está arriba de la pila. Hero y About no tienen link: sin activa. */
+  useEffect(() => {
+    const els = SECTION_IDS.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => !!el);
+    const inBand = new Set<string>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) inBand.add(e.target.id);
+          else inBand.delete(e.target.id);
+        }
+        const top = [...SECTION_IDS].reverse().find((id) => inBand.has(id)) ?? null;
+        setActive(top);
+      },
+      { rootMargin: '-45% 0px -54% 0px' },
+    );
+    els.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
 
-  const closeMenu = useCallback((returnFocus: boolean) => {
-    setMenuOpen(false);
-    if (returnFocus) menuBtnRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeMenu(true); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [menuOpen, closeMenu]);
-
-  const navLinks = [
-    { href: '#projects', label: t('projects') },
-    { href: '#videos', label: t('video') },
-    { href: '#skills', label: t('skills') },
-    { href: '#experience', label: t('experience') },
-    { href: '#contact', label: t('contact') },
+  const navLinks: { id: SectionKey; label: string }[] = [
+    { id: 'projects', label: t('projects') },
+    { id: 'videos', label: t('video') },
+    { id: 'skills', label: t('skills') },
+    { id: 'experience', label: t('experience') },
+    { id: 'contact', label: t('contact') },
   ];
 
-  const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
+  const scrollToSection = (id: string) => {
+    const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
+    document.getElementById(id)?.scrollIntoView({ behavior });
+  };
 
-  const handleNavClick = (e: MouseEvent<HTMLAnchorElement>, href: string) => {
+  const handleNavClick = (e: MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
-    setMenuOpen(false);
-    document.querySelector(href)?.scrollIntoView({ behavior });
+    scrollToSection(id);
   };
 
   const handleLogoClick = (e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    setMenuOpen(false);
-    window.scrollTo({ top: 0, behavior });
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
   };
 
-  const links = navLinks.map((link) => (
-    <li key={link.href}>
-      <a className="jnav-link" href={link.href} onClick={(e) => handleNavClick(e, link.href)}>
-        {link.label}
-      </a>
-    </li>
-  ));
+  const logoLabel = `${tHero('title')} ${tHero('surname')}`;
 
   return (
-    <>
-      <div ref={sentinelRef} aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: 1, height: 48, pointerEvents: 'none' }} />
-      <header className={`jnav${scrolled || menuOpen ? ' is-scrolled' : ''}`}>
-        <div className="jnav-bar">
-          <div className="jnav-left">
-            <LogoSlot
-              href={`/${locale}`}
-              label={`${tHero('title')} ${tHero('surname')}`}
-              onClick={handleLogoClick}
-            />
-            <span className="jnav-rule" aria-hidden="true" />
-            <nav aria-label={t('menu_aria')}>
-              <ul className="jnav-links">{links}</ul>
-            </nav>
-            <span className="jnav-rule" aria-hidden="true" />
-            <div className="jnav-lang-wide"><LanguageSelector /></div>
-          </div>
-
-          <div className="jnav-right">
-            <div className="jnav-lang-compact"><LanguageSelector /></div>
-            <CvLink href={cvHref} label={t('downloadCV')} />
-            <button
-              ref={menuBtnRef}
-              type="button"
-              className="jnav-menu"
-              aria-label={t('menu_aria')}
-              aria-expanded={menuOpen}
-              aria-controls={panelId}
-              onClick={() => setMenuOpen((v) => !v)}
-            >
-              <i /><i />
-            </button>
-          </div>
+    <header className={`jnav${scrolled ? ' is-scrolled' : ''}`}>
+      <div className="jnav-bar">
+        <div className="jnav-left">
+          <LogoSlot href={`/${locale}`} label={logoLabel} onClick={handleLogoClick} />
+          <span className="jnav-rule" aria-hidden="true" />
+          <nav aria-label={t('menu_aria')}>
+            <ul className="jnav-links">
+              {navLinks.map((link) => (
+                <li key={link.id}>
+                  <a
+                    className="jnav-link"
+                    href={`#${link.id}`}
+                    aria-current={active === link.id ? 'location' : undefined}
+                    onClick={(e) => handleNavClick(e, link.id)}
+                  >
+                    <span className="jnav-dot" aria-hidden="true" />
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <span className="jnav-rule" aria-hidden="true" />
+          <div className="jnav-lang-wide"><LanguageSelector /></div>
         </div>
 
-        {menuOpen && (
-          <nav id={panelId} className="jnav-panel" aria-label={t('menu_aria')}>
-            <ul className="jnav-links" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 0 }}>{links}</ul>
-            <CvLink href={cvHref} label={t('downloadCV')} />
-          </nav>
-        )}
-      </header>
-    </>
+        <div className="jnav-right">
+          <div className="jnav-lang-compact"><LanguageSelector /></div>
+          <CvLink href={cvHref} label={t('downloadCV')} />
+          <button
+            ref={menuBtnRef}
+            type="button"
+            className="jnav-menu"
+            aria-label={t('menu_aria')}
+            aria-expanded={menuOpen}
+            aria-controls={panelId}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            <i /><i />
+          </button>
+        </div>
+      </div>
+    </header>
   );
 }
