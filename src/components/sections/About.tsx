@@ -14,6 +14,7 @@ import Image from 'next/image';
 import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 import { onSignal, type Senal } from '../hero/senal/signal';
+import { GAL_ABOUT_OUT } from '../hero/senal/gallery';
 import './about-senal.css';
 
 gsap.registerPlugin(SplitText);
@@ -36,7 +37,7 @@ export default function About() {
       let split: SplitText | null = null;
       let tlTitle: gsap.core.Timeline | null = null;
       let twRest: gsap.core.Tween | null = null;
-      let titleOn = false, restOn = false, pinned = false, titleAt = 0, alive = true;
+      let titleOn = false, restOn = false, pinned = false, titleAt = 0, alive = true, galOut = false;
       let S: Senal | null = null;
       const offSignal = onSignal((s) => { S = s; });
       gsap.set([label, ...rest], { opacity: 0, y: 14 });
@@ -98,7 +99,11 @@ export default function About() {
         const sy = scrollY;
         const live = !!zone?.hasAttribute('data-see-through');
         const cam = live && S && !S.dead ? S.state.cam : -1;
-        const p = cam >= 0 ? cam : Math.min(1, Math.max(0, sy / land));   // sin escena: el scroll (el HTML se mueve con él)
+        // con la escena viva, la galería de Projects arranca en GAL_ABOUT_OUT: el About se despide con el mismo gesto
+        // de salida y la cámara levanta la mirada (histéresis de 0,03 al volver)
+        if (cam >= 0 && S) galOut = S.state.gal > (galOut ? GAL_ABOUT_OUT - 0.03 : GAL_ABOUT_OUT);
+        else galOut = false;
+        const p = galOut ? 0 : cam >= 0 ? cam : Math.min(1, Math.max(0, sy / land));   // sin escena: el scroll (el HTML se mueve con él)
         if (!titleOn && p >= T_IN) showTitle(); else if (titleOn && p < T_OUT) hideTitle();
         if (!restOn && p >= R_IN) showRest(); else if (restOn && p < R_OUT) hideRest();
         const leaving = !!(tlTitle?.isActive() && !titleOn) || !!(twRest?.isActive() && !restOn);

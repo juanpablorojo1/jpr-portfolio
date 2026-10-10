@@ -9,8 +9,10 @@ export type SenalGeom = {
 };
 
 /** cam: progreso de la cámara 3D (0 tope, 1 aterrizaje del About), con su damp; lo escribe scene.js en cada frame.
-    −1 sin escena. El About dispara su texto con esto: la línea 3D depende de cam, no del scroll. */
-export type SenalState = { t: number; p: number; pTarget: number; vel: number; lastScroll: number; cam: number };
+    −1 sin escena. El About dispara su texto con esto: la línea 3D depende de cam, no del scroll.
+    gal: progreso de la galería de Projects (viewports desde el aterrizaje del About, con el mismo damp; gallery.ts).
+    −1 sin escena. */
+export type SenalState = { t: number; p: number; pTarget: number; vel: number; lastScroll: number; cam: number; gal: number };
 
 export type Senal = {
   params: URLSearchParams;
@@ -127,7 +129,7 @@ export function createSignal(search: string): Senal {
     },
 
     // estado compartido (lo escribe hero-controller una vez por frame)
-    state: { t: 0, p: 0, pTarget: 0, vel: 0, lastScroll: 0, cam: -1 },
+    state: { t: 0, p: 0, pTarget: 0, vel: 0, lastScroll: 0, cam: -1, gal: -1 },
     handoff: false,
     dead: false,
     goStatic: () => {},

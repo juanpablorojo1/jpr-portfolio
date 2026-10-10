@@ -59,22 +59,37 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
   const zone = root.closest('.transition-zone');
   const nextZone = (zone ?? root).nextElementSibling as HTMLElement | null;
   const afterZone = (nextZone?.nextElementSibling ?? null) as HTMLElement | null;
+  // Projects (afterZone) es la galería espacial: también entra transparente y la escena sigue detrás.
+  // data-gallery (≥1024, con escena posible: no estática) elige su layout de galería; sin él, Projects queda apilado.
+  // Lo que tapa la escena pasa a ser la sección que sigue a Projects (Video).
+  const coverZone = (afterZone?.nextElementSibling ?? null) as HTMLElement | null;
   const wide = matchMedia('(min-width: 1024px)');
   const covered = new Map<Element, boolean>();
   let applyView: () => void = () => {};
   function syncSeeThrough() {
     if (!nextZone) return;
-    const on = !disposed && !S.dead && wide.matches && root.classList.contains('is-live');
+    const ok = !disposed && !S.dead && wide.matches;
+    const on = ok && root.classList.contains('is-live');
     nextZone.toggleAttribute('data-see-through', on);
+    if (afterZone) {
+      afterZone.toggleAttribute('data-see-through', on);
+      afterZone.toggleAttribute('data-gallery', ok);
+    }
     applyView();
   }
   wide.addEventListener('change', syncSeeThrough);
-  cleanups.push(() => { wide.removeEventListener('change', syncSeeThrough); nextZone?.removeAttribute('data-see-through'); });
+  cleanups.push(() => {
+    wide.removeEventListener('change', syncSeeThrough);
+    nextZone?.removeAttribute('data-see-through');
+    afterZone?.removeAttribute('data-see-through');
+    afterZone?.removeAttribute('data-gallery');
+  });
 
   if (root.classList.contains('is-static')) {
     goStatic(matchMedia('(prefers-reduced-motion: reduce)').matches ? 'prefers-reduced-motion' : '?static');
     return () => { disposed = true; S.goStatic = () => {}; cleanups.forEach((f) => f()); };
   }
+  syncSeeThrough();   // escena por venir: Projects ya toma el layout de galería (todavía opaco)
 
   document.fonts.ready.then(() => {
     if (disposed || S.dead) return;
@@ -220,7 +235,8 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
      El canvas es fixed y el hero vive en un card sticky: el hero no sale del viewport, lo tapa la sección siguiente.
      Se observan las dos secciones que siguen contra todo lo que queda por encima del borde superior del viewport
      (rootMargin: arriba 10000 %, abajo -100 %): si una la toca, cubre el viewport entero. La escena está tapada cuando
-     la cubre la sección de después del About (Projects) o el About opaco (sin data-see-through: celular, sin 3D).
+     la cubre la sección que sigue a la galería de Projects (Video), o el About / Projects opacos (sin data-see-through:
+     celular, sin 3D). Con la escena viva, About y Projects son transparentes y la escena sigue corriendo detrás.
      Tapada → se pausan el loop 2D/HTML, el render 3D (S.onView → scene.js) y las animaciones CSS del hero.
      Sirve igual en celular, donde los cards no son sticky. */
   if (nextZone && 'IntersectionObserver' in window) {
@@ -230,7 +246,10 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
       // así el loop corre, la escena llega a is-live y el About pasa a transparente (si no, quedaba opaco para siempre).
       const pending = wide.matches && !S.dead && !root.classList.contains('is-live');
       const aboutOpaque = !nextZone.hasAttribute('data-see-through') && !pending;
-      const hidden = !!(afterZone && covered.get(afterZone)) || (!!covered.get(nextZone) && aboutOpaque);
+      const galOpaque = !!afterZone && !afterZone.hasAttribute('data-see-through') && !pending;
+      const hidden = !!(coverZone && covered.get(coverZone))
+        || (!!(afterZone && covered.get(afterZone)) && galOpaque)
+        || (!!covered.get(nextZone) && aboutOpaque);
       const v = !hidden;
       if (v === S.inView) return;
       S.inView = v;
@@ -244,6 +263,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
     }, { rootMargin: '10000% 0px -100% 0px', threshold: 0 });
     io.observe(nextZone);
     if (afterZone) io.observe(afterZone);
+    if (coverZone) io.observe(coverZone);
     cleanups.push(() => io.disconnect());
   }
 
