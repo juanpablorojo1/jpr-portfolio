@@ -5,7 +5,7 @@
   --bg: #080808;
   --surface: #1c1c1c;
   --red: #e8272a;
-  --red-cta: #e62529;      /* solo el fondo del botón sólido: blanco 14px da 4,51:1 (con #E8272A, 4,42:1) */
+  --red-cta: #e62529;      /* fondo rojo de los botones (sólido y hover del ghost): blanco 14px da 4,51:1 (con #E8272A, 4,42:1) */
   --red-muted: #8b1517;
   --off: #e8e4de;
   --white: #ffffff;
@@ -156,13 +156,13 @@
 .senal .btn-solid:hover::before { transform: scaleY(0); transform-origin: top; }
 .senal .btn-ghost { border-color: var(--border); color: var(--off); }
 .senal .btn-ghost:hover { border-color: var(--red); color: var(--white); }
-.senal .btn-ghost:hover::before { transform: scaleY(1); }
+.senal .btn-ghost:hover::before { transform: scaleY(1); background: var(--red-cta); }
 .senal .btn:hover { box-shadow: 0 0 16px rgba(232,39,42,.20); }
 
 .senal .scroll-cue {
   position: absolute; right: var(--pad); bottom: 30px;
   display: flex; align-items: center; gap: 12px;
-  font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(232,228,222,.45);
+  font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(232,228,222,.58);
 }
 .senal .scroll-cue i { width: 1px; height: 40px; background: linear-gradient(var(--red), transparent); transform-origin: top; animation: senal-cue 2.4s var(--ease-out) infinite; }
 @keyframes senal-cue { 0% { transform: scaleY(0); } 45% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
