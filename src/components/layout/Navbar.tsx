@@ -7,13 +7,15 @@
    - Celular (<1200): menú a pantalla completa en un <dialog> modal (foco atrapado por el navegador, Escape cierra,
      el foco vuelve al botón), links grandes en Barlow Condensed y la traza del hero cruzando el fondo, plana.
      Entrada con @starting-style en navbar.css; sin soporte, abre sin animar.
-   El logo vive en <LogoSlot> (componente propio): el concepto A se integra en el dispatch siguiente. */
+   El logo vive en <LogoSlot> con <LogoMark> inline (logo A «Asta»): la barra lleva los ids canónicos (#jpr-*)
+   y el menú de celular los lleva con sufijo «-menu». */
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import LanguageSelector from '../ui/LanguageSelector';
 import LogoSlot from './LogoSlot';
+import LogoMark from './LogoMark';
 import './navbar.css';
 
 const prefersReducedMotion = () =>
@@ -188,7 +190,7 @@ export default function Navbar() {
     <header className={`jnav${scrolled ? ' is-scrolled' : ''}`}>
       <div className="jnav-bar">
         <div className="jnav-left">
-          <LogoSlot href={`/${locale}`} label={logoLabel} onClick={handleLogoClick} />
+          <LogoSlot href={`/${locale}`} label={logoLabel} onClick={handleLogoClick} svg={<LogoMark />} />
           <span className="jnav-rule" aria-hidden="true" />
           <nav aria-label={t('menu_aria')}>
             <ul className="jnav-links">
@@ -231,7 +233,7 @@ export default function Navbar() {
       {/* Menú de celular. Modal: el resto de la página queda inerte mientras está abierto. */}
       <dialog ref={sheetRef} id={panelId} className="jnav-sheet" aria-label={t('menu_aria')}>
         <div className="jnav-bar jnav-sheet-bar">
-          <LogoSlot href={`/${locale}`} label={logoLabel} onClick={handleLogoClick} />
+          <LogoSlot href={`/${locale}`} label={logoLabel} onClick={handleLogoClick} svg={<LogoMark idSuffix="-menu" />} />
           <div className="jnav-right">
             <LanguageSelector />
             <button ref={closeBtnRef} type="button" className="jnav-menu jnav-close" aria-label={closeLabel} onClick={closeSheet}>

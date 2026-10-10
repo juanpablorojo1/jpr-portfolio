@@ -16,7 +16,7 @@
   --dim: rgba(232, 228, 222, 0.62);  /* ≈ #939190 sobre #080808: 6,6:1 */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --pad: 5.5vw;                       /* = --pad del hero (senal.css) */
-  --logo-h: 24px;
+  --logo-h: 28px;                     /* logo A: 28 px de alto ≥900, 24 px debajo (sistema-a/README) */
 
   position: fixed; top: 0; left: 0; right: 0;
   z-index: 100;                       /* encima de las TransitionZone (10–60) */
@@ -39,7 +39,8 @@
 .jnav-lang-compact { display: none; }
 
 /* ---------- slot del logo ---------- */
-.jnav-logo { display: inline-flex; align-items: center; height: var(--logo-h); color: var(--white); }
+/* .jnav .jnav-logo: tiene que ganarle a «.jnav a { color: inherit }», si no las letras quedan en --dim (62 %). */
+.jnav .jnav-logo { display: inline-flex; align-items: center; height: var(--logo-h); color: var(--white); }
 .jnav-logo-mark { display: block; height: 100%; width: auto; }
 .jnav-logo-mark > svg { display: block; height: 100%; width: auto; }
 .jnav-logo-ph { font-size: 13px; letter-spacing: 0.32em; color: var(--off); margin-right: -0.32em; }
@@ -215,7 +216,7 @@
   .jnav-right { gap: 18px; }
 }
 @media (max-width: 899px) {
-  .jnav { --pad: 22px; --logo-h: 22px; }
+  .jnav { --pad: 22px; --logo-h: 24px; }
   .jnav-bar { height: 64px; }
 }
 

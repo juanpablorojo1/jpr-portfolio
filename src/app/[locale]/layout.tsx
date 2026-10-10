@@ -45,6 +45,8 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
     title: title,
     description: description,
     metadataBase: new URL(siteUrl),
+    // Iconos: convenciones de archivo en src/app (favicon.ico, icon.svg, apple-icon.png). Logo A «Asta».
+    manifest: '/manifest.json',
     openGraph: {
       title: title,
       description: description,
@@ -54,7 +56,7 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
       locale: isEn ? 'en_US' : 'es_AR',
       images: [
         {
-          url: `/og/og-${locale}.png`,
+          url: '/og/og-image.png',
           width: 1200,
           height: 630,
           alt: title,
@@ -63,7 +65,7 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
     },
     twitter: {
       card: 'summary_large_image',
-      images: [`/og/og-${locale}.png`],
+      images: ['/og/og-image.png'],
       title: title,
       description: description,
     },

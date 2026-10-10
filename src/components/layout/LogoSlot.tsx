@@ -1,11 +1,9 @@
 'use client';
 
-/* Slot del logo del menú. Aislado a propósito: el logo final todavía no está elegido
-   (logo-generator, conceptos en clients/jpr-portfolio/logo/2026-10-10-conceptos/{a,b,c}/nav.svg).
-   Para montar un concepto sin tocar el resto del menú:
+/* Slot del logo del menú. Hoy monta el logo A «Asta» (<LogoMark>, inline). Para cambiarlo sin tocar el resto:
      - inline (preferido: permite animar el trazo después):  <LogoSlot svg={<svg viewBox=…>…</svg>} />
      - archivo en /public:                                   <LogoSlot src="/logo/nav.svg" />
-   El slot fija el ALTO (--logo-h en navbar.css: 24px desktop, 22px celular) y el ancho sale del viewBox.
+   El slot fija el ALTO (--logo-h en navbar.css: 28px desktop, 24px celular) y el ancho sale del viewBox.
    Sin svg ni src se ve el placeholder neutro «JPR» en mono. */
 
 import type { ReactNode, MouseEvent } from 'react';
