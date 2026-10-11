@@ -7,6 +7,7 @@
 import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 import type { Senal } from './signal';
+import { setBatch } from '../../../lib/idle';
 
 gsap.registerPlugin(SplitText);
 
@@ -17,14 +18,19 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
   const cleanups: Array<() => void> = [];
   let disposed = false;
 
-  // grano de película: textura generada una vez
+  // grano de película: textura generada una vez. Ruido gris uniforme (0–255, opaco) de 128 px, como antes, pero armado
+  // como BMP sin comprimir en vez de canvas.toDataURL(): codificar PNG un ruido (que no comprime) tomaba 50–80 ms dentro
+  // de la hidratación (delivery-auditor D-01). Mismos pixeles, mismo uso (var(--noise) en .grain).
   (function makeNoise() {
-    const c = document.createElement('canvas'); c.width = c.height = 128;
-    const x = c.getContext('2d'); if (!x) return;
-    const d = x.createImageData(128, 128);
-    for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
-    x.putImageData(d, 0, 0);
-    root.style.setProperty('--noise', `url(${c.toDataURL()})`);
+    const N = 128, row = N * 3, off = 54, size = off + row * N;
+    const b = new Uint8Array(size), dv = new DataView(b.buffer);
+    b[0] = 0x42; b[1] = 0x4d; dv.setUint32(2, size, true); dv.setUint32(10, off, true);                 // BITMAPFILEHEADER
+    dv.setUint32(14, 40, true); dv.setInt32(18, N, true); dv.setInt32(22, N, true);                    // BITMAPINFOHEADER
+    dv.setUint16(26, 1, true); dv.setUint16(28, 24, true); dv.setUint32(34, row * N, true);            // 24 bits, sin compresión
+    for (let i = off; i < size; i += 3) { const v = Math.round(Math.random() * 255); b[i] = b[i + 1] = b[i + 2] = v; }
+    let bin = '';
+    for (let i = 0; i < size; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000) as unknown as number[]);
+    root.style.setProperty('--noise', `url(data:image/bmp;base64,${btoa(bin)})`);
   })();
 
   // hero.marquee de messages/{locale}.json → canales del monitor
@@ -113,8 +119,8 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
       const sp = ctx.measureText(' ').width;
       tagSplit.words.forEach((w) => { const n = w.nextSibling; if (n && n.nodeType === 3) { n.remove(); (w as HTMLElement).style.marginRight = sp + 'px'; } });
     }
-    gsap.set(nameSplit.chars, { yPercent: 108 });
-    gsap.set(tagSplit.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 });
+    // mismo estado inicial que antes, en una pasada de lectura y otra de escritura (sin recalcular estilo por letra: D-01)
+    setBatch([[nameSplit.chars, { yPercent: 108 }], [tagSplit.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 }]]);
     textReady = true;
     if (revealed) runReveal(S.now() - S.T_R0);
   });
@@ -161,11 +167,14 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
   const cv = q<HTMLCanvasElement>('.senal-intro');
   const cx = cv.getContext('2d')!;
   let dpr = 1;
-  function size() { dpr = Math.min(devicePixelRatio || 1, 2); cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr); }
+  // viewport en caché (resize): el loop de cada frame no lee innerWidth/innerHeight después de escribir estilos,
+  // que obligaba a recalcular estilo/layout dentro del rAF (forced reflow, delivery-auditor D-01)
+  let vw = innerWidth, vh = innerHeight;
+  function size() { vw = innerWidth; vh = innerHeight; dpr = Math.min(devicePixelRatio || 1, 2); cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr); }
   size(); addEventListener('resize', size);
   cleanups.push(() => removeEventListener('resize', size));
   function draw2D(t: number) {
-    const W = innerWidth, H = innerHeight, G = S.geom(W, H);
+    const W = vw, H = vh, G = S.geom(W, H);
     cx.setTransform(dpr, 0, 0, dpr, 0, 0);
     cx.clearRect(0, 0, W, H);
     if (t < S.T_START) return;
@@ -203,8 +212,10 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
 
   /* ---------- loop ---------- */
   const st = S.state;
-  st.lastScroll = scrollY;
-  const onScroll = () => { st.pTarget = Math.min(1, Math.max(0, scrollY / (innerHeight * 3))); };
+  // scroll en caché: lo actualiza el evento scroll (corre antes del rAF del mismo frame), así el loop no lee layout
+  let sy = scrollY;
+  st.lastScroll = sy;
+  const onScroll = () => { sy = scrollY; st.pTarget = Math.min(1, Math.max(0, sy / (vh * 3))); };
   onScroll();
   addEventListener('scroll', onScroll, { passive: true });
   cleanups.push(() => removeEventListener('scroll', onScroll));
@@ -215,8 +226,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
     if (S.dead || disposed) { running = false; return; }
     const dt = Math.min((now - last) / 1000, 1 / 20); last = now;
     const t = S.now(); st.t = t;
-    const sy = scrollY;
-    st.vel = S.damp(st.vel, Math.abs(sy - st.lastScroll) / Math.max(dt, 1e-3) / innerHeight, 6, dt); st.lastScroll = sy;
+    st.vel = S.damp(st.vel, Math.abs(sy - st.lastScroll) / Math.max(dt, 1e-3) / vh, 6, dt); st.lastScroll = sy;
     st.p = S.damp(st.p, st.pTarget, 3.6, dt);
 
     if (S.write(t, st.vel)) nextChannel();
@@ -226,7 +236,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
     }
     if (glowOn) rojoGlow.style.opacity = (0.08 + S.pulse(t) * 0.6).toFixed(3);
     const p = st.p;
-    heroInner.style.opacity = (1 - S.smooth(0.01, 0.09, Math.min(1, Math.max(0, sy / (innerHeight * 3))))).toFixed(3);   // fade atado al scroll real (sin damping): el nombre se apaga antes de cruzar el nav
+    heroInner.style.opacity = (1 - S.smooth(0.01, 0.09, Math.min(1, Math.max(0, sy / (vh * 3))))).toFixed(3);   // fade atado al scroll real (sin damping): el nombre se apaga antes de cruzar el nav
     heroInner.style.transform = `translate3d(0, ${(-p * 140).toFixed(2)}px, 0)`;
     if (!S.handoff) draw2D(t);
     if (running) raf = requestAnimationFrame(tick);
@@ -234,7 +244,8 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
   function start() {
     if (running || disposed || S.dead) return;
     running = true;
-    last = performance.now(); st.lastScroll = scrollY;   // sin salto de dt ni pico de velocidad al volver
+    sy = scrollY;
+    last = performance.now(); st.lastScroll = sy;   // sin salto de dt ni pico de velocidad al volver
     raf = requestAnimationFrame(tick);
   }
   function stop() { running = false; cancelAnimationFrame(raf); }

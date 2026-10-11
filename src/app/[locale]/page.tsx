@@ -11,6 +11,13 @@ import Contact from '../../components/sections/Contact';
 import TransitionZone from '../../components/motion/TransitionZone';
 import SoundToggle from '../../components/ui/SoundToggle';
 
+// Corre mientras se parsea el HTML, antes del primer pintado: en escritorio con la escena posible (≥1024, sin reduced
+// motion ni ?static) las secciones de la galería ya llevan data-gallery, la misma decisión que toma hero-controller al
+// hidratar (syncSeeThrough). Así el primer layout ya es el de la galería y la hidratación no rehace el de toda la página
+// (delivery-auditor D-01). Si después la escena no puede (sin GPU), hero-controller lo saca como siempre.
+// Contact queda afuera: su capa del punto es fixed y se vería sobre el hero hasta que ContactStage la apaga al hidratar.
+const GALLERY_SCRIPT = `(function(){if(!matchMedia('(min-width: 1024px)').matches||matchMedia('(prefers-reduced-motion: reduce)').matches||/[?&]static\\b/.test(location.search))return;['.transition-zone[data-section="projects"]','.fbf-zone','.stack-zone','.transition-zone[data-section="experience"]'].forEach(function(s){var z=document.querySelector(s);if(z)z.setAttribute('data-gallery','');});})();`;
+
 export default function HomePage() {
   return (
     <>
@@ -61,6 +68,7 @@ export default function HomePage() {
           <Contact />
         </TransitionZone>
       </main>
+      <script dangerouslySetInnerHTML={{ __html: GALLERY_SCRIPT }} />
       {/* Sonido del sitio (apagado por defecto): un solo interruptor para todas las secciones */}
       <SoundToggle />
     </>
