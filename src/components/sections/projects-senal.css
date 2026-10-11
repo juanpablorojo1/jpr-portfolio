@@ -41,25 +41,36 @@
   }
   .pj-label { left: var(--pad); display: flex; align-items: center; gap: 10px; }
   .pj-count { right: var(--pad); }
-  .pj-count b { color: #e8272a; font-weight: 400; }
+  /* D-03: el rojo en texto chico daba 2,65:1 sobre la escena (y la marca lo reserva para texto grande): el índice va
+     en off-white pleno y el rojo queda en el cuadrado que lo acompaña (el mismo marcador en rótulos, contador y caso) */
+  .pj-count b, .pj-eyebrow b, .pj-k b { color: #e8e4de; font-weight: 400; }
+  .pj-count b::before, .pj-eyebrow b::before, .pj-k b::before {
+    content: ''; display: inline-block; width: 5px; height: 5px; margin: 0 .75em 0 0; vertical-align: .2em;
+    background: #e8272a; box-shadow: 0 0 8px rgba(232, 39, 42, .6);
+  }
   .pj-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
 
   /* ---------- lo esencial, en el espacio ---------- */
   .pj-tag {
-    position: absolute; left: 0; top: 0; width: min(34vw, 490px);
+    /* D-06: el ancho acompaña al título hasta 1920 (con tope 490 px, a 1920 el título de 104 px partía en 3 líneas).
+       Piso de 460 px: con el texto chico a 13 px (D-04), a 1200 los rótulos crecían y Eleven subía ~45 px sobre su
+       placa; a 460 px la bajada y la ficha ocupan una línea menos y el rótulo queda donde estaba (±10 px). */
+    position: absolute; left: 0; top: 0; width: clamp(460px, 34vw, 640px);
     will-change: transform; transform-origin: 0 0;
   }
   .pj-tag[data-side='r'] { text-align: right; transform-origin: 100% 0; }
   /* respaldo sin escena viva: abajo a la izquierda, sin transform */
-  .pj-stage:not(.is-anchored) .pj-tag { left: var(--pad); top: auto; bottom: 10vh; transform: none !important; text-align: left; width: min(40vw, 560px); }
+  .pj-stage:not(.is-anchored) .pj-tag { left: var(--pad); top: auto; bottom: 10vh; transform: none !important; text-align: left; width: min(40vw, 680px); }
   .pj-stage:not(.is-anchored) .pj-tag .pj-stats { justify-content: flex-start; }
   .pj-stage:not(.is-anchored) .pj-tag .pj-stats dt { margin-left: 0; }
 
+  /* D-04: la escena achica el rótulo hasta 0,82 (corridor.js, placeTags). El texto chico va a 13 px de CSS para que
+     nunca baje de 10,5 px reales (13 × 0,82 = 10,66); la bajada, a 19,6 px o más (≥ 16 px reales). Solo en el rótulo:
+     el caso (.pj-panel) no se escala y conserva sus tamaños. */
   .pj-eyebrow {
     margin: 0; font: 10.5px/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim-scene);
     text-shadow: 0 1px 12px rgba(0, 0, 0, .9);
   }
-  .pj-eyebrow b, .pj-k b { color: #e8272a; font-weight: 400; }
   .pj-badge {
     display: inline-flex; align-items: center; gap: 10px; margin: 12px 0 0; padding: 7px 10px 6px;
     border: 1px solid rgba(232, 39, 42, .55); background: rgba(8, 8, 8, .5); color: #e8e4de;
@@ -67,20 +78,32 @@
   }
   .pj-title {
     margin: 10px 0 0; font-weight: 400; text-transform: uppercase; color: #fff;
-    font-size: clamp(60px, 6.1vw, 104px); line-height: .86; letter-spacing: .005em;
+    font-size: clamp(60px, 6.1vw, 104px); line-height: .86; letter-spacing: .005em; text-wrap: balance;
     perspective: 900px; text-shadow: 0 2px 30px rgba(0, 0, 0, .65);
   }
   .pj-title .word { display: inline-block; white-space: nowrap; transform-style: preserve-3d; }
   .pj-title .char { display: inline-block; will-change: transform, opacity; }
   .pj-sub {
-    margin: 12px 0 0; font-size: clamp(17px, 1.3vw, 21px); line-height: 1.3; color: #e8e4de;
+    margin: 12px 0 0; font-size: clamp(19.6px, 1.45vw, 22px); line-height: 1.3; color: #e8e4de;
     text-shadow: 0 1px 16px rgba(0, 0, 0, .9);
   }
   .pj-stats { display: flex; gap: 22px; margin: 18px 0 0; flex-wrap: wrap; }
   .pj-tag[data-side='r'] .pj-stats { justify-content: flex-end; }
-  .pj-stats div { display: flex; flex-direction: column-reverse; gap: 6px; }
+  /* D-05: cifra arriba y rótulo debajo, alineados arriba (con column-reverse la cifra bajaba según las líneas de su
+     rótulo). Cuatro cifras (TraumaVision, LEEX): una fila de cuatro columnas desde 1400 (a 1440 LEEX EN mide 448 de
+     490 px) y 2 × 2 deliberado por debajo (a 1200 entraban 3 + 1 huérfana). El rótulo nunca es más angosto que su
+     palabra más larga («AUTOMATIZADOS», «ESPECIFICIDAD»: con 14ch se salían de la columna). */
+  .pj-stats div { display: flex; flex-direction: column; gap: 6px; }
+  .pj-stats dd { order: -1; }
+  .pj-stats:has(> div:nth-child(4):last-child) { display: grid; grid-template-columns: repeat(2, max-content); gap: 16px 34px; }
+  .pj-stats:has(> div:nth-child(4):last-child) dt { max-width: 20ch; }
+  @media (min-width: 1400px) {
+    .pj-stats:has(> div:nth-child(4):last-child) { grid-template-columns: repeat(4, max-content); column-gap: 1.1vw; }
+    .pj-stats:has(> div:nth-child(4):last-child) dt { max-width: 13ch; }
+  }
+  .pj-tag[data-side='r'] .pj-stats:has(> div:nth-child(4):last-child) { justify-content: end; }
   .pj-stats dt {
-    font: 10.5px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim-scene); max-width: 14ch;
+    font: 10.5px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim-scene); max-width: 14ch; min-width: min-content;
     text-shadow: 0 1px 10px rgba(0, 0, 0, .9);
   }
   .pj-tag[data-side='r'] .pj-stats dt { margin-left: auto; }
@@ -106,6 +129,29 @@
   .pj-open:hover em, .pj-open:focus-visible em { transform: rotate(90deg); }
   .pj-open:active { background: rgba(232, 39, 42, .18); }
   .pj-open:focus-visible { box-shadow: 0 0 0 1px #e8272a; }
+
+  /* D-04 (ver arriba): tamaños del texto chico dentro del rótulo escalado */
+  .pj-tag .pj-eyebrow, .pj-tag .pj-badge, .pj-tag .pj-mnote, .pj-tag .pj-open, .pj-stats dt { font-size: 13px; }
+  /* a 13 px el eyebrow largo (LEEX, KIBBO) parte en dos: que no quede «2026» solo en la segunda línea */
+  .pj-tag .pj-eyebrow { text-wrap: balance; }
+  .pj-tag .pj-open em { font-size: 16px; }
+
+  /* D-08: Eleven no tiene cifras sino datos (fundación, clientes, enfoque): ficha rótulo / valor, no casillas de
+     cifras en Bebas. Mismo texto de messages; cambia solo la forma. En el rótulo, una fila de pares entre filetes
+     (el rótulo tiene el alto contado: a 0,82 de escala ya sube sobre la placa); en el caso, una ficha vertical. */
+  .pj-stats.pj-facts {
+    display: flex; flex-wrap: wrap; gap: 4px 18px; padding: 9px 0 8px;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  }
+  .pj-stats.pj-facts > div { flex-direction: row; align-items: baseline; gap: 10px; }
+  .pj-stats.pj-facts dt, .pj-c-stats.pj-facts dt { max-width: none; margin: 0; }
+  .pj-stats.pj-facts dd, .pj-c-stats.pj-facts dd {
+    order: 0; font: 500 20px/1.1 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; letter-spacing: .02em; color: #e8e4de;
+  }
+  .pj-c-stats.pj-facts { display: grid; grid-template-columns: max-content max-content; gap: 0 22px; }
+  /* cada fila es una fila de la grilla (subgrid): la columna de rótulos queda alineada */
+  .pj-c-stats.pj-facts > div { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: baseline; border-top: 1px solid var(--line); padding: 8px 0 7px; }
+  .pj-c-stats.pj-facts > div:last-child { border-bottom: 1px solid var(--line); }
 
   /* la placa bajo el puntero se puede abrir (corridor.js pone pj-hot en <html>) */
   html.pj-hot, html.pj-hot body { cursor: pointer; }
@@ -156,7 +202,7 @@
     font: 10.5px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; text-decoration: none;
     transition: border-color .2s, background-color .2s, color .2s;
   }
-  .pj-btn span { color: #e8272a; }
+  .pj-btn span { color: var(--dim); }   /* D-03: el número no va en rojo (texto chico) */
   .pj-btn:hover, .pj-btn:focus-visible { border-color: #e8272a; outline: none; }
   .pj-btn:active { background: rgba(232, 39, 42, .12); }
   .pj-cta { border-color: #e8272a; }

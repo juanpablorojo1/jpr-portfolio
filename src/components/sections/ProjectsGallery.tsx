@@ -45,6 +45,8 @@ type Stat = { label: string; value: string };
 type Item = {
   title: string; eyebrow: string; caseEyebrow?: string; sub?: string; badge?: string; soon?: boolean;
   stats: Stat[]; note?: string; steps: string[]; body: ReactNode;
+  /** los «stats» son datos en palabras, no cifras (Eleven): van como ficha rótulo / valor (D-08) */
+  facts?: boolean;
 };
 
 export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kibboShotCount, openTraumavision, openEleven, openKibbo, openLeex }: Props) {
@@ -260,7 +262,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
     <dl className={cls}>{stats.map((s) => (<div key={s.label}><dt>{s.label}</dt><dd>{s.value}</dd></div>))}</dl>
   );
   // problema → mi rol → decisiones clave → resultado (los cuatro casos tienen el formato completo en el copy)
-  const caseBody = (d: CaseStudyData, stack: readonly string[], actions: ReactNode, note?: string, pre?: ReactNode) => (
+  const caseBody = (d: CaseStudyData, stack: readonly string[], actions: ReactNode, note?: string, pre?: ReactNode, facts = false) => (
     <>
       <div className="pj-c-block"><p className="pj-k"><b>01</b> / {L.problem}</p><p>{d.problem}</p></div>
       <div className="pj-c-block"><p className="pj-k"><b>02</b> / {L.role}</p><p>{d.role}</p></div>
@@ -272,7 +274,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
           ))}
         </ol>
       </div>
-      <div className="pj-c-block"><p className="pj-k"><b>04</b> / {L.result}</p><p>{d.result}</p>{statsDl(d.stats)}</div>
+      <div className="pj-c-block"><p className="pj-k"><b>04</b> / {L.result}</p><p>{d.result}</p>{statsDl(d.stats, facts ? 'pj-c-stats pj-facts' : 'pj-c-stats')}</div>
       <div className="pj-c-block">
         {pre}
         <p className="pj-k">{L.stack}</p><p className="pj-mono">{stack.join(' · ')}</p>
@@ -316,13 +318,13 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
     },
     {
       title: eleven.title, eyebrow: t('eleven.subtitle'), caseEyebrow: eleven.eyebrow, sub: t('eleven.description'), stats: eleven.stats,
-      steps: steps4,
+      steps: steps4, facts: true,
       body: caseBody(eleven, ELEVEN_STACK, (
         <>
           {screens(eleven.shots.length, openEleven)}
           {eleven.cta && <a className="pj-btn pj-cta" href={eleven.cta.href} target="_blank" rel="noopener noreferrer">{eleven.cta.label}</a>}
         </>
-      )),
+      ), undefined, undefined, true),
     },
   ];
 
@@ -339,7 +341,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
             {it.badge && <p className="pj-badge"><span className="pj-dot" aria-hidden="true" />{it.badge}</p>}
             <h2 id={`pj-t-${k}`} className="pj-title font-display" aria-label={it.title}>{it.title}</h2>
             {it.sub && <p className="pj-sub">{it.sub}</p>}
-            {statsDl(it.stats, 'pj-stats')}
+            {statsDl(it.stats, it.facts ? 'pj-stats pj-facts' : 'pj-stats')}
             {it.note && <p className="pj-mnote">{it.note}</p>}
             <button type="button" className="pj-open" data-open-case={k} aria-haspopup="dialog" aria-controls={`pj-case-${k}`}>
               <span className="sr-only">{t('case.open_aria', { title: it.title })}: </span>
