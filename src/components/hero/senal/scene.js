@@ -94,15 +94,38 @@ async function boot({ S, root, after, assetBase }, ctl) {
   S.onView = sync;
   wdRun();
 
+  // GPU dedicada (Juan: «usá mi GPU, no la placa del procesador»). WebGPU: el hint va al requestAdapter de three.
+  // El respaldo WebGL2 de three no pasa powerPreference a getContext: se lo agrega este envoltorio, sólo en este canvas.
+  // Es un pedido, no una garantía: en Windows decide la configuración de gráficos del sistema para Chrome.
+  // Con qué GPU corrió queda en __senal.gpu, en el HUD (?hud) y en bench() (?qa).
+  if (!canvas.__hiPerf) {
+    const getCtx = canvas.getContext.bind(canvas);
+    canvas.getContext = (type, attrs) => getCtx(type, type === 'webgl2' ? { ...attrs, powerPreference: 'high-performance' } : attrs);
+    canvas.__hiPerf = true;
+  }
   let renderer;
   try {
-    renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: params.has('webgl') });
+    renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: params.has('webgl'), powerPreference: 'high-performance' });
     ctl.renderer = renderer;
     await renderer.init();
   } catch (e) { clearWatchdog(); return S.goStatic('renderer: ' + e.message); }
   if (ctl.disposed) { releaseRenderer(ctl); return; }   // desmontado a mitad de init(): el dispose anterior no liberó el device/contexto
   if (S.dead) return;
   const backend = renderer.backend.isWebGPUBackend ? 'webgpu' : 'webgl2';
+  const gpu = (() => {
+    try {
+      const dev = renderer.backend.device, gl = renderer.backend.gl;
+      if (dev) {
+        const i = dev.adapterInfo || {};
+        return [i.vendor, i.architecture, i.description || i.device].filter(Boolean).join(' · ') || 'webgpu (sin adapterInfo)';
+      }
+      if (gl) {
+        const ext = gl.getExtension('WEBGL_debug_renderer_info');
+        return String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
+      }
+    } catch (e) { /* sin dato */ }
+    return 'desconocida';
+  })();
   const isMobile = () => innerWidth < 900;
   // la galería de Projects existe sólo ≥1024 (data-gallery, projects-senal.css); debajo, Projects queda apilado
   const wideMQ = matchMedia('(min-width: 1024px)');
@@ -519,7 +542,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   }
   const hud = params.has('hud') ? root.querySelector('.senal-hud') : null;
   if (hud) hud.hidden = false;
-  ctl.info = { backend, t: { rendererReady: Math.round(performance.now()) }, fps: () => (fpsBuf.length ? (fpsBuf.length / (fpsBuf.reduce((a, b) => a + b, 0) / 1000)).toFixed(1) : null), frames: 0, running: () => loopOn, dpr: () => renderer.getPixelRatio() };
+  ctl.info = { backend, gpu, t: { rendererReady: Math.round(performance.now()) }, fps: () => (fpsBuf.length ? (fpsBuf.length / (fpsBuf.reduce((a, b) => a + b, 0) / 1000)).toFixed(1) : null), frames: 0, running: () => loopOn, dpr: () => renderer.getPixelRatio() };
   window.__senal = ctl.info;
   // QA (?hud): dónde cae la traza en pantalla para un progreso dado, sin renderizar (sirve con la pestaña oculta).
   // Devuelve el rango de y (px CSS) de la cinta principal entre x0 y x1. El frame siguiente rehace cámara y cintas.
@@ -543,7 +566,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     }
     return { lo, hi };
   };
-  console.info('[senal] backend:', backend);
+  console.info('[senal] backend:', backend, '| gpu:', gpu);
 
   /* ---------- Projects: armado diferido del pasillo ----------
      Sólo escritorio ≥1024. Se arma con el hero ya vivo y el hilo libre (idle, con pausas entre etapas), o en el acto
@@ -603,7 +626,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
       }
       simDt = 0;
       ms.sort((a, b) => a - b);
-      return { u: +gal.p.toFixed(2), avg: +(ms.reduce((a, b) => a + b, 0) / n).toFixed(2), p50: +ms[n >> 1].toFixed(2), p95: +ms[Math.floor(n * 0.95)].toFixed(2), max: +ms[n - 1].toFixed(2), dpr: renderer.getPixelRatio(), w: innerWidth, h: innerHeight, backend };
+      return { u: +gal.p.toFixed(2), avg: +(ms.reduce((a, b) => a + b, 0) / n).toFixed(2), p50: +ms[n >> 1].toFixed(2), p95: +ms[Math.floor(n * 0.95)].toFixed(2), max: +ms[n - 1].toFixed(2), dpr: renderer.getPixelRatio(), w: innerWidth, h: innerHeight, backend, gpu };
     };
     ctl.info.corrStage = () => (corr ? 'ready' : ctl.corrStage || (corrBuilding ? 'building' : 'idle:' + corrIdle));
     ctl.info.dbg = () => ({ core, halo, extCore, extHalo, echoes, lamp, head, floorM, fig, scene, corr, camera });
@@ -658,7 +681,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     } else if (docEl.classList.contains('pj-hot')) docEl.classList.remove('pj-hot');
 
     if (first) { first = false; clearWatchdog(); window.__senal.t.firstFrame = Math.round(performance.now()); S.onLive(); }
-    if (hud && (Math.round(t * 10) % 5 === 0)) hud.textContent = `${backend}  ${window.__senal.fps()} fps  dpr ${renderer.getPixelRatio().toFixed(2)}  p ${p.toFixed(3)}  u ${gal.p.toFixed(2)}${corr ? '  ' + corr.info().mode : ''}`;
+    if (hud && (Math.round(t * 10) % 5 === 0)) hud.textContent = `${backend} · ${gpu}  ${window.__senal.fps()} fps  dpr ${renderer.getPixelRatio().toFixed(2)}  p ${p.toFixed(3)}  u ${gal.p.toFixed(2)}${corr ? '  ' + corr.info().mode : ''}`;
     if (!simDt) adaptive(dtMs, t);
   }
   // warm-up: compilar todo antes de mostrar (sin tirones en el latido ni en el primer scroll)
