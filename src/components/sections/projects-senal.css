@@ -211,4 +211,22 @@
   .pj-cta:hover, .pj-cta:focus-visible { background: #e62529; color: #fff; }
   .pj-note { margin-top: 12px !important; font: 10.5px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
   html.pj-case-open .pj-label, html.pj-case-open .pj-count { opacity: 0 !important; }
+
+  /* video demo (Track C): la pausa de las placas, bajo el contador (mismo halo que el contador: va sobre la escena);
+     sin escena viva no hay placas, y con un caso abierto manda la pausa del caso */
+  .pj-vpause {
+    position: absolute; right: var(--pad); top: calc(clamp(84px, 11vh, 110px) + 18px);
+    display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 2px;
+    background: none; border: 0; cursor: pointer; pointer-events: auto;
+    font: 10.5px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: #e8e4de;
+    text-shadow: 0 0 2px rgba(0, 0, 0, .95), 0 0 6px rgba(0, 0, 0, .9), 0 1px 14px rgba(0, 0, 0, .85);
+    transition: color .2s;
+  }
+  .pj-vpause svg { filter: drop-shadow(0 0 3px rgba(0, 0, 0, .9)); }
+  .pj-vpause:hover, .pj-vpause:focus-visible { color: #fff; outline: none; }
+  .pj-vpause:focus-visible { box-shadow: 0 1px 0 #e8272a; }
+  .pj-stage:not(.is-anchored) .pj-vpause { display: none; }
+  html.pj-case-open .pj-vpause { opacity: 0 !important; pointer-events: none; }
+  /* el caso: el demo entre la cabecera y la grilla */
+  .pj-c-demo { margin-top: 30px; }
 }

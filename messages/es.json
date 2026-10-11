@@ -51,7 +51,7 @@
       "metric_specificity": "Especificidad",
       "pipeline_label": "Pipeline",
       "stack_label": "Stack",
-      "shot_labels": ["LOGIN", "INICIO", "ANÁLISIS", "HISTORIAL", "TABLERO", "MÉTRICAS"],
+      "shot_labels": ["REVISAR", "VISOR", "SIN HALLAZGOS", "HISTORIAL", "ACIERTO"],
       "eyebrow": "Caso · Tesis · UNC Córdoba · 2026",
       "metrics_note": "Test interno de la tesis · 3.038 imágenes",
       "pipeline": "DICOM → CLAHE → YOLOv8m → Detección → Informe PDF",
@@ -64,13 +64,13 @@
         { "title": "Probar con datos de otro país.", "body": "El modelo final corrió sin reentrenar sobre PediURF, un dataset pediátrico de Shenzhen, China (1.000 casos, 1.790 imágenes)." }
       ],
       "result": "Test interno (3.038 imágenes, 914 pacientes no vistos): sensibilidad 96,7%, especificidad 93,1% y AUC-ROC 0,987 por imagen; mAP@50 de caja 0,944. Test externo (PediURF): sensibilidad 97,4% y especificidad 88,3% por imagen. Evaluado con datos retrospectivos; no está registrado ante la ANMAT ni autorizado para uso clínico. Código público bajo AGPL-3.0. En etapa de escalado con Emprende U 2026; extenderlo a otras regiones requiere datasets etiquetados por expertos.",
+      "demo_alt": "Video demo de TraumaVision, sin sonido, 36 s: ingreso, carga del estudio (imagen individual o ZIP de DICOM), un resultado REVISAR con la zona marcada por YOLOv8m, el visor invertido con el puntaje por zona, la revisión del médico, el informe PDF, un caso negativo, el historial, el desempeño del modelo y el alcance y las limitaciones.",
       "shots_alt": [
-        "TraumaVision: pantalla de login",
-        "TraumaVision: carga de estudios con selector de región; la muñeca pediátrica es la única región disponible",
-        "TraumaVision: detección con caja y un puntaje de detección de 0,84 (un puntaje, no una probabilidad)",
-        "TraumaVision: historial de análisis",
-        "TraumaVision: tablero de estadísticas",
-        "TraumaVision: matriz de confusión y métricas del detector YOLOv8m en el test de la tesis (3.038 imágenes)"
+        "TraumaVision: resultado REVISAR, una zona marcada sobre el radio distal con un puntaje del detector de 0,83, por encima del corte de aviso de 0,22, y el aviso de confirmar con lectura médica",
+        "TraumaVision: visor con contraste invertido y realce, la barra de puntaje por detección y los atajos de teclado",
+        "TraumaVision: resultado SIN HALLAZGOS, con el aviso de que no descarta fractura",
+        "TraumaVision: historial de análisis, filtrable por resultado y modelo (164 análisis: 102 con hallazgos, 62 sin)",
+        "TraumaVision: acierto medido contra casos diagnosticados por un médico: detecta 0,967, descarta 0,931; 3 de cada 100 fracturas quedan sin marcar"
       ]
     },
     "eleven": {
@@ -88,7 +88,7 @@
       "stat_approach_label": "Enfoque",
       "services_label": "Servicios",
       "services_list": "Productos web · Agentes de IA · Contenido",
-      "shot_labels": ["HERO", "¿POR QUÉ?", "SERVICIOS", "WEB", "CONTENIDO", "CONTACTO"],
+      "shot_labels": ["PISO 01", "MANIFIESTO", "SERVICIOS", "MURO", "PORTAFOLIO", "TERRAZA"],
       "cta": "Ver sitio",
       "eyebrow": "Caso · Agencia propia · Argentina · 2026",
       "problem": "Un proyecto para una pyme pasa por discovery, estrategia, marca, desarrollo y QA, y lo que sale de cada etapa tiene que revisarse antes de que lo use la siguiente.",
@@ -98,13 +98,14 @@
         { "title": "Cada punto de control lo aprueba una persona.", "body": "Los agentes preparan cada entrega; yo la reviso y la apruebo en cada punto de control, como en el desarrollo de KIBBO." }
       ],
       "result": "En funcionamiento desde 2026. Entre los trabajos entregados está kibbo.io en español e inglés (ver el caso KIBBO).",
+      "demo_alt": "Video demo de Eleven, sin sonido, 30 s: el sitio ascensor desde el loader y las puertas que se abren, el piso 01 y el manifiesto, el piso de servicios, el viaje entre pisos, el muro de movimiento, la pila del portafolio y la terraza de contacto.",
       "shots_alt": [
-        "Eleven: hero con logo y mascota robot",
-        "Eleven: sección por qué nosotros",
-        "Eleven: sección de servicios, transición",
-        "Eleven: páginas web y productos digitales",
-        "Eleven: contenido y videos",
-        "Eleven: sección de contacto y footer"
+        "Eleven: piso 01 del sitio ascensor, el wordmark «eleven» y «Tu negocio, elevado.», con el HUD de piso y el riel",
+        "Eleven: el manifiesto completo en el piso 01; las palabras se encienden con el scroll",
+        "Eleven: piso 03, servicio 01 «Sistemas», con la tipografía recortada sobre fotos",
+        "Eleven: piso 05, el muro de isotipos con el verbo «Acelerar.»",
+        "Eleven: piso 08, tarjeta de portafolio P-01 «Sabrina Pilates»",
+        "Eleven: piso 11, la terraza de noche con «¿Elevamos tu negocio?» y los links de contacto (email difuminado)"
       ]
     },
     "hackathon": {
@@ -147,7 +148,12 @@
       "open": "Abrir caso",
       "open_aria": "Abrir caso: {title}",
       "close_case": "Cerrar el caso",
-      "plate_aria": "Placa {n} de {total}: {title}"
+      "plate_aria": "Placa {n} de {total}: {title}",
+      "demo": "Demo",
+      "demo_pause": "Pausar demo",
+      "demo_play": "Reproducir demo",
+      "demo_pause_aria": "Pausar demo: {title}",
+      "demo_play_aria": "Reproducir demo: {title}"
     },
     "kibbo": {
       "eyebrow": "Caso · SaaS B2B · Vía Eleven · 2026",
@@ -175,10 +181,11 @@
         "Guías citables: qué es un CMMS, pliego de licitación, registros por país."
       ],
       "cta": "Ver sitio →",
+      "demo_alt": "Video demo de KIBBO, sin sonido, 33 s: la home de kibbo.io, la ficha del equipo abierta en el teléfono desde su QR, el inventario de la flota, la hoja de vida del equipo, el preventivo con la marca de vencido, las órdenes de trabajo, los proveedores de servicio, el tablero de la flota y la comunidad de consultas.",
       "shots": [
         { "label": "Inicio", "caption": "Inicio: inventario y mantenimiento del parque de equipos." },
         { "label": "Problemas", "caption": "Cinco problemas del parque, cada uno resuelto en una pantalla real." },
-        { "label": "Cómo funciona", "caption": "Cómo funciona: inventario, hoja de vida, preventivos, órdenes." },
+        { "label": "En el teléfono", "caption": "/en/how-it-works, paso 1: se escanea el QR del equipo y su ficha abre en el teléfono (serie y QR difuminados)." },
         { "label": "Tablero", "caption": "/en/how-it-works: «The institution's real state, on one dashboard»." },
         { "label": "Comunidad", "caption": "/en/cases-and-network: «No one manages a fleet alone»." },
         { "label": "Confianza", "caption": "/en/trust-and-security: «How the information travels»." },
@@ -210,10 +217,11 @@
         { "value": "28", "label": "Categorías de producto" },
         { "value": "10k+", "label": "Tests automatizados" }
       ],
+      "demo_alt": "Video demo del Sistema de Licitaciones LEEX, sin sonido, 30 s, con datos de clientes y montos difuminados: detección automática con los barridos incompletos marcados, el descarte NO APTO, una ficha con su veredicto por requisito, el tablero, mi trabajo, la cola de revisión y la salud de las fuentes. En desarrollo, lanzamiento próximo.",
       "blur_note": "Datos de clientes y montos difuminados",
       "shots": [
         { "label": "Veredicto", "caption": "La ficha: veredicto requisito por requisito, con evidencia citada." },
-        { "label": "Mi trabajo", "caption": "Mi trabajo: vence hoy, en plazo y apertura pasada, de todo el equipo." },
+        { "label": "NO APTO", "caption": "La pestaña NO APTO: lo que el veredicto descartó, cada fila con su chip de veredicto." },
         { "label": "Detección", "caption": "Detección automática: si un barrido vuelve incompleto, el sistema lo marca." },
         { "label": "Tablero", "caption": "El tablero: por vencer, sin asignar, en gestión, detectadas." },
         { "label": "Fuentes", "caption": "Salud de fuentes: «no hay nada» no es «no pude ver»." }

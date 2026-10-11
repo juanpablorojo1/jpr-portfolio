@@ -32,6 +32,7 @@ import { GAL_PROJECTS, GAL_DWELLS, GAL_END, GAL_ABOUT_OUT } from './gallery';
 import { FBF_BEAM, FBF_INTRO, FBF_OFF } from './frames';
 import { playSound } from '../../../lib/sound';
 import { buildProjector } from './projector';
+import { createPlateVideos } from './plate-video';
 
 export const WALL = 3.2, CEIL = 3.4, Z_IN = 2, Z_END = -62;
 const BOX_W = 2.6, BOX_H = BOX_W * 756 / 1600, BOX_Y = 1.75;
@@ -55,7 +56,7 @@ function dwellPose(st, end) {
 }
 
 /** Arma el pasillo (async, con pausas al hilo principal). Devuelve el controlador o null si se desmontó a mitad. */
-export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW, assetBase = '/images/', yieldToMain }) {
+export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW, assetBase = '/projects/', yieldToMain }) {
   const alive = () => !ctl.disposed && !S.dead;
   const group = new THREE.Group();
   group.name = 'corridor';
@@ -66,7 +67,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   ctl.corrStage = 'images';
   const maxAniso = Math.min(8, renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : 8);
 
-  /* ---------- texturas: capturas reales del repo (public/images) ---------- */
+  /* ---------- texturas: capturas reales del repo (public/projects/<proyecto>/, Track C) ---------- */
   const loadImg = (f) => new Promise((res, rej) => { const i = new Image(); i.decoding = 'async'; i.onload = () => res(i); i.onerror = rej; i.src = assetBase + f; });
   const names = [...new Set(ST.flatMap((s) => [s.main, s.sec, ...s.films.map((f) => f[0])]))];
   const imgs = Object.fromEntries(await Promise.all(names.map(async (n) => {
@@ -241,6 +242,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     headMatLocal.opacityNode = float(1).sub(smoothstep(0.0, 0.5, r));
   }
   const BZ = 0.024, BOT = 0.12, DEPTH = 0.12;
+  // video demo de cada placa (plate-video.js): se funde sobre la captura principal cuando la placa está en foco
+  const pv = createPlateVideos({ ST, S, ctl, alive });
   const stations = ST.map((st, k) => {
     const g = new THREE.Group();
     const s = st.side;
@@ -266,7 +269,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       const film = new THREE.MeshBasicNodeMaterial();
       {
         const u = uv();
-        const c = texture(tex, u);
+        const c = isMain ? pv.over(k, u, texture(tex, u), tex) : texture(tex, u);
         const L = luminance(c.rgb);
         // difusor: tubos verticales y caída suave hacia los bordes del panel (sin franja de luz: no se lee marco)
         const tubes = sin(u.x.mul(Math.PI * 4)).abs().mul(0.07).add(0.93);
@@ -277,8 +280,9 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
         let col = mix(vec3(L), c.rgb, 0.82).mul(back);
         if (st.scan && isMain) {
           // antes del barrido: una radiografía (sólo la muñeca, hueso blanco; la interfaz apenas velada)
-          const inX = smoothstep(0.268, 0.276, u.x).mul(float(1).sub(smoothstep(0.507, 0.515, u.x)));
-          const inY = smoothstep(0.272, 0.28, u.y).mul(float(1).sub(smoothstep(0.772, 0.78, u.y)));
+          const [x0, x1, y0, y1] = st.xray;       // la radiografía dentro de la captura (gallery.ts)
+          const inX = smoothstep(x0 - 0.004, x0 + 0.004, u.x).mul(float(1).sub(smoothstep(x1 - 0.004, x1 + 0.004, u.x)));
+          const inY = smoothstep(y0 - 0.004, y0 + 0.004, u.y).mul(float(1).sub(smoothstep(y1 - 0.004, y1 + 0.004, u.y)));
           const xr = inX.mul(inY);
           const bone = L.pow(1.25).mul(1.25);
           const neg = OFF.mul(mix(L.mul(0.07), bone, xr)).mul(back);
@@ -582,6 +586,9 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       s.hoverU.value = damp(s.hoverU.value, S.neg.hover === k ? 1 : 0, 8, dt);
       s.filmsG.forEach((f) => { f.fmesh.rotation.x = Math.sin(t * 0.7 + f.ph) * 0.05; f.fmesh.rotation.y = Math.sin(t * 0.43 + f.ph) * 0.07; });
     });
+
+    // video demo: en la estadía (la misma ventana del foco en la placa); TraumaVision, con el barrido terminado
+    pv.update(u, dt, gw, GAL_DWELLS, (k) => u >= ST[k].dwell[0] - 0.12 && u <= ST[k].dwell[1] + 0.05 && (!ST[k].scan || stations[k].scanU.value > 0.999));
 
     // foco: en qué capa está el plano de foco. Cada cambio de capa = rack focus (con su sonido, si está encendido).
     fwd.copy(L).sub(P).normalize();

@@ -51,7 +51,7 @@
       "metric_specificity": "Specificity",
       "pipeline_label": "Pipeline",
       "stack_label": "Stack",
-      "shot_labels": ["LOGIN", "HOME", "ANALYSIS", "HISTORY", "DASHBOARD", "METRICS"],
+      "shot_labels": ["REVIEW", "VIEWER", "NO FINDINGS", "HISTORY", "ACCURACY"],
       "eyebrow": "Case Study · Thesis · UNC Córdoba · 2026",
       "metrics_note": "Thesis internal test set · 3,038 images",
       "pipeline": "DICOM → CLAHE → YOLOv8m → Detection → PDF report",
@@ -64,13 +64,13 @@
         { "title": "Test on data from another country.", "body": "The final model ran without retraining on PediURF, a pediatric dataset from Shenzhen, China (1,000 cases, 1,790 images)." }
       ],
       "result": "Internal test set (3,038 images, 914 unseen patients): 96.7% sensitivity, 93.1% specificity and AUC-ROC 0.987 per image; box mAP@50 0.944. External test (PediURF): 97.4% sensitivity and 88.3% specificity per image. Evaluated on retrospective data; not registered with ANMAT or authorized for clinical use. Code public under AGPL-3.0. Now scaling through Emprende U 2026; extending it to other regions requires expert-labeled datasets.",
+      "demo_alt": "TraumaVision demo video, silent, 36 s: sign-in, study upload (single image or a DICOM ZIP), a REVIEW result with the zone marked by YOLOv8m, the inverted viewer with the score per zone, the physician review, the PDF report, a negative case, the history, model performance, and scope and limitations.",
       "shots_alt": [
-        "TraumaVision: login screen",
-        "TraumaVision: study upload with the region selector; the pediatric wrist is the only region available",
-        "TraumaVision: detection with a bounding box and a 0.84 detection score (a score, not a probability)",
-        "TraumaVision: analysis history",
-        "TraumaVision: statistics dashboard",
-        "TraumaVision: confusion matrix and metrics of the YOLOv8m detector on the thesis test set (3,038 images)"
+        "TraumaVision: REVIEW result, a zone marked over the distal radius with a 0.83 detector score, above the 0.22 alert cut-off, and the notice to confirm with a medical reading",
+        "TraumaVision: viewer with inverted contrast and enhancement, the score bar per detection and the keyboard shortcuts",
+        "TraumaVision: NO FINDINGS result, with the notice that it does not rule out a fracture",
+        "TraumaVision: analysis history, filterable by result and model (164 analyses: 102 with findings, 62 without)",
+        "TraumaVision: accuracy measured against physician-diagnosed cases: detects 0.967, rules out 0.931; 3 in 100 fractures go unmarked"
       ]
     },
     "eleven": {
@@ -88,7 +88,7 @@
       "stat_approach_label": "Approach",
       "services_label": "Services",
       "services_list": "Web Products · AI Agents · Digital Content",
-      "shot_labels": ["HERO", "WHY US", "SERVICES", "WEB", "CONTENT", "CONTACT"],
+      "shot_labels": ["FLOOR 01", "MANIFESTO", "SERVICES", "MOTION WALL", "PORTFOLIO", "TERRACE"],
       "cta": "View Site",
       "eyebrow": "Case Study · Own agency · Argentina · 2026",
       "problem": "An SMB project runs through discovery, strategy, brand, development and QA, and each stage's output has to be checked before the next one uses it.",
@@ -98,13 +98,14 @@
         { "title": "A person signs off every checkpoint.", "body": "Agents prepare each deliverable; I review and approve it at every checkpoint, as on the KIBBO build." }
       ],
       "result": "In operation since 2026. Delivered work includes kibbo.io in Spanish and English (see the KIBBO case).",
+      "demo_alt": "Eleven demo video, silent, 30 s: the elevator site from the loader and the doors opening, floor 01 and the manifesto, the services floor, the transit between floors, the motion wall, the portfolio stack and the contact terrace.",
       "shots_alt": [
-        "Eleven: hero with logo and robot mascot",
-        "Eleven: why-us section",
-        "Eleven: services section, transition",
-        "Eleven: web pages and digital products",
-        "Eleven: content and video",
-        "Eleven: contact section and footer"
+        "Eleven: floor 01 of the elevator site, the «eleven» wordmark and «Tu negocio, elevado.», with the floor HUD and rail",
+        "Eleven: the full manifesto on floor 01; the words light up with the scroll",
+        "Eleven: floor 03, service 01 «Sistemas», with the type masked over photos",
+        "Eleven: floor 05, the motion wall of isotypes with the verb «Acelerar.»",
+        "Eleven: floor 08, portfolio card P-01 «Sabrina Pilates»",
+        "Eleven: floor 11, the night terrace with «¿Elevamos tu negocio?» and the contact links (email blurred)"
       ]
     },
     "hackathon": {
@@ -147,7 +148,12 @@
       "open": "Open case",
       "open_aria": "Open case: {title}",
       "close_case": "Close case study",
-      "plate_aria": "Plate {n} of {total}: {title}"
+      "plate_aria": "Plate {n} of {total}: {title}",
+      "demo": "Demo",
+      "demo_pause": "Pause demo",
+      "demo_play": "Play demo",
+      "demo_pause_aria": "Pause demo: {title}",
+      "demo_play_aria": "Play demo: {title}"
     },
     "kibbo": {
       "eyebrow": "Case Study · B2B SaaS · Built via Eleven · 2026",
@@ -175,10 +181,11 @@
         "Citable guides: CMMS explainer, tender checklist, country records (ES)."
       ],
       "cta": "View site →",
+      "demo_alt": "KIBBO demo video, silent, 33 s: the kibbo.io home, the device profile opened on the phone from its QR, fleet inventory, the equipment history file, preventive maintenance with the overdue flag, work orders, service providers, the fleet dashboard and the community Q&A.",
       "shots": [
         { "label": "Home", "caption": "Home: inventory and maintenance of the equipment fleet." },
         { "label": "Problems", "caption": "Five fleet problems, each answered on a real product screen." },
-        { "label": "How it works", "caption": "How it works: inventory, history file, preventive, work orders." },
+        { "label": "On the phone", "caption": "/en/how-it-works, step 1: scan the QR on the device and its record opens on the phone (serial and QR blurred)." },
         { "label": "Dashboard", "caption": "/en/how-it-works: \"The institution's real state, on one dashboard.\"" },
         { "label": "Community", "caption": "/en/cases-and-network: \"No one manages a fleet alone.\"" },
         { "label": "Trust", "caption": "/en/trust-and-security: \"How the information travels.\"" },
@@ -210,10 +217,11 @@
         { "value": "28", "label": "Product categories matched" },
         { "value": "10k+", "label": "Automated tests" }
       ],
+      "demo_alt": "LEEX Tender System demo video, silent, 30 s, client data and amounts blurred: automatic detection with incomplete sweeps flagged, the NO APTO triage, a tender file with its verdict per requirement, the board, my work, the review queue and source health. In development, launching soon.",
       "blur_note": "Client data and amounts blurred",
       "shots": [
         { "label": "Verdict", "caption": "The file: a verdict drafted per requirement, with cited evidence." },
-        { "label": "My work", "caption": "My work: due today, on time and past opening, across the whole team." },
+        { "label": "NO APTO", "caption": "The NO APTO (not eligible) tab: what the verdict ruled out, each row with its verdict chip." },
         { "label": "Detection", "caption": "Automatic detection: when a sweep comes back incomplete, the system flags it." },
         { "label": "Board", "caption": "The board: due soon, unassigned, in progress, detected." },
         { "label": "Sources", "caption": "Source health: 'nothing there' is not 'couldn't see'." }

@@ -23,19 +23,25 @@ export const GAL_END = 10.0;                // la cámara llega al final del rie
 export const GAL_SECTION_VH = 10.3;         // alto de la sección en viewports (Video entra por abajo en u = 10,3)
 
 export type GalleryId = 'traumavision' | 'kibbo' | 'leex' | 'eleven';
-/** side: −1 pared izquierda, 1 derecha. z: profundidad en el pasillo (m). Imágenes de public/images. */
+/** side: −1 pared izquierda, 1 derecha. z: profundidad en el pasillo (m). Imágenes de public/projects/<proyecto>/
+    (Track C, 2026-10-10; donde había versión difuminada en _work/ va esa). La primera película (la del índice) es el
+    thumb del proyecto: el detalle que lo identifica. xray (sólo con scan): la radiografía dentro de la captura
+    principal en uv [x0, x1, y0, y1] (y desde abajo), medida sobre tv-01-resultado-revisar.jpg (1900×912: visor
+    x 343–1300, y 146–768 px). El video demo de cada placa sale de PROJECT_DEMOS (content.ts), por id. */
 export const GAL_PROJECTS: ReadonlyArray<{
   id: GalleryId; side: -1 | 1; z: number; main: string; sec: string;
   films: ReadonlyArray<readonly [string, number]>; blur?: boolean; far?: boolean; scan?: boolean;
+  xray?: readonly [number, number, number, number];
 }> = [
-  { id: 'traumavision', side: -1, z: -8, main: 'traumavision-analisis.jpg', sec: 'traumavision-home.jpg', scan: true,
-    films: [['traumavision-dashboard.jpg', 0.18], ['traumavision-metrics.jpg', 0.5]] },
-  { id: 'kibbo', side: 1, z: -20, main: 'kibbo-en-01-hero.jpg', sec: 'kibbo-en-08-mobile.jpg',
-    films: [['kibbo-en-04-dashboard.jpg', 0.5], ['kibbo-en-08-mobile.jpg', 0.5]] },
-  { id: 'leex', side: -1, z: -32, main: 'leex-02-veredicto.jpg', sec: 'leex-04-tablero.jpg', blur: true, far: true,
-    films: [['leex-03-mi-trabajo.jpg', 0.3], ['leex-04-tablero.jpg', 0.6]] },
-  { id: 'eleven', side: 1, z: -44, main: 'eleven-01-hero.jpg', sec: 'eleven-05-portfolio.jpg',
-    films: [['eleven-04-servicios3.jpg', 0.5], ['eleven-01-hero.jpg', 0.3]] },
+  { id: 'traumavision', side: -1, z: -8, main: 'traumavision/tv-01-resultado-revisar.jpg', sec: 'traumavision/tv-04-historial.jpg', scan: true,
+    xray: [0.181, 0.684, 0.158, 0.840],
+    films: [['traumavision/thumb.jpg', 0.38], ['traumavision/tv-05-metricas-acierto.jpg', 0.82]] },
+  { id: 'kibbo', side: 1, z: -20, main: 'kibbo/kibbo-01-hero.jpg', sec: 'kibbo/kibbo-04-dashboard-blur.jpg',
+    films: [['kibbo/thumb.jpg', 0.3], ['kibbo/kibbo-03-on-the-phone-blur.jpg', 0.65]] },
+  { id: 'leex', side: -1, z: -32, main: 'leex/leex-04-veredicto-blur.jpg', sec: 'leex/leex-01-deteccion-lote.jpg', blur: true, far: true,
+    films: [['leex/thumb.jpg', 0.3], ['leex/leex-05-tablero-blur.jpg', 0.5]] },
+  { id: 'eleven', side: 1, z: -44, main: 'eleven/eleven-01-hero.jpg', sec: 'eleven/eleven-05-portafolio.jpg',
+    films: [['eleven/thumb.jpg', 0.3], ['eleven/eleven-04-muro.jpg', 0.5]] },
 ];
 
 /** rótulo visible (lo esencial de cada proyecto en el espacio): un poco antes y después de la estadía */

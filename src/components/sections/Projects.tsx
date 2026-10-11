@@ -22,6 +22,7 @@ import {
   LEEX_STACK,
   LEEX_SCREENSHOTS,
   HACKATHON_STACK,
+  PROJECT_DEMOS,
 } from '../../lib/content';
 
 
@@ -82,6 +83,7 @@ export default function Projects() {
     shots: kibboShots,
     seo: { label: t('kibbo.seo_label'), items: t.raw('kibbo.seo_items') as string[], shots: kibboSeoShots },
     cta: { href: KIBBO_URL, label: t('kibbo.cta') },
+    demo: { src: PROJECT_DEMOS.kibbo, alt: t('kibbo.demo_alt') },
   };
   const kibboLightboxShots = [...kibboShots, ...kibboSeoShots];
 
@@ -100,6 +102,7 @@ export default function Projects() {
     stackSpread: 'b',
     shots: withSrc(LEEX_SCREENSHOTS, t.raw('leex.shots') as ShotCopy[]),
     shotsNote: t('leex.blur_note'),
+    demo: { src: PROJECT_DEMOS.leex, alt: t('leex.demo_alt') },
   };
 
   const metricLabels: Record<string, string> = {
@@ -129,6 +132,7 @@ export default function Projects() {
     stack: TRAUMAVISION_STACK,
     stackSpread: 'b',
     shots: TRAUMAVISION_SCREENSHOTS.map((sh, i) => ({ src: sh.src, label: tvShotLabels[i] ?? '', caption: tvShotAlts[i] ?? '' })),
+    demo: { src: PROJECT_DEMOS.traumavision, alt: t('traumavision.demo_alt') },
   };
   const eleven: CaseStudyData = {
     number: '02',
@@ -148,6 +152,7 @@ export default function Projects() {
     stackSpread: 'b',
     shots: ELEVEN_SCREENSHOTS.map((sh, i) => ({ src: sh.src, label: elevenShotLabels[i] ?? '', caption: elevenShotAlts[i] ?? '' })),
     cta: { href: ELEVEN_URL, label: t('eleven.cta') },
+    demo: { src: PROJECT_DEMOS.eleven, alt: t('eleven.demo_alt') },
   };
 
   return (

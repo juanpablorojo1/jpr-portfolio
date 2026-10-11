@@ -14,7 +14,7 @@
    Sin escena todavía (o sin GPU con data-gallery): los rótulos quedan en su posición de respaldo (CSS).
    El guion (estadías, alto de la sección) es gallery.ts, el mismo que usa la cámara. */
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
@@ -22,6 +22,7 @@ import { onSignal, type Senal } from '../hero/senal/signal';
 import { GAL_DWELLS, GAL_SECTION_VH, GAL_PROJECTS, tagWanted } from '../hero/senal/gallery';
 import { TRAUMAVISION_STACK, ELEVEN_STACK, KIBBO_STACK, LEEX_STACK } from '../../lib/content';
 import type { CaseStudyData } from './CaseStudy';
+import ProjectDemo from '../ui/ProjectDemo';
 import './projects-senal.css';
 
 gsap.registerPlugin(SplitText);
@@ -44,7 +45,7 @@ const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
 type Stat = { label: string; value: string };
 type Item = {
   title: string; eyebrow: string; caseEyebrow?: string; sub?: string; badge?: string; soon?: boolean;
-  stats: Stat[]; note?: string; steps: string[]; body: ReactNode;
+  stats: Stat[]; note?: string; steps: string[]; body: ReactNode; demo?: CaseStudyData['demo'];
   /** los «stats» son datos en palabras, no cifras (Eleven): van como ficha rótulo / valor (D-08) */
   facts?: boolean;
 };
@@ -53,6 +54,11 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
   const t = useTranslations('projects');
   const ref = useRef<HTMLElement>(null);
   const total = pad2(GAL_DWELLS.length);
+  // video demo de las placas (plate-video.js): pausa del usuario, WCAG 2.2.2 (como la vista previa de Frame by Frame)
+  const [platesPaused, setPlatesPaused] = useState(false);
+  const pausedRef = useRef(false);
+  const sRef = useRef<Senal | null>(null);
+  useEffect(() => { pausedRef.current = platesPaused; if (sRef.current) sRef.current.neg.paused = platesPaused; }, [platesPaused]);
 
   useEffect(() => {
     const section = ref.current;
@@ -64,12 +70,13 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       const label = section.querySelector<HTMLElement>('.pj-label');
       const count = section.querySelector<HTMLElement>('.pj-count');
       const countN = section.querySelector<HTMLElement>('.pj-count b');
+      const vpause = section.querySelector<HTMLElement>('.pj-vpause');
       const tags = Array.from(section.querySelectorAll<HTMLElement>('.pj-tag'));
       const panels = Array.from(section.querySelectorAll<HTMLElement>('.pj-panel'));
       if (!zone || !stage || !label || !count || !countN || tags.length !== GAL_DWELLS.length) return;
       const html = document.documentElement;
       let S: Senal | null = null;
-      const offSignal = onSignal((s) => { S = s; s.neg.tags = tags; });
+      const offSignal = onSignal((s) => { S = s; sRef.current = s; s.neg.tags = tags; s.neg.paused = pausedRef.current; });
       let alive = true;
 
       type T = { el: HTMLElement; title: HTMLElement; rest: HTMLElement[]; split: SplitText | null; on: boolean; tl: gsap.core.Timeline | null };
@@ -81,6 +88,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       }));
       let chromeOn = false;
       gsap.set([label, count], { opacity: 0, y: 14 });
+      if (vpause) gsap.set(vpause, { autoAlpha: 0, y: 14 });
       ts.forEach((c) => { gsap.set(c.rest, { opacity: 0, y: 14 }); gsap.set(c.title, { opacity: 0 }); });
 
       // L: el aterrizaje del About (su borde superior en el del viewport); el mismo que usa la cámara (trig.end)
@@ -132,7 +140,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         const p = panels[k];
         p.setAttribute('data-open', '');
         p.scrollTop = 0;
-        const parts = p.querySelectorAll('.pj-c-head > *, .pj-c-grid > *');
+        const parts = p.querySelectorAll('.pj-c-head > *, .pj-c-demo, .pj-c-grid > *');
         gsap.fromTo(p, { opacity: 0 }, { opacity: 1, duration: 0.6, ease: 'expo.out', overwrite: true });
         gsap.fromTo(parts, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 1.0, ease: 'expo.out', stagger: 0.06, delay: 0.25, overwrite: true });
         p.querySelector<HTMLElement>('.pj-close')?.focus({ preventScroll: true });
@@ -204,6 +212,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         if (wantChrome !== chromeOn) {
           chromeOn = wantChrome;
           gsap.to([label, count], { opacity: wantChrome ? 1 : 0, y: wantChrome ? 0 : 14, duration: wantChrome ? 0.8 : 0.35, ease: 'expo.out', overwrite: true });
+          if (vpause) gsap.to(vpause, { autoAlpha: wantChrome ? 1 : 0, y: wantChrome ? 0 : 14, duration: wantChrome ? 0.8 : 0.35, ease: 'expo.out', overwrite: true });
         }
         const cur = GAL_DWELLS.reduce((a, d, i) => (u >= d[0] - 0.5 ? i : a), 0);
         const n = pad2(cur + 1);
@@ -235,7 +244,8 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         section.removeEventListener('click', onClose);
         section.removeEventListener('focusin', onFocusIn);
         if (openK >= 0) closeCase(true);
-        if (S) { S.neg.tags = []; S.neg.open = -1; }
+        if (S) { S.neg.tags = []; S.neg.open = -1; S.neg.paused = false; }
+        sRef.current = null;
         offSignal();
         stage.classList.remove('is-anchored');
         html.classList.remove('pj-hot');
@@ -248,6 +258,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         });
         panels.forEach((p) => { gsap.killTweensOf(p); p.removeAttribute('data-open'); gsap.set(p, { clearProps: 'opacity' }); });
         gsap.set([label, count], { clearProps: 'opacity,transform' });
+        if (vpause) gsap.set(vpause, { clearProps: 'opacity,visibility,transform' });
       };
     });
     return () => mm.revert();
@@ -296,14 +307,14 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
   const items: Item[] = [
     {
       title: traumavision.title, eyebrow: t('traumavision.label'), caseEyebrow: traumavision.eyebrow, sub: traumavision.subtitle,
-      stats: traumavision.stats, note: t('traumavision.metrics_note'), steps: steps4,
+      stats: traumavision.stats, note: t('traumavision.metrics_note'), steps: steps4, demo: traumavision.demo,
       body: caseBody(traumavision, TRAUMAVISION_STACK, screens(traumavision.shots.length, openTraumavision), undefined, (
         <><p className="pj-k">{t('traumavision.pipeline_label')}</p><p className="pj-mono">{tvPipeline}</p></>
       )),
     },
     {
       title: kibbo.title, eyebrow: kibbo.eyebrow, sub: kibbo.subtitle, stats: kibbo.stats,
-      steps: steps4,
+      steps: steps4, demo: kibbo.demo,
       body: caseBody(kibbo, KIBBO_STACK, (
         <>
           {screens(kibboShotCount, openKibbo)}
@@ -313,12 +324,12 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
     },
     {
       title: leex.title, eyebrow: leex.eyebrow, sub: leex.subtitle, badge: leex.badge, soon: true, stats: leex.stats,
-      steps: steps4,
+      steps: steps4, demo: leex.demo,
       body: caseBody(leex, LEEX_STACK, screens(leex.shots.length, openLeex), leex.shotsNote),
     },
     {
       title: eleven.title, eyebrow: t('eleven.subtitle'), caseEyebrow: eleven.eyebrow, sub: t('eleven.description'), stats: eleven.stats,
-      steps: steps4, facts: true,
+      steps: steps4, facts: true, demo: eleven.demo,
       body: caseBody(eleven, ELEVEN_STACK, (
         <>
           {screens(eleven.shots.length, openEleven)}
@@ -333,6 +344,13 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       <div className="pj-stage">
         <p className="pj-label"><span className="pj-dot" aria-hidden="true" />{t('label')}</p>
         <p className="pj-count" aria-hidden="true"><b>01</b> / {total}</p>
+        {/* pausa del video demo de las placas (la escena lo respeta: S.neg.paused) */}
+        <button type="button" className="pj-vpause" onClick={() => setPlatesPaused((p) => !p)}>
+          {platesPaused
+            ? <svg width="9" height="10" viewBox="0 0 14 16" fill="currentColor" aria-hidden="true"><path d="M0 0 L14 8 L0 16 Z" /></svg>
+            : <svg width="9" height="10" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true"><path d="M0 0h3.5v12H0zM6.5 0H10v12H6.5z" /></svg>}
+          {platesPaused ? t('case.demo_play') : t('case.demo_pause')}
+        </button>
 
         {/* Lo esencial de cada proyecto, en el espacio (la escena lo ancla bajo su negatoscopio) */}
         {items.map((it, k) => (
@@ -368,6 +386,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
               <h3 id={`pj-c-${k}`} className="pj-c-title font-display">{it.title}</h3>
               {it.sub && <p className="pj-sub">{it.sub}</p>}
             </header>
+            {it.demo && <ProjectDemo className="pj-c-demo" demo={it.demo.src} title={it.title} alt={it.demo.alt} />}
             <div className="pj-c-grid">{it.body}</div>
           </section>
         ))}

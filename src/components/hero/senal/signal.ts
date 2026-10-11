@@ -44,8 +44,9 @@ export type Senal = {
   /** Projects «negatoscopio»: lo comparten el HTML (ProjectsGallery.tsx) y la escena (corridor.js).
       tags: los rótulos en el espacio (la escena les escribe el transform en el mismo frame del render).
       open: caso abierto (−1 ninguno; lo escribe el HTML, la cámara empuja hacia la placa).
-      hover: placa bajo el puntero (−1 ninguna; lo escribe la escena). live: el pasillo está armado y se dibuja. */
-  neg: { tags: HTMLElement[]; open: number; hover: number; live: boolean };
+      hover: placa bajo el puntero (−1 ninguna; lo escribe la escena). live: el pasillo está armado y se dibuja.
+      paused: el usuario pausó el video demo de las placas (HTML; plate-video.js lo respeta, WCAG 2.2.2). */
+  neg: { tags: HTMLElement[]; open: number; hover: number; live: boolean; paused: boolean };
   /** Frame by Frame «sala de proyección»: lo comparten el HTML (VideosStage.tsx) y la escena (projector.js).
       tags: los rótulos de cada pantalla (la escena les escribe un parallax leve en el mismo frame del render).
       active: pantalla con el haz encima (−1 ninguna; escena). hover: pantalla bajo el puntero (−1; escena).
@@ -151,7 +152,7 @@ export function createSignal(search: string): Senal {
     onLive: () => {},
     inView: true,
     onView: () => {},
-    neg: { tags: [], open: -1, hover: -1, live: false },
+    neg: { tags: [], open: -1, hover: -1, live: false, paused: false },
     fbf: { tags: [], active: -1, hover: -1, paused: false, open: -1, live: false },
     stk: { items: [], active: -1, live: false },
   };
