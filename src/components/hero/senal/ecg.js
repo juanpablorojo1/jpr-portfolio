@@ -51,6 +51,7 @@ const LEADS = [
 const TICK = 0.42;                 // largo del tick hacia la ficha (m)
 const GRID_Z = -8.5;               // papel milimetrado, detrás de la traza
 const Y_TOP = 3.0;                 // la traza empieza arriba del ancla y se funde (empalma con la recta de Stack)
+const JOIN = 1.6;                  // metros en que la traza se superpone con el final de la recta de Stack
 
 /** Latidos: y del pico R (local, negativo hacia abajo), amplitud, largo del complejo, lado de la ficha. */
 function layoutBeats([nR, nE, nC]) {
@@ -74,7 +75,7 @@ function layoutBeats([nR, nE, nC]) {
 }
 
 /** Arma la traza (async, con pausas al hilo principal). Devuelve el controlador o null si se desmontó a mitad. */
-export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMain, anchor }) {
+export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMain, line }) {
   const alive = () => !ctl.disposed && !S.dead;
   const counts = S.exp.counts.map((n, k) => n || [6, 3, 2][k]);
   const plan = expPlan(counts[0]);
@@ -86,7 +87,15 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
 
   const ecg = new THREE.Group();
   ecg.name = 'exp-ecg';
-  ecg.position.copy(anchor || V(0.8, -9.5, -158));
+  /* ancla: la traza sigue la recta en que termina la red de Stack (misma x/z; su arranque se funde con el final de
+     la recta). La recta cambia con el aspecto de la ventana: el ancla se relee en cada frame. Sin red, un punto fijo
+     debajo de la última capa. */
+  const anchorAt = (out) => {
+    const l = line && line();
+    if (!l || !Number.isFinite(l.yBot)) return out.set(0.8, -9.5, -158);
+    return out.set(l.x, l.yBot - Y_TOP + JOIN, l.z);
+  };
+  anchorAt(ecg.position);
   ecg.visible = false;
   corr.group.add(ecg);
 
@@ -320,7 +329,7 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
     // entrada: con la recta de Stack en cuadro (ancla cerca), la cámara sigue desde la pose anterior (un crane);
     // sin ella (todavía tapa una sección opaca), arranca de un plano arriba de la traza que nadie ve
     const p0 = toLoc(P0), l0 = toLoc(L0);
-    const follow = p0.distanceTo(iA.p) < 25;
+    const follow = !!line || p0.distanceTo(iA.p) < 25;
     K.push([plan.enter[0], follow ? p0 : iA.p.clone().add(V(0, 4.5, 2.5)), follow ? l0 : iA.l.clone().add(V(0, 3.5, 0))]);
     K.push([plan.intro[0] + 0.35, iA.p, iA.l, true]);
     K.push([plan.intro[1], iB.p, iB.l]);
@@ -378,8 +387,14 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
   }
   const v0 = () => (S.exp && Number.isFinite(S.exp.v0) ? S.exp.v0 : Infinity);
   /** Pose para u > U0. P/L llegan con la pose de la toma anterior (coordenadas del pasillo): es la primera llave. */
+  const aT = V();
+  const syncAnchor = () => {
+    anchorAt(aT);
+    if (aT.distanceToSquared(ecg.position) > 1e-8) { ecg.position.copy(aT); keyAspect = 0; }
+  };
   function pose(u, cam, P, L) {
     const tanV = Math.tan((fovOf(cam.aspect) / 2) * D2R);
+    syncAnchor();
     if (cam.aspect !== keyAspect || P.distanceToSquared(k0P) > 1e-6 || L.distanceToSquared(k0L) > 1e-6) {
       keyAspect = cam.aspect; k0P.copy(P); k0L.copy(L);
       buildKeys(P, L, tanV, cam.aspect);
@@ -448,6 +463,7 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
     const on = Number.isFinite(e) && e > plan.enter[0] - 0.4;
     ecg.visible = on;
     if (!on) { hideTags(); return null; }
+    syncAnchor();
     ecg.updateMatrixWorld();
     camW.copy(camera.position);
     camL.value.copy(ecg.worldToLocal(camW));
@@ -504,6 +520,8 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
     st.live = !!(S.exp && S.exp.live);
     if (st.live) placeTags(); else hideTags();
     void gw;
+    // hasta que la cámara deja la recta de Stack, el foco es de la red; desde ahí, de la traza
+    if (e < plan.enter[0]) return null;
     // el post abre el rango del DOF: el desenfoque de la traza lo hace cada línea, punto y celda (ver arriba)
     return { mode, fT, rT: 400 };
   }
@@ -515,6 +533,14 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
     group: ecg, pose, calm, update, warm,
     U0: () => v0() + plan.enter[0],
     info: () => ({ exp: st.mode, focus: +st.focus.toFixed(2), head: +headY.value.toFixed(2), yEnd: +yEnd.toFixed(2), segs: NSEG, v0: +v0().toFixed(3) }),
-    dispose: () => { hideTags(); corr.group.remove(ecg); },
+    // dispose total: la traza sale del pasillo antes del recorrido de scene.js, así que libera lo suyo acá
+    dispose: () => {
+      hideTags();
+      ecg.traverse((o) => {
+        if (o.geometry) o.geometry.dispose();
+        if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
+      });
+      corr.group.remove(ecg);
+    },
   };
 }

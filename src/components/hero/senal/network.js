@@ -793,6 +793,9 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
 
   return {
     group: net, pose, calm, update, warm, U0: FBF_END,
+    /** la recta final (coordenadas del pasillo): x/z, arriba (raíz de la última capa) y abajo (donde termina). La
+        lee Experience (ecg.js) para seguir la misma línea. Cambia con el aspecto de la ventana (place()). */
+    line: () => ({ x: marks.lineX, z: marks.lineZ, yTop: marks.yTop, yBot: marks.yTop - (marks.end - sR3U.value) }),
     info: () => ({ stk: st.mode, focus: +st.focus.toFixed(2), head: +headU.value.toFixed(2), end: +marks.end.toFixed(1), w: [...W.value.toArray()].map((x) => +x.toFixed(2)), nodes: NP + NH, segs: NSEG + PM, built: st.built }),
     dispose: () => { for (let k = 0; k < NL; k++) hideItems(k); },
   };
