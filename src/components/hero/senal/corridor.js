@@ -183,7 +183,10 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const alb = float(0.07).add(dots.mul(0.6)).add(seam.mul(0.12));
     // el borde cercano del piso (hacia el About) se funde a negro: sin costura recta en el giro
     const edge = smoothstep(FLOOR_NEAR, FLOOR_NEAR - 5, p.z);
-    floorMat.colorNode = withFog(lightAt(p).mul(alb).add(float(0.0018).mul(appear)).mul(edge));
+    // el borde lejano (y los laterales) se funden al fondo del render (#080808 lineal): la niebla deja el piso en FOG,
+    // un poco más claro que el vacío, y el borde se leía como un horizonte recto desde la sala (D-15, u 20,6)
+    const farEdge = smoothstep(FLOOR_FAR, FLOOR_FAR + 60, p.z).mul(smoothstep(45, 33, abs(p.x)));
+    floorMat.colorNode = mix(vec3(0.00243), withFog(lightAt(p).mul(alb).add(float(0.0018).mul(appear)).mul(edge)), farEdge);
   }
   const ceilMat = new THREE.MeshBasicNodeMaterial();
   {

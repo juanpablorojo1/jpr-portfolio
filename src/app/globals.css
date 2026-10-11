@@ -218,7 +218,9 @@ body {
 body::after {
   content: '';
   position: fixed;
-  inset: 0;
+  /* grain-shift lo corre hasta ±4 %: con inset 0 quedaba una franja sin grano en el borde (canto de Δ3–4 a la
+     izquierda, design-critic D-15). Con −5 % el grano cubre siempre todo el cuadro. */
+  inset: -5%;
   z-index: 99990;
   pointer-events: none;
   opacity: 0.032;
