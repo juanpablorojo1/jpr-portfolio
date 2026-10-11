@@ -554,10 +554,14 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const igs = boxU.map((b) => b.ig.value);
     boxU.forEach((b) => { b.ig.value = 1; });
     ctl.corrStage = 'compile';
+    // compileAsync arma la lista y pide los pipelines en forma síncrona y recién después espera: todo lo que se
+    // tocó (render target del pass, visibilidad, culling, placas encendidas) se restaura ANTES del await. Si no, un
+    // frame del loop podía dibujar el post dentro de la textura que él mismo lee (error de WebGPU «output» usage).
     const prevRT = renderer.getRenderTarget();
+    let pending = null;
     try {
       if (scenePass.renderTarget) renderer.setRenderTarget(scenePass.renderTarget);
-      await renderer.compileAsync(scene, camera);
+      pending = renderer.compileAsync(scene, camera);
     } catch (e) { /* sin compileAsync: compila en el primer frame */ }
     finally {
       renderer.setRenderTarget(prevRT);
@@ -565,6 +569,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       boxU.forEach((b, i) => { b.ig.value = igs[i]; });
       group.visible = prevVis;
     }
+    try { await pending; } catch (e) { /* idem */ }
   }
 
   return {

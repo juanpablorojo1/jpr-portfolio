@@ -251,7 +251,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const lamp = new THREE.Sprite(lampMat);
   lamp.scale.setScalar(0.24); lamp.renderOrder = 3;
   scene.add(lamp);
-  let corr = null, corrBuilding = false;
+  let corr = null, corrBuilding = false, corrIn = 0;
 
   /* ---------- composición (fracciones del viewport, idénticas a la figura HTML) ---------- */
   const lay = {};
@@ -461,7 +461,9 @@ async function boot({ S, root, after, assetBase }, ctl) {
   /* estado del pasillo para un u: peso, visibilidad (lo usan el loop y lineAt) */
   function updateGallery(g) {
     const on = wideMQ.matches && !!corr;
-    G.w = on ? smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.45, g) : 0;
+    // corrIn: si el pasillo termina de armarse con la galería ya abierta (recarga a mitad de Projects), entra en
+    // ~0,5 s en lugar de cortar de la pose del About al pasillo
+    G.w = on ? smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.45, g) * corrIn : 0;
     U.galW.value = G.w;
     lampOpacity.value = G.w;
     if (corr) corr.group.visible = G.w > 0.0005;
@@ -627,6 +629,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
 
     U.ignite.value = S.ign(t);
     U.pulse.value = S.pulse(t);
+    if (corr) corrIn = corrIn > 0.999 ? 1 : S.damp(corrIn, 1, 6, dt);
     updateGallery(gal.p);
     headOpacity.value = S.headAlpha(t) * (1 - G.w);
     const bend = updateCamera(t, dt, p, gal.p);
