@@ -336,31 +336,34 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
     roleB.forEach((b, k) => {
       const s = b.side, d = plan.roles[k];
       const B = V(0, b.y, 0);
-      const a = shot(B, s * 30, 1.45, 5.7, -s * 0.34, 0.3, tanV, aspect);
-      const z = shot(B, s * 21, 1.05, 5.1, -s * 0.33, 0.29, tanV, aspect);
+      // órbita ±25° → ±18° (era ±30° → ±21°): el cruce de lado gira la vista ~40° en vez de ~55°
+      const a = shot(B, s * 25, 1.45, 5.7, -s * 0.34, 0.3, tanV, aspect);
+      const z = shot(B, s * 18, 1.05, 5.1, -s * 0.33, 0.29, tanV, aspect);
       K.push([d[0], a.p, a.l, true]);
-      K.push([d[1], z.p, z.l]);
+      K.push([d[1], z.p, z.l, 'in']);
       const nx = roleB[k + 1];
       if (nx) {
-        // cruce: la cámara baja y pasa al otro lado de la traza, más cerca (la traza barre el cuadro)
-        const m = shot(V(0, (b.y + nx.y) / 2 - 0.3, 0), s * 5, 2.2, 4.3, 0, 0.15, tanV, aspect);
-        K.push([(d[1] + plan.roles[k + 1][0]) / 2, m.p, m.l]);
+        // cruce: la cámara baja y pasa al otro lado de la traza, más cerca (la traza barre el cuadro); un solo
+        // ease de z a la llave siguiente (in hasta m, out desde m): no se frena en el medio
+        // m en la mitad angular del cruce (de s·18° a −s·25°): con s·5° casi todo el giro caía en la segunda mitad
+        const m = shot(V(0, (b.y + nx.y) / 2 - 0.3, 0), -s * 3.5, 2.2, 4.3, 0, 0.15, tanV, aspect);
+        K.push([(d[1] + plan.roles[k + 1][0]) / 2, m.p, m.l, 'out']);
       }
     });
     const lastR = roleB[roleB.length - 1];
     {
       const yc = midY(eduB);
       const m = shot(V(0, (lastR.y + eduB[0].y) / 2, 0), -6, 2.6, 5.6, 0.1, 0.12, tanV, aspect);
-      K.push([(plan.roles[plan.roles.length - 1][1] + plan.edu[0]) / 2, m.p, m.l]);
+      K.push([(plan.roles[plan.roles.length - 1][1] + plan.edu[0]) / 2, m.p, m.l, 'out']);
       const a = shot(V(0, yc + 0.25, 0), -24, 1.2, 7.4, 0.24, 0.06, tanV, aspect);
       const z = shot(V(0, yc, 0), -16, 0.8, 6.8, 0.24, 0.04, tanV, aspect);
       K.push([plan.edu[0], a.p, a.l, true]);
-      K.push([plan.edu[1], z.p, z.l]);
+      K.push([plan.edu[1], z.p, z.l, 'in']);
     }
     {
       const yc = midY(recB);
       const m = shot(V(0, (eduB[eduB.length - 1].y + recB[0].y) / 2, 0), 4, 2.4, 5.4, 0, 0.12, tanV, aspect);
-      K.push([(plan.edu[1] + plan.rec[0]) / 2, m.p, m.l]);
+      K.push([(plan.edu[1] + plan.rec[0]) / 2, m.p, m.l, 'out']);
       const a = shot(V(0, yc + 0.2, 0), 22, 1.0, 6.4, -0.22, 0.08, tanV, aspect);
       const z = shot(V(0, yc, 0), 15, 0.7, 5.9, -0.22, 0.06, tanV, aspect);
       K.push([plan.rec[0], a.p, a.l, true]);
@@ -383,7 +386,10 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
     while (i < KEYS.length - 2 && e >= KEYS[i + 1][0]) i++;
     const a = KEYS[i][0], b = KEYS[i + 1][0];
     const l = Math.min(1, Math.max(0, (e - a) / (b - a)));
-    return (i + (KEYS[i][3] ? l : easeIO(l))) / (KEYS.length - 1);
+    const f = KEYS[i][3];
+    // true: lineal (estadía); 'in' / 'out': las dos mitades de un mismo ease (cruce partido por una llave intermedia)
+    const w = f === 'in' ? 2 * easeIO(l / 2) : f === 'out' ? 2 * easeIO(0.5 + l / 2) - 1 : f ? l : easeIO(l);
+    return (i + w) / (KEYS.length - 1);
   }
   const v0 = () => (S.exp && Number.isFinite(S.exp.v0) ? S.exp.v0 : Infinity);
   /** Pose para u > U0. P/L llegan con la pose de la toma anterior (coordenadas del pasillo): es la primera llave. */

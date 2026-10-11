@@ -31,15 +31,18 @@ export type ExpPlan = {
   vh: number;
 };
 
-const R0 = 2.25, STEP = 1.0, DWELL = 0.7;
+/* DWELL 0,5 (era 0,7): el cruce entre roles tiene medio viewport. Con 0,3 la cámara giraba ~30° en 0,15 vh
+   (≈280°/vh medido, un latigazo); las transiciones de Stack giran ≤54°/vh. GAP: cruce hacia educación y
+   reconocimientos (era 0,4; la cámara baja varios metros ahí). */
+const R0 = 2.25, STEP = 1.0, DWELL = 0.5, GAP = 0.6;
 
 /** guion de la sección para n roles (messages experience.items) */
 export function expPlan(nRoles: number): ExpPlan {
   const n = Math.max(1, nRoles);
   const roles: ExpWin[] = Array.from({ length: n }, (_, k) => [R0 + k * STEP, R0 + k * STEP + DWELL] as const);
   const last = roles[n - 1][1];
-  const edu: ExpWin = [last + 0.4, last + 1.2];
-  const rec: ExpWin = [edu[1] + 0.4, edu[1] + 1.2];
+  const edu: ExpWin = [last + GAP, last + GAP + 0.8];
+  const rec: ExpWin = [edu[1] + GAP, edu[1] + GAP + 0.8];
   // el punto se forma antes de que Contact empiece a subir (e = vh) y queda arriba del cuadro mientras lo tapa
   const out: ExpWin = [rec[1] + 0.1, rec[1] + 0.95];
   return { enter: [-0.2, 1.05], intro: [0.7, 1.7], roles, edu, rec, out, vh: rec[1] + 0.85 };
@@ -52,8 +55,10 @@ export const EXP_REC_SIDE = 1 as const;
 
 export const expIntroWanted = (P: ExpPlan, e: number) => e >= P.intro[0] && e <= P.intro[1];
 export const expRoleWanted = (P: ExpPlan, k: number, e: number) => e >= P.roles[k][0] - 0.25 && e <= P.roles[k][1] + 0.12;
-export const expEduWanted = (P: ExpPlan, e: number) => e >= P.edu[0] - 0.3 && e <= P.edu[1] + 0.12;
+/* educación entra 0,12 antes de su estadía (era 0,3): antes, con la cámara todavía bajando, los tres latidos se ven
+   comprimidos en perspectiva y sus rótulos se pisaban (medido a 1440: 5 solapes en e 8,1–8,15) */
+export const expEduWanted = (P: ExpPlan, e: number) => e >= P.edu[0] - 0.12 && e <= P.edu[1] + 0.12;
 export const expRecWanted = (P: ExpPlan, e: number) => e >= P.rec[0] - 0.3 && e <= P.rec[1] + 0.25;
 export const expChromeWanted = (P: ExpPlan, e: number) => e >= P.roles[0][0] - 0.45 && e <= P.rec[1] + 0.25;
-/** rol en foco para el contador: el último cuya estadía ya empezó (con medio viewport de anticipo) */
-export const expCurrent = (P: ExpPlan, e: number) => P.roles.reduce((a, d, i) => (e >= d[0] - 0.5 ? i : a), 0);
+/** rol en foco para el contador: cambia en la mitad del cruce (antes iba medio viewport adelantado: «02» con la ficha 01) */
+export const expCurrent = (P: ExpPlan, e: number) => P.roles.reduce((a, d, i) => (e >= d[0] - (STEP - DWELL) / 2 ? i : a), 0);
