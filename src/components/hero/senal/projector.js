@@ -17,7 +17,7 @@ import {
   uniform, texture, uv, vec3, float, smoothstep, exp, mix, length, time, sin, cos, distance, clamp, dot, step,
   attribute, instancedBufferAttribute, positionWorld, cameraPosition, max
 } from 'three/tsl';
-import { GAL_END } from './gallery';
+import { GAL_END, GAL_DWELLS } from './gallery';
 import { FBF_RISE, FBF_BEAM, FBF_INTRO, FBF_DWELLS, FBF_OFF, FBF_END, FBF_SCREENS } from './frames';
 import { VIDEOS } from '../../../lib/content';
 
@@ -26,6 +26,7 @@ const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a
 const damp = (a, b, l, dt) => a + (b - a) * (1 - Math.exp(-l * dt));
 const easeIO = (x) => 0.5 - 0.5 * Math.cos(Math.PI * x);
 const N = FBF_SCREENS.length;
+const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
 const TRACK_Y = 3.6;
 // arranque de lámpara de proyector: dos parpadeos y queda
 const flicker = (t) => {
@@ -37,7 +38,7 @@ const flicker = (t) => {
 /** Arma la sala. Devuelve el controlador o null si se desmontó a mitad. Todo en coordenadas del pasillo. */
 export async function buildProjector({
   group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
-  headPos, headI, scrPos, scrI, endP, endL, railHeadZ,
+  headPos, headI, scrPos, scrI, endP, endL, railHeadZ, focusU, rangeU,
 }) {
   const alive = () => !ctl.disposed && !S.dead;
   const hall = new THREE.Group();
@@ -54,7 +55,8 @@ export async function buildProjector({
 
   /* ---------- haz: uniforms compartidos por la pirámide y el polvo ---------- */
   const bA = uniform(new THREE.Vector3()), bC = uniform(new THREE.Vector3()), bR = uniform(1), bI = uniform(0), shatterU = uniform(0), dustOut = uniform(0);
-  // fantasmas: las pantallas apagadas aparecen recién con el haz (al final de Projects el cabezal es la única luz)
+  // fantasmas: las pantallas apagadas. Al final de Projects quedan en espera (se adivinan por el último vano, el
+  // cabezal sigue siendo la luz que manda); con el haz suben a fantasma pleno
   const ghostU = uniform(0);
 
   /* ---------- pantallas ---------- */
@@ -172,6 +174,11 @@ export async function buildProjector({
   beam.frustumCulled = false; beam.renderOrder = 4;
   hall.add(beam);
 
+  /* polvo fuera de foco: se apaga en lugar de abrirse en discos. Sin esto, en el cruce entre pantallas el polvo del haz
+     cercano a cámara se leía como una columna de manchas rojas (U4, captura u4-fbf-05). Mota a más de un rango del
+     plano de foco: queda al 20 %. */
+  const oofK = (near) => float(1).sub(smoothstep(rangeU.mul(0.35), rangeU, near.sub(focusU).abs()).mul(0.8));
+
   /* ---------- polvo de la sala: se enciende dentro del haz; al final queda como puntos ---------- */
   const DUST = 1500;
   const dPos = new Float32Array(DUST * 3), dSeed = new Float32Array(DUST);
@@ -200,7 +207,7 @@ export async function buildProjector({
     // en el haz: rojo con el centro caliente; fuera: lo que alumbre la pantalla encendida (lightAt) y un resto neutro
     dustMat.colorNode = RED.mul(beamLit.mul(5.0)).add(OFF.mul(beamLit.mul(beamLit).mul(0.6)))
       .add(lightAt(toL(positionWorld)).mul(2.0)).add(OFF.mul(0.006)).mul(float(1).sub(dustOut));
-    dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(smoothstep(0.3, 0.9, near)).mul(max(beamLit.mul(1.2), float(0.35))).mul(appear);
+    dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(smoothstep(0.3, 0.9, near)).mul(max(beamLit.mul(1.2), float(0.35))).mul(oofK(near)).mul(appear);
   }
   const dust = new THREE.Sprite(dustMat); dust.count = DUST; dust.frustumCulled = false;
   hall.add(dust);
@@ -234,7 +241,7 @@ export async function buildProjector({
     const lit = bI.mul(0.55).add(shatterU.mul(1.3)).mul(float(1).sub(dustOut));
     motesMat.colorNode = RED.mul(lit.mul(4.0)).add(OFF.mul(lit.mul(shatterU).mul(0.5))).mul(tw);
     const soft = float(1).sub(smoothstep(0.0, 0.5, length(uv().sub(0.5))));
-    motesMat.opacityNode = soft.mul(seed.mul(0.5).add(0.5)).mul(smoothstep(0.4, 1.0, near)).mul(appear);
+    motesMat.opacityNode = soft.mul(seed.mul(0.5).add(0.5)).mul(smoothstep(0.4, 1.0, near)).mul(oofK(near)).mul(appear);
   }
   const motes = new THREE.Sprite(motesMat); motes.count = MOTES; motes.frustumCulled = false; motes.renderOrder = 5;
   hall.add(motes);
@@ -353,7 +360,8 @@ export async function buildProjector({
 
   /** Estado de la sala para u. Escribe uniforms (haz, pantallas, lámpara) y devuelve el foco, o null antes de la sala. */
   function update(u, t, dt, gw, P, L, inView) {
-    const on = u > GAL_END - 0.4;
+    // la sala existe desde el final de Projects: sus pantallas en espera se adivinan por el último vano (D-01)
+    const on = u > LAST_OUT + 0.1;
     hall.visible = on;
     const ready = on && gw > 0.5;
     if (!on) { st.active = -1; S.fbf.active = -1; scrI.value = 0; pauseAll(); return null; }
@@ -372,7 +380,7 @@ export async function buildProjector({
     const sweep = Math.sin(Math.PI * Math.min(1, f));
     st.b = b;
     st.beam = smooth(FBF_BEAM[0], FBF_BEAM[1], u) * (1 - off);
-    ghostU.value = smooth(FBF_BEAM[0], FBF_BEAM[1] + 0.3, u) * (1 - off);
+    ghostU.value = Math.max(smooth(FBF_BEAM[0], FBF_BEAM[1] + 0.3, u), 0.45 * smooth(LAST_OUT + 0.3, LAST_OUT + 0.9, u)) * (1 - off);
     bI.value = st.beam * (1 - 0.35 * sweep) * (0.92 + 0.08 * hb);
     shatterU.value = smooth(FBF_OFF - 0.05, FBF_OFF + 0.45, u);
     dustOut.value = 0.65 * smooth(FBF_END + 0.1, FBF_END + 1.1, u);

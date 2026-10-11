@@ -23,11 +23,13 @@
 import * as THREE from 'three/webgpu';
 import {
   uniform, texture, uv, vec2, vec3, vec4, float, smoothstep, exp, abs, fract, mix, max, screenUV,
-  length, time, sin, cos, positionWorld, distance, luminance, cameraPosition, step, dot, instancedBufferAttribute
+  length, time, sin, cos, positionWorld, distance, luminance, cameraPosition, step, dot, instancedBufferAttribute,
+  normalWorld, select, min
 } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { GAL_PROJECTS, GAL_DWELLS, GAL_END, GAL_ABOUT_OUT } from './gallery';
+import { FBF_BEAM, FBF_INTRO, FBF_OFF } from './frames';
 import { playSound } from '../../../lib/sound';
 import { buildProjector } from './projector';
 
@@ -120,6 +122,20 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const scrPos = uniform(new THREE.Vector3(0, -50, 0)), scrI = uniform(0);
   // caso abierto (0..1, con el damp de la cámara): el barrido de TraumaVision se apaga detrás del panel (D-09)
   const caseU = uniform(0);
+  /* Umbrales (U-motion-1, D-01/D-02). En el giro de entrada y en el plano final el cuadro no puede quedar en negro
+     con un punto: el pasillo se lee por luz neutra y por canto, y el rojo queda en el cabezal.
+     - redFar / redNear: alcance largo y charco cercano del cabezal (teñían todo el cuadro de rojo en el plano final;
+       ahí bajan: el rojo queda en el cabezal y su estela, no en el piso entero).
+     - ambX: ambiente neutro que se suma al del riel; sostiene azulejos y vanos cuando el riel cae.
+     - roomI: la sala de proyección, del otro lado del último vano, con las pantallas en espera: un derrame neutro
+       que recorta el vano a contraluz y lame el final del pasillo.
+     - entryI: el giro de entrada. Un relleno neutro bajo y largo desde adentro del pasillo (el primer negatoscopio en
+       espera y los que siguen): paredes, piso y vano existen antes de que la señal encienda la primera placa. */
+  const redFar = uniform(1), redNear = uniform(1), ambX = uniform(0), roomI = uniform(0), entryI = uniform(0), dotK = uniform(0);
+  // post (más abajo); acá porque el polvo de la sala (projector.js) también los lee
+  const focusU = uniform(7), rangeU = uniform(1.6), bokehU = uniform(12.0), voidK = uniform(0), grainK = uniform(0);
+  const ROOM_POS = new THREE.Vector3(0, 2.1, Z_END - 4.5);
+  const roomPos = vec3(ROOM_POS.x, ROOM_POS.y, ROOM_POS.z);
   const appear = galW;                           // el pasillo existe sólo con la galería abierta (0 en el About)
   const lightAt = (p) => {
     let l = vec3(0.0);
@@ -129,10 +145,15 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       l = l.add(OFF.mul(b.ig.mul(exp(d.mul(-0.8)).mul(0.55).add(float(0.2).div(d.mul(d).mul(0.06).add(1))))));
     });
     const dh = distance(p, headPos);
-    l = l.add(RED.mul(headI.mul(exp(dh.mul(-1.15)).mul(1.2).add(exp(dh.mul(-0.32)).mul(0.45)))));
+    l = l.add(RED.mul(headI.mul(exp(dh.mul(-1.15)).mul(1.2).mul(redNear).add(exp(dh.mul(-0.32)).mul(0.45).mul(redFar)))));
     l = l.add(OFF.mul(scrI.mul(exp(distance(p, scrPos).mul(-0.55)))));
     l = l.add(RED.mul(exp(abs(p.x).mul(-7.0)).mul(exp(p.y.mul(-4.5))).mul(0.3).mul(railI)));    // el riel ilumina su franja de piso (angosta: de cerca no es una banda)
-    l = l.add(RED.mul(exp(p.y.mul(-0.6)).mul(0.03).mul(railI))).add(OFF.mul(railI.mul(0.03)));   // ambiente neutro (cae al final): se leen azulejos y vanos
+    l = l.add(RED.mul(exp(p.y.mul(-0.6)).mul(0.03).mul(railI))).add(OFF.mul(railI.mul(0.03).add(ambX)));   // ambiente neutro: se leen azulejos y vanos
+    // sala de proyección: derrame neutro por el último vano (sólo hacia este lado del vano y adentro de la sala)
+    const dr = distance(p, roomPos);
+    l = l.add(OFF.mul(roomI.mul(float(1).div(dr.mul(dr).mul(0.045).add(1)))));
+    // giro de entrada: relleno neutro desde el fondo del primer tramo (TraumaVision en espera), cae hacia la entrada
+    l = l.add(OFF.mul(entryI.mul(smoothstep(Z_IN + 4, Z_IN - 6, p.z)).mul(exp(abs(p.z.sub(-9)).mul(-0.07)))));
     return l.mul(appear);
   };
   const fogF = (k = 1) => float(1).sub(exp(distance(positionWorld, cameraPosition).mul(-0.05 * k)));
@@ -148,12 +169,15 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const alb = float(0.12).add(tile.mul(0.3)).add(dado.mul(0.35));
     wallMat.colorNode = withFog(lightAt(p).mul(alb).add(float(0.0022).mul(appear)));
   }
-  const FLOOR_NEAR = Z_IN + 4, FLOOR_FAR = Z_END - 56;   // sigue bajo la sala de proyección (projector.js)
+  const FLOOR_NEAR = Z_IN + 4, FLOOR_FAR = Z_END - 120;   // sigue bajo la sala de proyección (projector.js)
   const floorMat = new THREE.MeshBasicNodeMaterial();
   {
     const p = toL(positionWorld);
     const d = length(fract(p.xz.div(0.6)).sub(0.5));
-    const dots = float(1).sub(smoothstep(0.02, 0.06, d));
+    // plano final: los puntos cercanos a cámara se apagan (fuera de foco eran discos de bokeh en el tercio inferior);
+    // la retícula se lee lejos, donde la lame el cabezal (D-01)
+    const dots = float(1).sub(smoothstep(0.02, 0.06, d))
+      .mul(float(1).sub(dotK.mul(float(1).sub(smoothstep(2.2, 7.5, distance(positionWorld, cameraPosition))))));
     const seam = smoothstep(0.985, 1.0, abs(fract(p.z.div(1.2)).sub(0.5)).mul(2)).mul(0.5);
     const alb = float(0.07).add(dots.mul(0.6)).add(seam.mul(0.12));
     // el borde cercano del piso (hacia el About) se funde a negro: sin costura recta en el giro
@@ -180,13 +204,31 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   addPlane(2 * WALL, corridorLen, ceilMat, V(0, CEIL, zMid), [Math.PI / 2, 0, 0]);
   // piso: desde la entrada hacia el fondo y más allá del final (el riel termina en el umbral de la oscuridad).
   // No llega a la zona del About (z > Z_IN + 4): ahí sigue el piso de puntos del hero.
-  addPlane(40, FLOOR_NEAR - FLOOR_FAR, floorMat, V(0, 0, (FLOOR_NEAR + FLOOR_FAR) / 2), [-Math.PI / 2, 0, 0]);
+  addPlane(90, FLOOR_NEAR - FLOOR_FAR, floorMat, V(0, 0, (FLOOR_NEAR + FLOOR_FAR) / 2), [-Math.PI / 2, 0, 0]);
   const box = (w, h, d, mat, pos, parent = group) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.copy(pos); parent.add(m); return m; };
   // vanos cada 12 m (el primero es la entrada; el último, el final del pasillo, donde termina el riel)
+  /* vanos de la entrada y del final: con canto (D-01/D-02). Antes eran un plano de color uniforme (una losa marrón);
+     ahora cada cara toma la luz según hacia dónde mira: la que da al cabezal se enciende en rojo, la que da a la
+     sala de proyección (o al fondo del pasillo, en el giro) toma el neutro a contraluz. El filo entre caras se lee. */
+  const portalMat = new THREE.MeshBasicNodeMaterial();
+  {
+    const p = toL(positionWorld);
+    const n = vec3(normalWorld.z.negate(), normalWorld.y, normalWorld.x);
+    const toH = headPos.sub(p), dh = length(toH);
+    const lamH = max(dot(n, toH.div(dh)), 0);
+    const toR = roomPos.sub(p), dr = length(toR);
+    const lamR = max(dot(n, toR.div(dr)), 0);
+    const lamE = max(n.z.negate(), 0);                                    // la cara que mira al fondo del pasillo
+    const keyH = RED.mul(headI.mul(lamH).mul(exp(dh.mul(-0.3))).mul(0.08));
+    const rimR = OFF.mul(roomI.mul(lamR).mul(float(1).div(dr.mul(dr).mul(0.03).add(1))).mul(0.2));
+    const fillE = OFF.mul(entryI.mul(lamE).mul(0.6).add(entryI.mul(0.08)));
+    portalMat.colorNode = withFog(lightAt(p).mul(0.05).add(keyH.add(rimR).add(fillE).mul(appear)).add(float(0.004).mul(appear)));
+  }
   [Z_IN, -14, -26, -38, -50, Z_END].forEach((z) => {
-    box(0.34, CEIL, 0.42, metalMat, V(-WALL + 0.17, CEIL / 2, z));
-    box(0.34, CEIL, 0.42, metalMat, V(WALL - 0.17, CEIL / 2, z));
-    box(2 * WALL, 0.46, 0.42, metalMat, V(0, CEIL - 0.23, z));
+    const m = z === Z_IN || z === Z_END ? portalMat : metalMat;
+    box(0.34, CEIL, 0.42, m, V(-WALL + 0.17, CEIL / 2, z));
+    box(0.34, CEIL, 0.42, m, V(WALL - 0.17, CEIL / 2, z));
+    box(2 * WALL, 0.46, 0.42, m, V(0, CEIL - 0.23, z));
   });
   await yieldToMain();
   if (!alive()) return null;
@@ -343,7 +385,9 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const soft = float(1).sub(smoothstep(0.0, 0.5, length(uv().sub(0.5))));
     dustMat.colorNode = lightAt(toL(positionWorld)).mul(2.2).add(OFF.mul(0.01).mul(appear));
     // una mota pegada a la lente taparía el cuadro entero (disco de bokeh gigante): debajo de ~0,6 m se apaga
-    dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(fogF())).mul(smoothstep(0.3, 0.9, near)).mul(appear);
+    // plano final (dotK): la mota lejos del plano de foco se apaga en lugar de abrirse en un disco
+    const oof = smoothstep(rangeU.mul(0.35), rangeU, near.sub(focusU).abs()).mul(0.8).mul(dotK);
+    dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(fogF())).mul(smoothstep(0.3, 0.9, near)).mul(float(1).sub(oof)).mul(appear);
   }
   const dust = new THREE.Sprite(dustMat); dust.count = DUST; dust.frustumCulled = false; group.add(dust);
 
@@ -352,7 +396,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const END_P = V(0.78, 0.86, -54.8), END_L = V(-0.12, 0.12, -61.8);   // última llave del pasillo (= primera de la sala)
   const proj = await buildProjector({
     group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
-    headPos, headI, scrPos, scrI, endP: END_P, endL: END_L, railHeadZ: RAIL_STOP + 0.15,
+    headPos, headI, scrPos, scrI, endP: END_P, endL: END_L, railHeadZ: RAIL_STOP + 0.15, focusU, rangeU,
   });
   if (!proj || !alive()) return null;
 
@@ -365,15 +409,23 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
      entre los dos pipelines no se nota. Se usa sólo con la galería abierta; el hero no paga el DOF. */
   const pipeline = new THREE.RenderPipeline(renderer);
   const col = scenePass.getTextureNode('output');
-  const viewZ = scenePass.getViewZNode();
-  const focusU = uniform(7), rangeU = uniform(1.6), bokehU = uniform(12.0);
+  /* El DOF lee la profundidad de lo opaco: el polvo y el haz (aditivos, sin depthWrite) toman la de lo que tienen
+     detrás. Donde detrás no hay nada (el vacío más allá del último vano, la sala), esa profundidad es el plano lejano
+     y todo lo que flota delante se desenfocaba al máximo en discos; sobre una pantalla, en cambio, quedaba nítido:
+     un rectángulo de polvo nítido con borde recto dentro de un campo de discos (U4). Desde el plano final, el vacío
+     pasa a la distancia de foco (voidK 0 → 1, continuo: arranca en foco + 3 rangos, que ya es desenfoque pleno). */
+  const camFar = camera.far;
+  const viewZ0 = scenePass.getViewZNode();
+  const viewZ = select(viewZ0.lessThan(-(camFar - 0.5)), focusU.add(min(rangeU, 40).mul(3).mul(float(1).sub(voidK))).negate(), viewZ0);
   const dofN = dof(col, viewZ, focusU, rangeU, bokehU);
   const redOnly = (c) => { const r = max(c.r.sub(max(c.g, c.b).mul(1.15)), 0); return vec4(r, r.mul(0.04), r.mul(0.05), 1); };
   const bl = bloom(mix(dofN, redOnly(dofN), galW), 1.2, 0.6, 0.12);
   const vigHero = smoothstep(1.05, 0.25, length(screenUV.sub(0.5).mul(vec2(1.25, 1.0))).mul(1.35)).mul(0.85).add(0.15);
   const vigNeg = smoothstep(1.05, 0.2, length(screenUV.sub(0.5).mul(vec2(1.2, 1.0))).mul(1.3)).mul(0.82).add(0.18);
   const grainN = fract(sin(dot(screenUV.mul(vec2(1731.3, 977.1)).add(fract(time.mul(13.7)).mul(91.7)), vec2(12.9898, 78.233))).mul(43758.5453)).sub(0.5).mul(0.03);
-  pipeline.outputNode = dofN.add(bl).mul(mix(vigHero, vigNeg, galW)).add(grainN.mul(galW));
+  // en los umbrales (cuadros oscuros) el grano manda: ahí se atenúa donde no hay luz (grainK, D-01)
+  const grainAmp = mix(float(1), smoothstep(0.0, 0.05, luminance(dofN.rgb)).mul(0.65).add(0.35), grainK);
+  pipeline.outputNode = dofN.add(bl).mul(mix(vigHero, vigNeg, galW)).add(grainN.mul(galW).mul(grainAmp));
   ctl.nodes.push(dofN, bl);
   ctl.pipelines.push(pipeline);
 
@@ -383,7 +435,9 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const K = [];
     K.push([0.0, aP.clone(), aL.clone()]);
     K.push([0.4, aP.clone().add(V(0.2, -0.02, -0.3)), aL.clone().add(V(0, 0.01, -0.2)), true]);
-    K.push([0.95, V(-3.4, 1.12, 8.3), V(1.4, 0.4, 3.0)]);
+    // giro: en u 0,95 la cámara ya mira adentro por el vano de entrada (antes miraba el borde derecho del vano y el
+    // cuadro quedaba en negro con una losa hasta u 1,3; D-02). Misma posición: sólo el objetivo entra al pasillo.
+    K.push([0.95, V(-3.4, 1.12, 8.3), V(0.6, 0.75, -2.5)]);
     K.push([1.5, V(0.45, 1.6, 6.0), V(-0.45, 1.3, -6.0)]);
     ST.forEach((st, i) => {
       const a = dwellPose(st, false), b = dwellPose(st, true);
@@ -436,7 +490,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const railEndX = () => group.position.x + RAIL_STOP;
 
   /* ---------- estado por frame ---------- */
-  const st8 = { nearK: 1, focus: 7, range: 4, mode: '', open: -1, openA: 0, lastOpen: 0, headZ: 7, endK: 0, liveDone: false };
+  const st8 = { nearK: 1, focus: 7, range: 4, bokeh: 12, mode: '', open: -1, openA: 0, lastOpen: 0, headZ: 7, endK: 0, liveDone: false };
   const P = new THREE.Vector3(), L = new THREE.Vector3(), tmp = new THREE.Vector3(), q = new THREE.Vector3(), fwd = new THREE.Vector3();
   const flicker = (t) => {
     if (t < 0) return 0;
@@ -485,6 +539,22 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const endK = smooth(LAST_OUT, LAST_OUT + 0.7, u);
     st8.endK = endK;
     railI.value = 1 - 0.75 * endK;
+    // umbral final (D-01): el rojo se recoge en el cabezal, el neutro sostiene el pasillo, la sala de proyección se
+    // anuncia por el vano, la retícula cercana se apaga y el vacío deja de desenfocar lo que flota delante
+    const thr = smooth(LAST_OUT + 0.1, LAST_OUT + 0.8, u);
+    redFar.value = 1 - 0.85 * thr;
+    redNear.value = 1 - 0.55 * thr;
+    ambX.value = 0.034 * thr;
+    roomI.value = 0.55 * smooth(LAST_OUT + 0.2, LAST_OUT + 1.0, u) * (1 - 0.5 * smooth(FBF_BEAM[0], FBF_BEAM[1] + 0.3, u));
+    dotK.value = thr;
+    // en las estadías y cruces de Frame by Frame el vacío vuelve a desenfocar (0,78 ≈ 70 % del bokeh):
+    // con el vacío nítido, el borde del haz se leía como una columna recortada
+    const fbfMid = smooth(FBF_INTRO[0], FBF_INTRO[1], u) * (1 - smooth(FBF_OFF - 0.2, FBF_OFF + 0.2, u));
+    voidK.value = smooth(LAST_OUT + 0.15, LAST_OUT + 0.6, u) * (1 - 0.22 * fbfMid);
+    // giro de entrada (D-02): el pasillo existe desde u 0,6, antes de que la señal encienda la primera placa
+    const entryK = smooth(0.45, 0.75, u) * (1 - smooth(1.5, 2.1, u));
+    entryI.value = 0.05 * entryK;
+    grainK.value = Math.max(entryK, thr);
     // Frame by Frame: lámpara, haz, pantallas y foco (null antes de la sala)
     const fx = proj.update(u, t, dt, gw, P, L, S.inView);
 
@@ -496,7 +566,9 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       if (pr >= 0.999 && !s.igOn) { s.igOn = true; s.igT0 = t; }
       if (pr < 0.5 && s.igOn) s.igOn = false;
       const off = 1 - smooth(LAST_OUT + k * 0.1, LAST_OUT + 0.35 + k * 0.1, u);
-      const fl = s.igOn ? Math.max(STANDBY, flicker(t - s.igT0)) : STANDBY;
+      // en el giro de entrada los negatoscopios en espera dan un poco más (se leen como aparatos, no como huecos)
+      const sb = STANDBY + 0.13 * entryK;
+      const fl = s.igOn ? Math.max(sb, flicker(t - s.igT0)) : sb;
       boxU[k].ig.value = damp(boxU[k].ig.value, fl * (s.st.blur ? 0.72 : 1) * off, s.igOn && t - s.igT0 < 0.5 ? 60 : 6, dt);
       if (s.st.scan) s.scanU.value = smooth(d0 + 0.02, d0 + 0.75, u);
       s.hoverU.value = damp(s.hoverU.value, S.neg.hover === k ? 1 : 0, 8, dt);
@@ -529,8 +601,13 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const fTarget = Math.max(0.6, fT);
     st8.focus = damp(st8.focus, fTarget, 2.4, dt);
     focusU.value = st8.focus;
-    const rT = fx && u > GAL_END ? fx.rT : mode.startsWith('travel') ? 7.5 : mode === 'end' ? 3.2 : mode === 'about' ? 4 : THREE.MathUtils.lerp(2.0, 2.6, smooth(6, 12, st8.focus));
+    const rT = fx && u > GAL_END ? fx.rT : mode.startsWith('travel') ? 7.5 : mode === 'end' ? 5.5 : mode === 'about' ? 4 : THREE.MathUtils.lerp(2.0, 2.6, smooth(6, 12, st8.focus));
     st8.range = damp(st8.range, rT, 2.4, dt);
+    // tamaño del bokeh: en los umbrales (plano final, el cabezal que sube, la salida en puntos) los discos se achican
+    const fm = fx && u > GAL_END ? fx.mode : mode;
+    const bT = fm === 'end' || fm === 'rise' || fm === 'fbf-end' ? 6 : fm === 'intro' ? 8 : 12;
+    st8.bokeh = damp(st8.bokeh, bT, 2.4, dt);
+    bokehU.value = st8.bokeh;
     // El DOF lee la profundidad de lo que hay DETRÁS de las cintas (transparentes, sin depthWrite). En el giro, detrás
     // de la recta está el vacío (plano lejano, ~120 m) y la recta se ablandaba en una banda gruesa. El DOF entra
     // recién cuando el pasillo llena el cuadro (u 0,8 → 1,6); antes el rango es enorme y no desenfoca nada.
