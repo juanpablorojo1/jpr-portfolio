@@ -336,7 +336,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     dustMat.scaleNode = seed.mul(0.016).add(0.006).mul(smoothstep(0.2, 2.2, near).mul(-0.6).add(1.6));   // cerca: disco de bokeh
     const soft = float(1).sub(smoothstep(0.0, 0.5, length(uv().sub(0.5))));
     dustMat.colorNode = lightAt(toL(positionWorld)).mul(2.2).add(OFF.mul(0.01).mul(appear));
-    dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(fogF())).mul(appear);
+    // una mota pegada a la lente taparía el cuadro entero (disco de bokeh gigante): debajo de ~0,6 m se apaga
+    dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(fogF())).mul(smoothstep(0.3, 0.9, near)).mul(appear);
   }
   const dust = new THREE.Sprite(dustMat); dust.count = DUST; dust.frustumCulled = false; group.add(dust);
 

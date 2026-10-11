@@ -17,6 +17,9 @@
   .pj-stage {
     --pad: 5.5vw;            /* el margen del hero y del About */
     --dim: rgba(232, 228, 222, .62);
+    /* texto chico de los rótulos sobre la escena: el fondo real es la pared iluminada (L ≈ 0,03–0,05), no el negro.
+       Al 62 % daba 3,3–4,3:1; al 82 %, 5,3–6,9:1 (medido sobre la captura de TraumaVision a 1440) */
+    --dim-scene: rgba(232, 228, 222, .82);
     --line: rgba(232, 228, 222, .16);
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --mono: var(--font-jetbrains-mono), ui-monospace, monospace;
@@ -48,7 +51,7 @@
   .pj-stage:not(.is-anchored) .pj-tag .pj-stats dt { margin-left: 0; }
 
   .pj-eyebrow {
-    margin: 0; font: 10.5px/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+    margin: 0; font: 10.5px/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim-scene);
     text-shadow: 0 1px 12px rgba(0, 0, 0, .9);
   }
   .pj-eyebrow b, .pj-k b { color: #e8272a; font-weight: 400; }
@@ -72,7 +75,7 @@
   .pj-tag[data-side='r'] .pj-stats { justify-content: flex-end; }
   .pj-stats div { display: flex; flex-direction: column-reverse; gap: 6px; }
   .pj-stats dt {
-    font: 10.5px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); max-width: 14ch;
+    font: 10.5px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim-scene); max-width: 14ch;
     text-shadow: 0 1px 10px rgba(0, 0, 0, .9);
   }
   .pj-tag[data-side='r'] .pj-stats dt { margin-left: auto; }
