@@ -189,7 +189,8 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         if (openK < 0) return;
         if (e.key === 'Escape') { if (otherModal()) return; e.preventDefault(); closeCase(); return; }
         if (SCROLL_KEYS.has(e.key) && !(e.target as HTMLElement).closest?.('.pj-panel') && !otherModal()) { e.preventDefault(); return; }
-        if (e.key === 'Tab') {   // el foco no sale del caso abierto
+        if (e.key === 'Tab') {   // el foco no sale del caso abierto (con un visor de screens abierto, manda su trap: F-02)
+          if (otherModal()) return;
           const f = Array.from(panels[openK].querySelectorAll<HTMLElement>('a[href], button:not([disabled])')).filter((x) => x.offsetParent !== null);
           if (!f.length) return;
           const first = f[0], last = f[f.length - 1];

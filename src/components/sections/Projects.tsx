@@ -6,6 +6,7 @@ import Image from 'next/image';
 import MetricCounter from '../ui/MetricCounter';
 import StackBadge from '../ui/StackBadge';
 import CaseLightbox, { type CaseShot } from '../ui/CaseLightbox';
+import { useDialogFocus } from '../../hooks/useDialogFocus';
 import ProjectsGallery from './ProjectsGallery';
 import { CaseStudyMobile, type CaseStudyData, type CaseDecision, type CaseStat } from './CaseStudy';
 import {
@@ -40,6 +41,9 @@ export default function Projects() {
   const [leexLightboxIndex, setLeexLightboxIndex] = useState<number | null>(null);
   const openKibbo = useCallback((i: number | null) => setKibboLightboxIndex(i), []);
   const openLeex = useCallback((i: number | null) => setLeexLightboxIndex(i), []);
+  // Foco de los visores TraumaVision / Eleven: a Cerrar al abrir, Tab adentro, vuelve a «Screens» al cerrar (F-02)
+  const tvFocus = useDialogFocus(lightboxIndex !== null);
+  const elevenFocus = useDialogFocus(elevenLightboxIndex !== null);
 
   // Close TraumaVision lightbox on Escape/arrows
   useEffect(() => {
@@ -222,6 +226,7 @@ export default function Projects() {
       {/* ─────────────────────────────────────────────────────────── */}
       {elevenLightboxIndex !== null && (
         <div
+          ref={elevenFocus.dialogRef}
           className="fixed inset-0 z-[100] flex items-center justify-center"
           style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
           onClick={() => setElevenLightboxIndex(null)}
@@ -230,6 +235,7 @@ export default function Projects() {
           aria-label={t('case.lightbox.viewer')}
         >
           <button
+            ref={elevenFocus.closeRef}
             className="absolute top-4 right-6 font-mono text-sm text-off-white hover:text-accent transition-colors duration-150 z-10"
             onClick={() => setElevenLightboxIndex(null)}
             aria-label={t('case.lightbox.close_aria')}
@@ -277,6 +283,7 @@ export default function Projects() {
       {/* ─────────────────────────────────────────────────────────── */}
       {lightboxIndex !== null && (
         <div
+          ref={tvFocus.dialogRef}
           className="fixed inset-0 z-[100] flex items-center justify-center"
           style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
           onClick={() => setLightboxIndex(null)}
@@ -286,6 +293,7 @@ export default function Projects() {
         >
           {/* Close button */}
           <button
+            ref={tvFocus.closeRef}
             className="absolute top-4 right-6 font-mono text-sm text-off-white hover:text-accent transition-colors duration-150 z-10"
             onClick={() => setLightboxIndex(null)}
             aria-label={t('case.lightbox.close_aria')}
