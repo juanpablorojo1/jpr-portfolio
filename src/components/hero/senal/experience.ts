@@ -54,7 +54,9 @@ export const EXP_EDU_SIDE = -1 as const;
 export const EXP_REC_SIDE = 1 as const;
 
 export const expIntroWanted = (P: ExpPlan, e: number) => e >= P.intro[0] && e <= P.intro[1];
-export const expRoleWanted = (P: ExpPlan, k: number, e: number) => e >= P.roles[k][0] - 0.25 && e <= P.roles[k][1] + 0.12;
+/* el primer rol entra 0,2 antes que los demás (−0,45): entre el titular (sale en e 1,7) y la primera ficha quedaba un
+   tramo de 0,3 vh sin texto con la traza gris sola (D-13). Los demás no: pisarían la salida de la ficha anterior. */
+export const expRoleWanted = (P: ExpPlan, k: number, e: number) => e >= P.roles[k][0] - (k === 0 ? 0.45 : 0.25) && e <= P.roles[k][1] + 0.12;
 /* educación entra 0,12 antes de su estadía (era 0,3): antes, con la cámara todavía bajando, los tres latidos se ven
    comprimidos en perspectiva y sus rótulos se pisaban (medido a 1440: 5 solapes en e 8,1–8,15) */
 export const expEduWanted = (P: ExpPlan, e: number) => e >= P.edu[0] - 0.12 && e <= P.edu[1] + 0.12;

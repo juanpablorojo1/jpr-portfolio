@@ -85,6 +85,7 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
   const W = uniform(new THREE.Vector4(0, 0, 0, 0));    // onda de cada capa
   const cW = uniform(0);                               // conexión de la nube
   const apU = uniform(0);                              // la red aparece (en espera, tenue)
+  const preU = uniform(0);                             // la capa IA en espera se aclara en el primer cruce (D-13)
   const outK = uniform(0);                             // la red se apaga al final
   const headU = uniform(-1), straightK = uniform(0), sR3U = uniform(1e4), beatU = uniform(0), pathOut = uniform(0);
 
@@ -98,7 +99,9 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
     const flash = exp(front.mul(front).mul(-320)).mul(step(0.0, front)).mul(smoothstep(0.0, 0.03, w));
     const isCloud = isK(lay, CLOUD);
     // en espera: un resto apenas visible (la nube no tiene espera: aparece al conectarse)
-    const standby = apU.mul(0.13).mul(float(1).sub(isCloud));
+    // la capa IA (1) sube su espera durante el primer cruce: en los otros dos la capa siguiente ya se lee en espera,
+    // en este el cuadro quedaba vacío (u 24,2–24,45)
+    const standby = apU.mul(float(0.13).add(preU.mul(isK(lay, 1)))).mul(float(1).sub(isCloud));
     const level = mix(standby, float(0.3), lit).mul(mix(float(1), float(0.22), outK));
     return { lit, flash: flash.mul(float(1).sub(outK)), level };
   };
@@ -756,6 +759,7 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
     W.value.set(w[0], w[1], w[2], w[3]);
     cW.value = smooth(STK_CONNECT[0] - 0.05, STK_CONNECT[1], u);
     apU.value = smooth(22.2, 22.75, u);
+    preU.value = 0.22 * smooth(STK_DWELLS[0][1] - 0.15, STK_DWELLS[0][1] + 0.1, u);
     outK.value = smooth(STK_OUT[0], STK_OUT[0] + 0.55, u);
     pathOut.value = smooth(STK_OUT[0], STK_END, u);
     straightK.value = easeIO(smooth(STK_OUT[0] + 0.1, STK_END, u));

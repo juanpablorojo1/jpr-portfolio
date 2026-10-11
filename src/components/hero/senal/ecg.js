@@ -107,6 +107,7 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
   const actA = uniform(1e4), actB = uniform(1e4), beatU = uniform(0);
   const onU = uniform(0);                          // la traza existe (entra con la sección)
   const endU = uniform(0);                         // el punto final (sale hacia Contact)
+  const introU = uniform(0);                       // relevo desde Stack: papel y derivaciones fantasma en espera (D-13)
   const appear = galW.mul(onU);
 
   const fogOf = (d) => exp(d.mul(-0.045));
@@ -207,7 +208,7 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
     const guide = float(1).sub(written).mul(0.13).mul(exp(ahead.negate().max(0).mul(-0.03))).mul(spk.mul(1.2).add(1));
     const tail = smoothstep(Y_TOP, Y_TOP - 2.2, sy);                 // arriba del ancla se funde (empalma con Stack)
     const mainC = RED.mul(bri.mul(3.6)).add(OFF.mul(guide));
-    const ghostC = mix(OFF.mul(0.5), RED.mul(1.1), written.mul(0.55)).mul(bri.mul(0.7).add(guide.mul(1.4)));
+    const ghostC = mix(OFF.mul(0.5), RED.mul(1.1), written.mul(0.55)).mul(bri.mul(0.7).add(guide.mul(introU.mul(4.0).add(1.4))));
     const tickC = RED.mul(written.mul(2.6).add(0.12));
     const col = mainC.mul(isMain).add(ghostC.mul(isGhost)).add(tickC.mul(isTick));
     const k = aa.mul(near).mul(fogOf(d)).mul(tail).div(coc.mul(3.0).add(1)).mul(appear);
@@ -221,7 +222,10 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
   if (!alive()) { corr.group.remove(ecg); return null; }
 
   /* ---------- papel milimetrado: plano oblicuo detrás, encendido sólo cerca del cabezal ---------- */
-  const gH = Y_TOP + 6 - (yEnd - 6), gMid = (Y_TOP + 6 + yEnd - 6) / 2, gW = 30;
+  // el papel sube 12 m más arriba de la traza: en el relevo (la cámara todavía baja por la recta de Stack, 7–15 m
+  // arriba del ancla) es lo que entra primero al cuadro; fuera del relevo ese tramo queda apagado (D-13)
+  const G_TOP = Y_TOP + 18;
+  const gH = G_TOP - (yEnd - 6), gMid = (G_TOP + yEnd - 6) / 2, gW = 30;
   {
     const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
     const gp = positionGeometry.xy.add(vec2(0, gMid));
@@ -240,8 +244,9 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
     const minor = max(axis(gp.x, 0.25), axis(gp.y, 0.25));
     const major = max(axis(gp.x, 1.25), axis(gp.y, 1.25));
     // sólo lo enciende el cabezal: lejos de él el papel se pierde en la oscuridad (luz escasa)
-    const lit = exp(distance(p3, headP).mul(-0.24)).mul(2.6).add(0.05);
-    const edge = smoothstep(gW / 2, gW / 2 - 4, abs(gp.x)).mul(smoothstep(Y_TOP + 6, Y_TOP + 1, gp.y)).mul(smoothstep(yEnd - 6, yEnd - 1, gp.y));
+    const lit = exp(distance(p3, headP).mul(-0.24)).mul(2.6).add(0.05).add(introU.mul(0.6));
+    const top = smoothstep(introU.mul(12).add(Y_TOP + 6), introU.mul(11).add(Y_TOP + 1), gp.y);
+    const edge = smoothstep(gW / 2, gW / 2 - 4, abs(gp.x)).mul(top).mul(smoothstep(yEnd - 6, yEnd - 1, gp.y));
     const k = lit.mul(edge).mul(fogOf(d)).mul(smoothstep(1.0, 3.0, d)).mul(appear);
     m.colorNode = OFF.mul(minor.mul(0.03).add(major.mul(0.085))).mul(k).add(RED.mul(major.mul(0.09).mul(exp(distance(p3, headP).mul(-0.3)))).mul(appear));
     m.opacityNode = float(1);
@@ -476,6 +481,9 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
     camL.value.copy(ecg.worldToLocal(camW));
     pxW.value = 2 * Math.tan((camera.fov / 2) * D2R) / innerHeight;
     onU.value = smooth(plan.enter[0] - 0.4, plan.enter[0] + 0.1, e);
+    // relevo (u ≈ 30,2–31): la recta de Stack sola dejaba el cuadro casi vacío; el papel y las derivaciones fantasma
+    // entran en espera con la sección y vuelven a su nivel cuando el cabezal empieza a escribir (D-13)
+    introU.value = smooth(plan.enter[0] - 0.05, plan.enter[0] + 0.3, e) * (1 - smooth(plan.intro[0], plan.intro[0] + 0.6, e));
 
     // cabezal
     const hy = headAt(e);
