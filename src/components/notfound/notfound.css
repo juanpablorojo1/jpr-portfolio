@@ -78,6 +78,9 @@ body:has(> .nf) { margin: 0; background: #080808; }
   transition: box-shadow .2s ease, transform .12s ease;
 }
 .nf-btn span { position: relative; z-index: 1; display: inline-block; }
+/* `.nf a { color: inherit }` (0,1,1) le ganaba a .nf-btn y a .nf-logo (0,1,0): el texto del botón quedaba #e8e4de sobre
+   el rojo (3,56:1, no pasa AA a 14 px). Blanco, como pedía la regla: 4,51:1. */
+.nf a.nf-btn, .nf a.nf-logo { color: #fff; }
 .nf-btn::before {
   content: ''; position: absolute; inset: 0; background: var(--red-cta);
   transform: scaleY(1); transform-origin: top; transition: transform .45s var(--ease-out);

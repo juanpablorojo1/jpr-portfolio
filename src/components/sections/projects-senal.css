@@ -144,7 +144,11 @@
   .pj-stats.pj-facts {
     display: flex; flex-wrap: wrap; gap: 4px 18px; padding: 9px 0 8px;
     border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    transition: border-color .6s var(--ease-out);
   }
+  /* los filetes son del <dl>, no de sus filas (las que funde el GSAP del rótulo): con el rótulo apagado quedaban a la
+     vista detrás de Stack y al entrar Experience (u ≈ 30,0–30,18, y ≈ 624/660 a 1440) */
+  .pj-tag:not([data-on]) .pj-stats.pj-facts { border-color: transparent; }
   .pj-stats.pj-facts > div { flex-direction: row; align-items: baseline; gap: 10px; }
   .pj-stats.pj-facts dt, .pj-c-stats.pj-facts dt { max-width: none; margin: 0; }
   .pj-stats.pj-facts dd, .pj-c-stats.pj-facts dd {
