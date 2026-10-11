@@ -133,7 +133,9 @@ export default function Hero() {
             </p>
 
             <div className="below">
-              <p className="tagline">{t('tagline')}</p>
+              {/* el tagline se parte por letras (hero-controller): la frase entera para lectores de pantalla va aparte */}
+              <span className="sr-only">{t('tagline')}</span>
+              <p className="tagline" aria-hidden="true">{t('tagline')}</p>
               <p className="role" data-reveal>{t('role')}</p>
               <div className="ctas" data-reveal>
                 <a className="btn btn-solid" href="#projects" onClick={handleViewWork} data-magnetic>

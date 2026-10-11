@@ -8,8 +8,8 @@
     "downloadCV": "Download CV",
     "menu_aria": "Menu",
     "close_aria": "Close menu",
-    "lang_en_aria": "Switch to English",
-    "lang_es_aria": "Switch to Spanish"
+    "lang_en_aria": "EN — Switch to English",
+    "lang_es_aria": "ES — Switch to Spanish"
   },
   "hero": {
     "title": "JUAN PABLO",

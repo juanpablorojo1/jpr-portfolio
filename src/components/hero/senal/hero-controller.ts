@@ -101,8 +101,10 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
 
   document.fonts.ready.then(() => {
     if (disposed || S.dead) return;
-    nameSplit = SplitText.create(root.querySelectorAll('.name [data-split]'), { type: 'chars', mask: 'chars', charsClass: 'char' });
-    tagSplit = SplitText.create(q('.tagline'), { type: 'words,chars', wordsClass: 'word', charsClass: 'char' });
+    // aria: 'none' (D-04, axe aria-prohibited-attr): SplitText no pone aria-label en <span>/<p>. El nombre accesible
+    // del h1 es su aria-label; el tagline partido es aria-hidden y lo lee su copia .sr-only (Hero.tsx).
+    nameSplit = SplitText.create(root.querySelectorAll('.name [data-split]'), { type: 'chars', mask: 'chars', charsClass: 'char', aria: 'none' });
+    tagSplit = SplitText.create(q('.tagline'), { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' });
     // Chrome corta antes del espacio que sigue a un inline-block → sangría falsa en la línea 2.
     const tg = q('.tagline'); const cs = getComputedStyle(tg);
     const ctx = document.createElement('canvas').getContext('2d');
@@ -127,7 +129,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
       .fromTo(q('.channel'), { opacity: 0 }, { opacity: 1, duration: 0.8, ease: 'expo.out' }, 1.1)
       .call(() => { glowOn = true; }, undefined, 1.0);
     // El tagline queda partido a propósito: revertirlo crea un bloque de texto "nuevo" y el LCP salta a ~4,4 s.
-    // SplitText deja aria-label en el tagline, así que los lectores de pantalla leen la frase entera.
+    // Los lectores de pantalla leen la frase entera en su copia .sr-only (el <p> partido es aria-hidden).
     if (late > 0) tl.seek(late, false);
   }
 
