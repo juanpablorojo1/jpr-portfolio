@@ -720,12 +720,36 @@ async function boot({ S, root, after, assetBase }, ctl) {
      respaldo, como siempre. */
   const corrNear = () => cam.target > 0 || gal.target > 0;
   let corrPost = false;
+
+  /* Respaldo del armado (U-fix-2): por proximidad, el armado caía en el primer scroll y lo trababa (frames de
+     130-180 ms). Ahora arranca también solo, con el hilo libre, CORR_IDLE_MS después del primer frame: lo que
+     llegue primero. 2,5 s: fuera de la traza de Lighthouse (termina a ~2,9 s de la navegación) y con el armado
+     entero (~1,8 s headless RTX) listo antes de un primer scroll a los ~8 s. Mientras el usuario scrollea, cada
+     etapa espera a que se pinte un frame (yieldBuild) para no competir con el scroll. */
+  const CORR_IDLE_MS = 2500;
+  let lastScrollT = -1e9;
+  const markScroll = () => { lastScrollT = performance.now(); };
+  on(window, 'scroll', markScroll, { passive: true });
+  on(window, 'wheel', markScroll, { passive: true });
+  const yieldBuild = () => (performance.now() - lastScrollT < 150
+    ? new Promise((r) => { requestAnimationFrame(() => setTimeout(r, 0)); setTimeout(r, 100); })
+    : yieldToMain());
+  let corrIdleId = 0;
+  ctl.offs.push(() => clearTimeout(corrIdleId));
+  function armCorridorIdle() {
+    if (!wideMQ.matches || isMobile()) return;
+    corrIdleId = setTimeout(() => {
+      corrIdleId = 0;
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(() => startCorridor(), { timeout: 1000 });
+      else startCorridor();
+    }, CORR_IDLE_MS);
+  }
   function startCorridor() {
     if (corr || corrBuilding || !wideMQ.matches || isMobile() || S.dead || ctl.disposed) return;
     corrBuilding = true;
     const t0 = performance.now();
     loadShots()
-      .then(({ buildCorridor }) => (ctl.disposed || S.dead ? null : buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW: U.galW, yieldToMain })))
+      .then(({ buildCorridor }) => (ctl.disposed || S.dead ? null : buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW: U.galW, yieldToMain: yieldBuild })))
       .then(async (c) => {
         if (!c || ctl.disposed || S.dead) return;
         c.place({ yT: lay.yT, railZ: RAIL_Z, aboutPos: lay.endPos, aboutLook: lay.endLook });
@@ -770,16 +794,16 @@ async function boot({ S, root, after, assetBase }, ctl) {
   }
   async function startNetwork(c) {
     const { buildNetwork, buildEcg, buildConvergence } = await loadShots();
-    const n = await attachExt(c, 'network', () => buildNetwork({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain }));
+    const n = await attachExt(c, 'network', () => buildNetwork({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain: yieldBuild }));
     if (n) { stk = n; ctl.info.stk = n.info; }
     if (ctl.disposed || S.dead) return;
     // Experience sigue la recta de la red (sin red: un ancla fija debajo de la última capa)
     const line = n && n.line ? n.line : null;
-    const x = await attachExt(c, 'ecg', () => buildEcg({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain, line }));
+    const x = await attachExt(c, 'ecg', () => buildEcg({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain: yieldBuild, line }));
     if (x) { ecgX = x; ctl.info.exp = x.info; }
     if (!x || ctl.disposed || S.dead) return;
     // Contact: todas las líneas convergen en el punto en que termina la traza (su ancla)
-    const cv = await attachExt(c, 'contact', () => buildConvergence({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain, ecg: x }));
+    const cv = await attachExt(c, 'contact', () => buildConvergence({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain: yieldBuild, ecg: x }));
     if (cv) { ctcX = cv; ctl.info.ctc = cv.info; }
   }
 
@@ -906,7 +930,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
       if (docEl.classList.contains('fv-hot')) docEl.classList.remove('fv-hot');
     }
 
-    if (first) { first = false; clearWatchdog(); window.__senal.t.firstFrame = Math.round(performance.now()); S.onLive(); }
+    if (first) { first = false; clearWatchdog(); window.__senal.t.firstFrame = Math.round(performance.now()); S.onLive(); armCorridorIdle(); }
     if (hud && (Math.round(t * 10) % 5 === 0)) hud.textContent = `${backend} · ${gpu}  ${window.__senal.fps()} fps  dpr ${renderer.getPixelRatio().toFixed(2)}  p ${p.toFixed(3)}  u ${gal.p.toFixed(2)}${corr ? '  ' + corr.info().mode : ''}`;
     if (!simDt) adaptive(dtMs, t);
   }

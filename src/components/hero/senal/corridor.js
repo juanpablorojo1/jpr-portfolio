@@ -740,6 +740,14 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     // tope de 4 s: en WebGL 2 la compilación paralela se sondea con rAF y con la pestaña oculta no termina nunca;
     // pasado el tope, lo que falte compila en el primer frame (un tirón) en lugar de dejar el pasillo sin abrir
     try { await Promise.race([pending, new Promise((r) => setTimeout(r, 4000))]); } catch (e) { /* idem */ }
+    // U-fix-2: las texturas (capturas, películas, pósters) se suben a la GPU acá, de a una por tarea. Si no, la
+    // decodificación + subida + mipmaps caían en el primer frame que dibuja el pasillo, en pleno scroll (130-195 ms).
+    ctl.corrStage = 'upload';
+    for (const t of texs) {
+      if (!alive()) return;
+      try { renderer.initTexture(t); } catch (e) { /* se sube en el primer frame */ }
+      await yieldToMain();
+    }
   }
 
   return {
