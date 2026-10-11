@@ -21,14 +21,19 @@
        bordes (tubos y difusor), la carcasa es un aparato (filo fino arriba y a los lados, zócalo de comando abajo con
        el LED rojo donde termina el ramal) y la luz se derrama en los azulejos.
 
-   Pared negra (pedido de Juan, 2026-10-11: «Tampoco me gusta la pared gris con grillado, prefiero una pared negra con
-   sombras»): la pared es negra mate (albedo ~0,022, micro-rugosidad apenas visible), sin azulejos ni guardasilla; la
-   profundidad sale del derrame de cada aparato (halo junto al marco, con su sombra de contacto) y de la caída de luz. */
+   Pantalla LED y pared negra (pedido de Juan, 2026-10-11: «se ve borroso, prefiero que sea una pantalla LED que tenga
+   la portada del proyecto […] Tampoco me gusta la pared gris con grillado, prefiero una pared negra con sombras»):
+   - la estación con `led` (gallery.ts; por ahora TraumaVision) es una pantalla LED de bisel negro con la portada del
+     proyecto (nombre + línea técnica) dibujada en un canvas de 2048 px, sin captura secundaria ni video encima. Se
+     enciende con un barrido de filas de píxeles cuando llega el ramal y queda nítida; en la estadía el post no le pone
+     DOF ni grano encima (máscara en pantalla del panel, ledMask).
+   - la pared es negra mate (albedo ~0,026, micro-rugosidad apenas visible), sin azulejos ni guardasilla; la
+     profundidad sale del derrame de cada aparato (halo junto al marco, con su sombra de contacto) y de la caída de luz. */
 import * as THREE from 'three/webgpu';
 import {
   uniform, texture, uv, vec2, vec3, vec4, float, smoothstep, exp, abs, fract, mix, max, screenUV,
   length, time, sin, cos, positionWorld, distance, luminance, cameraPosition, step, dot, instancedBufferAttribute,
-  normalWorld, select, min, clamp, mx_noise_float
+  normalWorld, select, min, clamp, floor, fwidth, mx_noise_float
 } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
@@ -63,6 +68,7 @@ function dwellPose(st, end) {
 /** Arma el pasillo (async, con pausas al hilo principal). Devuelve el controlador o null si se desmontó a mitad. */
 export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW, assetBase = '/projects/', yieldToMain }) {
   const alive = () => !ctl.disposed && !S.dead;
+  const RM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const group = new THREE.Group();
   group.name = 'corridor';
   const offU = uniform(new THREE.Vector3());
@@ -74,7 +80,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
 
   /* ---------- texturas: capturas reales del repo (public/projects/<proyecto>/, Track C) ---------- */
   const loadImg = (f) => new Promise((res, rej) => { const i = new Image(); i.decoding = 'async'; i.onload = () => res(i); i.onerror = rej; i.src = assetBase + f; });
-  const names = [...new Set(ST.flatMap((s) => [s.main, s.sec, ...s.films.map((f) => f[0])]))];
+  const names = [...new Set(ST.flatMap((s) => [...(s.led ? [] : [s.main, s.sec]), ...s.films.map((f) => f[0])]))];
   const imgs = Object.fromEntries(await Promise.all(names.map(async (n) => {
     // sin im.decode(): con la pestaña en segundo plano Chrome lo retiene y el armado quedaba colgado
     const im = await loadImg(n);
@@ -85,8 +91,14 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const el = document.querySelector('.font-display');
     return el ? getComputedStyle(el).fontFamily : '"Bebas Neue", sans-serif';
   })();
+  // portada LED: Barlow Condensed (línea técnica) y JetBrains Mono (índice), las mismas fuentes locales del rótulo
+  const famOf = (sel, fb) => { const el = document.querySelector(sel); return el ? getComputedStyle(el).fontFamily : fb; };
+  const body = famOf('.pj-sub', '"Barlow Condensed", "Arial Narrow", sans-serif');
+  const mono = famOf('.pj-eyebrow', '"JetBrains Mono", monospace');
   ctl.corrStage = 'font';
-  try { await document.fonts.load(`400 250px ${display}`); } catch (e) { /* sin la fuente: cae a la de respaldo */ }
+  try {
+    await Promise.all([document.fonts.load(`400 250px ${display}`), document.fonts.load(`400 90px ${body}`), document.fonts.load(`400 44px ${mono}`)]);
+  } catch (e) { /* sin la fuente: cae a la de respaldo */ }
   const texs = [];
   const prep = (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = maxAniso; t.needsUpdate = true; texs.push(t); ctl.texs.push(t); return t; };
   const texOf = (n, blurPx) => {
@@ -116,6 +128,55 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     }
     return prep(new THREE.CanvasTexture(c));
   };
+  /* portada de la pantalla LED: el texto sale del rótulo HTML del proyecto (data-led-*, ProjectsGallery.tsx: messages
+     EN/ES), así la escena no duplica el copy. Canvas de 2048 × 968 (la proporción de la placa) con mipmaps y
+     anisotropía: a 1440 la placa ocupa ~650 px de ancho y el texto se muestrea sin escalones ni desenfoque. */
+  const LED_W = 2048, LED_H = Math.round(LED_W * 756 / 1600);
+  const ledCover = (k, st) => {
+    const tag = document.querySelectorAll('.pj-gal .pj-tag')[k];
+    const ds = (tag && tag.dataset) || {};
+    const name = (ds.ledName || st.id).toUpperCase(), line = ds.ledLine || '', eyebrow = (ds.ledEyebrow || '').toUpperCase();
+    const c = document.createElement('canvas'); c.width = LED_W; c.height = LED_H;
+    const x = c.getContext('2d');
+    x.fillStyle = '#000'; x.fillRect(0, 0, LED_W, LED_H);
+    const padX = 150, maxW = LED_W - 2 * padX;
+    // nombre: Bebas Neue, lo más grande que entre en una línea
+    let fs = 300;
+    x.font = `400 ${fs}px ${display}`;
+    while (fs > 160 && x.measureText(name).width > maxW) { fs -= 6; x.font = `400 ${fs}px ${display}`; }
+    // línea técnica: Barlow Condensed, partida en palabras (máx. 2 líneas)
+    const lfs = 104, lh = Math.round(lfs * 1.18);
+    x.font = `400 ${lfs}px ${body}`;
+    const lines = [];
+    line.split(/\s+/).filter(Boolean).forEach((w) => {
+      const cur = lines[lines.length - 1];
+      if (cur && x.measureText(cur + ' ' + w).width <= maxW) lines[lines.length - 1] = cur + ' ' + w; else lines.push(w);
+    });
+    // bloque centrado en vertical: índice · nombre · filete rojo · línea
+    const eyeH = eyebrow ? 44 + 66 : 0, nameH = fs * 0.86, ruleGap = 54, ruleH = 7, lineGap = 60;
+    const blockH = eyeH + nameH + ruleGap + ruleH + lineGap + lines.length * lh - (lh - lfs);
+    let y = Math.round((LED_H - blockH) / 2);
+    if (eyebrow) {
+      x.font = `400 44px ${mono}`;
+      if ('letterSpacing' in x) x.letterSpacing = '6px';
+      x.fillStyle = '#e8272a'; x.fillRect(padX, y + 8, 18, 18);          // el LED de estado: el único rojo junto al filete
+      x.fillStyle = 'rgba(232, 228, 222, .8)'; x.textBaseline = 'top';
+      x.fillText(eyebrow, padX + 48, y);
+      if ('letterSpacing' in x) x.letterSpacing = '0px';
+      y += eyeH;
+    }
+    x.textBaseline = 'alphabetic';
+    x.font = `400 ${fs}px ${display}`; x.fillStyle = '#ffffff';
+    x.fillText(name, padX - fs * 0.02, y + nameH);
+    y += nameH + ruleGap;
+    x.fillStyle = '#e8272a'; x.fillRect(padX, y, 120, ruleH);
+    y += ruleH + lineGap;
+    x.font = `400 ${lfs}px ${body}`; x.fillStyle = '#e8e4de';
+    lines.slice(0, 2).forEach((l, i) => x.fillText(l, padX, y + lfs * 0.8 + i * lh));
+    const t = prep(new THREE.CanvasTexture(c));
+    t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
+    return t;
+  };
   await yieldToMain();
   if (!alive()) return null;
 
@@ -126,8 +187,6 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const headPos = uniform(new THREE.Vector3(0, 0.03, 7)), headI = uniform(1), railI = uniform(1);
   // Frame by Frame (projector.js): la pantalla encendida alumbra el piso, los cables y el polvo cercano
   const scrPos = uniform(new THREE.Vector3(0, -50, 0)), scrI = uniform(0);
-  // caso abierto (0..1, con el damp de la cámara): el barrido de TraumaVision se apaga detrás del panel (D-09)
-  const caseU = uniform(0);
   /* Umbrales (U-motion-1, D-01/D-02). En el giro de entrada y en el plano final el cuadro no puede quedar en negro
      con un punto: el pasillo se lee por luz neutra y por canto, y el rojo queda en el cabezal.
      - redFar / redNear: alcance largo y charco cercano del cabezal (teñían todo el cuadro de rojo en el plano final;
@@ -140,15 +199,24 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const redFar = uniform(1), redNear = uniform(1), ambX = uniform(0), roomI = uniform(0), entryI = uniform(0), dotK = uniform(0);
   // post (más abajo); acá porque el polvo de la sala (projector.js) también los lee
   const focusU = uniform(7), rangeU = uniform(1.6), bokehU = uniform(12.0), voidK = uniform(0), grainK = uniform(0), farK = uniform(50);
+  // máscara de la pantalla LED en el post (ledProtect)
+  const ledEdgeU = [0, 1, 2, 3].map(() => uniform(new THREE.Vector3(0, 0, -1))), ledKU = uniform(0), ledNearU = uniform(0);
+  const ledAspU = uniform(1), ledFeatherU = uniform(0.002);
   const ROOM_POS = new THREE.Vector3(0, 2.1, Z_END - 4.5);
   const roomPos = vec3(ROOM_POS.x, ROOM_POS.y, ROOM_POS.z);
   const appear = galW;                           // el pasillo existe sólo con la galería abierta (0 en el About)
+  // la pantalla LED alumbra neutro tirando a frío (el negatoscopio, tibio: OFF)
+  const LEDC = vec3(0.70, 0.74, 0.80);
   const lightAt = (p) => {
     let l = vec3(0.0);
-    boxU.forEach((b) => {
+    boxU.forEach((b, k) => {
       const d = distance(p, b.pos);
-      // luz cercana (el derrame en los azulejos) + relleno neutro de largo alcance (los cruces se leen, sin barro)
-      l = l.add(OFF.mul(b.ig.mul(exp(d.mul(-0.8)).mul(0.55).add(float(0.2).div(d.mul(d).mul(0.06).add(1))))));
+      // luz cercana (el derrame) + relleno neutro de largo alcance (los cruces se leen, sin barro)
+      let near = exp(d.mul(-0.8)).mul(0.55);
+      // la LED emite hacia el pasillo: el lóbulo deja en sombra el piso pegado a la pared bajo la pantalla y lanza el
+      // charco de luz hacia adelante (el negatoscopio, difuso, alumbra parejo)
+      if (ST[k].led) near = near.mul(max(dot(p.sub(b.pos).div(d.max(0.001)), vec3(-ST[k].side, 0, 0)), 0).mul(0.8).add(0.2));
+      l = l.add((ST[k].led ? LEDC : OFF).mul(b.ig.mul(near.add(float(0.2).div(d.mul(d).mul(0.06).add(1))))));
     });
     const dh = distance(p, headPos);
     l = l.add(RED.mul(headI.mul(exp(dh.mul(-1.15)).mul(1.2).mul(redNear).add(exp(dh.mul(-0.32)).mul(0.45).mul(redFar)))));
@@ -185,7 +253,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       const d = length(vec2(dz, dy));
       const contact = smoothstep(0.0, 0.07, d);                                       // sombra del marco en la pared
       const glow = exp(d.mul(-4.2)).mul(0.04).add(exp(d.mul(-1.3)).mul(0.005));
-      halo = halo.add(OFF.mul(ig.mul(glow).mul(contact).mul(same)));
+      halo = halo.add((st.led ? LEDC : OFF).mul(ig.mul(glow).mul(contact).mul(same)));
     });
     wallMat.colorNode = withFog(lightAt(p).mul(alb).add(halo.mul(rough).mul(appear)).add(float(0.0005).mul(appear)));
   }
@@ -256,7 +324,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   await yieldToMain();
   if (!alive()) return null;
 
-  /* ---------- estaciones: negatoscopio + placa, secundario en brazo, ramal, películas colgadas ---------- */
+  /* ---------- estaciones: negatoscopio + placa (o pantalla LED), secundario en brazo, ramal, películas ---------- */
   const headMatLocal = new THREE.SpriteNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
   {
     const r = length(uv().sub(0.5));
@@ -270,8 +338,11 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const preTex = new Map();
   for (let k = 0; k < ST.length; k++) {
     const st = ST[k];
-    preTex.set('m' + k, texOf(st.main, st.blur ? 9 : 0)); await yieldToMain();
-    preTex.set('s' + k, texOf(st.sec, st.blur ? 6 : 0)); await yieldToMain();
+    if (st.led) { preTex.set('m' + k, ledCover(k, st)); await yieldToMain(); }
+    else {
+      preTex.set('m' + k, texOf(st.main, st.blur ? 9 : 0)); await yieldToMain();
+      preTex.set('s' + k, texOf(st.sec, st.blur ? 6 : 0)); await yieldToMain();
+    }
     for (let i = 0; i < st.films.length; i++) {
       const [n, cx] = st.films[i];
       preTex.set('f' + k + '-' + i, filmTex(n, cx, i === 0 ? String(k + 1).padStart(2, '0') : '', st.blur ? 5 : 0));
@@ -287,7 +358,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     group.add(g);
     const deeper = s < 0 ? 1 : -1;
     const ig = boxU[k].ig;
-    const scanU = uniform(st.scan ? 0 : 1), hoverU = uniform(0);
+    // pantalla LED: powU (0..1) barre las filas de arriba abajo; sharpU (0..1) pasa de píxeles gruesos a nítida
+    const powU = uniform(st.led ? 0 : 1), sharpU = uniform(st.led ? 0 : 1), hoverU = uniform(0);
 
     const makeViewer = (tex, w, h, isMain) => {
       const v = new THREE.Group();
@@ -302,7 +374,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       led.position.set(-deeper * (w / 2 - 0.08), -h / 2 - BOT / 2, DEPTH / 2 + 0.002);
       v.add(led);
       const film = new THREE.MeshBasicNodeMaterial();
-      {
+      if (st.led && isMain) film.colorNode = ledFace(tex, w, h).mul(appear);
+      else {
         const u = uv();
         const c = isMain ? pv.over(k, u, texture(tex, u), tex) : texture(tex, u);
         const L = luminance(c.rgb);
@@ -312,40 +385,59 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
         const ey = smoothstep(0.0, 0.1, u.y).mul(smoothstep(0.0, 0.1, float(1).sub(u.y)));
         const panel = mix(float(0.5), float(1), ex.mul(ey)).mul(tubes);
         const back = ig.mul(hoverU.mul(0.1).add(0.88)).mul(panel).add(0.006);
-        let col = mix(vec3(L), c.rgb, 0.82).mul(back);
-        if (st.scan && isMain) {
-          // antes del barrido: una radiografía (sólo la muñeca, hueso blanco; la interfaz apenas velada)
-          const [x0, x1, y0, y1] = st.xray;       // la radiografía dentro de la captura (gallery.ts)
-          const inX = smoothstep(x0 - 0.004, x0 + 0.004, u.x).mul(float(1).sub(smoothstep(x1 - 0.004, x1 + 0.004, u.x)));
-          const inY = smoothstep(y0 - 0.004, y0 + 0.004, u.y).mul(float(1).sub(smoothstep(y1 - 0.004, y1 + 0.004, u.y)));
-          const xr = inX.mul(inY);
-          const bone = L.pow(1.25).mul(1.25);
-          const neg = OFF.mul(mix(L.mul(0.07), bone, xr)).mul(back);
-          const edge = scanU.mul(1.04).sub(0.02);
-          const revealed = float(1).sub(smoothstep(edge.sub(0.004), edge, u.x));
-          col = mix(neg, col, revealed);
-          const band = exp(abs(u.x.sub(edge)).mul(-260)).mul(step(scanU, 0.999)).mul(step(0.001, scanU));
-          const trail = exp(edge.sub(u.x).mul(-18)).mul(revealed).mul(step(scanU, 0.999)).mul(0.25);
-          col = col.add(RED.mul(band.mul(4.5).add(trail)).mul(ig.add(0.3)).mul(float(1).sub(caseU)));
-        }
-        film.colorNode = col.mul(appear);
+        film.colorNode = mix(vec3(L), c.rgb, 0.82).mul(back).mul(appear);
       }
       const filmM = new THREE.Mesh(new THREE.PlaneGeometry(w, h), film);
       filmM.position.z = DEPTH / 2 + 0.003; v.add(filmM);
-      [-0.3, 0.3].forEach((fx) => { const c = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.03), metalMat); c.position.set(fx * w, h / 2 + BZ + 0.004, DEPTH / 2 + 0.012); v.add(c); });
+      // las pinzas del negatoscopio (la pantalla LED no las tiene)
+      if (!st.led) [-0.3, 0.3].forEach((fx) => { const c = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.03), metalMat); c.position.set(fx * w, h / 2 + BZ + 0.004, DEPTH / 2 + 0.012); v.add(c); });
       return { v, filmM };
     };
+
+    /* cara de la pantalla LED: la portada tal cual (sin difusor, sin tubos, sin caída a los bordes), con
+       - encendido: filas de arriba abajo (powU), cada fila en píxeles LED gruesos que se resuelven a nítida (sharpU);
+         la fila que llega sale sobreexcitada un instante;
+       - textura de píxel fina (pitch ~7 mm) que se ve sólo de cerca: se apaga con fwidth antes de que haga moiré;
+       - apagada (espera / final del pasillo): vidrio negro con un resto de reflejo, no un hueco. */
+    function ledFace(tex, w, h) {
+      const u = uv();
+      const ROWS = 48;
+      const cx = mix(float(110), float(LED_W), sharpU.pow(3)), cy = cx.mul(h / w);
+      const cell = vec2(cx, cy);
+      const uq = floor(u.mul(cell)).add(0.5).div(cell);
+      const us = mix(uq, u, step(0.999, sharpU));
+      const c = texture(tex, us).rgb;
+      const dotM = smoothstep(0.5, 0.3, length(fract(u.mul(cell)).sub(0.5)));           // LED redondo (en el encendido)
+      const pixK = float(1).sub(sharpU);
+      const row = floor(float(1).sub(u.y).mul(ROWS));
+      const front = powU.mul(ROWS + 2).sub(1);
+      const rowOn = clamp(front.sub(row), 0, 1);
+      const hot = exp(abs(row.add(0.5).sub(front)).mul(-1.4)).mul(step(powU, 0.999)).mul(step(0.001, powU));
+      const gp = u.mul(vec2(w / 0.007, h / 0.007));
+      const fw = max(fwidth(gp.x), fwidth(gp.y));
+      const gl = abs(fract(gp).sub(0.5)).mul(2);
+      const grid = float(1).sub(smoothstep(0.78, 1.0, max(gl.x, gl.y)).mul(0.22).mul(float(1).sub(smoothstep(0.12, 0.32, fw))));
+      const on = clamp(ig.sub(STANDBY).div(1 - STANDBY), 0, 1);
+      const lit = c.mul(mix(float(1), dotM.mul(1.25), pixK)).mul(grid).mul(rowOn).add(vec3(0.55, 0.6, 0.68).mul(hot).mul(0.35));
+      const black = vec3(0.0011, 0.0012, 0.0014);                                         // negro de la LED encendida
+      const glass = vec3(0.0016, 0.0017, 0.0019).mul(smoothstep(1.1, 0.0, u.y.add(u.x.mul(0.3))).mul(0.8).add(0.4));
+      return mix(glass, black.add(lit.mul(hoverU.mul(0.06).add(1))), on);
+    }
 
     const main = makeViewer(preTex.get('m' + k), BOX_W, BOX_H, true);
     main.v.position.set(0, BOX_Y, 0.12);
     g.add(main.v);
-    const sw = 1.3, sh = sw * 756 / 1600;
-    const sec = makeViewer(preTex.get('s' + k), sw, sh, false);
-    sec.v.position.set(deeper * (BOX_W / 2 + 1.05), 2.12, 0.62);
-    sec.v.rotation.y = -deeper * 0.42;
-    g.add(sec.v);
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.035, 0.6), metalMat);
-    arm.position.set(deeper * (BOX_W / 2 + 1.05), 2.12, 0.3); g.add(arm);
+    // la captura secundaria en su brazo (la pantalla LED no la lleva: la portada es la única imagen de la estación)
+    let sec = null;
+    if (!st.led) {
+      const sw = 1.3, sh = sw * 756 / 1600;
+      sec = makeViewer(preTex.get('s' + k), sw, sh, false);
+      sec.v.position.set(deeper * (BOX_W / 2 + 1.05), 2.12, 0.62);
+      sec.v.rotation.y = -deeper * 0.42;
+      g.add(sec.v);
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.035, 0.6), metalMat);
+      arm.position.set(deeper * (BOX_W / 2 + 1.05), 2.12, 0.3); g.add(arm);
+    }
 
     // luz del negatoscopio (un poco delante del acrílico), en coordenadas del pasillo
     const lp = V(s * (WALL - 0.12) - s * 0.35, BOX_Y, st.z);
@@ -400,7 +492,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       const w = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.006, p0.distanceTo(p1)), metalMat);
       w.position.copy(p0.clone().add(p1).multiplyScalar(0.5)); group.add(w); w.lookAt(p1);
     }
-    return { st, g, main, sec, ig, scanU, hoverU, progU, path, spark, filmsG, igT0: -1, igOn: false, lightPos: lp };
+    return { st, g, main, sec, ig, powU, sharpU, hoverU, progU, path, spark, filmsG, igT0: -1, igOn: false, lightPos: lp };
   });
   await yieldToMain();
   if (!alive()) return null;
@@ -426,7 +518,11 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     // una mota pegada a la lente taparía el cuadro entero (disco de bokeh gigante): debajo de ~0,6 m se apaga
     // plano final (dotK): la mota lejos del plano de foco se apaga en lugar de abrirse en un disco
     const oof = smoothstep(rangeU.mul(0.35), rangeU, near.sub(focusU).abs()).mul(0.8).mul(dotK);
-    dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(fogF())).mul(smoothstep(0.3, 0.9, near)).mul(float(1).sub(oof)).mul(appear);
+    // delante de la pantalla LED no hay polvo: una mota encendida por la pantalla, nítida sobre la portada, se leía
+    // como un píxel muerto encima del texto
+    let ledClear = float(1);
+    ST.forEach((st, k) => { if (st.led) ledClear = ledClear.mul(smoothstep(0.9, 1.8, distance(toL(positionWorld), boxU[k].pos))); });
+    dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(fogF())).mul(smoothstep(0.3, 0.9, near)).mul(float(1).sub(oof)).mul(ledClear).mul(appear);
   }
   const dust = new THREE.Sprite(dustMat); dust.count = DUST; dust.frustumCulled = false; group.add(dust);
 
@@ -468,7 +564,15 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const grainN = fract(sin(dot(screenUV.mul(vec2(1731.3, 977.1)).add(fract(time.mul(13.7)).mul(91.7)), vec2(12.9898, 78.233))).mul(43758.5453)).sub(0.5).mul(0.03);
   // en los umbrales (cuadros oscuros) el grano manda: ahí se atenúa donde no hay luz (grainK, D-01)
   const grainAmp = mix(float(1), smoothstep(0.0, 0.05, luminance(dofN.rgb)).mul(0.65).add(0.35), grainK);
-  pipeline.outputNode = dofN.add(bl).mul(mix(vigHero, vigNeg, galW)).add(grainN.mul(galW).mul(grainAmp));
+  /* pantalla LED en su estadía: ni DOF ni grano sobre la portada. ledEdge: las cuatro aristas del panel proyectado
+     (en screenUV con x por el aspecto; positivo adentro), ledProtect() las escribe por frame. La máscara sólo toma lo
+     que está a la profundidad del panel o detrás (las películas colgadas, más cerca, siguen desenfocadas). */
+  const qS = screenUV.mul(vec2(ledAspU, 1));
+  const edgeD = ledEdgeU.map((e) => dot(e.xy, qS).add(e.z));
+  const ledMask = smoothstep(0.0, ledFeatherU, min(min(edgeD[0], edgeD[1]), min(edgeD[2], edgeD[3])))
+    .mul(step(ledNearU, viewZ0.negate())).mul(ledKU);
+  const base = mix(dofN, col, ledMask);
+  pipeline.outputNode = base.add(bl).mul(mix(vigHero, vigNeg, galW)).add(grainN.mul(galW).mul(grainAmp).mul(float(1).sub(ledMask)));
   ctl.nodes.push(dofN, bl);
   ctl.pipelines.push(pipeline);
 
@@ -511,9 +615,10 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
      de la cámara del About en el sentido del riel: así la cámara del About queda en (−7, 1,28, 9) del pasillo. */
   const tagAnchors = ST.map((st) => {
     const s = st.side;
-    return st.far
-      ? V(s * (WALL - 0.04), BOX_Y - BOX_H / 2 + 0.22, st.z - BOX_W * 0.56)      // LEEX: al costado, en la profundidad
-      : V(s * (WALL - 0.04), BOX_Y - BOX_H / 2 - BOT - 0.12, st.z + BOX_W * 0.42);
+    if (st.far) return V(s * (WALL - 0.04), BOX_Y - BOX_H / 2 + 0.22, st.z - BOX_W * 0.56);      // LEEX: al costado, en la profundidad
+    // pantalla LED: el rótulo (cifras + «Ver proyecto») bajo la pantalla, más cerca de su centro y lejos del ramal
+    // (anclado en el borde cercano, el ramal rojo pasaba por detrás de las cifras)
+    return V(s * (WALL - 0.04), BOX_Y - BOX_H / 2 - BOT - 0.12, st.z + BOX_W * (st.led ? 0.12 : 0.42));
   });
   const tagRef = ST.map((st, k) => (tagAnchors[k].distanceTo(dwellPose(st, false).p) + tagAnchors[k].distanceTo(dwellPose(st, true).p)) / 2);
   const tagW = ST.map(() => V(0, 0, 0));
@@ -528,11 +633,52 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const aP = group.worldToLocal(aboutPos.clone()), aL = group.worldToLocal(aboutLook.clone());
     buildKeys(aP, aL);
     tagAnchors.forEach((a, k) => { tagW[k].copy(a); group.localToWorld(tagW[k]); });
+    if (ledIdx >= 0) {
+      const m = stations[ledIdx].main.filmM;
+      m.updateMatrixWorld(true);
+      [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b], i) => { ledCW[i].set(a * BOX_W / 2, b * BOX_H / 2, 0); m.localToWorld(ledCW[i]); });
+    }
   }
   /** x de mundo del final del riel (la cinta de la señal termina ahí) */
   const railEndX = () => group.position.x + RAIL_STOP;
 
   /* ---------- estado por frame ---------- */
+  /* la pantalla LED, protegida en el post durante su estadía (ver ledMask): esquinas del panel en el mundo (place) y,
+     por frame, sus aristas proyectadas y la profundidad más cercana */
+  const ledIdx = ST.findIndex((s) => s.led);
+  const ledCW = [V(0, 0, 0), V(0, 0, 0), V(0, 0, 0), V(0, 0, 0)];
+  const ledPx = [new THREE.Vector2(), new THREE.Vector2(), new THREE.Vector2(), new THREE.Vector2()];
+  let ledK = 0;
+  function ledProtect(u, dt) {
+    if (ledIdx < 0) return;
+    const s = stations[ledIdx], d = s.st.dwell;
+    const want = u >= d[0] - 0.12 && u <= d[1] + 0.05 && s.sharpU.value > 0.999 ? 1 : 0;
+    ledK = damp(ledK, want, 5, dt);
+    if (ledK < 0.002) { ledKU.value = 0; return; }
+    const asp = innerWidth / innerHeight;
+    let near = Infinity, ok = true;
+    for (let i = 0; i < 4; i++) {
+      tmp.copy(ledCW[i]).applyMatrix4(camera.matrixWorldInverse);
+      if (-tmp.z < camera.near * 2) ok = false;
+      near = Math.min(near, -tmp.z);
+      tmp.copy(ledCW[i]).project(camera);
+      ledPx[i].set((tmp.x * 0.5 + 0.5) * asp, 0.5 - tmp.y * 0.5);
+    }
+    if (!ok) { ledKU.value = 0; return; }
+    const gx = (ledPx[0].x + ledPx[1].x + ledPx[2].x + ledPx[3].x) / 4, gy = (ledPx[0].y + ledPx[1].y + ledPx[2].y + ledPx[3].y) / 4;
+    for (let i = 0; i < 4; i++) {
+      const a = ledPx[i], b = ledPx[(i + 1) % 4];
+      let nx = -(b.y - a.y), ny = b.x - a.x;
+      const l = Math.hypot(nx, ny) || 1; nx /= l; ny /= l;
+      let c = -(nx * a.x + ny * a.y);
+      if (nx * gx + ny * gy + c < 0) { nx = -nx; ny = -ny; c = -c; }
+      ledEdgeU[i].value.set(nx, ny, c);
+    }
+    ledAspU.value = asp;
+    ledFeatherU.value = 1.5 / innerHeight;
+    ledNearU.value = near - 0.3;
+    ledKU.value = ledK;
+  }
   const st8 = { nearK: 1, focus: 7, range: 4, bokeh: 12, farK: 50, mode: '', open: -1, openA: 0, lastOpen: 0, headZ: 7, endK: 0, liveDone: false };
   const P = new THREE.Vector3(), L = new THREE.Vector3(), tmp = new THREE.Vector3(), q = new THREE.Vector3(), fwd = new THREE.Vector3();
   const flicker = (t) => {
@@ -558,7 +704,6 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     // caso abierto: la cámara empuja hacia la placa (oblicua, nunca de frente) y la deja del lado opuesto al texto
     st8.openA = damp(st8.openA, S.neg.open >= 0 ? 1 : 0, 3.2, dt);
     if (S.neg.open >= 0) st8.lastOpen = S.neg.open;
-    caseU.value = st8.openA;
     if (st8.openA > 0.001) {
       const so = stations[st8.lastOpen];
       const c = so.lightPos.clone(); c.x = so.st.side * (WALL - 0.12);
@@ -625,15 +770,23 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       const off = 1 - smooth(LAST_OUT + k * 0.1, LAST_OUT + 0.35 + k * 0.1, u);
       // en el giro de entrada los negatoscopios en espera dan un poco más (se leen como aparatos, no como huecos)
       const sb = STANDBY + 0.13 * entryK;
-      const fl = s.igOn ? Math.max(sb, flicker(t - s.igT0)) : sb;
-      boxU[k].ig.value = damp(boxU[k].ig.value, fl * (s.st.blur ? 0.72 : 1) * off, s.igOn && t - s.igT0 < 0.5 ? 60 : 6, dt);
-      if (s.st.scan) s.scanU.value = smooth(d0 + 0.02, d0 + 0.75, u);
+      if (s.st.led) {
+        // pantalla LED: sin parpadeo de tubo. Llega el ramal → barrido de filas (0,75 s) → nítida (0,5–1,05 s)
+        const te = s.igOn ? t - s.igT0 : -1;
+        s.powU.value = s.igOn ? (RM ? 1 : Math.min(1, te / 0.75)) : damp(s.powU.value, 0, 8, dt);
+        s.sharpU.value = s.igOn ? (RM ? 1 : Math.min(1, Math.max(0, (te - 0.5) / 0.55))) : 0;
+        boxU[k].ig.value = damp(boxU[k].ig.value, (s.igOn ? Math.max(sb, s.powU.value) : sb) * off, 7, dt);
+      } else {
+        const fl = s.igOn ? Math.max(sb, flicker(t - s.igT0)) : sb;
+        boxU[k].ig.value = damp(boxU[k].ig.value, fl * (s.st.blur ? 0.72 : 1) * off, s.igOn && t - s.igT0 < 0.5 ? 60 : 6, dt);
+      }
       s.hoverU.value = damp(s.hoverU.value, S.neg.hover === k ? 1 : 0, 8, dt);
       s.filmsG.forEach((f) => { f.fmesh.rotation.x = Math.sin(t * 0.7 + f.ph) * 0.05; f.fmesh.rotation.y = Math.sin(t * 0.43 + f.ph) * 0.07; });
     });
 
-    // video demo: en la estadía (la misma ventana del foco en la placa); TraumaVision, con el barrido terminado
-    pv.update(u, dt, gw, GAL_DWELLS, (k) => u >= ST[k].dwell[0] - 0.12 && u <= ST[k].dwell[1] + 0.05 && (!ST[k].scan || stations[k].scanU.value > 0.999));
+    // video demo: en la estadía (la misma ventana del foco en la placa); la pantalla LED no lleva (plate-video.js)
+    pv.update(u, dt, gw, GAL_DWELLS, (k) => u >= ST[k].dwell[0] - 0.12 && u <= ST[k].dwell[1] + 0.05);
+    ledProtect(u, dt);
 
     // foco: en qué capa está el plano de foco. Cada cambio de capa = rack focus (con su sonido, si está encendido).
     fwd.copy(L).sub(P).normalize();
@@ -797,6 +950,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     railY: () => railY,
     info: () => ({ mode: st8.mode, focus: +st8.focus.toFixed(2), range: +st8.range.toFixed(2), headZ: +st8.headZ.toFixed(2), ig: boxU.map((b) => +b.ig.value.toFixed(2)), ...proj.info() }),
     activeTag: (u) => ST.findIndex((s) => u >= s.dwell[0] - 0.16 && u <= s.dwell[1] + 0.08),
+    /** QA (?qa, vía __senal.dbg().corr): vuelve a encender la pantalla LED desde cero (el barrido se reproduce) */
+    ledReplay: () => { if (ledIdx >= 0) { stations[ledIdx].igOn = false; stations[ledIdx].powU.value = 0; } },
     ABOUT_OUT: GAL_ABOUT_OUT,
   };
 }

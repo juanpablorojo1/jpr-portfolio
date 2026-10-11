@@ -241,4 +241,30 @@
   html.pj-case-open .pj-vpause { opacity: 0 !important; pointer-events: none; }
   /* el caso: el demo entre la cabecera y la grilla */
   .pj-c-demo { margin-top: 30px; }
+
+  /* ---------- pantalla LED (2026-10-11; gallery.ts led, por ahora TraumaVision) ----------
+     La escena dibuja índice, nombre y línea técnica en la pantalla: con la escena viva el rótulo deja a la vista las
+     cifras y «Ver proyecto»; índice, título, bajada y la línea quedan para lectores de pantalla (la pantalla es un
+     canvas). Sin escena (respaldo), el rótulo completo, como antes; la línea de la portada sólo para lectores. */
+  .pj-led-line,
+  .pj-stage.is-anchored .pj-tag.pj-led :is(.pj-eyebrow, .pj-title, .pj-sub) {
+    position: absolute !important; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
+  .pj-stage.is-anchored .pj-tag.pj-led .pj-stats { margin-top: 0; }
+  /* «Ver proyecto»: la acción principal de la estación. Filete rojo (el rojo como acento, no como fondo), área de
+     clic de 48 px de alto, flecha que avanza en hover y foco; anillo de foco claro, separado del filete rojo */
+  .pj-tag .pj-open:has(.pj-view) {
+    min-height: 48px; padding: 0 20px 0 18px; gap: 14px; margin-top: 22px;
+    border-color: rgba(232, 39, 42, .85); background: rgba(8, 8, 8, .62);
+    font-size: 13px; letter-spacing: .16em; color: #fff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .55);
+    transition: border-color .3s var(--ease-out), background-color .3s var(--ease-out), transform .2s var(--ease-out);
+  }
+  .pj-open .pj-view { gap: 14px; }
+  .pj-open .pj-view i { font-size: 16px; transition: transform .45s var(--ease-out); }
+  .pj-tag .pj-open:has(.pj-view):hover { border-color: #e8272a; background: rgba(232, 39, 42, .16); }
+  .pj-tag .pj-open:has(.pj-view):hover .pj-view i, .pj-tag .pj-open:has(.pj-view):focus-visible .pj-view i { transform: translateX(5px); }
+  .pj-tag .pj-open:has(.pj-view):focus-visible { border-color: #e8272a; background: rgba(232, 39, 42, .16); box-shadow: 0 0 0 3px #080808, 0 0 0 5px #e8e4de; }
+  .pj-tag .pj-open:has(.pj-view):active { transform: scale(.98); background: rgba(232, 39, 42, .24); }
 }

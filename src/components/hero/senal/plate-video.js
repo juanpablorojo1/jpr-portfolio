@@ -22,7 +22,8 @@ const damp = (a, b, l, dt) => a + (b - a) * (1 - Math.exp(-l * dt));
 export function createPlateVideos({ ST, S, ctl, alive, blurPx = 9 }) {
   const recs = ST.map((st) => {
     const d = PROJECT_DEMOS[st.id];
-    if (!d) return null;
+    // la pantalla LED muestra la portada, no el demo (el demo sigue en el caso)
+    if (!d || st.led) return null;
     const blur = !!st.blur;
     return {
       st, d, blur,

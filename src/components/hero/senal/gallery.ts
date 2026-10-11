@@ -25,16 +25,16 @@ export const GAL_SECTION_VH = 10.3;         // alto de la sección en viewports 
 export type GalleryId = 'traumavision' | 'kibbo' | 'leex' | 'eleven';
 /** side: −1 pared izquierda, 1 derecha. z: profundidad en el pasillo (m). Imágenes de public/projects/<proyecto>/
     (Track C, 2026-10-10; donde había versión difuminada en _work/ va esa). La primera película (la del índice) es el
-    thumb del proyecto: el detalle que lo identifica. xray (sólo con scan): la radiografía dentro de la captura
-    principal en uv [x0, x1, y0, y1] (y desde abajo), medida sobre tv-01-resultado-revisar.jpg (1900×912: visor
-    x 343–1300, y 146–768 px). El video demo de cada placa sale de PROJECT_DEMOS (content.ts), por id. */
+    thumb del proyecto: el detalle que lo identifica. El video demo de cada placa sale de PROJECT_DEMOS (content.ts),
+    por id. led: la placa es una pantalla LED con la portada del proyecto (nombre + línea técnica, nítidos) en lugar
+    de una captura en negatoscopio (pedido de Juan, 2026-10-11: «se ve borroso, prefiero que sea una pantalla LED que
+    tenga la portada del proyecto»). La portada se dibuja con el texto del rótulo HTML (data-led-*, ProjectsGallery);
+    sin captura secundaria ni video demo encima. Por ahora sólo TraumaVision (las otras, después del frame). */
 export const GAL_PROJECTS: ReadonlyArray<{
   id: GalleryId; side: -1 | 1; z: number; main: string; sec: string;
-  films: ReadonlyArray<readonly [string, number]>; blur?: boolean; far?: boolean; scan?: boolean;
-  xray?: readonly [number, number, number, number];
+  films: ReadonlyArray<readonly [string, number]>; blur?: boolean; far?: boolean; led?: boolean;
 }> = [
-  { id: 'traumavision', side: -1, z: -8, main: 'traumavision/tv-01-resultado-revisar.jpg', sec: 'traumavision/tv-04-historial.jpg', scan: true,
-    xray: [0.181, 0.684, 0.158, 0.840],
+  { id: 'traumavision', side: -1, z: -8, main: 'traumavision/tv-01-resultado-revisar.jpg', sec: 'traumavision/tv-04-historial.jpg', led: true,
     films: [['traumavision/thumb.jpg', 0.38], ['traumavision/tv-05-metricas-acierto.jpg', 0.82]] },
   { id: 'kibbo', side: 1, z: -20, main: 'kibbo/kibbo-01-hero.jpg', sec: 'kibbo/kibbo-04-dashboard-blur.jpg',
     films: [['kibbo/thumb.jpg', 0.3], ['kibbo/kibbo-03-on-the-phone-blur.jpg', 0.65]] },
