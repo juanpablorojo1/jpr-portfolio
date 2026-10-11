@@ -31,7 +31,12 @@
   }
   .fv-label { left: var(--pad); display: flex; align-items: center; gap: 10px; }
   .fv-count { right: var(--pad); }
-  .fv-count b { color: #e8272a; font-weight: 400; }
+  /* índice en tono pleno con el cuadrado rojo, como Projects (D-03) / Stack / Experience: el rojo, sólo como acento (B-01) */
+  .fv-count b, .fv-eyebrow b, .fv-dlg-bar p b { color: #e8e4de; font-weight: 400; }
+  .fv-count b::before, .fv-eyebrow b::before, .fv-dlg-bar p b::before {
+    content: ''; display: inline-block; width: 5px; height: 5px; margin: 0 .75em 0 0; vertical-align: .2em;
+    background: #e8272a; box-shadow: 0 0 8px rgba(232, 39, 42, .6);
+  }
   .fv-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
 
   /* ---------- plano de situación ---------- */
@@ -68,7 +73,6 @@
     margin: 0; font: 10.5px/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim-scene);
     text-shadow: 0 1px 12px rgba(0, 0, 0, .9);
   }
-  .fv-eyebrow b { color: #e8272a; font-weight: 400; }
   .fv-title {
     margin: 10px 0 0; font-weight: 400; text-transform: uppercase; color: #fff;
     font-size: clamp(44px, 3.9vw, 70px); line-height: .9; letter-spacing: .005em;
@@ -133,12 +137,11 @@
   .fv-dlg::backdrop { background: rgba(8, 8, 8, .6); }
   .fv-dlg-bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: 88px; flex-shrink: 0; }
   .fv-dlg-bar p { margin: 0; font: 10.5px/1.4 var(--font-jetbrains-mono), ui-monospace, monospace; letter-spacing: .16em; text-transform: uppercase; }
-  .fv-dlg-bar p b { color: #e8272a; font-weight: 400; }
   .fv-dlg .fv-btn {
     --line: rgba(232, 228, 222, .28); --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   }
-  .fv-dlg-video { flex: 1; min-height: 0; width: 100%; margin-bottom: 40px; background: #000; object-fit: contain; outline: none; }
+  .fv-dlg-video { flex: 1; min-height: 0; width: 100%; margin-bottom: 40px; background: #080808; object-fit: contain; outline: none; }
   .fv-dlg-video:focus-visible { box-shadow: 0 0 0 1px #e8272a; }
 }
 

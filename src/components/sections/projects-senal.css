@@ -152,7 +152,7 @@
   .pj-stats.pj-facts > div { flex-direction: row; align-items: baseline; gap: 10px; }
   .pj-stats.pj-facts dt, .pj-c-stats.pj-facts dt { max-width: none; margin: 0; }
   .pj-stats.pj-facts dd, .pj-c-stats.pj-facts dd {
-    order: 0; font: 500 20px/1.1 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; letter-spacing: .02em; color: #e8e4de;
+    order: 0; font: 400 20px/1.1 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; letter-spacing: .02em; color: #e8e4de;
   }
   .pj-c-stats.pj-facts { display: grid; grid-template-columns: max-content max-content; gap: 0 22px; }
   /* cada fila es una fila de la grilla (subgrid): la columna de rótulos queda alineada */
@@ -165,7 +165,7 @@
   /* ---------- el caso completo ---------- */
   .pj-panel {
     position: absolute; top: 0; bottom: 0; width: min(52vw, 820px); padding: 128px 4vw 72px;
-    overflow-y: auto; overscroll-behavior: contain; pointer-events: auto; scrollbar-width: thin; scrollbar-color: #333 transparent;
+    overflow-y: auto; overscroll-behavior: contain; pointer-events: auto; scrollbar-width: thin; scrollbar-color: #2a2a2a transparent;
     display: none; z-index: 5;
   }
   .pj-panel[data-open] { display: block; }

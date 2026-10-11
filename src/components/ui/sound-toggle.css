@@ -18,7 +18,8 @@
   .snd-toggle:focus-visible { outline: 1px solid #e8272a; outline-offset: 4px; }
   .snd-toggle b { font-weight: 400; color: #e8e4de; }
   .snd-toggle[aria-pressed='true'] { border-color: rgba(232, 39, 42, .6); }
-  .snd-toggle[aria-pressed='true'] b { color: #e8272a; }
+  /* «ON» en off-white: el rojo del estado encendido es acento (borde y barras), no texto de 10,5 px (B-03) */
+  .snd-toggle[aria-pressed='true'] b { color: #e8e4de; }
   .snd-ico { display: inline-flex; align-items: flex-end; gap: 2px; height: 10px; }
   .snd-ico i { width: 2px; height: 3px; background: currentColor; transform-origin: 50% 100%; }
   .snd-toggle[aria-pressed='true'] .snd-ico i { background: #e8272a; animation: snd-eq 1s cubic-bezier(.16, 1, .3, 1) infinite alternate; }

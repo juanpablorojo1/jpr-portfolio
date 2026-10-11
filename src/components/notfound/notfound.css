@@ -32,7 +32,8 @@ body:has(> .nf) { margin: 0; background: #080808; }
   display: flex; align-items: center; justify-content: space-between;
   font: 11px/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
 }
-.nf-logo { --hit: 8px; display: inline-flex; align-items: center; height: 28px; padding: var(--hit); margin: calc(-1 * var(--hit)); color: #fff; }
+/* content-box, como .jnav-logo: el área de toque suma --hit sin achicar el logo (B-02) */
+.nf-logo { --hit: 8px; display: inline-flex; align-items: center; height: 28px; box-sizing: content-box; padding: var(--hit); margin: calc(-1 * var(--hit)); color: #fff; }
 .nf-logo svg { display: block; height: 100%; width: auto; }
 .nf-logo:focus-visible { outline-offset: -4px; }
 .nf .jnav-lang a { padding: 20px 14px; margin: -12px; transition: color .2s ease; }

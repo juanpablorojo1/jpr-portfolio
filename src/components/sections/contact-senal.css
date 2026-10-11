@@ -153,7 +153,8 @@
   .ct-foot p { margin: 0; white-space: nowrap; }
   .ct-foot-logo {
     --hit: 8px;
-    display: inline-flex; align-items: center; height: 28px; padding: var(--hit); margin: calc(-1 * var(--hit));
+    /* content-box, como .jnav-logo (navbar.css): el área de toque suma --hit sin achicar el logo (28 px, mínimo 20; B-02) */
+    display: inline-flex; align-items: center; height: 28px; box-sizing: content-box; padding: var(--hit); margin: calc(-1 * var(--hit));
     color: #fff;
   }
   .ct-foot-logo svg { display: block; height: 100%; width: auto; }
