@@ -137,6 +137,14 @@
   /* a 13 px el eyebrow largo (LEEX, KIBBO) parte en dos: que no quede «2026» solo en la segunda línea */
   .pj-tag .pj-eyebrow { text-wrap: balance; }
   .pj-tag .pj-open em { font-size: 16px; }
+  /* D-19: la botonera en una línea de 1200 a 1920, EN y ES (mismo texto). A 13 px y .14em, «Problema → Mi rol →
+     Decisiones clave → Resultado +» medía 542 px contra un rótulo de 460-518: tracking .08em, pasos a 7 px y el
+     botón a su ancho de contenido (ES 488 px). Entre 1200 y ~1355 ES pasa el ancho del rótulo por ≤28 px, hacia
+     afuera de la alineación (rótulo izquierdo hacia la derecha; rótulo derecho, float right, hacia la izquierda). */
+  .pj-tag .pj-open { display: flex; flex-wrap: nowrap; width: max-content; padding: 9px 12px; gap: 6px 7px; letter-spacing: .08em; }
+  .pj-open .pj-step { gap: 7px; }
+  .pj-tag .pj-open em { margin-left: 4px; }
+  .pj-stage.is-anchored .pj-tag[data-side='r'] .pj-open { float: right; }
 
   /* D-08: Eleven no tiene cifras sino datos (fundación, clientes, enfoque): ficha rótulo / valor, no casillas de
      cifras en Bebas. Mismo texto de messages; cambia solo la forma. En el rótulo, una fila de pares entre filetes
