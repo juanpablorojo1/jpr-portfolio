@@ -272,3 +272,14 @@ body::after {
 .skip-link:focus { transform: none; outline: none; }
 #content:focus { outline: none; }
 
+/* Cambio de idioma con View Transitions (functional-tester F-01): navegación cross-document entre /en y /es
+   (los <a href> planos del selector), sin JS. Un crossfade corto y sobrio de la página entera; mismas curva y
+   duración en las dos capas para que la suma no parpadee. Con reduced motion no se activa: recarga directa. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
