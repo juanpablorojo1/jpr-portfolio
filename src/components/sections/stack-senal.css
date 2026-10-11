@@ -74,22 +74,25 @@
   .sk-metric {
     margin: 16px 0 0; font: 12px/1.6 var(--mono); letter-spacing: .04em; color: #e8e4de;
     text-shadow: var(--halo);
+    text-wrap: balance;   /* D-21: sin «set)» solo en la segunda línea */
   }
   .sk-items { list-style: none; margin: 0; padding: 0; }
 
   /* rótulo de cada nodo: punto 3D = esquina (0,0) del li; filete corto y el nombre a la derecha.
-     Nombre a 11 px (≥ 10,5 px reales: los rótulos no se escalan). */
+     Nombre a 11 px (≥ 10,5 px reales: los rótulos no se escalan).
+     D-20: el cuadrado del nodo crece con el desenfoque (9 px × (1 + 5·coc)) y tocaba la primera letra: filete y
+     nombre 6 px más afuera; y el nombre que parte en dos lo hace en dos líneas parejas (sin huérfanos a 1200). */
   .sk-item { position: absolute; left: 0; top: 0; }
   .sk-name {
-    position: absolute; left: 15px; top: -7.5px; display: block; width: max-content;
-    max-width: min(300px, calc(19vw - 26px));
+    position: absolute; left: 21px; top: -7.5px; display: block; width: max-content;
+    max-width: min(300px, calc(19vw - 26px)); text-wrap: balance;
     font: 11px/1.36 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: rgba(232, 228, 222, .92);
     text-shadow: var(--halo);
     opacity: 0; transform: translate3d(-6px, 0, 0);
     transition: opacity .35s var(--ease-out), transform .35s var(--ease-out);
   }
   .sk-item::before {
-    content: ''; position: absolute; left: 6px; top: 0; width: 6px; height: 1px; background: rgba(232, 228, 222, .5);
+    content: ''; position: absolute; left: 12px; top: 0; width: 6px; height: 1px; background: rgba(232, 228, 222, .5);
     opacity: 0; transition: opacity .35s var(--ease-out);
   }
   .sk-item[data-on] .sk-name { opacity: 1; transform: none; transition: opacity .9s var(--ease-out), transform 1s var(--ease-out); }
