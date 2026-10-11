@@ -54,8 +54,10 @@
   .pj-tag {
     /* D-06: el ancho acompaña al título hasta 1920 (con tope 490 px, a 1920 el título de 104 px partía en 3 líneas).
        Piso de 460 px: con el texto chico a 13 px (D-04), a 1200 los rótulos crecían y Eleven subía ~45 px sobre su
-       placa; a 460 px la bajada y la ficha ocupan una línea menos y el rótulo queda donde estaba (±10 px). */
-    position: absolute; left: 0; top: 0; width: clamp(460px, 34vw, 640px);
+       placa; a 460 px la bajada y la ficha ocupan una línea menos y el rótulo queda donde estaba (±10 px).
+       36vw: el título más largo («Sistema de Licitaciones LEEX», 5,77 em en dos líneas) entra en dos de 1200 a 1920;
+       con 34vw, a 1440 ES quedaba «LEEX» solo en una tercera línea. */
+    position: absolute; left: 0; top: 0; width: clamp(460px, 36vw, 640px);
     will-change: transform; transform-origin: 0 0;
   }
   .pj-tag[data-side='r'] { text-align: right; transform-origin: 100% 0; }
