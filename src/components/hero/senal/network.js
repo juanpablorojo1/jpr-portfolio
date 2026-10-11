@@ -81,7 +81,7 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
   /* ---------- uniforms ---------- */
   const camL = uniform(new THREE.Vector3(0, 0, 0));     // cámara en coordenadas del pasillo
   const pxW = uniform(0.001);                          // m por px a 1 m de distancia
-  const focusU = uniform(9), rangeU = uniform(1.6), apertU = uniform(1.4);
+  const focusU = uniform(9), rangeU = uniform(1.6), apertU = uniform(2.2);
   const W = uniform(new THREE.Vector4(0, 0, 0, 0));    // onda de cada capa
   const cW = uniform(0);                               // conexión de la nube
   const apU = uniform(0);                              // la red aparece (en espera, tenue)
@@ -98,8 +98,8 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
     const flash = exp(front.mul(front).mul(-320)).mul(step(0.0, front)).mul(smoothstep(0.0, 0.03, w));
     const isCloud = isK(lay, CLOUD);
     // en espera: un resto apenas visible (la nube no tiene espera: aparece al conectarse)
-    const standby = apU.mul(0.06).mul(float(1).sub(isCloud));
-    const level = mix(standby, float(0.3), lit).mul(mix(float(1), float(0.12), outK));
+    const standby = apU.mul(0.13).mul(float(1).sub(isCloud));
+    const level = mix(standby, float(0.3), lit).mul(mix(float(1), float(0.22), outK));
     return { lit, flash: flash.mul(float(1).sub(outK)), level };
   };
   const fogOf = (d) => exp(d.mul(-0.042));
@@ -355,7 +355,7 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
       const ph = fract(arr.mul(4.0).sub(time.mul(0.22)).add(lay.mul(0.37)).add(seed.mul(0.15)));
       const pulse = smoothstep(0.94, 1.0, ph).mul(lit).mul(float(1).sub(outK)).mul(float(1).sub(isK(lay, CLOUD).mul(0.6)));
       const tint = mix(OFF, RED.mul(1.5), isK(lay, CLOUD).mul(0.75));
-      return tint.mul(level.mul(0.55)).add(RED.mul(flash.mul(2.4).add(pulse.mul(0.55))));
+      return tint.mul(level.mul(mix(float(0.55), float(0.4), isK(lay, CLOUD)))).add(RED.mul(flash.mul(2.4).add(pulse.mul(0.55))));
     },
   });
   const linesMesh = new THREE.Mesh(lGeo, linesM);
@@ -365,7 +365,7 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
   // puntos: polvo + uniones + puntas + nube (redondos)
   const pts = [];          // [ref, arr, lay, sizePx, bright]
   layers.forEach((L) => {
-    L.dust.forEach(([p, a]) => pts.push([{ k: L.k, p }, a, L.k, 1.7 + R() * 1.1, 0.55]));
+    L.dust.forEach(([p, a]) => pts.push([{ k: L.k, p }, a, L.k, 1.8 + R() * 1.2, 0.85]));
     L.junctions.forEach((i) => pts.push([{ k: L.k, i }, L.arrOf(i), L.k, 3.0, 1.0]));
     L.tips.forEach((i) => pts.push([{ k: L.k, i }, L.arrOf(i), L.k, 2.4, 0.9]));
   });
@@ -424,7 +424,7 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
   pGeo.setAttribute('side', new THREE.BufferAttribute(qSide, 1)); pGeo.setAttribute('arr', qArrA); pGeo.setAttribute('mv', qMvA);
   pGeo.setIndex(new THREE.BufferAttribute(qIdx, 1));
   const pathM = lineMat({
-    widthPx: 2.3, path: true,
+    widthPx: 1.9, path: true,
     colorFn: () => {
       const sA = attribute('arr', 'float'), mv = attribute('mv', 'float');
       const behind = headU.sub(sA);
@@ -437,7 +437,7 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
       const bx = sA.sub(sR3U).sub(beatU);
       const beat = exp(bx.mul(bx).mul(-1.2)).mul(mv).mul(straightK).mul(1.6);
       const br = float(0.22).add(fresh.mul(1.0)).add(hot.mul(2.4)).add(beat).mul(vis).mul(keep);
-      return RED.mul(br.mul(3.6));
+      return RED.mul(br.mul(2.5));
     },
   });
   const pathMesh = new THREE.Mesh(pGeo, pathM);
