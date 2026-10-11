@@ -456,6 +456,11 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
   net.add(head);
 
   corr.group.add(net);
+  // las pantallas de la sala (grupos dentro de 'fbf-hall', projector.js): apagadas son siluetas casi negras que
+  // tapan la nube y la red con un rectángulo. Pasado el final de Frame by Frame se ocultan (no se ven: están negras).
+  const hall = corr.group.getObjectByName('fbf-hall');
+  const screensOf = () => (hall ? hall.children.filter((c) => c.isGroup) : []);
+  let screensHidden = false;
 
   /* ---------- colocación: espacio de cada cámara de estadía → pasillo (con el aspecto actual) ---------- */
   let pA = 0, pT = 0;
@@ -704,7 +709,7 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
   const hideItems = (k) => {
     const els = S.stk && S.stk.items[k];
     if (!els) return;
-    els.forEach((el, i) => { if (itemsOn[k][i]) { itemsOn[k][i] = false; el.removeAttribute('data-on'); } });
+    els.forEach((el, i) => { if (itemsOn[k][i] || el.hasAttribute('data-on')) { itemsOn[k][i] = false; el.removeAttribute('data-on'); } });
   };
   function placeItems(u, w) {
     const all = S.stk && S.stk.items;
@@ -719,7 +724,9 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
         const on = hubArr[k][i] <= w[k] * WAVE_K;
         wv.copy(hubW[k][i]).applyMatrix4(net.matrixWorld).project(camera);
         const vis = on && wv.z < 1 && wv.z > -1;
-        if (vis !== itemsOn[k][i]) { itemsOn[k][i] = vis; el.toggleAttribute('data-on', vis); }
+        // contra el atributo real (el HTML lo limpia al pasar a escena viva): nunca queda un rótulo trabado
+        if (vis !== el.hasAttribute('data-on')) el.toggleAttribute('data-on', vis);
+        itemsOn[k][i] = vis;
         if (wv.z < 1) {
           const x = (wv.x * 0.5 + 0.5) * innerWidth, y = (-wv.y * 0.5 + 0.5) * innerHeight;
           el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
@@ -732,8 +739,14 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
   function update(u, t, dt, gw, P, L) {
     const on = u > FBF_END - 0.6;
     net.visible = on;
-    if (!on) { st.active = -1; if (S.stk) S.stk.active = -1; for (let k = 0; k < NL; k++) hideItems(k); return null; }
+    if (!on) {
+      st.active = -1; if (S.stk) S.stk.active = -1; for (let k = 0; k < NL; k++) hideItems(k);
+      if (screensHidden) { screensHidden = false; screensOf().forEach((g) => { g.visible = true; }); }
+      return null;
+    }
     if (camera.aspect !== pA) place();
+    const hide = u > FBF_END + 0.08;
+    if (hide !== screensHidden) { screensHidden = hide; screensOf().forEach((g) => { g.visible = !hide; }); }
     net.updateMatrixWorld();
     camW.copy(camera.position);
     camL.value.copy(net.worldToLocal(camW));
@@ -769,6 +782,8 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
     st.active = dIdx;
     if (S.stk) S.stk.active = dIdx;
     placeItems(u, w);
+    // hasta el final de Frame by Frame el foco es de la sala (su plano de salida); desde ahí, de la red
+    if (u <= FBF_END) return null;
     // el post abre el rango del DOF: el desenfoque de la red lo hace cada punto (ver arriba)
     return { mode, fT, rT: 400 };
   }
