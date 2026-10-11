@@ -5,6 +5,8 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '../../../i18n';
+import { SITE_URL } from '../../lib/site';
+import { SOCIAL_LINKS } from '../../lib/content';
 import '../globals.css';
 
 // Fuentes locales (public/fonts, las mismas woff2 que la maqueta «Señal»), mismas variables CSS de siempre.
@@ -39,7 +41,7 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
   const t = await getTranslations({ locale, namespace: 'meta' });
   const title = t('title');
   const description = t('description');
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const siteUrl = SITE_URL;
 
   return {
     title: title,
@@ -101,12 +103,30 @@ export default async function LocaleLayout({ children, params: { locale } }: Pro
   // Provide messages to client components
   const messages = await getMessages();
 
+  // Datos estructurados (D-07): sólo lo que ya dice el sitio. jobTitle = la línea de rol del título de la página
+  // (meta.title, después de «— »); description = el rol del hero; sameAs = LinkedIn y GitHub del Contacto.
+  const tMeta = await getTranslations({ locale, namespace: 'meta' });
+  const tHero = await getTranslations({ locale, namespace: 'hero' });
+  const personLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Juan Pablo Rojo',
+    jobTitle: tMeta('title').split(' — ').slice(1).join(' — ') || undefined,
+    description: tHero('role'),
+    url: `${SITE_URL}/${locale}`,
+    sameAs: [SOCIAL_LINKS.linkedin, SOCIAL_LINKS.github],
+  };
+
   return (
     <html
       lang={locale}
       className={`${bebasNeue.variable} ${barlowCondensed.variable} ${jetBrainsMono.variable}`}
     >
       <body className="bg-bg text-white font-ui">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd).replace(/</g, '\\u003c') }}
+        />
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>
