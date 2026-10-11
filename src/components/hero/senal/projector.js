@@ -137,7 +137,7 @@ export async function buildProjector({
     const m = new THREE.MeshBasicNodeMaterial({ alphaTest: 0.5 });
     const x = uv().x;
     // trazo tenue detrás de la lámpara, cabeza brillante donde está; nada adelante
-    m.colorNode = RED.mul(1.2).mul(float(0.3).add(exp(x.sub(trProg).mul(TOTAL * 4.0)).mul(1.3))).mul(trI).mul(appear);
+    m.colorNode = RED.mul(1.2).mul(float(0.18).add(exp(x.sub(trProg).mul(TOTAL * 4.0)).mul(1.4))).mul(trI).mul(appear);
     m.opacityNode = float(1).sub(step(trProg, x)).mul(step(0.5, appear));
     const tube = new THREE.Mesh(new THREE.TubeGeometry(path, 600, 0.0032, 5, false), m);
     tube.frustumCulled = false;
