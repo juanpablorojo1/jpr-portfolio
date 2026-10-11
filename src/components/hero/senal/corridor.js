@@ -24,7 +24,7 @@ import * as THREE from 'three/webgpu';
 import {
   uniform, texture, uv, vec2, vec3, vec4, float, smoothstep, exp, abs, fract, mix, max, screenUV,
   length, time, sin, cos, positionWorld, distance, luminance, cameraPosition, step, dot, instancedBufferAttribute,
-  normalWorld, select, min
+  normalWorld, select, min, clamp
 } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
@@ -416,9 +416,10 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
      pasa a la distancia de foco (voidK 0 → 1, continuo: arranca en foco + 3 rangos, que ya es desenfoque pleno). */
   const camFar = camera.far;
   const viewZ0 = scenePass.getViewZNode();
-  // farK (en rangos): tope del desenfoque de fondo. Sólo en la salida en puntos de Frame by Frame (0,35 ≈ 28 % del
-  // bokeh): las motas que flotan delante del piso tomaban su desenfoque y quedaban como discos al pie de la pantalla
-  const viewZc = min(viewZ0.negate(), focusU.add(rangeU.mul(farK))).negate();
+  // farK (en rangos): tope del desenfoque por profundidad, hacia adelante y hacia atrás del foco. Sólo en la salida en
+  // puntos de Frame by Frame (0,35 ≈ 28 % del bokeh): las motas que flotan delante del piso tomaban su desenfoque y
+  // quedaban como discos alrededor de la pantalla apagada
+  const viewZc = clamp(viewZ0.negate(), focusU.sub(rangeU.mul(farK)), focusU.add(rangeU.mul(farK))).negate();
   const viewZ = select(viewZ0.lessThan(-(camFar - 0.5)), focusU.add(min(rangeU, 40).mul(3).mul(float(1).sub(voidK))).negate(), viewZc);
   const dofN = dof(col, viewZ, focusU, rangeU, bokehU);
   const redOnly = (c) => { const r = max(c.r.sub(max(c.g, c.b).mul(1.15)), 0); return vec4(r, r.mul(0.04), r.mul(0.05), 1); };
