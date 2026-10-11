@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import MetricCounter from '../ui/MetricCounter';
@@ -224,10 +225,12 @@ export default function Projects() {
       {/* ─────────────────────────────────────────────────────────── */}
       {/* Lightbox — Eleven screenshots                               */}
       {/* ─────────────────────────────────────────────────────────── */}
-      {elevenLightboxIndex !== null && (
+      {/* Portal a <body> y z 300 (como CaseLightbox): dentro de la TransitionZone sticky el menú (z 100) tapaba
+          «Close» y el foco quedaba en un botón invisible (F-02). */}
+      {elevenLightboxIndex !== null && createPortal(
         <div
           ref={elevenFocus.dialogRef}
-          className="fixed inset-0 z-[100] flex items-center justify-center"
+          className="fixed inset-0 z-[300] flex items-center justify-center"
           style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
           onClick={() => setElevenLightboxIndex(null)}
           role="dialog"
@@ -271,7 +274,8 @@ export default function Projects() {
             onClick={(e) => { e.stopPropagation(); setElevenLightboxIndex((i) => i !== null ? (i + 1) % ELEVEN_SCREENSHOTS.length : null); }}
             aria-label={t('case.lightbox.next')}
           >→</button>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Lightbox — KIBBO (site + SEO/GEO) and LEEX screenshots */}
@@ -281,10 +285,12 @@ export default function Projects() {
       {/* ─────────────────────────────────────────────────────────── */}
       {/* Lightbox — TraumaVision screenshots                         */}
       {/* ─────────────────────────────────────────────────────────── */}
-      {lightboxIndex !== null && (
+      {/* Portal a <body> y z 300 (como CaseLightbox): dentro de la TransitionZone sticky el menú (z 100) tapaba
+          «Close» y el foco quedaba en un botón invisible (F-02). */}
+      {lightboxIndex !== null && createPortal(
         <div
           ref={tvFocus.dialogRef}
-          className="fixed inset-0 z-[100] flex items-center justify-center"
+          className="fixed inset-0 z-[300] flex items-center justify-center"
           style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
           onClick={() => setLightboxIndex(null)}
           role="dialog"
@@ -352,7 +358,8 @@ export default function Projects() {
           >
             →
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
