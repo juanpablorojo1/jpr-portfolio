@@ -130,7 +130,7 @@ export async function buildConvergence({ corr, camera, S, ctl, RED, OFF, galW, y
     if (!alive()) { corr.group.remove(g); return null; }
   }
   // hilos sin nombre: volumen alrededor; nunca desde detrás de la cámara (cruzarían la lente)
-  for (let k = 0; k < 22; k++) {
+  for (let k = 0; k < 14; k++) {
     let dir;
     for (let tries = 0; tries < 20; tries++) {
       dir = V(rnd() * 2 - 1, (rnd() * 2 - 1) * 0.7, rnd() * 2 - 1).normalize();
@@ -195,7 +195,7 @@ export async function buildConvergence({ corr, camera, S, ctl, RED, OFF, galW, y
     const lineC = RED.mul(float(0.16).add(conv.mul(1.1)).mul(hov).add(pulse.mul(3.2)));
     const dotsC = lineC.mul(dash.mul(1.6));
     const twigC = RED.mul(float(0.09).add(conv.mul(0.4))).add(OFF.mul(0.025));
-    const threadC = OFF.mul(float(0.045).add(conv.mul(0.22)).mul(hov)).add(RED.mul(pulse.mul(0.9)));
+    const threadC = OFF.mul(float(0.03).add(conv.mul(0.13)).mul(hov)).add(RED.mul(pulse.mul(0.7)));   // luz escasa: los hilos sin nombre apenas se leen
     const col = lineC.mul(isLine).add(dotsC.mul(isDots)).add(twigC.mul(isTwig)).add(threadC.mul(isThread));
     // la columna de texto (izquierda del cuadro) queda en la oscuridad: lo que cruce por ahí se apaga al 25 %
     const textSide = mix(float(0.25), float(1), smoothstep(0.4, 0.52, screenUV.x).max(textMaskOff));
@@ -314,7 +314,7 @@ export async function buildConvergence({ corr, camera, S, ctl, RED, OFF, galW, y
   const fwd = V(), q = V(), camW = V(), wv = V();
   const hideDot = () => {
     const el = S.ctc && S.ctc.dot;
-    if (st.vis && el) el.removeAttribute('data-vis');
+    if (el && el.hasAttribute('data-vis')) el.removeAttribute('data-vis');
     st.vis = false;
   };
   /** el enlace del HTML encima de la proyección del punto (mismo frame que el render); no sale del cuadro */
@@ -324,7 +324,9 @@ export async function buildConvergence({ corr, camera, S, ctl, RED, OFF, galW, y
     wv.set(0, 0, 0);
     g.localToWorld(wv).project(camera);
     const vis = wv.z < 1 && wv.z > -1;
-    if (vis !== st.vis) { st.vis = vis; el.toggleAttribute('data-vis', vis); }
+    st.vis = vis;
+    // contra el atributo, no contra un caché: el HTML lo limpia cuando cambia de dueño (escena ↔ CSS)
+    if (el.hasAttribute('data-vis') !== vis) el.toggleAttribute('data-vis', vis);
     if (!vis) return;
     const W = innerWidth, H = innerHeight;
     const x = Math.min(W - W * 0.055 - 150, Math.max(W * 0.5, (wv.x * 0.5 + 0.5) * W));

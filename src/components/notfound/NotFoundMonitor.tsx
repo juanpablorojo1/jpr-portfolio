@@ -89,7 +89,8 @@ export default function NotFoundMonitor() {
       const Y = (i: number) => y0 - val[i] * ampPx;
       cx.setTransform(dpr, 0, 0, dpr, 0, 0);
       cx.clearRect(0, 0, W, H);
-      cx.globalCompositeOperation = 'lighter'; cx.lineCap = 'round'; cx.lineJoin = 'round';
+      // tramos con extremos planos: con 'round' y 'lighter' las uniones entre tramos se sumaban y la línea plana se veía punteada
+      cx.globalCompositeOperation = 'lighter'; cx.lineCap = 'butt'; cx.lineJoin = 'round';
       const CH = 6;
       for (let a = 0; a < N - 1; a += CH) {
         const b = Math.min(N - 1, a + CH);
