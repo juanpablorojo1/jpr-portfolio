@@ -709,14 +709,14 @@ async function boot({ S, root, after, assetBase }, ctl) {
   console.info('[senal] backend:', backend, '| gpu:', gpu);
 
   /* ---------- Projects: armado diferido del pasillo ----------
-     Sólo escritorio ≥1024. Se arma con el hero ya vivo y el hilo libre (idle, con pausas entre etapas), o en el acto
-     si el usuario ya está bajando al About / recargó a mitad de Projects. Las texturas (13 capturas) se piden recién
-     ahí. Hasta que está listo, la galería no abre (G.w = 0) y el HTML de Projects usa su posición de respaldo. */
-  let corrIdle = false, corrPost = false;
-  const ric = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : (f) => setTimeout(f, 2500);
-  const cic = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : clearTimeout;
-  const idleId = ric(() => { corrIdle = true; }, { timeout: 4000 });
-  ctl.offs.push(() => cic(idleId));
+     Sólo escritorio ≥1024. Se arma por proximidad: cuando el usuario empieza a bajar (el primer scroll fuera del
+     tope ya va hacia el About y Projects, a más de 3 viewports) o si recargó a mitad de página. Antes se armaba
+     sólo con el hilo libre a los ~3 s aunque nadie bajara: las 13 capturas (~2 MB), los pósters de Frame by Frame y
+     el armado de Stack / Experience / Contact entraban en la carga (delivery-auditor D-01 y D-03). El armado va con
+     pausas entre etapas. Hasta que está listo, la galería no abre (G.w = 0) y el HTML de Projects usa su posición de
+     respaldo, como siempre. */
+  const corrNear = () => cam.target > 0 || gal.target > 0;
+  let corrPost = false;
   function startCorridor() {
     if (corr || corrBuilding || !wideMQ.matches || isMobile() || S.dead || ctl.disposed) return;
     corrBuilding = true;
@@ -810,7 +810,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
       ms.sort((a, b) => a - b);
       return { u: +gal.p.toFixed(2), avg: +(ms.reduce((a, b) => a + b, 0) / n).toFixed(2), p50: +ms[n >> 1].toFixed(2), p95: +ms[Math.floor(n * 0.95)].toFixed(2), max: +ms[n - 1].toFixed(2), dpr: renderer.getPixelRatio(), w: innerWidth, h: innerHeight, backend, gpu };
     };
-    ctl.info.corrStage = () => (corr ? 'ready' : ctl.corrStage || (corrBuilding ? 'building' : 'idle:' + corrIdle));
+    ctl.info.corrStage = () => (corr ? 'ready' : ctl.corrStage || (corrBuilding ? 'building' : 'waiting (near: ' + corrNear() + ')'));
     ctl.info.dbg = () => ({ core, halo, extCore, extHalo, echoes, lamp, head, floorM, fig, scene, corr, camera, abGroup, haze, abDust, lay, U });
     ctl.info.mouse = (x, y) => { mouse.tx = x; mouse.ty = y; mouse.seen = true; };
   }
@@ -861,7 +861,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     gal.p = wideMQ.matches ? S.damp(gal.p, gal.target, CAM_LAMBDA, dt) : 0;
     st.gal = gal.p;                              // Projects (ProjectsGallery.tsx) y el About leen la galería con la cámara
     ctl.info.frames++;
-    if (!corr && !corrBuilding && wideMQ.matches && (corrIdle || p > 0.25 || gal.target > 0)) startCorridor();
+    if (!corr && !corrBuilding && wideMQ.matches && (corrNear() || p > 0.25)) startCorridor();
 
     U.ignite.value = S.ign(t);
     U.pulse.value = S.pulse(t);
@@ -911,6 +911,23 @@ async function boot({ S, root, after, assetBase }, ctl) {
   updateCamera(S.now(), 0, 0); buildRibbons(S.now(), 0);
   echoes.forEach((e) => { e.alpha.value = 0; });
   abGroup.visible = true;                        // compilar las capas del About ahora (con abW = 0 no se ven)
+  // Los materiales de la escena se compilan antes con compileAsync (three arma los nodos de a un objeto por tarea),
+  // contra el render target del pase: el mismo contexto que usa el render (formato y muestras que PassNode.setup le pone
+  // en el primer render; como en attachExt). El warm-up de abajo los encuentra hechos y sólo arma el post: antes era una
+  // sola tarea de 120–350 ms justo cuando el hero revela el texto (delivery-auditor D-01 / D-02). Lo que no se llegue a
+  // compilar acá (tope de 4 s, como el pasillo) se compila en el warm-up, como antes.
+  try {
+    const rt = scenePass.renderTarget;
+    rt.samples = renderer.samples;
+    rt.texture.type = renderer.getOutputBufferType();
+    const prevRT = renderer.getRenderTarget(), prevMRT = renderer.getMRT();
+    let pending = null;
+    renderer.setRenderTarget(rt); renderer.setMRT(null);
+    try { pending = renderer.compileAsync(scene, camera); } finally { renderer.setRenderTarget(prevRT); renderer.setMRT(prevMRT); }
+    await Promise.race([pending, new Promise((r) => setTimeout(r, 4000))]);
+  } catch (e) { /* se compila en el warm-up */ }
+  if (ctl.disposed || S.dead) return;
+  updateCamera(S.now(), 0, 0); buildRibbons(S.now(), 0);
   pipeline.render();
   abGroup.visible = false;
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));

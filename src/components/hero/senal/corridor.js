@@ -244,6 +244,20 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const BZ = 0.024, BOT = 0.12, DEPTH = 0.12;
   // video demo de cada placa (plate-video.js): se funde sobre la captura principal cuando la placa está en foco
   const pv = createPlateVideos({ ST, S, ctl, alive });
+  // texturas de las placas y de las películas antes de armar las estaciones, de a una por tarea: los filtros de canvas
+  // (difuminado, negativo) tomaban ~150 ms en una sola tarea (delivery-auditor D-01). Las mismas texturas, en el mismo orden.
+  const preTex = new Map();
+  for (let k = 0; k < ST.length; k++) {
+    const st = ST[k];
+    preTex.set('m' + k, texOf(st.main, st.blur ? 9 : 0)); await yieldToMain();
+    preTex.set('s' + k, texOf(st.sec, st.blur ? 6 : 0)); await yieldToMain();
+    for (let i = 0; i < st.films.length; i++) {
+      const [n, cx] = st.films[i];
+      preTex.set('f' + k + '-' + i, filmTex(n, cx, i === 0 ? String(k + 1).padStart(2, '0') : '', st.blur ? 5 : 0));
+      await yieldToMain();
+    }
+    if (!alive()) return null;
+  }
   const stations = ST.map((st, k) => {
     const g = new THREE.Group();
     const s = st.side;
@@ -301,11 +315,11 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       return { v, filmM };
     };
 
-    const main = makeViewer(texOf(st.main, st.blur ? 9 : 0), BOX_W, BOX_H, true);
+    const main = makeViewer(preTex.get('m' + k), BOX_W, BOX_H, true);
     main.v.position.set(0, BOX_Y, 0.12);
     g.add(main.v);
     const sw = 1.3, sh = sw * 756 / 1600;
-    const sec = makeViewer(texOf(st.sec, st.blur ? 6 : 0), sw, sh, false);
+    const sec = makeViewer(preTex.get('s' + k), sw, sh, false);
     sec.v.position.set(deeper * (BOX_W / 2 + 1.05), 2.12, 0.62);
     sec.v.rotation.y = -deeper * 0.42;
     g.add(sec.v);
@@ -345,7 +359,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       group.add(fg);
       fg.lookAt(c.clone().sub(d.clone().multiplyScalar(1)).add(r.clone().multiplyScalar(0.25 * (i ? -1 : 1))));
       const fm = new THREE.MeshBasicNodeMaterial();
-      const ft = filmTex(n, cx, i === 0 ? String(k + 1).padStart(2, '0') : '', st.blur ? 5 : 0);
+      const ft = preTex.get('f' + k + '-' + i);
       {
         // a contraluz: la placa encendida detrás la atraviesa; sin ella, cae a negro (no a cartón gris)
         const ftc = texture(ft, uv()).rgb;
