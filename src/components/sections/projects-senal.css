@@ -141,6 +141,9 @@
   .pj-dec span { font: 400 26px/1 var(--font-bebas-neue), sans-serif; color: #e8272a; }
   .pj-dec strong { color: #fff; font-weight: 700; }
   .pj-c-stats { display: flex; gap: 28px; flex-wrap: wrap; margin: 16px 0 0; }
+  /* cuatro cifras (TraumaVision) en 2 × 2: en la columna del resultado entraban 3 + 1 suelta */
+  .pj-c-stats:has(> div:nth-child(4):last-child) { display: grid; grid-template-columns: repeat(2, max-content); gap: 18px 40px; }
+  .pj-nb { white-space: nowrap; }
   .pj-c-stats div { display: flex; flex-direction: column-reverse; gap: 6px; }
   .pj-c-stats dt { font: 10.5px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); max-width: 15ch; }
   .pj-c-stats dd { margin: 0; font: 400 36px/1 var(--font-bebas-neue), sans-serif; color: #e8e4de; }

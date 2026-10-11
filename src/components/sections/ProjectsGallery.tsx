@@ -282,26 +282,21 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
     </>
   );
 
-  // el pipeline de TraumaVision, con las flechas en rojo (la clave trae «→» como separador)
-  const tvPipeline = t('traumavision.pipeline').split(' → ').map((x, i) => (<span key={x}>{i > 0 && <i> → </i>}{x}</span>));
+  // el pipeline de TraumaVision, con las flechas en rojo (la clave trae «→» como separador). Cada etapa lleva su
+  // flecha al final y no se parte: si la línea corta, corta después de una flecha (nunca empieza con «→»)
+  const tvSteps = t('traumavision.pipeline').split(' → ');
+  const tvPipeline = tvSteps.map((x, i) => (
+    <span key={x}><span className="pj-nb">{x}{i < tvSteps.length - 1 && <i> →</i>}</span>{i < tvSteps.length - 1 && ' '}</span>
+  ));
   const steps4 = [L.problem, L.role, L.decisions, L.result];
 
+  // mismo orden que GAL_PROJECTS (gallery.ts): TraumaVision, KIBBO, LEEX, Eleven
   const items: Item[] = [
     {
       title: traumavision.title, eyebrow: t('traumavision.label'), caseEyebrow: traumavision.eyebrow, sub: traumavision.subtitle,
       stats: traumavision.stats, note: t('traumavision.metrics_note'), steps: steps4,
       body: caseBody(traumavision, TRAUMAVISION_STACK, screens(traumavision.shots.length, openTraumavision), undefined, (
         <><p className="pj-k">{t('traumavision.pipeline_label')}</p><p className="pj-mono">{tvPipeline}</p></>
-      )),
-    },
-    {
-      title: eleven.title, eyebrow: t('eleven.subtitle'), caseEyebrow: eleven.eyebrow, sub: t('eleven.description'), stats: eleven.stats,
-      steps: steps4,
-      body: caseBody(eleven, ELEVEN_STACK, (
-        <>
-          {screens(eleven.shots.length, openEleven)}
-          {eleven.cta && <a className="pj-btn pj-cta" href={eleven.cta.href} target="_blank" rel="noopener noreferrer">{eleven.cta.label}</a>}
-        </>
       )),
     },
     {
@@ -318,6 +313,16 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       title: leex.title, eyebrow: leex.eyebrow, sub: leex.subtitle, badge: leex.badge, soon: true, stats: leex.stats,
       steps: steps4,
       body: caseBody(leex, LEEX_STACK, screens(leex.shots.length, openLeex), leex.shotsNote),
+    },
+    {
+      title: eleven.title, eyebrow: t('eleven.subtitle'), caseEyebrow: eleven.eyebrow, sub: t('eleven.description'), stats: eleven.stats,
+      steps: steps4,
+      body: caseBody(eleven, ELEVEN_STACK, (
+        <>
+          {screens(eleven.shots.length, openEleven)}
+          {eleven.cta && <a className="pj-btn pj-cta" href={eleven.cta.href} target="_blank" rel="noopener noreferrer">{eleven.cta.label}</a>}
+        </>
+      )),
     },
   ];
 
