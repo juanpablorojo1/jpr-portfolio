@@ -248,26 +248,26 @@
         "eyebrow": "LEEX · B6 incubator",
         "title": "Where the incubator came from",
         "caption": "In 1878, a Paris obstetrician had a zoo's poultry incubator adapted for newborns; with controlled heat alone, premature mortality fell from 66% to 38%. LEEX's B6 incubator builds on the same idea.",
-        "made_with": "Made with: Claude Code · Remotion · React Three Fiber · faster-whisper · FFmpeg · CapCut — iPhone footage, Wellcome Collection engravings",
+        "made_with": "Made with: Claude Code · Remotion · React Three Fiber · faster-whisper · FFmpeg · CapCut. iPhone footage, Wellcome Collection engravings",
         "credit": "Engravings: Wellcome Collection, via Wikimedia Commons · <license>CC BY 4.0</license> · cropped, color-treated, camera-animated."
       },
       "kibbo_film": {
         "eyebrow": "KIBBO · Product reel",
         "title": "Preventive maintenance, from plan to execution",
         "caption": "A maintenance plan takes a week to build, and the first unplanned failure puts schedule and staff out of sync. The reel shows KIBBO's preventive task list: one filterable list, visible to the whole team.",
-        "made_with": "Made with: Claude Code · Remotion · faster-whisper · Python audio · FFmpeg · CapCut — iPhone footage, UI rebuilt in code"
+        "made_with": "Made with: Claude Code · Remotion · faster-whisper · Python audio · FFmpeg · CapCut. iPhone footage, UI rebuilt in code"
       },
       "v8v_cpr": {
         "eyebrow": "LEEX · V8v bed",
         "title": "One-button CPR position",
         "caption": "LEEX's V8v electric hospital bed has a CPR function on a single button: pressing it lays the bed fully flat for resuscitation.",
-        "made_with": "Made with: Claude Code · Remotion · faster-whisper · Python-synthesized SFX · FFmpeg — iPhone footage, Mixkit music"
+        "made_with": "Made with: Claude Code · Remotion · faster-whisper · Python-synthesized SFX · FFmpeg. iPhone footage, Mixkit music"
       },
       "mri_explainer": {
         "eyebrow": "Explainer",
         "title": "How an MRI works",
         "caption": "MRI uses no camera and no X-rays. Hydrogen nuclei in the body's water align in a strong magnetic field; a radio pulse at their resonance frequency excites them, and gradient coils encode position so the returning signal can be reconstructed as an image. Script researched from 20 institutional sources.",
-        "made_with": "Made with: Claude Code · Remotion · React Three Fiber · edge-tts · faster-whisper · NumPy-synthesized score — 100% AI, no stock footage"
+        "made_with": "Made with: Claude Code · Remotion · React Three Fiber · edge-tts · faster-whisper · NumPy-synthesized score. 100% AI, no stock footage"
       },
       "model_comparison": {
         "eyebrow": "AI models",
@@ -344,8 +344,8 @@
       },
       {
         "year": "Jul–Dec 2023",
-        "company": "UNC — Faculty of Exact, Physical and Natural Sciences",
-        "role": "Teaching Assistant — Human Physiology",
+        "company": "UNC · Faculty of Exact, Physical and Natural Sciences",
+        "role": "Teaching Assistant, Human Physiology",
         "description": "Prepared and taught support classes in Human Physiology for engineering students, and led a study group of more than 15 students."
       },
       {
@@ -386,7 +386,7 @@
       },
       {
         "year": "2025",
-        "institution": "Rocking the Industry — RTS Group",
+        "institution": "Rocking the Industry (RTS Group)",
         "degree": "1st place · Team Algarroba LID",
         "detail": "Industrial hackathon · 150 multidisciplinary teams"
       }

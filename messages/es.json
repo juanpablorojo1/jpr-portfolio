@@ -248,26 +248,26 @@
         "eyebrow": "LEEX · Incubadora B6",
         "title": "De dónde viene la incubadora",
         "caption": "En 1878, un obstetra de París hizo adaptar para recién nacidos una incubadora de aves de un zoológico; solo con control del calor, la mortalidad de los prematuros bajó del 66% al 38%. La incubadora B6 de LEEX parte de la misma idea.",
-        "made_with": "Hecho con: Claude Code · Remotion · React Three Fiber · faster-whisper · FFmpeg · CapCut — tomas con iPhone, grabados de Wellcome Collection",
+        "made_with": "Hecho con: Claude Code · Remotion · React Three Fiber · faster-whisper · FFmpeg · CapCut. Tomas con iPhone, grabados de Wellcome Collection",
         "credit": "Grabados: Wellcome Collection, vía Wikimedia Commons · <license>CC BY 4.0</license> · recortados, con tratamiento de color y animación de cámara."
       },
       "kibbo_film": {
         "eyebrow": "KIBBO · Reel de producto",
         "title": "Mantenimiento preventivo, del plan a la ejecución",
         "caption": "El plan de mantenimiento se arma en una semana, y ante la primera falla imprevista el cronograma y el personal dejan de coincidir. El reel muestra la lista de preventivos de KIBBO: una sola lista filtrable, a la vista de todo el equipo.",
-        "made_with": "Hecho con: Claude Code · Remotion · faster-whisper · audio en Python · FFmpeg · CapCut — tomas con iPhone, UI reconstruida en código"
+        "made_with": "Hecho con: Claude Code · Remotion · faster-whisper · audio en Python · FFmpeg · CapCut. Tomas con iPhone, UI reconstruida en código"
       },
       "v8v_cpr": {
         "eyebrow": "LEEX · Cama V8v",
         "title": "Posición de RCP con un botón",
         "caption": "La cama hospitalaria eléctrica V8v de LEEX tiene la función de RCP en un solo botón: al presionarlo, la cama queda totalmente horizontal para la reanimación.",
-        "made_with": "Hecho con: Claude Code · Remotion · faster-whisper · SFX sintetizados en Python · FFmpeg — tomas con iPhone, música de Mixkit"
+        "made_with": "Hecho con: Claude Code · Remotion · faster-whisper · SFX sintetizados en Python · FFmpeg. Tomas con iPhone, música de Mixkit"
       },
       "mri_explainer": {
         "eyebrow": "Explicativo",
         "title": "Cómo funciona una resonancia",
         "caption": "La resonancia no usa cámaras ni rayos X. Los núcleos de hidrógeno del agua del cuerpo se alinean en un campo magnético intenso; un pulso de radio a su frecuencia de resonancia los excita, y las bobinas de gradiente codifican la posición para reconstruir la señal como imagen. Guion investigado con 20 fuentes institucionales.",
-        "made_with": "Hecho con: Claude Code · Remotion · React Three Fiber · edge-tts · faster-whisper · música sintetizada con NumPy — 100% IA, sin material de stock"
+        "made_with": "Hecho con: Claude Code · Remotion · React Three Fiber · edge-tts · faster-whisper · música sintetizada con NumPy. 100% IA, sin material de stock"
       },
       "model_comparison": {
         "eyebrow": "Modelos de IA",
@@ -344,8 +344,8 @@
       },
       {
         "year": "jul.–dic. 2023",
-        "company": "UNC — Facultad de Ciencias Exactas, Físicas y Naturales",
-        "role": "Ayudante de Cátedra — Fisiología Humana",
+        "company": "UNC · Facultad de Ciencias Exactas, Físicas y Naturales",
+        "role": "Ayudante de Cátedra, Fisiología Humana",
         "description": "Preparé y di clases de apoyo de Fisiología Humana para alumnos de ingeniería, y tuve a cargo un grupo de estudio de más de 15 alumnos."
       },
       {
@@ -386,7 +386,7 @@
       },
       {
         "year": "2025",
-        "institution": "Rocking the Industry — RTS Group",
+        "institution": "Rocking the Industry (RTS Group)",
         "degree": "1er puesto · Equipo Algarroba LID",
         "detail": "Hackathon industrial · 150 equipos multidisciplinarios"
       }
