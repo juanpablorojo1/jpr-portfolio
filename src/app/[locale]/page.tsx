@@ -48,7 +48,9 @@ export default function HomePage() {
           <Skills />
         </div>
 
-        <TransitionZone sectionId="experience" zIndex={50}>
+        {/* Experience «Señal»: con la escena viva entra transparente (hero-controller) y es el electrocardiograma vertical
+            (ExperienceStage); overflow clip para que su escenario sticky funcione. Sin escena: el layout de columnas. */}
+        <TransitionZone sectionId="experience" zIndex={50} overflowClip>
           <Experience />
         </TransitionZone>
 

@@ -507,15 +507,19 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   };
   const heartbeat = (t) => { const ph = t % 2.4; return Math.exp(-((ph - 0.05) ** 2) / 0.0016) + 0.6 * Math.exp(-((ph - 0.27) ** 2) / 0.0022); };
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
-  // Stack (network.js, U5): sigue la misma toma después de Frame by Frame. La engancha scene.js con setExt().
-  let ext = null;
+  /* Tomas que siguen después de Frame by Frame (Stack, Experience), en el orden del recorrido. Las engancha scene.js con
+     setExt() y quedan ordenadas por U0 (u desde el que manda cada una: número o función). Cada una recibe la pose de
+     la anterior (P/L) y sigue desde ahí; foco, calma y rótulos: manda la última activa. */
+  const exts = [];
+  const u0Of = (x) => (typeof x.U0 === 'function' ? x.U0() : x.U0);
+  const extAt = (u) => { let e = null; for (const x of exts) if (u > u0Of(x)) e = x; return e; };
 
   /** Pose de cámara del pasillo para u (escribe camera.position/rotación). w: peso de la mezcla con la del About. */
   function camPose(u, t, dt, mouse, outPos, outLook) {
     const k01 = keyParam(u);
     posCurve.getPoint(k01, P); lookCurve.getPoint(k01, L);
     if (u > GAL_END) proj.pose(u, camera, P, L);          // Frame by Frame: la sala sigue la misma toma
-    if (ext && u > ext.U0) ext.pose(u, camera, P, L);     // Stack: la red sigue desde la última pose de la sala
+    for (const x of exts) if (u > u0Of(x)) x.pose(u, camera, P, L);   // Stack, Experience: siguen desde la pose anterior
     // caso abierto: la cámara empuja hacia la placa (oblicua, nunca de frente) y la deja del lado opuesto al texto
     st8.openA = damp(st8.openA, S.neg.open >= 0 ? 1 : 0, 3.2, dt);
     if (S.neg.open >= 0) st8.lastOpen = S.neg.open;
@@ -530,7 +534,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       P.lerp(pOpen, st8.openA); L.lerp(lOpen, st8.openA);
     }
     // cámara siempre viva: deriva lenta (dolly / orbit corto); al final, más calma (el cabezal manda)
-    const calm = ext && u > ext.U0 ? ext.calm(u) : u > GAL_END ? proj.calm(u) : 1 - 0.55 * smooth(LAST_OUT, GAL_END, u);
+    const xa = extAt(u);
+    const calm = xa ? xa.calm(u) : u > GAL_END ? proj.calm(u) : 1 - 0.55 * smooth(LAST_OUT, GAL_END, u);
     P.x += Math.sin(t * 0.23) * 0.17 * calm; P.y += Math.sin(t * 0.31 + 1) * 0.04 * calm; P.z += Math.cos(t * 0.19) * 0.2 * calm;
     L.x += Math.sin(t * 0.17 + 2) * 0.1 * calm; L.y += Math.sin(t * 0.27) * 0.035 * calm;
     outPos.copy(P); group.localToWorld(outPos);
@@ -568,7 +573,9 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     grainK.value = Math.max(entryK, thr);
     // Frame by Frame: lámpara, haz, pantallas y foco (null antes de la sala)
     const fx = proj.update(u, t, dt, gw, P, L, S.inView);
-    const ex = ext ? ext.update(u, t, dt, gw, P, L) : null;   // Stack: red, foco y rótulos (null antes de la red)
+    // Stack, Experience: su escena, foco y rótulos (null fuera de su tramo); manda la última que devuelve algo
+    let ex = null;
+    for (const x of exts) { const r = x.update(u, t, dt, gw, P, L); if (r) ex = r; }
 
     stations.forEach((s, k) => {
       const d0 = s.st.dwell[0];
@@ -738,7 +745,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     /** cabezal en el mundo (en Frame by Frame sube y es la lámpara del proyector) */
     headWorld: (out) => group.localToWorld(out.copy(headPos.value)),
     fbf: proj,
-    setExt: (e) => { ext = e; },
+    /** engancha una toma posterior (U0: u desde el que manda; pose, calm, update) */
+    setExt: (e) => { exts.push(e); exts.sort((a, b) => u0Of(a) - u0Of(b)); },
     pickFbf: (mx, my) => proj.pick(mx, my, camera),
     railY: () => railY,
     info: () => ({ mode: st8.mode, focus: +st8.focus.toFixed(2), range: +st8.range.toFixed(2), headZ: +st8.headZ.toFixed(2), ig: boxU.map((b) => +b.ig.value.toFixed(2)), ...proj.info() }),

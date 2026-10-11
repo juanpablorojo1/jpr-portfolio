@@ -1,0 +1,124 @@
+/* Experience «Señal» — el electrocardiograma vertical (escritorio ≥1024 con la escena viva o por venir: data-gallery en
+   su TransitionZone, lo pone hero-controller). Sin data-gallery (reduced motion, ?static, sin GPU, <1024): el layout
+   de columnas (.ex-classic). Con la escena viva (.ex-stage.is-live) la sección es transparente: la traza está en el
+   3D y cada ficha sigue al tick de su latido (posición escrita por ecg.js). Sin ella, las fichas en posiciones fijas.
+   CSS propio con prefijo .ex (mismo sistema que .pj, .fv y .sk). */
+
+.ex-gal { display: none; }
+
+@media (min-width: 1024px) {
+  .transition-zone[data-gallery] .ex-classic { display: none; }
+  .transition-zone[data-gallery] .ex-gal { display: block; position: relative; background: #080808; }
+  .transition-zone[data-see-through] .ex-gal { background: transparent; }
+  /* Experience en cuadro (ExperienceStage): About y Projects, pegados detrás, no se pintan */
+  html[data-exp-in] .transition-zone:is([data-section='about'], [data-section='projects']) { visibility: hidden; }
+
+  .ex-stage {
+    --pad: 5.5vw;
+    --dim-scene: rgba(232, 228, 222, .82);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+    --halo: 0 0 2px rgba(0, 0, 0, .95), 0 0 6px rgba(0, 0, 0, .9), 0 1px 14px rgba(0, 0, 0, .85);
+    position: sticky; top: 0; height: 100vh; overflow: hidden;
+    pointer-events: none;
+    color: #e8e4de; font-family: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
+  }
+  @supports (height: 100svh) { .ex-stage { height: 100svh; } }
+
+  /* rótulo del grupo y contador de rol: el mismo sistema que Projects, Frame by Frame y Stack */
+  .ex-label, .ex-count {
+    position: absolute; top: clamp(84px, 11vh, 110px); margin: 0;
+    font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: #e8e4de;
+    text-shadow: var(--halo);
+  }
+  .ex-label { left: var(--pad); display: flex; align-items: center; gap: 10px; }
+  .ex-count { right: var(--pad); }
+  .ex-count[data-off] { visibility: hidden; }
+  .ex-count b { color: #e8e4de; font-weight: 400; }
+  .ex-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
+
+  /* ---------- plano de situación ---------- */
+  .ex-intro { position: absolute; left: var(--pad); bottom: max(9vh, 64px); width: min(52vw, 860px); }
+  .ex-head {
+    margin: 0; font-weight: 400; text-transform: uppercase; color: #fff;
+    font-size: clamp(92px, 9.6vw, 176px); line-height: .84; letter-spacing: .005em;
+    perspective: 900px; text-shadow: 0 2px 40px rgba(0, 0, 0, .6);
+  }
+  .ex-index {
+    display: flex; flex-wrap: wrap; gap: 12px 40px; list-style: none; margin: 26px 0 0; padding: 14px 0 0;
+    border-top: 1px solid rgba(232, 228, 222, .16); max-width: 62ch;
+    font: 10.5px/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim-scene);
+    text-shadow: var(--halo);
+  }
+  .ex-index b { color: #e8e4de; font-weight: 400; margin-right: 10px; }
+  .ex-index b::before { content: ''; display: inline-block; width: 5px; height: 5px; margin-right: 8px; vertical-align: 1px; background: #e8272a; }
+  .ex-head .word, .ex-co .word { display: inline-block; white-space: nowrap; transform-style: preserve-3d; }
+  .ex-head .char, .ex-co .char { display: inline-block; will-change: transform, opacity; }
+
+  /* ---------- anclas: punto 3D (la punta del tick) = esquina (0,0) del li ---------- */
+  .ex-roles, .ex-group ol { list-style: none; margin: 0; padding: 0; }
+  .ex-anchor { position: absolute; left: 0; top: 0; will-change: transform; }
+  .ex-stage.is-live .ex-anchor:not([data-vis]) { visibility: hidden; }
+
+  /* fecha en mono con el cuadrado rojo: la primera línea, a la altura del tick */
+  .ex-date {
+    display: flex; align-items: center; gap: 9px; margin: 0;
+    font: 11px/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: #e8e4de;
+    text-shadow: var(--halo);
+  }
+  .ex-tick { display: inline-block; flex-shrink: 0; width: 5px; height: 5px; background: #e8272a; }
+  [data-side='l'] > * > .ex-date { flex-direction: row-reverse; }
+
+  /* ---------- ficha de cada rol ---------- */
+  .ex-card { position: absolute; top: -9px; width: clamp(340px, 30vw, 500px); }
+  .ex-role[data-side='r'] .ex-card { left: 16px; }
+  .ex-role[data-side='l'] .ex-card { right: 16px; }
+  .ex-role[data-side='l'] :is(.ex-co, .ex-role-t) { text-align: right; }
+  .ex-co {
+    margin: 10px 0 0; font-weight: 400; text-transform: uppercase; color: #fff;
+    font-size: clamp(44px, 3.9vw, 70px); line-height: .9; letter-spacing: .005em;
+    perspective: 900px; text-shadow: 0 2px 30px rgba(0, 0, 0, .65);
+    text-wrap: balance;
+  }
+  /* nombres largos (la facultad): misma voz, un cuerpo menos, para no pasar de tres líneas */
+  .ex-co[data-long] { font-size: clamp(34px, 2.7vw, 48px); line-height: .94; }
+  .ex-role-t {
+    margin: 10px 0 0; font-size: 18px; font-weight: 700; line-height: 1.25; letter-spacing: .04em; text-transform: uppercase;
+    color: #e8e4de; text-shadow: var(--halo);
+  }
+  .ex-desc {
+    margin: 12px 0 0; font-size: 17px; line-height: 1.45; color: rgba(232, 228, 222, .9);
+    text-shadow: 0 1px 16px rgba(0, 0, 0, .9), var(--halo);
+  }
+
+  /* ---------- educación y reconocimientos: un rótulo corto por latido ---------- */
+  .ex-mcard { position: absolute; top: -9px; width: clamp(290px, 24vw, 380px); }
+  .ex-mini[data-side='l'] .ex-mcard { right: 16px; text-align: right; }
+  .ex-mini[data-side='r'] .ex-mcard { left: 16px; }
+  .ex-ghead {
+    position: absolute; left: 0; right: 0; bottom: calc(100% + 22px); margin: 0;
+    display: flex; align-items: center; gap: 10px;
+    font: 10.5px/1 var(--mono); font-weight: 400; letter-spacing: .2em; text-transform: uppercase; color: #e8e4de;
+    text-shadow: var(--halo);
+  }
+  .ex-mini[data-side='l'] .ex-ghead { flex-direction: row-reverse; }
+  .ex-inst { margin: 6px 0 0; font-size: 21px; font-weight: 700; line-height: 1.15; color: #fff; text-shadow: var(--halo); }
+  .ex-deg { margin: 4px 0 0; font-size: 17px; line-height: 1.35; color: rgba(232, 228, 222, .9); text-shadow: var(--halo); }
+  .ex-det {
+    margin: 8px 0 0; font: 11px/1.6 var(--mono); letter-spacing: .02em; color: var(--dim-scene);
+    text-shadow: var(--halo);
+  }
+  /* reconocimientos: el resultado, con la voz de los titulares */
+  .ex-group[data-kind='rec'] .ex-mcard { width: clamp(330px, 30vw, 470px); }
+  .ex-group[data-kind='rec'] .ex-deg {
+    text-wrap: balance;
+    margin-top: 6px; font-family: var(--font-bebas-neue), 'Arial Narrow', sans-serif; font-size: clamp(30px, 2.5vw, 44px);
+    line-height: .95; text-transform: uppercase; color: #fff;
+  }
+
+  /* ---------- sin escena viva: las fichas en posiciones fijas del mismo lado ---------- */
+  .ex-stage:not(.is-live) .ex-role[data-side='r'] { transform: translate3d(44vw, 30vh, 0); }
+  .ex-stage:not(.is-live) .ex-role[data-side='l'] { transform: translate3d(56vw, 30vh, 0); }
+  .ex-stage:not(.is-live) .ex-mini[data-side='l'] { transform: translate3d(58vw, calc(30vh + var(--i) * 21vh), 0); }
+  .ex-stage:not(.is-live) .ex-mini[data-side='r'] { transform: translate3d(42vw, calc(34vh + var(--i) * 26vh), 0); }
+}

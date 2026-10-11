@@ -57,6 +57,13 @@ export type Senal = {
       items: los rótulos de cada capa (uno por nodo con nombre; la escena les escribe la posición y data-on en el
       mismo frame del render). active: capa en estadía (−1 ninguna; escena). live: la red está armada y se dibuja. */
   stk: { items: HTMLElement[][]; active: number; live: boolean };
+  /** Experience «el electrocardiograma vertical»: lo comparten el HTML (ExperienceStage.tsx) y la escena (ecg.js).
+      v0: u en que la sección entra por abajo (la mide el HTML; NaN sin sección). counts: roles, educación y
+      reconocimientos (messages experience.*). tags: un ancla por latido con rótulo (roles, educación,
+      reconocimientos, en ese orden): la escena le escribe la posición de su tick en el mismo frame del render.
+      box: ancho y alto de cada rótulo en px (los mide el HTML), para que la escena no lo saque del cuadro. live: la
+      traza está armada y se dibuja (escena). */
+  exp: { v0: number; counts: [number, number, number]; tags: HTMLElement[]; box: Array<{ w: number; h: number }>; live: boolean };
 };
 
 export function createSignal(search: string): Senal {
@@ -155,6 +162,7 @@ export function createSignal(search: string): Senal {
     neg: { tags: [], open: -1, hover: -1, live: false, paused: false },
     fbf: { tags: [], active: -1, hover: -1, paused: false, open: -1, live: false },
     stk: { items: [], active: -1, live: false },
+    exp: { v0: NaN, counts: [0, 0, 0], tags: [], box: [], live: false },
   };
   return S;
 }

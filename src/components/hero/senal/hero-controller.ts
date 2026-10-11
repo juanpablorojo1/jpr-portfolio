@@ -62,11 +62,13 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
   // Projects (afterZone) es la galería espacial: también entra transparente y la escena sigue detrás.
   // data-gallery (≥1024, con escena posible: no estática) elige su layout de galería; sin él, Projects queda apilado.
   // Frame by Frame (fbfZone, la sección de Video) es la sala de proyección: también transparente, misma escena detrás.
-  // Stack (stackZone, la que sigue a Video) es la red por capas: también transparente, misma escena detrás.
-  // Lo que tapa la escena pasa a ser la sección que sigue a Stack (Experience).
+  // Stack (stackZone, la que sigue a Video) es la red por capas y Experience (expZone) el electrocardiograma vertical:
+  // las dos también transparentes, misma escena detrás. Lo que tapa la escena pasa a ser la sección que sigue a
+  // Experience (Contact).
   const fbfZone = (afterZone?.nextElementSibling ?? null) as HTMLElement | null;
   const stackZone = (fbfZone?.nextElementSibling ?? null) as HTMLElement | null;
-  const coverZone = (stackZone?.nextElementSibling ?? null) as HTMLElement | null;
+  const expZone = (stackZone?.nextElementSibling ?? null) as HTMLElement | null;
+  const coverZone = (expZone?.nextElementSibling ?? null) as HTMLElement | null;
   const wide = matchMedia('(min-width: 1024px)');
   const covered = new Map<Element, boolean>();
   let applyView: () => void = () => {};
@@ -75,7 +77,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
     const ok = !disposed && !S.dead && wide.matches;
     const on = ok && root.classList.contains('is-live');
     nextZone.toggleAttribute('data-see-through', on);
-    [afterZone, fbfZone, stackZone].forEach((z) => {
+    [afterZone, fbfZone, stackZone, expZone].forEach((z) => {
       if (!z) return;
       z.toggleAttribute('data-see-through', on);
       z.toggleAttribute('data-gallery', ok);
@@ -86,7 +88,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
   cleanups.push(() => {
     wide.removeEventListener('change', syncSeeThrough);
     nextZone?.removeAttribute('data-see-through');
-    [afterZone, fbfZone, stackZone].forEach((z) => { z?.removeAttribute('data-see-through'); z?.removeAttribute('data-gallery'); });
+    [afterZone, fbfZone, stackZone, expZone].forEach((z) => { z?.removeAttribute('data-see-through'); z?.removeAttribute('data-gallery'); });
   });
 
   if (root.classList.contains('is-static')) {
@@ -239,7 +241,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
      El canvas es fixed y el hero vive en un card sticky: el hero no sale del viewport, lo tapa la sección siguiente.
      Se observan las dos secciones que siguen contra todo lo que queda por encima del borde superior del viewport
      (rootMargin: arriba 10000 %, abajo -100 %): si una la toca, cubre el viewport entero. La escena está tapada cuando
-     la cubre la sección que sigue a Stack (Experience), o el About / Projects / Video / Stack opacos (sin data-see-through:
+     la cubre la sección que sigue a Experience (Contact), o el About / Projects / Video / Stack / Experience opacos (sin data-see-through:
      celular, sin 3D). Con la escena viva, About y Projects son transparentes y la escena sigue corriendo detrás.
      Tapada → se pausan el loop 2D/HTML, el render 3D (S.onView → scene.js) y las animaciones CSS del hero.
      Sirve igual en celular, donde los cards no son sticky. */
@@ -253,7 +255,9 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
       const galOpaque = !!afterZone && !afterZone.hasAttribute('data-see-through') && !pending;
       const fbfOpaque = !!fbfZone && !fbfZone.hasAttribute('data-see-through') && !pending;
       const stackOpaque = !!stackZone && !stackZone.hasAttribute('data-see-through') && !pending;
+      const expOpaque = !!expZone && !expZone.hasAttribute('data-see-through') && !pending;
       const hidden = !!(coverZone && covered.get(coverZone))
+        || (!!(expZone && covered.get(expZone)) && expOpaque)
         || (!!(stackZone && covered.get(stackZone)) && stackOpaque)
         || (!!(fbfZone && covered.get(fbfZone)) && fbfOpaque)
         || (!!(afterZone && covered.get(afterZone)) && galOpaque)
@@ -273,6 +277,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
     if (afterZone) io.observe(afterZone);
     if (fbfZone) io.observe(fbfZone);
     if (stackZone) io.observe(stackZone);
+    if (expZone) io.observe(expZone);
     if (coverZone) io.observe(coverZone);
     cleanups.push(() => io.disconnect());
   }

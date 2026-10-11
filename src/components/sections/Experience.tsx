@@ -2,6 +2,11 @@
 
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import ExperienceStage from './ExperienceStage';
+
+// Experience — data-driven from messages experience.*. Two layouts in the same #experience block:
+// - .ex-classic (these columns): phones/tablets (<1024) and desktop without the 3D scene (reduced motion, ?static, no GPU).
+// - ExperienceStage: desktop ≥1024 with the «Señal» scene — the vertical ECG (ecg.js + experience-senal.css).
 
 type ExperienceItem = {
   year: string;
@@ -201,10 +206,10 @@ export default function Experience() {
   }, []);
 
   return (
+    <div id="experience">
     <section
-      id="experience"
       ref={sectionRef}
-      className="relative bg-bg pt-10 pb-10 lg:py-0 lg:min-h-screen lg:flex lg:flex-col lg:justify-center"
+      className="ex-classic relative bg-bg pt-10 pb-10 lg:py-0 lg:min-h-screen lg:flex lg:flex-col lg:justify-center"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <p className="font-mono text-xs text-accent tracking-widest uppercase mb-3 lg:mb-4">
@@ -316,5 +321,7 @@ export default function Experience() {
         </div>
       </div>
     </section>
+    <ExperienceStage />
+    </div>
   );
 }

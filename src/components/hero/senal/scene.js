@@ -18,6 +18,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { GAL_ABOUT_OUT } from './gallery';
 import { buildCorridor } from './corridor';
 import { buildNetwork } from './network';
+import { buildEcg } from './ecg';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -276,6 +277,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   lamp.scale.setScalar(0.24); lamp.renderOrder = 3;
   scene.add(lamp);
   let corr = null, corrBuilding = false, corrIn = 0;
+  let stk = null, ecgX = null;                   // Stack (network.js) y Experience (ecg.js): se enganchan con el pasillo listo
 
   /* ---------- composición (fracciones del viewport, idénticas a la figura HTML) ---------- */
   const lay = {};
@@ -497,6 +499,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     S.fbf.live = S.neg.live && G.w > 0.5;
     S.stk.live = S.fbf.live && !!stk;            // Stack: la red armada y enganchada al pasillo
     if (!S.fbf.live) { S.fbf.hover = -1; S.fbf.active = -1; if (corr) corr.fbf.pauseAll(); }
+    S.exp.live = S.fbf.live && !!ecgX;           // Experience: la traza armada y enganchada al pasillo
   }
 
   /* ---------- progreso de la cámara ----------
@@ -602,14 +605,15 @@ async function boot({ S, root, after, assetBase }, ctl) {
       .finally(() => { corrBuilding = false; });
   }
 
-  /* ---------- Stack: la red por capas (network.js), con el pasillo ya listo ----------
-     Se arma en el mismo hilo de idle (con pausas), compila sus materiales sin dibujar (tope de 4 s, como el pasillo)
-     y recién ahí se engancha al pasillo (setExt). Hasta entonces Stack usa su layout de respaldo. */
-  let stk = null;
-  async function startNetwork(c) {
+  /* ---------- tomas que siguen a Frame by Frame, con el pasillo ya listo ----------
+     Stack (network.js, la red por capas) y después Experience (ecg.js, el electrocardiograma vertical). Cada una se
+     arma en el mismo hilo de idle (con pausas), compila sus materiales sin dibujar (tope de 4 s, como el pasillo) y
+     recién ahí se engancha al pasillo (setExt). En serie: Experience arranca de la recta en que termina la red (su
+     ancla). Hasta que cada una se engancha, su sección usa el layout de respaldo. */
+  async function attachExt(c, name, build) {
     const t0 = performance.now();
     try {
-      const n = await buildNetwork({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain });
+      const n = await build();
       if (!n || ctl.disposed || S.dead) return;
       n.warm(true);
       const prevRT = renderer.getRenderTarget();
@@ -621,12 +625,21 @@ async function boot({ S, root, after, assetBase }, ctl) {
       finally { renderer.setRenderTarget(prevRT); n.warm(false); }
       try { await Promise.race([pending, new Promise((r) => setTimeout(r, 4000))]); } catch (e) { /* idem */ }
       if (ctl.disposed || S.dead) return;
-      stk = n; c.setExt(n);
+      c.setExt(n);
       ctl.offs.push(() => n.dispose());
-      ctl.info.stk = n.info;
-      ctl.info.t.network = Math.round(performance.now() - t0);
-      console.info('[senal] network ready in', ctl.info.t.network, 'ms');
-    } catch (e) { console.warn('[senal] network:', e && e.message); }
+      ctl.info.t[name] = Math.round(performance.now() - t0);
+      console.info('[senal] ' + name + ' ready in', ctl.info.t[name], 'ms');
+      return n;
+    } catch (e) { console.warn('[senal] ' + name + ':', e && e.message); return null; }
+  }
+  async function startNetwork(c) {
+    const n = await attachExt(c, 'network', () => buildNetwork({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain }));
+    if (n) { stk = n; ctl.info.stk = n.info; }
+    if (ctl.disposed || S.dead) return;
+    // Experience sigue la recta de la red (sin red: un ancla fija debajo de la última capa)
+    const line = n && n.line ? n.line : null;
+    const x = await attachExt(c, 'ecg', () => buildEcg({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain, line }));
+    if (x) { ecgX = x; ctl.info.exp = x.info; }
   }
 
   // QA con la pestaña oculta (rAF frenado): avanza la escena N segundos a 60 fps con un reloj simulado.
