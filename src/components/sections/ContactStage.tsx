@@ -20,6 +20,7 @@ import { CTC, CTC_VH } from '../hero/senal/contact';
 import { SOCIAL_LINKS } from '../../lib/content';
 import LogoMark from '../layout/LogoMark';
 import LanguageSelector from '../ui/LanguageSelector';
+import { idleTask, setBatch } from '../../lib/idle';
 import './contact-senal.css';
 
 gsap.registerPlugin(SplitText);
@@ -88,9 +89,11 @@ export default function ContactStage() {
       let split: SplitText | null = null;
       let headOn = false, bodyOn = false, wasLive = false, wasIn = false, cNow = -1;
       let headTl: gsap.core.Timeline | null = null, bodyTl: gsap.core.Timeline | null = null;
-      gsap.set(label, { opacity: 0, y: 14 });
-      gsap.set(head, { opacity: 0 });
-      gsap.set([...rest, dot], { opacity: 0, y: 14 });
+      let cancelPrep = () => {};
+      const hideJobs: Array<[HTMLElement | HTMLElement[] | null, gsap.TweenVars]> = [[label, { opacity: 0, y: 14 }], [head, { opacity: 0 }], [[...rest, dot], { opacity: 0, y: 14 }]];
+      // estado inicial (todo apagado) ya, en el montaje, como antes: la capa del punto es fixed y estaría a la vista
+      // sobre el hero hasta la tarea ociosa (las otras secciones sí lo difieren: lejos no se ven)
+      setBatch(hideJobs);
 
       const showHead = (on: boolean) => {
         headOn = on;
@@ -131,8 +134,9 @@ export default function ContactStage() {
         if (cIn !== wasIn) { wasIn = cIn; document.documentElement.toggleAttribute('data-ct-in', cIn); }
         if (!headOn && c >= CTC.head[1]) showHead(true); else if (headOn && c < CTC.head[0]) showHead(false);
         if (!bodyOn && c >= CTC.body[1]) showBody(true); else if (bodyOn && c < CTC.body[0]) showBody(false);
-        // sin escena viva, el punto CSS late con el reloj del hero
-        if (!live && S && !S.dead) stage.style.setProperty('--beat', S.pulse(S.now()).toFixed(3));
+        // sin escena viva, el punto CSS late con el reloj del hero; sólo con Contact cerca de la vista (lejos no se ve
+        // y escribir la variable en cada frame invalidaba el estilo de la sección durante toda la carga: D-01)
+        if (!live && S && !S.dead && c > -1) stage.style.setProperty('--beat', S.pulse(S.now()).toFixed(3));
       };
 
       // teclado: el foco en un enlace de Contact antes de que la sección llegue lleva el scroll a su lugar
@@ -148,17 +152,22 @@ export default function ContactStage() {
       ];
       evs.forEach(([e, f]) => dot.addEventListener(e, f));
 
+      // titular partido fuera de la hidratación, en su propia tarea ociosa (D-01): partir, medir, preparar
       document.fonts.ready.then(() => {
         if (!alive) return;
-        split = SplitText.create(head.querySelectorAll('.ct-l'), { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' });
-        gsap.set(split.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 });
-        gsap.set(head, { opacity: 1 });
-        measure();
-        gsap.ticker.add(tick);
+        cancelPrep = idleTask(() => {
+          if (!alive) return;
+          const sp = SplitText.create(head.querySelectorAll('.ct-l'), { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' });
+          split = sp;
+          measure();
+          setBatch([[sp.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 }], [head, { opacity: 1 }]]);
+          gsap.ticker.add(tick);
+        });
       });
 
       return () => {
         alive = false;
+        cancelPrep();
         gsap.ticker.remove(tick);
         removeEventListener('resize', measure);
         ro.disconnect();

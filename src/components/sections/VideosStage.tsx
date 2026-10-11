@@ -23,6 +23,7 @@ import {
   FBF_DWELLS, FBF_SCREENS, FBF_SECTION_VH, fbfTagWanted, fbfIntroWanted, fbfChromeWanted, fbfCurrent,
 } from '../hero/senal/frames';
 import { VIDEOS } from '../../lib/content';
+import { idleTask, lazySet, setBatch } from '../../lib/idle';
 import './videos-senal.css';
 
 gsap.registerPlugin(SplitText);
@@ -141,8 +142,11 @@ export default function VideosStage() {
       const it: T = mk(intro, head, Array.from(intro.querySelectorAll<HTMLElement>('.fv-note, .fv-hint, .fv-tools')));
       const all = [...ts, it];
       let chromeOn = false;
-      gsap.set([label, count], { opacity: 0, y: 14 });
-      all.forEach((c) => { gsap.set(c.rest, { opacity: 0, y: 14 }); gsap.set(c.title, { opacity: 0 }); });
+      let cancelPrep = () => {};
+      const hideJobs: Array<[HTMLElement | HTMLElement[] | null, gsap.TweenVars]> = [
+        [[label, count], { opacity: 0, y: 14 }],
+        ...all.flatMap((c): Array<[HTMLElement | HTMLElement[], gsap.TweenVars]> => [[c.rest, { opacity: 0, y: 14 }], [c.title, { opacity: 0 }]]),
+      ];
 
       // L: el aterrizaje del About (el mismo que usa la cámara: trig.end = alto de la zona del hero)
       let land = 1;
@@ -152,6 +156,9 @@ export default function VideosStage() {
       };
       measure();
       addEventListener('resize', measure);
+      // estado inicial (todo apagado): ya si la sección está cerca de la vista; si no, en su tarea ociosa o al primer
+      // scroll, fuera de la hidratación (D-01). Lejos no se ve: el resultado es el mismo.
+      const hidden = lazySet(section, hideJobs);
 
       const show = (c: T) => {
         c.on = true;
@@ -209,19 +216,26 @@ export default function VideosStage() {
         });
       };
 
+      // titulares partidos fuera de la hidratación, en su propia tarea ociosa (D-01): partir, medir, preparar
       document.fonts.ready.then(() => {
         if (!alive) return;
-        all.forEach((c) => {
-          c.split = SplitText.create(c.title, { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' });
-          gsap.set(c.split.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 });
-          gsap.set(c.title, { opacity: 1 });
+        cancelPrep = idleTask(() => {
+          if (!alive) return;
+          hidden.ensure();
+          all.forEach((c) => { c.split = SplitText.create(c.title, { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' }); });
+          measure();
+          setBatch([
+            ...all.map((c): [Element[], gsap.TweenVars] => [c.split!.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 }]),
+            ...all.map((c): [HTMLElement, gsap.TweenVars] => [c.title, { opacity: 1 }]),
+          ]);
+          gsap.ticker.add(tick);
         });
-        measure();
-        gsap.ticker.add(tick);
       });
 
       return () => {
         alive = false;
+        cancelPrep();
+        hidden.cancel();
         gsap.ticker.remove(tick);
         removeEventListener('resize', measure);
         document.removeEventListener('click', onDocClick);

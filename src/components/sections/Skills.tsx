@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import StackBadge from '../ui/StackBadge';
 import StackStage from './StackStage';
+import { whenNoGallery } from '../../lib/idle';
 
 // Stack — data-driven from messages skills.*. Two layouts in the same #skills block:
 // - .sk-classic (this grid): phones/tablets (<1024) and desktop without the 3D scene (reduced motion, ?static, no GPU).
@@ -70,8 +71,9 @@ export default function Skills() {
       }
     };
 
-    animate();
-    return () => { cleanup = true; };
+    // con la galería de escritorio activa esta versión está oculta: sus animaciones esperan (D-01)
+    const stopWait = whenNoGallery(sectionRef.current, () => { animate(); });
+    return () => { cleanup = true; stopWait(); };
   }, []);
 
   const clusterKeys = ['cluster_ai', 'cluster_web', 'cluster_tools', 'cluster_bio'] as const;

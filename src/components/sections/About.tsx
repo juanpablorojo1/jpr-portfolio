@@ -15,6 +15,7 @@ import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 import { onSignal, type Senal } from '../hero/senal/signal';
 import { GAL_ABOUT_OUT } from '../hero/senal/gallery';
+import { setBatch } from '../../lib/idle';
 import './about-senal.css';
 
 gsap.registerPlugin(SplitText);
@@ -40,7 +41,7 @@ export default function About() {
       let titleOn = false, restOn = false, pinned = false, titleAt = 0, alive = true, galOut = false;
       let S: Senal | null = null;
       const offSignal = onSignal((s) => { S = s; });
-      gsap.set([label, ...rest], { opacity: 0, y: 14 });
+      setBatch([[[label, ...rest], { opacity: 0, y: 14 }]]);
       gsap.set(title, { visibility: 'hidden' });
 
       // Aterrizaje (L): el borde superior del About llega al del viewport; el mismo `end` que la cámara en scene.js.
@@ -113,9 +114,9 @@ export default function About() {
       document.fonts.ready.then(() => {
         if (!alive) return;
         split = SplitText.create(title.querySelectorAll('.ab-line'), { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' });
-        gsap.set(split.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 });
-        gsap.set(title, { visibility: 'visible' });
         measure();
+        setBatch([[split.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 }]]);   // mismo estado, sin reflow por letra (D-01)
+        gsap.set(title, { visibility: 'visible' });
         gsap.ticker.add(tick);
       });
       return () => {

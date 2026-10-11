@@ -23,6 +23,7 @@ import {
   expPlan, expRoleSide, EXP_EDU_SIDE, EXP_REC_SIDE,
   expIntroWanted, expRoleWanted, expEduWanted, expRecWanted, expChromeWanted, expCurrent,
 } from '../hero/senal/experience';
+import { idleTask, lazySet, setBatch } from '../../lib/idle';
 import './experience-senal.css';
 
 gsap.registerPlugin(SplitText);
@@ -77,8 +78,11 @@ export default function ExperienceStage() {
       const it: T = mk(intro, head, Array.from(intro.querySelectorAll<HTMLElement>('.ex-index')));
       const all = [...rs, ...gs, it];
       let chromeOn = false, wasLive = false, wasIn = false;
-      gsap.set([label, count], { opacity: 0, y: 14 });
-      all.forEach((c) => { gsap.set(c.rest, { opacity: 0, y: 14 }); if (c.title) gsap.set(c.title, { opacity: 0 }); });
+      let cancelPrep = () => {};
+      const hideJobs: Array<[HTMLElement | HTMLElement[] | null, gsap.TweenVars]> = [
+        [[label, count], { opacity: 0, y: 14 }],
+        ...all.flatMap((c): Array<[HTMLElement | HTMLElement[] | null, gsap.TweenVars]> => [[c.rest, { opacity: 0, y: 14 }], [c.title, { opacity: 0 }]]),
+      ];
 
       // aterrizaje del About (el mismo L que usa la cámara) y v0: u en que Experience entra por abajo
       let land = 1, v0 = NaN;
@@ -96,6 +100,9 @@ export default function ExperienceStage() {
       };
       measure();
       addEventListener('resize', measure);
+      // estado inicial (todo apagado): ya si la sección está cerca de la vista; si no, en su tarea ociosa o al primer
+      // scroll, fuera de la hidratación (D-01). Lejos no se ve: el resultado es el mismo.
+      const hidden = lazySet(section, hideJobs);
       // Stack (y su alto) puede cambiar después del montaje: fuentes, imágenes, su propio escenario
       const ro = new ResizeObserver(measure);
       if (zone.previousElementSibling) ro.observe(zone.previousElementSibling);
@@ -154,20 +161,27 @@ export default function ExperienceStage() {
         });
       };
 
+      // titulares partidos fuera de la hidratación, en su propia tarea ociosa (D-01): partir, medir, preparar
       document.fonts.ready.then(() => {
         if (!alive) return;
-        [...rs, it].forEach((c) => {
-          if (!c.title) return;
-          c.split = SplitText.create(c.title, { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' });
-          gsap.set(c.split.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 });
-          gsap.set(c.title, { opacity: 1 });
+        cancelPrep = idleTask(() => {
+          if (!alive) return;
+          hidden.ensure();
+          const titled = [...rs, it].filter((c) => c.title);
+          titled.forEach((c) => { c.split = SplitText.create(c.title!, { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' }); });
+          measure();
+          setBatch([
+            ...titled.map((c): [Element[], gsap.TweenVars] => [c.split!.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 }]),
+            ...titled.map((c): [HTMLElement | null, gsap.TweenVars] => [c.title, { opacity: 1 }]),
+          ]);
+          gsap.ticker.add(tick);
         });
-        measure();
-        gsap.ticker.add(tick);
       });
 
       return () => {
         alive = false;
+        cancelPrep();
+        hidden.cancel();
         gsap.ticker.remove(tick);
         removeEventListener('resize', measure);
         ro.disconnect();

@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { SOCIAL_LINKS } from '../../lib/content';
 import LogoMark from '../layout/LogoMark';
 import ContactStage from './ContactStage';
+import { whenNoGallery } from '../../lib/idle';
 
 // Contact — two layouts in the same #contact block:
 // - .ct-classic (this one): phones/tablets (<1024) and desktop without the 3D scene (reduced motion, ?static, no GPU).
@@ -98,8 +99,9 @@ export default function Contact() {
       }
     };
 
-    animate();
-    return () => { cleanup = true; };
+    // con la galería de escritorio activa esta versión está oculta: sus animaciones esperan (D-01)
+    const stopWait = whenNoGallery(headlineRef.current, () => { animate(); });
+    return () => { cleanup = true; stopWait(); };
   }, []);
 
   return (

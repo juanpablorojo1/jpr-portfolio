@@ -23,6 +23,7 @@ import { GAL_DWELLS, GAL_SECTION_VH, GAL_PROJECTS, tagWanted } from '../hero/sen
 import { TRAUMAVISION_STACK, ELEVEN_STACK, KIBBO_STACK, LEEX_STACK } from '../../lib/content';
 import type { CaseStudyData } from './CaseStudy';
 import ProjectDemo from '../ui/ProjectDemo';
+import { idleTask, lazySet, setBatch } from '../../lib/idle';
 import './projects-senal.css';
 
 gsap.registerPlugin(SplitText);
@@ -87,9 +88,12 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         split: null, on: false, tl: null,
       }));
       let chromeOn = false;
-      gsap.set([label, count], { opacity: 0, y: 14 });
-      if (vpause) gsap.set(vpause, { autoAlpha: 0, y: 14 });
-      ts.forEach((c) => { gsap.set(c.rest, { opacity: 0, y: 14 }); gsap.set(c.title, { opacity: 0 }); });
+      let cancelPrep = () => {};
+      const hideJobs: Array<[HTMLElement | HTMLElement[] | null, gsap.TweenVars]> = [
+        [[label, count], { opacity: 0, y: 14 }],
+        [vpause, { autoAlpha: 0, y: 14 }],
+        ...ts.flatMap((c): Array<[HTMLElement | HTMLElement[], gsap.TweenVars]> => [[c.rest, { opacity: 0, y: 14 }], [c.title, { opacity: 0 }]]),
+      ];
 
       // L: el aterrizaje del About (su borde superior en el del viewport); el mismo que usa la cámara (trig.end)
       let land = 1;
@@ -101,6 +105,9 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       };
       measure();
       addEventListener('resize', measure);
+      // estado inicial (todo apagado): ya si la sección está cerca de la vista; si no, en su tarea ociosa o al primer
+      // scroll, fuera de la hidratación (D-01). Lejos no se ve: el resultado es el mismo.
+      const hidden = lazySet(section, hideJobs);
 
       const show = (c: T) => {
         c.on = true;
@@ -223,19 +230,26 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         });
       };
 
+      // titulares partidos fuera de la hidratación, en su propia tarea ociosa (D-01): partir, medir, preparar
       document.fonts.ready.then(() => {
         if (!alive) return;
-        ts.forEach((c) => {
-          c.split = SplitText.create(c.title, { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' });
-          gsap.set(c.split.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 });
-          gsap.set(c.title, { opacity: 1 });
+        cancelPrep = idleTask(() => {
+          if (!alive) return;
+          hidden.ensure();
+          ts.forEach((c) => { c.split = SplitText.create(c.title, { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' }); });
+          measure();
+          setBatch([
+            ...ts.map((c): [Element[], gsap.TweenVars] => [c.split!.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 }]),
+            ...ts.map((c): [HTMLElement, gsap.TweenVars] => [c.title, { opacity: 1 }]),
+          ]);
+          gsap.ticker.add(tick);
         });
-        measure();
-        gsap.ticker.add(tick);
       });
 
       return () => {
         alive = false;
+        cancelPrep();
+        hidden.cancel();
         gsap.ticker.remove(tick);
         removeEventListener('resize', measure);
         removeEventListener('keydown', onKey);
