@@ -17,6 +17,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { GAL_ABOUT_OUT } from './gallery';
 import { buildCorridor } from './corridor';
+import { buildNetwork } from './network';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -494,6 +495,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     if (!S.neg.live) S.neg.hover = -1;
     // Frame by Frame vive en el mismo pasillo: con la galería cerrada, la sala no corre ni reproduce
     S.fbf.live = S.neg.live && G.w > 0.5;
+    S.stk.live = S.fbf.live && !!stk;            // Stack: la red armada y enganchada al pasillo
     if (!S.fbf.live) { S.fbf.hover = -1; S.fbf.active = -1; if (corr) corr.fbf.pauseAll(); }
   }
 
@@ -594,9 +596,37 @@ async function boot({ S, root, after, assetBase }, ctl) {
         ctl.info.neg = c.info;
         ctl.info.t.corridor = Math.round(performance.now() - t0);
         console.info('[senal] corridor ready in', ctl.info.t.corridor, 'ms');
+        startNetwork(c);
       })
       .catch((e) => { console.warn('[senal] corridor:', e && e.message); })
       .finally(() => { corrBuilding = false; });
+  }
+
+  /* ---------- Stack: la red por capas (network.js), con el pasillo ya listo ----------
+     Se arma en el mismo hilo de idle (con pausas), compila sus materiales sin dibujar (tope de 4 s, como el pasillo)
+     y recién ahí se engancha al pasillo (setExt). Hasta entonces Stack usa su layout de respaldo. */
+  let stk = null;
+  async function startNetwork(c) {
+    const t0 = performance.now();
+    try {
+      const n = await buildNetwork({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain });
+      if (!n || ctl.disposed || S.dead) return;
+      n.warm(true);
+      const prevRT = renderer.getRenderTarget();
+      let pending = null;
+      try {
+        if (scenePass.renderTarget) renderer.setRenderTarget(scenePass.renderTarget);
+        pending = renderer.compileAsync(n.group, camera, scene);
+      } catch (e) { /* compila en el primer frame */ }
+      finally { renderer.setRenderTarget(prevRT); n.warm(false); }
+      try { await Promise.race([pending, new Promise((r) => setTimeout(r, 4000))]); } catch (e) { /* idem */ }
+      if (ctl.disposed || S.dead) return;
+      stk = n; c.setExt(n);
+      ctl.offs.push(() => n.dispose());
+      ctl.info.stk = n.info;
+      ctl.info.t.network = Math.round(performance.now() - t0);
+      console.info('[senal] network ready in', ctl.info.t.network, 'ms');
+    } catch (e) { console.warn('[senal] network:', e && e.message); }
   }
 
   // QA con la pestaña oculta (rAF frenado): avanza la escena N segundos a 60 fps con un reloj simulado.

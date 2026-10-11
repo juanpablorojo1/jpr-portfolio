@@ -503,12 +503,15 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   };
   const heartbeat = (t) => { const ph = t % 2.4; return Math.exp(-((ph - 0.05) ** 2) / 0.0016) + 0.6 * Math.exp(-((ph - 0.27) ** 2) / 0.0022); };
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  // Stack (network.js, U5): sigue la misma toma después de Frame by Frame. La engancha scene.js con setExt().
+  let ext = null;
 
   /** Pose de cámara del pasillo para u (escribe camera.position/rotación). w: peso de la mezcla con la del About. */
   function camPose(u, t, dt, mouse, outPos, outLook) {
     const k01 = keyParam(u);
     posCurve.getPoint(k01, P); lookCurve.getPoint(k01, L);
     if (u > GAL_END) proj.pose(u, camera, P, L);          // Frame by Frame: la sala sigue la misma toma
+    if (ext && u > ext.U0) ext.pose(u, camera, P, L);     // Stack: la red sigue desde la última pose de la sala
     // caso abierto: la cámara empuja hacia la placa (oblicua, nunca de frente) y la deja del lado opuesto al texto
     st8.openA = damp(st8.openA, S.neg.open >= 0 ? 1 : 0, 3.2, dt);
     if (S.neg.open >= 0) st8.lastOpen = S.neg.open;
@@ -523,7 +526,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       P.lerp(pOpen, st8.openA); L.lerp(lOpen, st8.openA);
     }
     // cámara siempre viva: deriva lenta (dolly / orbit corto); al final, más calma (el cabezal manda)
-    const calm = u > GAL_END ? proj.calm(u) : 1 - 0.55 * smooth(LAST_OUT, GAL_END, u);
+    const calm = ext && u > ext.U0 ? ext.calm(u) : u > GAL_END ? proj.calm(u) : 1 - 0.55 * smooth(LAST_OUT, GAL_END, u);
     P.x += Math.sin(t * 0.23) * 0.17 * calm; P.y += Math.sin(t * 0.31 + 1) * 0.04 * calm; P.z += Math.cos(t * 0.19) * 0.2 * calm;
     L.x += Math.sin(t * 0.17 + 2) * 0.1 * calm; L.y += Math.sin(t * 0.27) * 0.035 * calm;
     outPos.copy(P); group.localToWorld(outPos);
@@ -561,6 +564,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     grainK.value = Math.max(entryK, thr);
     // Frame by Frame: lámpara, haz, pantallas y foco (null antes de la sala)
     const fx = proj.update(u, t, dt, gw, P, L, S.inView);
+    const ex = ext ? ext.update(u, t, dt, gw, P, L) : null;   // Stack: red, foco y rótulos (null antes de la red)
 
     stations.forEach((s, k) => {
       const d0 = s.st.dwell[0];
@@ -583,7 +587,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     fwd.copy(L).sub(P).normalize();
     let mode, fT;
     const dIdx = ST.findIndex((s) => u >= s.dwell[0] - 0.12 && u <= s.dwell[1] + 0.05);
-    if (fx && u > GAL_END) { mode = fx.mode; fT = fx.fT; }
+    if (ex) { mode = ex.mode; fT = ex.fT; }
+    else if (fx && u > GAL_END) { mode = fx.mode; fT = fx.fT; }
     else if (S.neg.open >= 0) { mode = 'open' + S.neg.open; fT = q.copy(stations[S.neg.open].lightPos).sub(P).dot(fwd); }
     else if (u < 0.9) { mode = 'about'; fT = 7; }
     else if (u > LAST_OUT + 0.35) { mode = 'end'; fT = q.set(0, 0.03, st8.headZ).sub(P).dot(fwd); }   // el cabezal, nítido
@@ -605,7 +610,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const fTarget = Math.max(0.6, fT);
     st8.focus = damp(st8.focus, fTarget, 2.4, dt);
     focusU.value = st8.focus;
-    const rT = fx && u > GAL_END ? fx.rT : mode.startsWith('travel') ? 7.5 : mode === 'end' ? 5.5 : mode === 'about' ? 4 : THREE.MathUtils.lerp(2.0, 2.6, smooth(6, 12, st8.focus));
+    const rT = ex ? ex.rT : fx && u > GAL_END ? fx.rT : mode.startsWith('travel') ? 7.5 : mode === 'end' ? 5.5 : mode === 'about' ? 4 : THREE.MathUtils.lerp(2.0, 2.6, smooth(6, 12, st8.focus));
     st8.range = damp(st8.range, rT, 2.4, dt);
     // tamaño del bokeh: en los umbrales (plano final, el cabezal que sube, la salida en puntos) los discos se achican
     const fm = fx && u > GAL_END ? fx.mode : mode;
@@ -726,6 +731,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     /** cabezal en el mundo (en Frame by Frame sube y es la lámpara del proyector) */
     headWorld: (out) => group.localToWorld(out.copy(headPos.value)),
     fbf: proj,
+    setExt: (e) => { ext = e; },
     pickFbf: (mx, my) => proj.pick(mx, my, camera),
     railY: () => railY,
     info: () => ({ mode: st8.mode, focus: +st8.focus.toFixed(2), range: +st8.range.toFixed(2), headZ: +st8.headZ.toFixed(2), ig: boxU.map((b) => +b.ig.value.toFixed(2)), ...proj.info() }),

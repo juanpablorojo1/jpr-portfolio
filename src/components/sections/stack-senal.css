@@ -1,0 +1,113 @@
+/* Stack «Señal» — la red por capas (escritorio ≥1024 con la escena viva o por venir: data-gallery en .stack-zone, lo
+   pone hero-controller). Sin data-gallery (reduced motion, ?static, sin GPU, <1024): el layout de grupos (.sk-classic).
+   Con la escena viva (.sk-stage.is-live) la sección es transparente: la red está en el 3D y cada rótulo sigue a su
+   nodo (posición escrita por network.js). Sin ella, los rótulos en una grilla. CSS propio con prefijo .sk (mismo
+   sistema que .pj de Projects y .fv de Frame by Frame). */
+
+.sk-gal { display: none; }
+
+@media (min-width: 1024px) {
+  .stack-zone[data-gallery] .sk-classic { display: none; }
+  .stack-zone[data-gallery] .sk-gal { display: block; position: relative; background: #080808; }
+  .stack-zone[data-see-through] .sk-gal { background: transparent; }
+
+  .sk-stage {
+    --pad: 5.5vw;
+    --dim-scene: rgba(232, 228, 222, .82);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+    --halo: 0 0 2px rgba(0, 0, 0, .95), 0 0 6px rgba(0, 0, 0, .9), 0 1px 14px rgba(0, 0, 0, .85);
+    position: sticky; top: 0; height: 100vh; overflow: hidden;
+    pointer-events: none;
+    color: #e8e4de; font-family: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
+  }
+  @supports (height: 100svh) { .sk-stage { height: 100svh; } }
+
+  /* rótulo de sección y contador: el mismo sistema que Projects y Frame by Frame */
+  .sk-label, .sk-count {
+    position: absolute; top: clamp(84px, 11vh, 110px); margin: 0;
+    font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: #e8e4de;
+    text-shadow: var(--halo);
+  }
+  .sk-label { left: var(--pad); display: flex; align-items: center; gap: 10px; }
+  .sk-count { right: var(--pad); }
+  .sk-count b { color: #e8e4de; font-weight: 400; }
+  .sk-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
+
+  /* ---------- plano de situación ---------- */
+  .sk-intro { position: absolute; left: var(--pad); bottom: max(9vh, 64px); width: min(56vw, 900px); }
+  .sk-head {
+    margin: 0; font-weight: 400; text-transform: uppercase; color: #fff;
+    font-size: clamp(92px, 9.6vw, 176px); line-height: .84; letter-spacing: .005em;
+    perspective: 900px; text-shadow: 0 2px 40px rgba(0, 0, 0, .6);
+  }
+  .sk-langs { display: flex; gap: 40px; margin: 26px 0 0; padding-top: 14px; border-top: 1px solid rgba(232, 228, 222, .16); max-width: 62ch; }
+  .sk-langs dt {
+    margin: 0; font: 10.5px/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim-scene);
+    text-shadow: var(--halo);
+  }
+  .sk-langs dd { margin: 4px 0 0; font-size: clamp(17px, 1.3vw, 20px); font-weight: 700; line-height: 1.3; color: #e8e4de; text-shadow: var(--halo); }
+
+  /* ---------- cada capa: cabecera de un lado, nodos del otro ---------- */
+  .sk-layer { position: absolute; inset: 0; }
+  .sk-lhead {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: min(25.5vw, 440px);
+  }
+  .sk-layer[data-side='l'] .sk-lhead { left: var(--pad); }
+  .sk-layer[data-side='r'] .sk-lhead { right: var(--pad); text-align: right; }
+  .sk-eyebrow {
+    margin: 0; font: 10.5px/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim-scene);
+    text-shadow: var(--halo);
+  }
+  /* índice en tono pleno con el cuadrado rojo (D-03 de Projects): el rojo, sólo como acento */
+  .sk-eyebrow b { color: #e8e4de; font-weight: 400; }
+  .sk-eyebrow b::before { content: ''; display: inline-block; width: 5px; height: 5px; margin-right: 8px; vertical-align: 1px; background: #e8272a; }
+  .sk-title {
+    margin: 10px 0 0; font-weight: 400; text-transform: uppercase; color: #fff;
+    font-size: clamp(56px, 5.3vw, 100px); line-height: .88; letter-spacing: .005em;
+    perspective: 900px; text-shadow: 0 2px 30px rgba(0, 0, 0, .65);
+    text-wrap: balance;
+  }
+  .sk-head .word, .sk-title .word { display: inline-block; white-space: nowrap; transform-style: preserve-3d; }
+  .sk-head .char, .sk-title .char { display: inline-block; will-change: transform, opacity; }
+  .sk-metric {
+    margin: 16px 0 0; font: 12px/1.6 var(--mono); letter-spacing: .04em; color: #e8e4de;
+    text-shadow: var(--halo);
+  }
+  .sk-items { list-style: none; margin: 0; padding: 0; }
+
+  /* rótulo de cada nodo: punto 3D = esquina (0,0) del li; filete corto y el nombre a la derecha.
+     Nombre a 11 px (≥ 10,5 px reales: los rótulos no se escalan). */
+  .sk-item { position: absolute; left: 0; top: 0; }
+  .sk-name {
+    position: absolute; left: 15px; top: -7.5px; display: block; width: max-content;
+    max-width: min(300px, calc(19vw - 26px));
+    font: 11px/1.36 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: rgba(232, 228, 222, .92);
+    text-shadow: var(--halo);
+    opacity: 0; transform: translate3d(-6px, 0, 0);
+    transition: opacity .35s var(--ease-out), transform .35s var(--ease-out);
+  }
+  .sk-item::before {
+    content: ''; position: absolute; left: 6px; top: 0; width: 6px; height: 1px; background: rgba(232, 228, 222, .5);
+    opacity: 0; transition: opacity .35s var(--ease-out);
+  }
+  .sk-item[data-on] .sk-name { opacity: 1; transform: none; transition: opacity .9s var(--ease-out), transform 1s var(--ease-out); }
+  .sk-item[data-on]::before { opacity: 1; transition: opacity .9s var(--ease-out); }
+
+  /* ---------- sin escena viva: los rótulos en una grilla del lado de los nodos ---------- */
+  .sk-stage:not(.is-live) .sk-items {
+    position: absolute; top: 150px; bottom: max(10vh, 96px); width: 58vw;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: center; gap: 18px 28px;
+  }
+  .sk-stage:not(.is-live) .sk-layer[data-cols='2'] .sk-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sk-stage:not(.is-live) .sk-layer[data-side='l'] .sk-items { right: var(--pad); }
+  .sk-stage:not(.is-live) .sk-layer[data-side='r'] .sk-items { left: var(--pad); }
+  .sk-stage:not(.is-live) .sk-item { position: relative; }
+  .sk-stage:not(.is-live) .sk-item::before { display: none; }
+  .sk-stage:not(.is-live) .sk-name { position: static; width: auto; max-width: none; }
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .sk-name, .sk-item::before { transition: none; }
+}

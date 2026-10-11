@@ -52,6 +52,10 @@ export type Senal = {
       paused: el usuario pausó la vista previa muda (HTML). open: video abierto en el diálogo (−1; HTML): la vista
       previa se pausa. live: la sala está armada y se dibuja (escena). */
   fbf: { tags: HTMLElement[]; active: number; hover: number; paused: boolean; open: number; live: boolean };
+  /** Stack «la red por capas»: lo comparten el HTML (StackStage.tsx) y la escena (network.js).
+      items: los rótulos de cada capa (uno por nodo con nombre; la escena les escribe la posición y data-on en el
+      mismo frame del render). active: capa en estadía (−1 ninguna; escena). live: la red está armada y se dibuja. */
+  stk: { items: HTMLElement[][]; active: number; live: boolean };
 };
 
 export function createSignal(search: string): Senal {
@@ -149,6 +153,7 @@ export function createSignal(search: string): Senal {
     onView: () => {},
     neg: { tags: [], open: -1, hover: -1, live: false },
     fbf: { tags: [], active: -1, hover: -1, paused: false, open: -1, live: false },
+    stk: { items: [], active: -1, live: false },
   };
   return S;
 }

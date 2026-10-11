@@ -41,9 +41,10 @@ export default function HomePage() {
           <Videos />
         </div>
 
-        {/* Skills — outside card stack so all content is reachable via normal scroll.
-            Experience (zIndex 50) still slides over it naturally as the user scrolls. */}
-        <div style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
+        {/* Stack — fuera del card stack, en flujo normal. Escritorio con la escena «Señal»: hero-controller le pone
+            data-see-through / data-gallery y es la red por capas (StackStage); la escena se pausa cuando la tapa
+            Experience (zIndex 50). Sin escena: la grilla de grupos. */}
+        <div className="stack-zone" style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
           <Skills />
         </div>
 
