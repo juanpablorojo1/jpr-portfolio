@@ -27,7 +27,7 @@ export default function HomePage() {
       <a href="#content" className="skip-link">{t('skip_to_content')}</a>
       {/* Sin loading screen: el hero «Señal» es el intro (un latido en la oscuridad) y se ve desde el primer frame. */}
       <Navbar />
-      <main id="content" tabIndex={-1}>
+      <main id="content">
 
         {/* Card stack with cinematic transitions —
             each section sticks, gets a watermark anchor word + connecting line,

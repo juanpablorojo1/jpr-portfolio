@@ -270,7 +270,6 @@ body::after {
   transform: translateY(calc(-100% - 24px));
 }
 .skip-link:focus { transform: none; outline: none; }
-#content:focus { outline: none; }
 
 /* Cambio de idioma con View Transitions (functional-tester F-01): navegación cross-document entre /en y /es
    (los <a href> planos del selector), sin JS. Un crossfade corto y sobrio de la página entera; mismas curva y
