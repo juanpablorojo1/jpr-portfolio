@@ -523,10 +523,13 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       if (!el || el.dataset.on === undefined) continue;
       tmp.copy(tagW[k]).project(camera);
       const dist = tagW[k].distanceTo(camera.position);
-      const sc = Math.min(1.12, Math.max(0.88, tagRef[k] / dist));
       const w = el.offsetWidth, h = el.offsetHeight;
       const x = (tmp.x * 0.5 + 0.5) * innerWidth;
-      const y = Math.min((-tmp.y * 0.5 + 0.5) * innerHeight, innerHeight - h * sc - 80);   // nunca baja hasta el interruptor de sonido ni se sale (1200×800)
+      const yA = (-tmp.y * 0.5 + 0.5) * innerHeight, room = innerHeight - 80 - yA;   // 80: el interruptor de sonido
+      // escala por profundidad; si el rótulo no entra debajo de su ancla, primero se achica (hasta 0,82) y recién
+      // después sube: subir lo monta sobre la placa (Eleven a 1440: el eyebrow caía sobre el borde de la captura)
+      const sc = Math.max(0.82, Math.min(Math.min(1.12, Math.max(0.88, tagRef[k] / dist)), room / h));
+      const y = Math.min(yA, innerHeight - h * sc - 80);
       const pad = innerWidth * 0.055;
       let xr = ST[k].side > 0 ? x - w * sc : x;
       xr = Math.min(Math.max(xr, pad), innerWidth - pad - w * sc);
