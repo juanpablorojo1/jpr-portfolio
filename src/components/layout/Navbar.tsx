@@ -91,23 +91,30 @@ export default function Navbar() {
   }, []);
 
   /* Sección activa: una banda fina al 45% del alto. De las secciones que la cortan, la última del documento
-     es la que está arriba de la pila. Hero y About no tienen link: sin activa. */
+     es la que está arriba de la pila. Hero y About no tienen link: sin activa.
+     Contact en escritorio (D-17): su titular llega con la cámara, ≈0,3 viewport antes de que el borde de la
+     sección cruce la banda. ContactStage marca `data-ct-head` en <html> mientras el titular está en pantalla
+     (evento 'ct-head'); con esa marca, CONTACT se activa con el titular. */
   useEffect(() => {
     const els = SECTION_IDS.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => !!el);
     const inBand = new Set<string>();
+    const html = document.documentElement;
+    let top: SectionKey | null = null;
+    const apply = () => setActive(html.hasAttribute('data-ct-head') ? 'contact' : top);
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) inBand.add(e.target.id);
           else inBand.delete(e.target.id);
         }
-        const top = [...SECTION_IDS].reverse().find((id) => inBand.has(id)) ?? null;
-        setActive(top);
+        top = [...SECTION_IDS].reverse().find((id) => inBand.has(id)) ?? null;
+        apply();
       },
       { root: document, rootMargin: '-45% 0px -54% 0px' },
     );
     els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    window.addEventListener('ct-head', apply);
+    return () => { io.disconnect(); window.removeEventListener('ct-head', apply); };
   }, []);
 
   /* ---------- menú de celular ---------- */

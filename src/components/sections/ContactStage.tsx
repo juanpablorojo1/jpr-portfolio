@@ -97,6 +97,9 @@ export default function ContactStage() {
 
       const showHead = (on: boolean) => {
         headOn = on;
+        // el menú marca CONTACT cuando entra el titular, no cuando el borde de la sección cruza su banda (D-17)
+        document.documentElement.toggleAttribute('data-ct-head', on);
+        window.dispatchEvent(new Event('ct-head'));
         headTl?.kill();
         headTl = gsap.timeline();
         headTl.to(label, { opacity: on ? 1 : 0, y: on ? 0 : 14, duration: on ? 0.8 : 0.35, ease: 'expo.out' }, 0);
@@ -184,6 +187,8 @@ export default function ContactStage() {
         dotPos.removeAttribute('data-vis');
         gsap.set([label, head, ...rest, dot], { clearProps: 'opacity,transform' });
         document.documentElement.removeAttribute('data-ct-in');
+        document.documentElement.removeAttribute('data-ct-head');
+        window.dispatchEvent(new Event('ct-head'));
       };
     });
     return () => mm.revert();
