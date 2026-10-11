@@ -55,7 +55,7 @@ export default function Navbar() {
   const sheetRef = useRef<HTMLDialogElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
-  const closeLabel = locale === 'es' ? 'Cerrar menú' : 'Close menu';
+  const closeLabel = t('close_aria');
 
   /* Estado al scrollear: la raíz del observer es la franja del menú (alto en reposo, arriba de todo).
      «Pasado el hero» = algo que no es el hero ocupa la franja. En desktop las tarjetas son sticky: el hero

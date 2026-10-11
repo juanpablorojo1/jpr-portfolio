@@ -23,37 +23,14 @@ export const TRAUMAVISION_STACK = [
   'Chart.js', 'GSAP', 'pytest',
 ] as const;
 
+// label + alt in messages projects.traumavision.shot_labels[i] / shots_alt[i], same order
 export const TRAUMAVISION_SCREENSHOTS = [
-  {
-    src: '/images/traumavision-login.jpg',
-    alt: 'TraumaVision — Login screen',
-    label: 'LOGIN',
-  },
-  {
-    src: '/images/traumavision-home.jpg',
-    alt: 'TraumaVision — Upload UI with anatomical region selector',
-    label: 'HOME',
-  },
-  {
-    src: '/images/traumavision-analisis.jpg',
-    alt: 'TraumaVision — Fracture detection with bounding box and a 0.84 detection score',
-    label: 'ANÁLISIS',
-  },
-  {
-    src: '/images/traumavision-historial.jpg',
-    alt: 'TraumaVision — Analysis history with 48 records',
-    label: 'HISTORIAL',
-  },
-  {
-    src: '/images/traumavision-dashboard.jpg',
-    alt: 'TraumaVision — Statistical dashboard',
-    label: 'DASHBOARD',
-  },
-  {
-    src: '/images/traumavision-metrics.jpg',
-    alt: 'TraumaVision — Confusion matrix and performance metrics (YOLOv8m, test set of 3,038 X-rays)',
-    label: 'MÉTRICAS',
-  },
+  { src: '/images/traumavision-login.jpg' },
+  { src: '/images/traumavision-home.jpg' },
+  { src: '/images/traumavision-analisis.jpg' },
+  { src: '/images/traumavision-historial.jpg' },
+  { src: '/images/traumavision-dashboard.jpg' },
+  { src: '/images/traumavision-metrics.jpg' },
 ] as const;
 
 export const ELEVEN_STACK = [
@@ -64,13 +41,16 @@ export const ELEVEN_STACK = [
   'Canva MCP', 'Vercel MCP', 'next-intl', 'Resend', 'VS Code', 'GitHub Copilot',
 ] as const;
 
+export const ELEVEN_URL = 'https://eleven-pagina.vercel.app';
+
+// label + alt in messages projects.eleven.shot_labels[i] / shots_alt[i], same order
 export const ELEVEN_SCREENSHOTS = [
-  { src: '/images/eleven-01-hero.jpg', alt: 'Eleven — Hero con logo y mascota robot', label: 'HERO' },
-  { src: '/images/eleven-02-servicios.jpg', alt: 'Eleven — Sección por qué nosotros', label: '¿POR QUÉ?' },
-  { src: '/images/eleven-03-servicios2.jpg', alt: 'Eleven — Lo que hacemos, transición', label: 'SERVICIOS' },
-  { src: '/images/eleven-04-servicios3.jpg', alt: 'Eleven — Páginas web y productos digitales', label: 'WEB' },
-  { src: '/images/eleven-05-portfolio.jpg', alt: 'Eleven — Contenido y videos', label: 'CONTENIDO' },
-  { src: '/images/eleven-06-contacto.jpg', alt: 'Eleven — Sección contacto y footer', label: 'CONTACTO' },
+  { src: '/images/eleven-01-hero.jpg' },
+  { src: '/images/eleven-02-servicios.jpg' },
+  { src: '/images/eleven-03-servicios2.jpg' },
+  { src: '/images/eleven-04-servicios3.jpg' },
+  { src: '/images/eleven-05-portfolio.jpg' },
+  { src: '/images/eleven-06-contacto.jpg' },
 ] as const;
 
 // ── Case studies (KIBBO, LEEX) ──

@@ -14,6 +14,7 @@ import {
   TRAUMAVISION_SCREENSHOTS,
   ELEVEN_STACK,
   ELEVEN_SCREENSHOTS,
+  ELEVEN_URL,
   KIBBO_URL,
   KIBBO_STACK,
   KIBBO_SCREENSHOTS,
@@ -110,6 +111,44 @@ export default function Projects() {
 
   const tvShotLabels = t.raw('traumavision.shot_labels') as string[];
   const elevenShotLabels = t.raw('eleven.shot_labels') as string[];
+  const tvShotAlts = t.raw('traumavision.shots_alt') as string[];
+  const elevenShotAlts = t.raw('eleven.shots_alt') as string[];
+
+  // TraumaVision y Eleven con el formato de caso de Juan (problema → mi rol → decisiones clave → resultado).
+  // Eleven: eleven.role es el dato «Founder» de la ficha; el párrafo de rol es eleven.role_text.
+  const traumavision: CaseStudyData = {
+    number: '01',
+    eyebrow: t('traumavision.eyebrow'),
+    title: t('traumavision.title'),
+    subtitle: t('traumavision.subtitle'),
+    problem: t('traumavision.problem'),
+    role: t('traumavision.role'),
+    decisions: t.raw('traumavision.decisions') as CaseDecision[],
+    result: t('traumavision.result'),
+    stats: TRAUMAVISION_METRICS.map((m) => ({ label: metricLabels[m.key], value: `${m.value.toFixed(m.decimals)}${m.suffix}` })),
+    stack: TRAUMAVISION_STACK,
+    stackSpread: 'b',
+    shots: TRAUMAVISION_SCREENSHOTS.map((sh, i) => ({ src: sh.src, label: tvShotLabels[i] ?? '', caption: tvShotAlts[i] ?? '' })),
+  };
+  const eleven: CaseStudyData = {
+    number: '02',
+    eyebrow: t('eleven.eyebrow'),
+    title: t('eleven.title'),
+    subtitle: t('eleven.subtitle'),
+    problem: t('eleven.problem'),
+    role: t('eleven.role_text'),
+    decisions: t.raw('eleven.decisions') as CaseDecision[],
+    result: t('eleven.result'),
+    stats: [
+      { value: t('eleven.stat_founded'), label: t('eleven.stat_founded_label') },
+      { value: t('eleven.stat_sites'), label: t('eleven.stat_sites_label') },
+      { value: t('eleven.stat_approach'), label: t('eleven.stat_approach_label') },
+    ],
+    stack: ELEVEN_STACK,
+    stackSpread: 'b',
+    shots: ELEVEN_SCREENSHOTS.map((sh, i) => ({ src: sh.src, label: elevenShotLabels[i] ?? '', caption: elevenShotAlts[i] ?? '' })),
+    cta: { href: ELEVEN_URL, label: t('eleven.cta') },
+  };
 
   return (
     <div id="projects">
@@ -119,56 +158,9 @@ export default function Projects() {
         <div className="max-w-7xl mx-auto px-6">
           <p className="font-mono text-xs text-accent tracking-widest uppercase mb-16">{t('label')}</p>
 
-          {/* TraumaVision */}
-          <div className="mb-20 border-t border-border pt-8">
-            <div className="flex items-baseline gap-4 mb-6">
-              <span className="font-mono text-xs text-accent tracking-widest">01</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            <p className="font-mono text-xs text-accent tracking-widest uppercase mb-2">{t('traumavision.label')}</p>
-            <h2 className="font-display text-white uppercase leading-none mb-4" style={{ fontSize: 'clamp(2rem, 8vw, 4rem)' }}>{t('traumavision.title')}</h2>
-            <p className="font-ui text-off-white mb-2">{t('traumavision.subtitle')}</p>
-            <p className="font-ui text-muted text-sm mb-6">{t('traumavision.description')}</p>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {TRAUMAVISION_METRICS.map((metric) => (
-                <MetricCounter key={metric.key} value={metric.value} decimals={metric.decimals} suffix={metric.suffix} label={metricLabels[metric.key] || metric.key} duration={1.5} />
-              ))}
-            </div>
-            <div className="mb-4 border-l-2 border-accent pl-4">
-              <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">{t('traumavision.pipeline_label')}</p>
-              <p className="font-mono text-sm text-off-white">DICOM <span className="text-accent">→</span> CLAHE <span className="text-accent">→</span> YOLOv8m <span className="text-accent">→</span> Detection <span className="text-accent">→</span> Report</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {TRAUMAVISION_STACK.map((tech) => <StackBadge key={tech} label={tech} />)}
-            </div>
-          </div>
-
-          {/* Eleven */}
-          <div className="mb-20 border-t border-border pt-8">
-            <div className="flex items-baseline gap-4 mb-6">
-              <span className="font-mono text-xs text-accent tracking-widest">02</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            <p className="font-mono text-xs text-accent tracking-widest uppercase mb-2">{t('eleven.subtitle')}</p>
-            <h2 className="font-display text-white uppercase leading-none mb-4" style={{ fontSize: 'clamp(2rem, 8vw, 4rem)' }}>{t('eleven.title')}</h2>
-            <p className="font-ui text-off-white mb-6">{t('eleven.description_expanded')}</p>
-            <div className="flex gap-8 mb-6 border-l-2 border-accent pl-4">
-              {[
-                { value: t('eleven.stat_founded'), label: t('eleven.stat_founded_label') },
-                { value: t('eleven.stat_sites'), label: t('eleven.stat_sites_label') },
-                { value: t('eleven.stat_approach'), label: t('eleven.stat_approach_label') },
-              ].map((stat, i) => (
-                <div key={i}>
-                  <p className="font-mono text-lg text-white tracking-tight mb-0.5">{stat.value}</p>
-                  <p className="font-mono text-xs text-muted uppercase tracking-widest">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {ELEVEN_STACK.map((tech) => <StackBadge key={tech} label={tech} />)}
-            </div>
-            <a href="https://eleven-pagina.vercel.app" target="_blank" rel="noopener noreferrer" className="inline-block font-ui font-bold text-xs text-accent border border-accent px-4 py-2 tracking-widest uppercase transition-all duration-150 hover:bg-accent hover:text-white">{t('eleven.cta')}</a>
-          </div>
+          {/* TraumaVision y Eleven: el mismo formato de caso que KIBBO y LEEX */}
+          <CaseStudyMobile data={traumavision} onOpen={setLightboxIndex} />
+          <CaseStudyMobile data={eleven} onOpen={setElevenLightboxIndex} />
 
           {/* Hackathon */}
           <div className="mb-20 border-t border-border pt-8">
@@ -209,6 +201,8 @@ export default function Projects() {
       {/* ── Escritorio ≥1024 con la escena «Señal»: la galería espacial (ProjectsGallery + scene.js).
           Sin escena (reduced motion, ?static, sin GPU) queda el layout apilado de arriba (projects-senal.css). ── */}
       <ProjectsGallery
+        traumavision={traumavision}
+        eleven={eleven}
         kibbo={kibbo}
         leex={leex}
         kibboShotCount={kibboLightboxShots.length}
@@ -249,7 +243,7 @@ export default function Projects() {
           >
             <Image
               src={ELEVEN_SCREENSHOTS[elevenLightboxIndex].src}
-              alt={ELEVEN_SCREENSHOTS[elevenLightboxIndex].alt}
+              alt={elevenShotAlts[elevenLightboxIndex]}
               fill
               className="object-contain"
               sizes="100vw"
@@ -314,7 +308,7 @@ export default function Projects() {
           >
             <Image
               src={TRAUMAVISION_SCREENSHOTS[lightboxIndex].src}
-              alt={TRAUMAVISION_SCREENSHOTS[lightboxIndex].alt}
+              alt={tvShotAlts[lightboxIndex]}
               fill
               className="object-contain"
               sizes="100vw"

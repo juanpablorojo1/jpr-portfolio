@@ -20,16 +20,15 @@ import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 import { onSignal, type Senal } from '../hero/senal/signal';
 import { GAL_DWELLS, GAL_SECTION_VH, GAL_PROJECTS, tagWanted } from '../hero/senal/gallery';
-import {
-  TRAUMAVISION_METRICS, TRAUMAVISION_STACK, TRAUMAVISION_SCREENSHOTS,
-  ELEVEN_STACK, ELEVEN_SCREENSHOTS, KIBBO_STACK, LEEX_STACK,
-} from '../../lib/content';
+import { TRAUMAVISION_STACK, ELEVEN_STACK, KIBBO_STACK, LEEX_STACK } from '../../lib/content';
 import type { CaseStudyData } from './CaseStudy';
 import './projects-senal.css';
 
 gsap.registerPlugin(SplitText);
 
 type Props = {
+  traumavision: CaseStudyData;
+  eleven: CaseStudyData;
   kibbo: CaseStudyData;
   leex: CaseStudyData;
   kibboShotCount: number;
@@ -44,11 +43,11 @@ const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
 
 type Stat = { label: string; value: string };
 type Item = {
-  title: string; eyebrow: string; sub?: string; badge?: string; soon?: boolean;
-  stats: Stat[]; steps: string[]; body: ReactNode;
+  title: string; eyebrow: string; caseEyebrow?: string; sub?: string; badge?: string; soon?: boolean;
+  stats: Stat[]; note?: string; steps: string[]; body: ReactNode;
 };
 
-export default function ProjectsGallery({ kibbo, leex, kibboShotCount, openTraumavision, openEleven, openKibbo, openLeex }: Props) {
+export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kibboShotCount, openTraumavision, openEleven, openKibbo, openLeex }: Props) {
   const t = useTranslations('projects');
   const ref = useRef<HTMLElement>(null);
   const total = pad2(GAL_DWELLS.length);
@@ -75,7 +74,7 @@ export default function ProjectsGallery({ kibbo, leex, kibboShotCount, openTraum
       const ts: T[] = tags.map((el) => ({
         el,
         title: el.querySelector<HTMLElement>('.pj-title')!,
-        rest: Array.from(el.querySelectorAll<HTMLElement>('.pj-eyebrow, .pj-badge, .pj-sub, .pj-stats > div, .pj-open')),
+        rest: Array.from(el.querySelectorAll<HTMLElement>('.pj-eyebrow, .pj-badge, .pj-sub, .pj-stats > div, .pj-mnote, .pj-open')),
         split: null, on: false, tl: null,
       }));
       let chromeOn = false;
@@ -260,8 +259,8 @@ export default function ProjectsGallery({ kibbo, leex, kibboShotCount, openTraum
   const statsDl = (stats: Stat[], cls = 'pj-c-stats') => (
     <dl className={cls}>{stats.map((s) => (<div key={s.label}><dt>{s.label}</dt><dd>{s.value}</dd></div>))}</dl>
   );
-  // problema → mi rol → decisiones clave → resultado (KIBBO y LEEX tienen el formato completo en el copy)
-  const caseBody = (d: CaseStudyData, stack: readonly string[], actions: ReactNode, note?: string) => (
+  // problema → mi rol → decisiones clave → resultado (los cuatro casos tienen el formato completo en el copy)
+  const caseBody = (d: CaseStudyData, stack: readonly string[], actions: ReactNode, note?: string, pre?: ReactNode) => (
     <>
       <div className="pj-c-block"><p className="pj-k"><b>01</b> / {L.problem}</p><p>{d.problem}</p></div>
       <div className="pj-c-block"><p className="pj-k"><b>02</b> / {L.role}</p><p>{d.role}</p></div>
@@ -275,6 +274,7 @@ export default function ProjectsGallery({ kibbo, leex, kibboShotCount, openTraum
       </div>
       <div className="pj-c-block"><p className="pj-k"><b>04</b> / {L.result}</p><p>{d.result}</p>{statsDl(d.stats)}</div>
       <div className="pj-c-block">
+        {pre}
         <p className="pj-k">{L.stack}</p><p className="pj-mono">{stack.join(' · ')}</p>
         <div className="pj-acts">{actions}</div>
         {note && <p className="pj-note">{note}</p>}
@@ -282,36 +282,31 @@ export default function ProjectsGallery({ kibbo, leex, kibboShotCount, openTraum
     </>
   );
 
-  const metricLabels: Record<string, string> = {
-    auc: t('traumavision.metric_auc'), map50: t('traumavision.metric_map50'),
-    recall: t('traumavision.metric_recall'), specificity: t('traumavision.metric_specificity'),
-  };
-  const tvStats: Stat[] = TRAUMAVISION_METRICS.map((m) => ({ label: metricLabels[m.key], value: `${m.value.toFixed(m.decimals)}${m.suffix}` }));
-  const elevenStats: Stat[] = [
-    { value: t('eleven.stat_founded'), label: t('eleven.stat_founded_label') },
-    { value: t('eleven.stat_sites'), label: t('eleven.stat_sites_label') },
-    { value: t('eleven.stat_approach'), label: t('eleven.stat_approach_label') },
-  ];
+  // el pipeline de TraumaVision, con las flechas en rojo (la clave trae «→» como separador)
+  const tvPipeline = t('traumavision.pipeline').split(' → ').map((x, i) => (<span key={x}>{i > 0 && <i> → </i>}{x}</span>));
+  const steps4 = [L.problem, L.role, L.decisions, L.result];
 
   const items: Item[] = [
     {
-      title: t('traumavision.title'), eyebrow: t('traumavision.label'), sub: t('traumavision.subtitle'),
-      stats: tvStats, steps: [t('traumavision.pipeline_label'), t('traumavision.stack_label')],
-      body: (
+      title: traumavision.title, eyebrow: t('traumavision.label'), caseEyebrow: traumavision.eyebrow, sub: traumavision.subtitle,
+      stats: traumavision.stats, note: t('traumavision.metrics_note'), steps: steps4,
+      body: caseBody(traumavision, TRAUMAVISION_STACK, screens(traumavision.shots.length, openTraumavision), undefined, (
+        <><p className="pj-k">{t('traumavision.pipeline_label')}</p><p className="pj-mono">{tvPipeline}</p></>
+      )),
+    },
+    {
+      title: eleven.title, eyebrow: t('eleven.subtitle'), caseEyebrow: eleven.eyebrow, sub: t('eleven.description'), stats: eleven.stats,
+      steps: steps4,
+      body: caseBody(eleven, ELEVEN_STACK, (
         <>
-          <div className="pj-c-block pj-c-wide"><p>{t('traumavision.description')}</p></div>
-          <div className="pj-c-wide">{statsDl(tvStats)}</div>
-          <div className="pj-c-block"><p className="pj-k">{t('traumavision.pipeline_label')}</p><p className="pj-mono">DICOM <i>→</i> CLAHE <i>→</i> YOLOv8m <i>→</i> Detection <i>→</i> Report</p></div>
-          <div className="pj-c-block">
-            <p className="pj-k">{t('traumavision.stack_label')}</p><p className="pj-mono">{TRAUMAVISION_STACK.join(' · ')}</p>
-            <div className="pj-acts">{screens(TRAUMAVISION_SCREENSHOTS.length, openTraumavision)}</div>
-          </div>
+          {screens(eleven.shots.length, openEleven)}
+          {eleven.cta && <a className="pj-btn pj-cta" href={eleven.cta.href} target="_blank" rel="noopener noreferrer">{eleven.cta.label}</a>}
         </>
-      ),
+      )),
     },
     {
       title: kibbo.title, eyebrow: kibbo.eyebrow, sub: kibbo.subtitle, stats: kibbo.stats,
-      steps: [L.problem, L.role, L.decisions, L.result],
+      steps: steps4,
       body: caseBody(kibbo, KIBBO_STACK, (
         <>
           {screens(kibboShotCount, openKibbo)}
@@ -321,29 +316,8 @@ export default function ProjectsGallery({ kibbo, leex, kibboShotCount, openTraum
     },
     {
       title: leex.title, eyebrow: leex.eyebrow, sub: leex.subtitle, badge: leex.badge, soon: true, stats: leex.stats,
-      steps: [L.problem, L.role, L.decisions, L.result],
+      steps: steps4,
       body: caseBody(leex, LEEX_STACK, screens(leex.shots.length, openLeex), leex.shotsNote),
-    },
-    {
-      title: t('eleven.title'), eyebrow: t('eleven.subtitle'), sub: t('eleven.description'), stats: elevenStats,
-      steps: [t('eleven.role_label'), t('eleven.services_label'), L.stack],
-      body: (
-        <>
-          <div className="pj-c-block pj-c-wide"><p>{t('eleven.description_expanded')}</p></div>
-          <div className="pj-c-wide">{statsDl(elevenStats)}</div>
-          <div className="pj-c-block">
-            <p className="pj-k">{t('eleven.role_label')}</p><p>{t('eleven.role')}</p>
-            <p className="pj-k">{t('eleven.services_label')}</p><p>{t('eleven.services_list')}</p>
-          </div>
-          <div className="pj-c-block">
-            <p className="pj-k">{L.stack}</p><p className="pj-mono">{ELEVEN_STACK.join(' · ')}</p>
-            <div className="pj-acts">
-              {screens(ELEVEN_SCREENSHOTS.length, openEleven)}
-              <a className="pj-btn pj-cta" href="https://eleven-pagina.vercel.app" target="_blank" rel="noopener noreferrer">{t('eleven.cta')}</a>
-            </div>
-          </div>
-        </>
-      ),
     },
   ];
 
@@ -355,14 +329,15 @@ export default function ProjectsGallery({ kibbo, leex, kibboShotCount, openTraum
 
         {/* Lo esencial de cada proyecto, en el espacio (la escena lo ancla bajo su negatoscopio) */}
         {items.map((it, k) => (
-          <article key={GAL_PROJECTS[k].id} className={`pj-tag${it.soon ? ' pj-soon' : ''}`} data-side={GAL_PROJECTS[k].side > 0 ? 'r' : 'l'} aria-labelledby={`pj-t-${k}`}>
+          <article key={GAL_PROJECTS[k].id} className={`pj-tag${it.soon ? ' pj-soon' : ''}`} data-side={GAL_PROJECTS[k].side > 0 ? 'r' : 'l'} aria-label={t('case.plate_aria', { n: k + 1, total: GAL_DWELLS.length, title: it.title })}>
             <p className="pj-eyebrow"><b>{pad2(k + 1)}</b> / {total} · {it.eyebrow}</p>
             {it.badge && <p className="pj-badge"><span className="pj-dot" aria-hidden="true" />{it.badge}</p>}
             <h2 id={`pj-t-${k}`} className="pj-title font-display" aria-label={it.title}>{it.title}</h2>
             {it.sub && <p className="pj-sub">{it.sub}</p>}
             {statsDl(it.stats, 'pj-stats')}
+            {it.note && <p className="pj-mnote">{it.note}</p>}
             <button type="button" className="pj-open" data-open-case={k} aria-haspopup="dialog" aria-controls={`pj-case-${k}`}>
-              <span className="sr-only">{it.title}: </span>
+              <span className="sr-only">{t('case.open_aria', { title: it.title })}: </span>
               {it.steps.map((s, i) => (
                 <span key={s} className="pj-step">{i > 0 && <i aria-hidden="true">→</i>}<span>{s}</span></span>
               ))}
@@ -377,7 +352,7 @@ export default function ProjectsGallery({ kibbo, leex, kibboShotCount, openTraum
             role="dialog" aria-modal="true" aria-labelledby={`pj-c-${k}`}>
             <button type="button" className="pj-close" aria-label={t('case.close_case')}>{t('case.lightbox.close')}</button>
             <header className="pj-c-head">
-              <p className="pj-eyebrow"><b>{pad2(k + 1)}</b> / {total} · {it.eyebrow}</p>
+              <p className="pj-eyebrow"><b>{pad2(k + 1)}</b> / {total} · {it.caseEyebrow ?? it.eyebrow}</p>
               {it.badge && <p className="pj-badge"><span className="pj-dot" aria-hidden="true" />{it.badge}</p>}
               <h3 id={`pj-c-${k}`} className="pj-c-title font-display">{it.title}</h3>
               {it.sub && <p className="pj-sub">{it.sub}</p>}

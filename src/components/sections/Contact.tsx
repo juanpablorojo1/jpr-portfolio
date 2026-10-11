@@ -268,7 +268,7 @@ export default function Contact() {
         <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <Image
             src="/logos/logo-jpr-monogram.svg"
-            alt="JPR"
+            alt={t('logo_alt')}
             width={40}
             height={28}
             className="h-7 w-auto opacity-60"

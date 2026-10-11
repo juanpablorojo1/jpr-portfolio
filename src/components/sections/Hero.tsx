@@ -145,7 +145,7 @@ export default function Hero() {
               </div>
             </div>
 
-            <div className="scroll-cue" data-reveal aria-hidden="true"><span>scroll</span><i /></div>
+            <div className="scroll-cue" data-reveal aria-hidden="true"><span>{t('scroll_cue')}</span><i /></div>
           </div>
         </section>
 

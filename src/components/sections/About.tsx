@@ -177,7 +177,7 @@ export default function About() {
           <div className="ab-frame relative aspect-[4/5] max-w-md mx-auto">
             <Image
               src="/images/portrait.jpg"
-              alt="Juan Pablo Rojo"
+              alt={t('photo_alt')}
               fill
               className="ab-img object-cover object-top"
               sizes="(max-width: 1023px) 80vw, 30vw"

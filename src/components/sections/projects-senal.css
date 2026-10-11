@@ -80,6 +80,11 @@
   }
   .pj-tag[data-side='r'] .pj-stats dt { margin-left: auto; }
   .pj-stats dd { margin: 0; font: 400 30px/1 var(--font-bebas-neue), sans-serif; color: #e8e4de; letter-spacing: .02em; }
+  /* de dónde salen las cifras (TraumaVision: el test interno de la tesis) */
+  .pj-mnote {
+    margin: 10px 0 0; font: 10.5px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim-scene);
+    text-shadow: 0 1px 10px rgba(0, 0, 0, .9);
+  }
 
   .pj-open {
     margin-top: 20px; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 9px; min-height: 40px; padding: 9px 14px;
