@@ -9,7 +9,8 @@
     "menu_aria": "Menu",
     "close_aria": "Close menu",
     "lang_en_aria": "EN — Switch to English",
-    "lang_es_aria": "ES — Switch to Spanish"
+    "lang_es_aria": "ES — Switch to Spanish",
+    "skip_to_content": "Skip to content"
   },
   "hero": {
     "title": "JUAN PABLO",

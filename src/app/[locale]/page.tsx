@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import Navbar from '../../components/layout/Navbar';
 import Hero from '../../components/sections/Hero';
 import About from '../../components/sections/About';
@@ -19,11 +20,14 @@ import SoundToggle from '../../components/ui/SoundToggle';
 const GALLERY_SCRIPT = `(function(){if(!matchMedia('(min-width: 1024px)').matches||matchMedia('(prefers-reduced-motion: reduce)').matches||/[?&]static\\b/.test(location.search))return;['.transition-zone[data-section="projects"]','.fbf-zone','.stack-zone','.transition-zone[data-section="experience"]'].forEach(function(s){var z=document.querySelector(s);if(z)z.setAttribute('data-gallery','');});})();`;
 
 export default function HomePage() {
+  const t = useTranslations('nav');
   return (
     <>
+      {/* Saltar al contenido (F-04): primer tabulable, invisible hasta recibir foco (globals.css .skip-link) */}
+      <a href="#content" className="skip-link">{t('skip_to_content')}</a>
       {/* Sin loading screen: el hero «Señal» es el intro (un latido en la oscuridad) y se ve desde el primer frame. */}
       <Navbar />
-      <main>
+      <main id="content" tabIndex={-1}>
 
         {/* Card stack with cinematic transitions —
             each section sticks, gets a watermark anchor word + connecting line,
