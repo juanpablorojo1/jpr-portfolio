@@ -190,8 +190,12 @@ async function boot({ S, root, after, assetBase }, ctl) {
   {
     const p = positionWorld.xz;
     const cell = p.div(0.6);
-    const g = abs(fract(cell).sub(0.5)).div(fwidth(cell));
-    const gl = float(1).sub(clamp(length(g).sub(0.6), 0, 1));
+    const fw = fwidth(cell);
+    const g = abs(fract(cell).sub(0.5)).div(fw);
+    // cerca del horizonte una celda mide menos de ~2 px de alto: las filas de puntos se funden en guiones (moiré).
+    // Ahí la retícula se apaga con la distancia en pantalla (D-18); la parte cercana queda igual.
+    const alias = float(1).sub(smoothstep(0.22, 0.5, max(fw.x, fw.y)));
+    const gl = float(1).sub(clamp(length(g).sub(0.6), 0, 1)).mul(alias);
     const lightFall = exp(distance(p, U.light.xz).mul(-0.55));
     const farFade = smoothstep(-60, -20, positionWorld.z);
     // en el About el piso es casi neutro (el rojo queda en la recta y en el polvo que la rodea)
