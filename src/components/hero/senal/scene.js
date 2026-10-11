@@ -153,7 +153,9 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const U = {
     ignite: uniform(0), pulse: uniform(0), dissolve: uniform(0), fadeL: uniform(1),
     light: uniform(new THREE.Vector3(0, -1, 0)), dpr: uniform(1),
-    galW: uniform(0)                             // peso de la galería (Projects): 0 en el About, 1 con la galería abierta
+    galW: uniform(0),                            // peso de la galería (Projects): 0 en el About, 1 con la galería abierta
+    abW: uniform(0),                             // peso del About aterrizado (capas de profundidad): 0 en el hero
+    abRail: uniform(new THREE.Vector3())         // punto del riel recto frente a la cámara del About (x de cámara, yT, −RAIL_Z)
   };
   const RED = vec3(0.807, 0.02, 0.023);        // #E8272A en lineal
   const OFF = vec3(0.80, 0.77, 0.73);          // #E8E4DE en lineal
@@ -193,9 +195,19 @@ async function boot({ S, root, after, assetBase }, ctl) {
     const gl = float(1).sub(clamp(length(g).sub(0.6), 0, 1));
     const lightFall = exp(distance(p, U.light.xz).mul(-0.55));
     const farFade = smoothstep(-60, -20, positionWorld.z);
-    floorMat.colorNode = mix(OFF.mul(0.6), RED, 0.55);
+    // en el About el piso es casi neutro (el rojo queda en la recta y en el polvo que la rodea)
+    floorMat.colorNode = mix(mix(OFF.mul(0.6), RED, 0.55), OFF.mul(0.5), U.abW.mul(0.75));
+    // About aterrizado (U.abW): la recta ilumina el piso que tiene debajo y detrás. Una franja a lo largo del riel
+    // (sólo depende de z), que se apaga cerca de la lente y se pierde en la niebla del fondo: la retícula es la capa
+    // de fondo que se separa de la recta cuando la cámara orbita alrededor de ella. En el hero abW = 0: igual que antes.
+    const zr = positionWorld.z.sub(U.abRail.z);
+    // La franja vive detrás de la recta (en pantalla: detrás del titular y del hueco de arriba a la derecha); delante
+    // de la recta (detrás del cuerpo de texto) se apaga, para no puntear las líneas de lectura.
+    const abBand = exp(abs(zr.add(12.0)).mul(-0.1));
+    const abFar = smoothstep(-42.0, -14.0, zr), abNear = float(1).sub(smoothstep(-10.0, -3.0, zr));
+    const abL = abBand.mul(abFar).mul(abNear).mul(U.abW).mul(U.pulse.mul(0.15).add(0.42));
     // con el pasillo de Projects abierto (galW) el piso de puntos se apaga: el pasillo tiene el suyo
-    floorMat.opacityNode = gl.mul(lightFall).mul(farFade).mul(U.ignite).mul(U.pulse.mul(0.5).add(0.22)).mul(float(1).sub(U.galW));
+    floorMat.opacityNode = gl.mul(lightFall.mul(farFade).mul(U.pulse.mul(0.5).add(0.22)).add(abL)).mul(U.ignite).mul(float(1).sub(U.galW));
   }
   // 150 de ancho, corrido a la izquierda
   const floorM = new THREE.Mesh(new THREE.PlaneGeometry(150, 110), floorMat);
@@ -224,6 +236,59 @@ async function boot({ S, root, after, assetBase }, ctl) {
   makeDust(isMobile() ? 380 : 900, (a, j) => {
     a[j] = (Math.random() - 0.5) * 16; a[j + 1] = (Math.random() - 0.3) * 7; a[j + 2] = 8 - Math.random() * 46;
   });
+
+  /* ---------- About: capas de profundidad (escritorio, sólo con el About aterrizado: U.abW) ----------
+     La recta es el eje: la cámara orbita alrededor de ella (updateCamera), así la recta y el titular que se apoya
+     encima no se mueven y todo lo demás se separa por parallax. De atrás hacia adelante: niebla en el horizonte del
+     piso, la retícula del piso (floorMat), polvo alrededor del riel, el HTML (titular, texto, foto) y, sobre todo,
+     motas desenfocadas cerca de la lente ([data-ab-fg], HTML que esta escena posiciona en cada frame).
+     Las dos capas 3D quedan invisibles (visible = false) fuera del About: el hero no paga nada. */
+  const abGroup = new THREE.Group();              // origen en U.abRail (lo coloca layout)
+  scene.add(abGroup);
+  // niebla: una franja tenue sobre el horizonte del piso, lejos (36 u detrás del riel), más clara a la derecha,
+  // donde no hay texto (sobre la foto y el hueco de arriba). Neutra con un resto cálido del rojo.
+  const hazeMat = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  {
+    const lp = positionWorld.sub(U.abRail);
+    const band = exp(lp.y.add(0.55).div(1.55).pow(2).negate());
+    const side = exp(lp.x.sub(12.0).div(17.0).pow(2).negate()).mul(0.75).add(0.25);
+    hazeMat.colorNode = mix(OFF, RED, 0.22).mul(band.mul(side).mul(0.014).mul(U.abW).mul(float(1).sub(U.galW)));
+    hazeMat.opacityNode = float(1);
+  }
+  const haze = new THREE.Mesh(new THREE.PlaneGeometry(140, 18), hazeMat);
+  haze.position.set(4, 0, -36);
+  haze.frustumCulled = false;
+  abGroup.add(haze);
+  // polvo del riel: el mismo grano que el del hero, repartido en el campo del About (local a U.abRail), más rojo
+  // cuanto más cerca de la recta. Es la capa media: entre el piso y la lente.
+  const abDust = (() => {
+    const n = 240;
+    const pos = new Float32Array(n * 3), sd = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const z = 4.5 - Math.random() * 20;                         // de 2 u frente a la lente a 15 u detrás del riel
+      const half = 0.45 * (7 - z) + 1.2;                          // el ancho visible a esa profundidad (+ margen)
+      pos[i * 3] = (Math.random() - 0.5) * 2 * half;
+      pos[i * 3 + 1] = -1.2 + Math.random() * (2.4 + 0.18 * (7 - z));
+      pos[i * 3 + 2] = z;
+      sd[i] = Math.random();
+    }
+    const m = new THREE.SpriteNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+    const base = instancedBufferAttribute(new THREE.InstancedBufferAttribute(pos, 3));
+    const seed = instancedBufferAttribute(new THREE.InstancedBufferAttribute(sd, 1));
+    const t = time.mul(0.16).add(seed.mul(40));
+    m.positionNode = base.add(vec3(sin(t).mul(0.1), cos(t.mul(0.7)).mul(0.07), sin(t.mul(0.5)).mul(0.08)));
+    m.scaleNode = seed.mul(0.02).add(0.009);
+    const soft = float(1).sub(smoothstep(0.1, 0.5, length(uv().sub(0.5))));
+    const lp = positionWorld.sub(U.abRail);
+    const nearRail = exp(lp.yz.length().mul(-0.9));
+    m.colorNode = mix(OFF.mul(0.55), RED.mul(2.0), nearRail.mul(0.85));
+    m.opacityNode = soft.mul(nearRail.mul(0.9).add(0.2)).mul(seed.mul(0.55).add(0.25)).mul(U.abW).mul(float(1).sub(U.galW));
+    const d = new THREE.Sprite(m);
+    d.count = n; d.frustumCulled = false;
+    abGroup.add(d);
+    return d;
+  })();
+  abGroup.visible = false;
 
   /* ---------- cintas (traza, halo, ecos y — en fig 2 — el contorno) ---------- */
   function makeRibbon(n, width, intensity, alphaMul) {
@@ -282,6 +347,9 @@ async function boot({ S, root, after, assetBase }, ctl) {
 
   /* ---------- composición (fracciones del viewport, idénticas a la figura HTML) ---------- */
   const lay = {};
+  const tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3(), tmpV3 = new THREE.Vector3();
+  // motas de primer plano del About: [NDC x, NDC y, distancia a la lente] en la pose de aterrizaje (ver layout)
+  const AB_FG = [[0.62, 0.5, 3.2], [0.92, -1.15, 2.4], [0.16, -0.8, 2.6]];
   const flat = new Float32Array(N * 3), rail = new Float32Array(N * 3), P = new Float32Array(N * 3);
   const visH = (z) => 2 * (CAM_Z - z) * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   function layout() {
@@ -335,6 +403,19 @@ async function boot({ S, root, after, assetBase }, ctl) {
         lay.endLook.set(x, y + END_H - Math.sin(a) * 10, -RAIL_Z + END_D - Math.cos(a) * 10);
         lay.anchored = true;
       }
+    }
+    // About: el eje de la cámara viva es el punto del riel frente a la lente; las capas se arman alrededor de él
+    U.abRail.value.set(lay.endPos.x, y, -RAIL_Z);
+    abGroup.position.copy(U.abRail.value);
+    // motas cerca de la lente: puntos fijos del mundo, puestos en la pose de aterrizaje (sin cámara viva) donde no hay
+    // texto ni cara (NDC x, y, distancia a la lente). Arriba a la derecha, sobre el pie de la foto y abajo al centro.
+    {
+      const fwd = tmpV.copy(lay.endLook).sub(lay.endPos).normalize();
+      const right = tmpV2.crossVectors(fwd, THREE.Object3D.DEFAULT_UP).normalize();
+      const up = tmpV3.crossVectors(right, fwd);
+      const T = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      lay.fg = AB_FG.map(([nx, ny, d]) => lay.endPos.clone().addScaledVector(fwd, d)
+        .addScaledVector(right, nx * d * T * camera.aspect).addScaledVector(up, ny * d * T));
     }
     const tmp = new THREE.Vector3();
     for (let i = 0; i < N; i++) {
@@ -446,7 +527,26 @@ async function boot({ S, root, after, assetBase }, ctl) {
   }
   const galP = new THREE.Vector3(), galL = new THREE.Vector3();
   const D2R = Math.PI / 180;
+  const abPiv = new THREE.Vector3(), AX_X = new THREE.Vector3(1, 0, 0), AX_Y = new THREE.Vector3(0, 1, 0);
+  /* La recta, nivelada y en su altura de aterrizaje con la cámara viva. La imagen de una recta es la intersección del
+     plano (lente, recta) con la pantalla: queda horizontal si el «arriba» de la cámara vive en ese plano (up = su
+     normal) y a la misma altura si el ángulo entre la mirada y el plano es el de la pose de aterrizaje (se corrige
+     con un pitch sobre el eje derecho de la cámara, que está en el plano y no la vuelve a inclinar). k: 0..1. */
+  const abN = new THREE.Vector3(), abF = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
+  const RAIL_XMAX = -4.95;                       // borde derecho de la vista sobre la recta (layout lo pone en −5)
+  const railNormal = (out, cam) => out.set(0, cam.z - -RAIL_Z, lay.yT - cam.y).normalize();   // X × (P0 − C)
+  function abLevel(look, k) {
+    railNormal(abN, camera.position);
+    camera.up.copy(UP).lerp(abN, k).normalize();
+    camera.lookAt(look);
+    camera.up.copy(UP);
+    const s = camera.getWorldDirection(abF).dot(abN);
+    const s0 = abF.copy(lay.endLook).sub(lay.endPos).normalize().dot(railNormal(abN, lay.endPos));
+    camera.rotateX(-(Math.asin(s) - Math.asin(s0)) * k);
+  }
+  let abRig = 0;
   function updateCamera(t, dt, p, g = 0) {
+    U.abW.value = 0; abRig = 0;
     mouse.x = S.damp(mouse.x, mouse.tx, 3, dt); mouse.y = S.damp(mouse.y, mouse.ty, 3, dt);
     const hp = tmpA.set(0, 0, CAM_Z).lerp(lay.heroTarget, S.dolly(t));
     hp.x += mouse.x * 0.22 + Math.sin(t * 0.13) * 0.04 * S.ign(t);
@@ -460,22 +560,52 @@ async function boot({ S, root, after, assetBase }, ctl) {
       // al llegar, un resto del mouse en x: el riel no se mueve (es una recta), el polvo y el piso sí (parallax)
       const mx = lay.anchored ? mouse.x * 0.15 * e : 0;
       endP.copy(lay.endPos); endP.x += mx; endL.copy(lay.endLook); endL.x += mx;
+      // About aterrizado: cámara viva con la recta como eje. Orbita alrededor del punto del riel frente a la lente
+      // (crane: giro en x sobre la recta misma, que no la mueve; orbit corto: giro en y, que la inclinaría unos px y
+      // corrige abLevel, más abajo) y respira en dolly sobre el rayo a la recta (tampoco la mueve). Así la recta, y
+      // el titular apoyado en ella, quedan quietos y todo lo demás se separa por parallax.
+      // Deriva lenta siempre; el mouse suma ~2° en y y 1,3° en x, con el mismo damp que el pasillo.
+      const ab = lay.anchored ? smooth(0.9, 1.0, p) : 0;
+      if (ab > 0) {
+        abPiv.set(endP.x, lay.yT, -RAIL_Z);
+        const dl = Math.sin(t * 0.11 + 0.3) * 0.24 * ab;
+        tmpC.copy(endP).sub(abPiv).normalize().multiplyScalar(dl);
+        endP.add(tmpC); endL.add(tmpC);
+        const crane = -(mouse.y * 1.3 + Math.sin(t * 0.19 + 0.4) * 0.45 + Math.sin(t * 0.071 + 2.1) * 0.25) * D2R * ab;
+        const orbit = -(mouse.x * 2.0 + Math.sin(t * 0.13 + 1.1) * 0.6) * D2R * ab;
+        endP.sub(abPiv).applyAxisAngle(AX_X, crane).applyAxisAngle(AX_Y, orbit).add(abPiv);
+        endL.sub(abPiv).applyAxisAngle(AX_X, crane).applyAxisAngle(AX_Y, orbit).add(abPiv);
+      }
+      // las capas se van con el texto del About, al empezar el giro hacia Projects
+      abRig = ab;
+      U.abW.value = ab * (1 - smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.25, g));
       railP.lerp(endP, e); railL.lerp(endL, e);
       camera.position.copy(hp).lerp(railP, w);
       hl.lerp(railL, w);
     }
     // Projects: la cámara gira 90° y entra al pasillo (corridor.js). Desde GAL_ABOUT_OUT se mezcla con la del About
     // (la primera llave del pasillo ES la pose del About, así que la mezcla sólo absorbe el parallax del mouse).
-    let fov = lay.fov;
+    let fov = lay.fov, wo = 0;
     if (G.w > 0 && corr) {
       corr.camPose(g, t, dt, mouse, galP, galL);
-      const wo = smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.15, g);
+      wo = smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.15, g);
       camera.position.lerp(galP, wo);
       hl.lerp(galL, wo);
       fov = lay.fov + ((camera.aspect > 1.9 ? 30 : 32) - lay.fov) * G.w;
     }
     if (Math.abs(camera.fov - fov) > 1e-4) { camera.fov = fov; camera.updateProjectionMatrix(); }
-    camera.lookAt(hl);
+    const abK = abRig * (1 - wo);
+    if (abK > 0) {
+      abLevel(hl, abK);
+      // el borde derecho de la vista no pasa de x −5 sobre la recta (más allá empieza la curva, que bajaría la línea
+      // en el borde): si el dolly o la órbita lo corren, la cámara se desliza a la izquierda, sobre la recta (no la mueve)
+      camera.updateMatrixWorld();
+      const c = camera.position;
+      const ny = abF.set(c.x, lay.yT, -RAIL_Z).project(camera).y;
+      const d = abF.set(1, ny, 0.5).unproject(camera).sub(c);
+      const xe = c.x + (d.x * (-RAIL_Z - c.z)) / d.z;
+      if (xe > RAIL_XMAX) c.x -= xe - RAIL_XMAX;
+    } else camera.lookAt(hl);
     // cámara viva en el pasillo: el mouse la gira ~2° (yaw) y 1,3° (pitch), con el damp de arriba
     if (G.w > 0 && corr) {
       camera.rotateY(-mouse.x * 2.0 * D2R * G.w);
@@ -681,9 +811,40 @@ async function boot({ S, root, after, assetBase }, ctl) {
       return { u: +gal.p.toFixed(2), avg: +(ms.reduce((a, b) => a + b, 0) / n).toFixed(2), p50: +ms[n >> 1].toFixed(2), p95: +ms[Math.floor(n * 0.95)].toFixed(2), max: +ms[n - 1].toFixed(2), dpr: renderer.getPixelRatio(), w: innerWidth, h: innerHeight, backend, gpu };
     };
     ctl.info.corrStage = () => (corr ? 'ready' : ctl.corrStage || (corrBuilding ? 'building' : 'idle:' + corrIdle));
-    ctl.info.dbg = () => ({ core, halo, extCore, extHalo, echoes, lamp, head, floorM, fig, scene, corr, camera });
+    ctl.info.dbg = () => ({ core, halo, extCore, extHalo, echoes, lamp, head, floorM, fig, scene, corr, camera, abGroup, haze, abDust, lay, U });
     ctl.info.mouse = (x, y) => { mouse.tx = x; mouse.ty = y; mouse.seen = true; };
   }
+
+  /* About: motas de primer plano ([data-ab-fg], About.tsx). Son HTML porque van por encima de la foto (una mota 3D
+     quedaría detrás del HTML y leería al revés). Puntos fijos del mundo proyectados con la cámara de este mismo
+     frame: siguen la órbita, el dolly y el giro de 90° hacia Projects (barren la pantalla y se van). Sólo escriben
+     el DOM con el About aterrizado. */
+  let fgBox = null, fgEls = null, fgOn = false;
+  const fgP = new THREE.Vector3();
+  function placeFg() {
+    const w = U.abW.value;
+    if (w <= 0.001) { if (fgOn) { fgOn = false; if (fgBox) fgBox.style.opacity = '0'; } return; }
+    if (!fgBox || !fgBox.isConnected) {
+      fgBox = document.querySelector('[data-ab-fg]');
+      fgEls = fgBox ? Array.from(fgBox.children) : null;
+    }
+    if (!fgBox || !lay.fg) return;
+    fgOn = true;
+    camera.updateMatrixWorld();
+    const r = fgBox.getBoundingClientRect();
+    for (let k = 0; k < fgEls.length && k < lay.fg.length; k++) {
+      const el = fgEls[k];
+      fgP.copy(lay.fg[k]).applyMatrix4(camera.matrixWorldInverse);
+      const depth = -fgP.z;
+      if (depth < 0.3) { el.style.visibility = 'hidden'; continue; }
+      fgP.applyMatrix4(camera.projectionMatrix);
+      const x = ((fgP.x + 1) / 2) * innerWidth - r.left, y = ((1 - fgP.y) / 2) * innerHeight - r.top;
+      el.style.visibility = '';
+      el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -50%) scale(${(AB_FG[k][2] / depth).toFixed(3)})`;
+    }
+    fgBox.style.opacity = w.toFixed(3);
+  }
+  ctl.offs.push(() => { if (fgBox) fgBox.style.opacity = '0'; });
 
   function frame() {
     if (S.dead || ctl.disposed) { renderer.setAnimationLoop(null); return; }
@@ -708,6 +869,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     updateGallery(gal.p);
     headOpacity.value = S.headAlpha(t) * (1 - G.w);
     const bend = updateCamera(t, dt, p, gal.p);
+    abGroup.visible = U.abW.value * (1 - G.w) > 0.001;
     U.dissolve.value = smooth(0.04, 0.2, p);
     echoes.forEach((e) => { e.alpha.value = smooth(0.1, 0.35, p) * 0.5 * (1 - smooth(0.7, 0.95, p)); });
     buildRibbons(t, bend);
@@ -723,6 +885,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
       pl = corr.pipeline; corrPost = false;
     }
     if (!skipRender) pl.render();
+    placeFg();
 
     // rótulos en el espacio (mismo frame que el render) y placa bajo el puntero
     const docEl = document.documentElement;
@@ -747,7 +910,9 @@ async function boot({ S, root, after, assetBase }, ctl) {
   if (ctl.disposed || S.dead) return;
   updateCamera(S.now(), 0, 0); buildRibbons(S.now(), 0);
   echoes.forEach((e) => { e.alpha.value = 0; });
+  abGroup.visible = true;                        // compilar las capas del About ahora (con abW = 0 no se ven)
   pipeline.render();
+  abGroup.visible = false;
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   if (ctl.disposed || S.dead) return;
   syncLoop = () => {

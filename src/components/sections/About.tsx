@@ -210,6 +210,10 @@ export default function About() {
             </div>
           </div>
         </div>
+
+        {/* Primer plano (≥1024 con la escena viva): motas desenfocadas cerca de la lente. Las posiciona scene.js en
+            cada frame (puntos del mundo proyectados con la cámara del About); van por encima de la foto, nunca de la cara */}
+        <div className="ab-fg" data-ab-fg aria-hidden="true"><i /><i /><i /></div>
       </div>
     </section>
   );

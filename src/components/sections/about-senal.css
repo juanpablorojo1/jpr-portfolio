@@ -16,6 +16,7 @@
 .ab .ab-status-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
 .ab .ab-img { filter: grayscale(85%) contrast(1.05); }
 .ab .ab-light, .ab .ab-matte { display: none; }
+.ab .ab-fg { display: none; }
 
 /* Escena viva detrás (hero-controller pone data-see-through): el About entra transparente y la cámara
    termina su recorrido detrás del texto. Sin sombra: sobre un card transparente la sombra dibuja una costura. */
@@ -125,6 +126,26 @@
   .ab .ab-meta {
     position: absolute; left: var(--pad); bottom: clamp(20px, 4vh, 44px);
     margin: 0; padding-top: 12px; gap: 16px; flex-wrap: nowrap;
+  }
+
+  /* Primer plano: motas desenfocadas cerca de la lente (bokeh: disco parejo, el borde apenas más claro y blando).
+     Sólo con la escena viva; scene.js escribe transform (posición y escala por distancia) y la opacidad del conjunto.
+     Sin escena (estático, reduced motion) no existen. */
+  .transition-zone[data-see-through] .ab .ab-fg {
+    display: block; position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; opacity: 0;
+  }
+  .ab .ab-fg i { position: absolute; left: 0; top: 0; border-radius: 50%; will-change: transform; }
+  .ab .ab-fg i:nth-child(1) {
+    width: 24vh; height: 24vh;
+    background: radial-gradient(closest-side, rgba(232, 228, 222, .04), rgba(232, 228, 222, .05) 74%, rgba(232, 228, 222, .072) 89%, rgba(232, 228, 222, 0));
+  }
+  .ab .ab-fg i:nth-child(2) {
+    width: 36vh; height: 36vh;
+    background: radial-gradient(closest-side, rgba(232, 228, 222, .045), rgba(232, 228, 222, .055) 74%, rgba(232, 228, 222, .08) 89%, rgba(232, 228, 222, 0));
+  }
+  .ab .ab-fg i:nth-child(3) {
+    width: 12vh; height: 12vh;
+    background: radial-gradient(closest-side, rgba(232, 39, 42, .065), rgba(232, 39, 42, .08) 74%, rgba(232, 39, 42, .12) 89%, rgba(232, 39, 42, 0));
   }
 }
 
