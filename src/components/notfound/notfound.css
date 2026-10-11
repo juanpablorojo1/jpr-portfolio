@@ -1,0 +1,97 @@
+/* 404 «Señal»: el monitor en línea plana (NotFoundMonitor.tsx). CSS propio con prefijo .nf.
+   Tokens del hero (senal.css): negro #080808, rojo #E8272A solo como acento, CTA sólido #E62529, off-white #E8E4DE,
+   Bebas Neue / Barlow Condensed / JetBrains Mono, radius 0. Horizonte 64 % (55 % debajo de 900, como el hero). */
+.nf {
+  --bg: #080808; --red: #e8272a; --red-cta: #e62529; --off: #e8e4de; --dim: rgba(232, 228, 222, .82);
+  --pad: 5.5vw; --horizon: 64vh;
+  --f-display: var(--font-bebas-neue), 'Arial Narrow', sans-serif;
+  --f-ui: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
+  --f-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative; min-height: 100vh; overflow: hidden;
+  background: var(--bg); color: var(--off); font-family: var(--f-ui);
+}
+@supports (height: 100svh) { .nf { min-height: 100svh; --horizon: 64svh; } }
+@media (max-width: 899px) {
+  .nf { --pad: 22px; --horizon: 55vh; }
+  @supports (height: 100svh) { .nf { --horizon: 55svh; } }
+}
+.nf a { color: inherit; text-decoration: none; }
+.nf :focus-visible { outline: 1px solid var(--red); outline-offset: 4px; }
+/* grano fino (fijo, sin repintar al scrollear) */
+.nf::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .07; mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* barra: logo A y EN/ES, alineados al --pad como el menú */
+.nf-bar {
+  position: absolute; z-index: 3; top: 0; left: var(--pad); right: var(--pad); height: 80px;
+  display: flex; align-items: center; justify-content: space-between;
+  font: 11px/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+}
+.nf-logo { --hit: 8px; display: inline-flex; align-items: center; height: 28px; padding: var(--hit); margin: calc(-1 * var(--hit)); color: #fff; }
+.nf-logo svg { display: block; height: 100%; width: auto; }
+.nf-logo:focus-visible { outline-offset: -4px; }
+.nf .jnav-lang a { padding: 20px 14px; margin: -12px; transition: color .2s ease; }
+.nf .jnav-lang a:hover, .nf .jnav-lang a[aria-current] { color: #fff; }
+.nf .jnav-lang a:focus-visible { outline-offset: -8px; }
+.nf .jnav-lang-sep { color: rgba(232, 228, 222, .3); }
+@media (max-width: 899px) { .nf-bar { height: 64px; } .nf-logo { height: 24px; --hit: 10px; } }
+
+/* la línea: CSS mientras no corre el canvas (sin JS, reduced motion); el canvas la reemplaza */
+.nf-main { position: relative; min-height: inherit; }
+.nf-line {
+  position: absolute; left: 0; right: 0; top: var(--horizon); height: 2px; margin-top: -1px;
+  background: rgba(255, 86, 88, .55); box-shadow: 0 0 10px rgba(232, 39, 42, .45), 0 0 26px rgba(232, 39, 42, .18);
+}
+.nf[data-run] .nf-line { display: none; }
+.nf-trace { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; pointer-events: none; }
+.nf-glow {
+  position: absolute; left: 0; top: calc(var(--horizon) - 40vh); width: 70vw; height: 80vh; pointer-events: none; opacity: 0;
+  background: radial-gradient(closest-side, rgba(232, 39, 42, .26), rgba(232, 39, 42, 0));
+}
+
+/* titular apoyado sobre la traza, datos debajo (la gramática del hero) */
+.nf-top { position: absolute; z-index: 2; left: var(--pad); bottom: calc(100% - var(--horizon) + clamp(18px, 3vh, 30px)); right: var(--pad); }
+.nf-label {
+  display: flex; align-items: center; gap: 10px; margin: 0 0 clamp(10px, 1.6vh, 18px);
+  font: 11px/1 var(--f-mono); letter-spacing: .2em; text-transform: uppercase; color: var(--off);
+}
+.nf-sq { display: inline-block; width: 6px; height: 6px; background: var(--red); box-shadow: 0 0 10px var(--red); }
+.nf-title {
+  margin: 0; font-family: var(--f-display); font-weight: 400; text-transform: uppercase; color: #fff;
+  font-size: clamp(76px, min(13vw, 24vh), 240px); line-height: .84; letter-spacing: .005em;
+  transition: color .3s ease;
+}
+.nf-bottom { position: absolute; z-index: 2; left: var(--pad); right: var(--pad); top: calc(var(--horizon) + clamp(28px, 4.4vh, 48px)); }
+.nf-body { margin: 0; max-width: 46ch; font-size: 18px; line-height: 1.45; color: rgba(232, 228, 222, .9); }
+
+/* el botón: el sólido del hero (#E62529, blanco 14 px bold: 4,51:1) */
+.nf-btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  height: 48px; padding: 0 28px; margin-top: clamp(20px, 3vh, 30px); overflow: hidden;
+  font-family: var(--f-ui); font-weight: 700; font-size: 14px; letter-spacing: .16em; text-transform: uppercase;
+  border: 1px solid var(--red-cta); color: #fff;
+  transition: box-shadow .2s ease, transform .12s ease;
+}
+.nf-btn span { position: relative; z-index: 1; display: inline-block; }
+.nf-btn::before {
+  content: ''; position: absolute; inset: 0; background: var(--red-cta);
+  transform: scaleY(1); transform-origin: top; transition: transform .45s var(--ease-out);
+}
+.nf-btn:hover::before { transform: scaleY(0); }
+.nf-btn:hover { box-shadow: 0 0 16px rgba(232, 39, 42, .2); }
+.nf-btn:active { transform: translateY(1px); }
+/* reanimando: el botón queda encendido y el titular toma el tono pleno */
+.nf[data-kick] .nf-btn::before { transform: scaleY(1); }
+.nf[data-kick] .nf-btn { pointer-events: none; }
+
+@media (max-width: 899px) {
+  .nf-title { font-size: clamp(56px, min(19vw, 22vh), 120px); }
+  .nf-body { font-size: 16px; }
+  .nf-glow { width: 100vw; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nf-btn, .nf-btn::before, .nf-title { transition: none; }
+}

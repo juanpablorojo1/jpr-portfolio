@@ -407,6 +407,9 @@
     "copyright": "© 2026 Juan Pablo Rojo",
     "dot_cta": "Send an email",
     "dot_aria": "Send an email to Juan Pablo Rojo",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copy_aria": "Copy the email address",
     "logo_alt": "Juan Pablo Rojo logo"
   },
   "sound": {

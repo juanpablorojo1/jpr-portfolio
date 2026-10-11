@@ -2,8 +2,14 @@
 
 import { useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import Image from 'next/image';
 import { SOCIAL_LINKS } from '../../lib/content';
+import LogoMark from '../layout/LogoMark';
+import ContactStage from './ContactStage';
+
+// Contact — two layouts in the same #contact block:
+// - .ct-classic (this one): phones/tablets (<1024) and desktop without the 3D scene (reduced motion, ?static, no GPU).
+// - ContactStage: desktop ≥1024 with the «Señal» scene — every line of the page converges on the beating point,
+//   which is the CTA (convergence.js + contact-senal.css).
 
 export default function Contact() {
   const t = useTranslations('contact');
@@ -97,9 +103,9 @@ export default function Contact() {
   }, []);
 
   return (
+    <div id="contact">
     <section
-      id="contact"
-      className="py-10 lg:py-32 bg-bg"
+      className="ct-classic py-10 lg:py-32 bg-bg"
     >
       {/* Headline — alineado con el contenido */}
       <div className="max-w-7xl mx-auto px-6 lg:px-12 mb-6 lg:mb-10 overflow-hidden">
@@ -266,13 +272,10 @@ export default function Contact() {
 
         {/* Footer bottom */}
         <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <Image
-            src="/logos/logo-jpr-monogram.svg"
-            alt={t('logo_alt')}
-            width={40}
-            height={28}
-            className="h-7 w-auto opacity-60"
-          />
+          {/* logo A «Asta» (el del menú), ids con sufijo propio */}
+          <span role="img" aria-label={t('logo_alt')} className="inline-flex h-7 text-white opacity-60 [&>svg]:h-full [&>svg]:w-auto">
+            <LogoMark idSuffix="-foot-classic" />
+          </span>
           <p className="font-mono text-xs text-muted hidden sm:block">
             {t('built_with')}
           </p>
@@ -282,5 +285,7 @@ export default function Contact() {
         </div>
       </div>
     </section>
+    <ContactStage />
+    </div>
   );
 }

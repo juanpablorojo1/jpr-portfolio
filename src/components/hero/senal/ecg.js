@@ -296,6 +296,7 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
     return sp;
   };
   const headI = uniform(6), dotI = uniform(0);
+  let handK = 0;                                   // relevo del punto a Contact (0 = el punto es de Experience)
   const head = glow(headI, 0.15);
   const dot = glow(dotI, 0.2);
   dot.position.set(0, yEnd, 0);
@@ -488,7 +489,7 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
     head.scale.setScalar(0.13 + 0.05 * hb);
     // el punto: aparece al final y late (el CTA de Contact lo recibe)
     endU.value = smooth(plan.out[0] + 0.3, plan.out[1], e);
-    dotI.value = endU.value * (6 + hb * 7);
+    dotI.value = endU.value * (6 + hb * 7) * (1 - handK);   // Contact (convergence.js) toma el latido del punto
     dot.scale.setScalar(0.1 + endU.value * (0.22 + 0.12 * hb));
 
     // latido en estadía (rango de y que late) y foco
@@ -537,6 +538,9 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
 
   return {
     group: ecg, pose, calm, update, warm,
+    /** Contact: el punto final en coordenadas del pasillo, y el relevo de su latido (k 0 → 1: se apaga acá) */
+    end: (out) => out.set(0, yEnd, 0).add(ecg.position),
+    handoff: (k) => { handK = k; },
     U0: () => v0() + plan.enter[0],
     info: () => ({ exp: st.mode, focus: +st.focus.toFixed(2), head: +headY.value.toFixed(2), yEnd: +yEnd.toFixed(2), segs: NSEG, v0: +v0().toFixed(3) }),
     // dispose total: la traza sale del pasillo antes del recorrido de scene.js, así que libera lo suyo acá

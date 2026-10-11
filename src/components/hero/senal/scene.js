@@ -19,6 +19,7 @@ import { GAL_ABOUT_OUT } from './gallery';
 import { buildCorridor } from './corridor';
 import { buildNetwork } from './network';
 import { buildEcg } from './ecg';
+import { buildConvergence } from './convergence';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -277,7 +278,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   lamp.scale.setScalar(0.24); lamp.renderOrder = 3;
   scene.add(lamp);
   let corr = null, corrBuilding = false, corrIn = 0;
-  let stk = null, ecgX = null;                   // Stack (network.js) y Experience (ecg.js): se enganchan con el pasillo listo
+  let stk = null, ecgX = null, ctcX = null;     // Stack (network.js), Experience (ecg.js) y Contact (convergence.js): se enganchan con el pasillo listo
 
   /* ---------- composición (fracciones del viewport, idénticas a la figura HTML) ---------- */
   const lay = {};
@@ -500,6 +501,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     S.stk.live = S.fbf.live && !!stk;            // Stack: la red armada y enganchada al pasillo
     if (!S.fbf.live) { S.fbf.hover = -1; S.fbf.active = -1; if (corr) corr.fbf.pauseAll(); }
     S.exp.live = S.fbf.live && !!ecgX;           // Experience: la traza armada y enganchada al pasillo
+    S.ctc.live = S.fbf.live && !!ctcX;           // Contact: la convergencia armada y enganchada al pasillo
   }
 
   /* ---------- progreso de la cámara ----------
@@ -640,6 +642,10 @@ async function boot({ S, root, after, assetBase }, ctl) {
     const line = n && n.line ? n.line : null;
     const x = await attachExt(c, 'ecg', () => buildEcg({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain, line }));
     if (x) { ecgX = x; ctl.info.exp = x.info; }
+    if (!x || ctl.disposed || S.dead) return;
+    // Contact: todas las líneas convergen en el punto en que termina la traza (su ancla)
+    const cv = await attachExt(c, 'contact', () => buildConvergence({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain, ecg: x }));
+    if (cv) { ctcX = cv; ctl.info.ctc = cv.info; }
   }
 
   // QA con la pestaña oculta (rAF frenado): avanza la escena N segundos a 60 fps con un reloj simulado.

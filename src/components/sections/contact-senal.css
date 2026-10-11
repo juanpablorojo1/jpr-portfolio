@@ -1,0 +1,178 @@
+/* Contact «Señal» — la convergencia (escritorio ≥1024 con la escena viva o por venir: data-gallery en su
+   TransitionZone, lo pone hero-controller). Sin data-gallery (reduced motion, ?static, sin GPU, <1024): el layout
+   anterior (.ct-classic). Con la escena viva (.ct-stage.is-live) la sección es transparente: las líneas y el punto
+   están en el 3D y el CTA sigue la proyección del punto (convergence.js). Sin ella, el punto es CSS y está fijo.
+   CSS propio con prefijo .ct (mismo sistema que .pj, .fv, .sk y .ex). */
+
+.ct-gal { display: none; }
+
+@media (min-width: 1024px) {
+  .transition-zone[data-gallery] .ct-classic { display: none; }
+  .transition-zone[data-gallery] .ct-gal { display: block; position: relative; background: #080808; }
+  .transition-zone[data-see-through] .ct-gal { background: transparent; }
+  /* Contact en cuadro: Experience, pegada detrás (su zona es sticky), no se pinta */
+  html[data-ct-in] .transition-zone[data-section='experience'] { visibility: hidden; }
+
+  .ct-stage {
+    --pad: 5.5vw;
+    --dim-scene: rgba(232, 228, 222, .82);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+    --halo: 0 0 2px rgba(0, 0, 0, .95), 0 0 6px rgba(0, 0, 0, .9), 0 1px 14px rgba(0, 0, 0, .85);
+    --foot: 92px;                                   /* alto del pie: su línea media = la del interruptor de sonido */
+    --beat: 0;
+    position: sticky; top: 0; height: 100vh; overflow: hidden;
+    pointer-events: none;
+    color: #e8e4de; font-family: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
+  }
+  @supports (height: 100svh) { .ct-stage { height: 100svh; } }
+  .ct-stage[data-on] :is(a, button) { pointer-events: auto; }
+  .ct-stage :focus-visible { outline: 1px solid #e8272a; outline-offset: 4px; }
+
+  /* rótulo: el sistema de las otras secciones */
+  .ct-label {
+    position: absolute; top: clamp(84px, 11vh, 110px); left: var(--pad); margin: 0;
+    display: flex; align-items: center; gap: 10px;
+    font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: #e8e4de;
+    text-shadow: var(--halo);
+  }
+  .ct-sq { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
+
+  /* ---------- columna de texto (izquierda; el punto vive a la derecha) ---------- */
+  .ct-copy {
+    position: absolute; left: var(--pad); top: calc(clamp(84px, 11vh, 110px) + 36px);
+    width: min(44vw, 720px);
+  }
+  .ct-head {
+    margin: 0; font-family: var(--font-bebas-neue), 'Arial Narrow', sans-serif; font-weight: 400;
+    text-transform: uppercase; color: #fff;
+    font-size: clamp(80px, min(9.6vw, 16vh), 176px); line-height: .84; letter-spacing: .005em;
+    perspective: 900px; text-shadow: 0 2px 40px rgba(0, 0, 0, .6);
+  }
+  .ct-l { display: block; white-space: nowrap; }
+  .ct-head .word { display: inline-block; white-space: nowrap; transform-style: preserve-3d; }
+  .ct-head .char { display: inline-block; will-change: transform, opacity; }
+  .ct-sub {
+    margin: clamp(16px, 2.4vh, 26px) 0 0; max-width: 44ch;
+    font-size: 18px; line-height: 1.4; color: rgba(232, 228, 222, .9);
+    text-shadow: 0 1px 16px rgba(0, 0, 0, .9), var(--halo);
+  }
+
+  /* rótulo mono de cada dato (mismo cuerpo que las fechas de Experience) */
+  .ct-k {
+    display: block; margin: 0;
+    font: 11px/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim-scene);
+    text-shadow: var(--halo);
+  }
+
+  /* email: el dato principal, con copiar al lado */
+  .ct-mail { margin-top: clamp(20px, 3.4vh, 34px); padding-top: 14px; border-top: 1px solid rgba(232, 228, 222, .16); }
+  .ct-mail-row { display: flex; align-items: center; gap: 18px; margin-top: 4px; }
+  .ct-mail-a {
+    position: relative; color: #fff; text-decoration: none;
+    font-size: clamp(24px, 2.1vw, 34px); font-weight: 700; line-height: 1.15; letter-spacing: .01em;
+    text-shadow: var(--halo);
+  }
+  .ct-mail-a::after, .ct-dot-t::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -3px; height: 1px; background: #e8272a;
+    transform: scaleX(0); transform-origin: left; transition: transform .45s var(--ease-out);
+  }
+  .ct-mail-a:hover::after, .ct-mail-a:focus-visible::after { transform: scaleX(1); }
+  .ct-copy-b {
+    display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px;
+    border: 1px solid rgba(232, 228, 222, .22); background: rgba(8, 8, 8, .55); color: #e8e4de;
+    font: 10.5px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; cursor: pointer;
+    transition: border-color .25s, color .25s, transform .12s;
+  }
+  .ct-copy-b:hover { border-color: rgba(232, 228, 222, .5); }
+  .ct-copy-b:active { transform: translateY(1px); }
+  .ct-copy-b[data-done] { border-color: rgba(232, 39, 42, .7); }
+
+  /* el resto de los canales: 2 × 2 */
+  .ct-links {
+    display: grid; grid-template-columns: repeat(2, minmax(0, max-content)); gap: 6px clamp(28px, 3.4vw, 56px);
+    list-style: none; margin: clamp(14px, 2.2vh, 22px) 0 0; padding: 0;
+  }
+  .ct-links a { display: block; padding: 6px 0; color: inherit; text-decoration: none; }
+  .ct-v {
+    display: inline-flex; align-items: baseline; gap: 8px;
+    font-size: 18px; font-weight: 700; line-height: 1.3; letter-spacing: .02em; color: #e8e4de;
+    text-shadow: var(--halo); transition: color .2s;
+  }
+  .ct-v i { font-style: normal; font-weight: 400; color: var(--dim-scene); transition: transform .3s var(--ease-out), color .2s; }
+  .ct-links a:hover .ct-v, .ct-links a:focus-visible .ct-v { color: #fff; }
+  .ct-links a:hover .ct-v i, .ct-links a:focus-visible .ct-v i { color: #e8272a; transform: translate(2px, -2px); }
+  .ct-links a:active .ct-v { transform: translateY(1px); }
+
+  /* ---------- el CTA: el enlace encima del punto (capa fija = coordenadas del canvas) ---------- */
+  .ct-dotlayer { position: fixed; inset: 0; pointer-events: none; }
+  .ct-dotpos { position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; }
+  .ct-stage.is-live .ct-dotpos:not([data-vis]) { visibility: hidden; }
+  /* sin escena viva: el punto en el mismo lugar del cuadro que la proyección (convergence.js, CTC_DOT_NDC) */
+  .ct-stage:not(.is-live) .ct-dotpos { transform: translate3d(65vw, 45vh, 0); }
+  .ct-dot {
+    position: absolute; left: -130px; top: -32px; width: 260px;
+    display: flex; flex-direction: column; align-items: center;
+    color: #fff; text-decoration: none; outline: none;
+  }
+  .ct-dot-hit { position: relative; display: block; width: 64px; height: 64px; flex-shrink: 0; }
+  .ct-stage .ct-dot:focus-visible { outline: none; }   /* el anillo va en el área del punto, no en la caja entera */
+  .ct-dot:focus-visible .ct-dot-hit { outline: 1px solid #e8272a; outline-offset: 2px; }
+  .ct-dot-tick {
+    display: block; width: 1px; height: 36px; margin-top: 2px;
+    background: linear-gradient(#e8272a, rgba(232, 39, 42, .25));
+    transform-origin: top; transition: transform .45s var(--ease-out);
+  }
+  .ct-dot:hover .ct-dot-tick, .ct-dot:focus-visible .ct-dot-tick { transform: scaleY(1.35); }
+  .ct-dot:active .ct-dot-tick { transform: scaleY(.8); }
+  .ct-dot-t {
+    position: relative; margin-top: 12px; white-space: nowrap;
+    font-size: 20px; font-weight: 700; line-height: 1.1; letter-spacing: .14em; text-transform: uppercase;
+    text-shadow: var(--halo); transition: transform .45s var(--ease-out);
+  }
+  .ct-dot:hover .ct-dot-t, .ct-dot:focus-visible .ct-dot-t { transform: translateY(13px); }
+  .ct-dot:hover .ct-dot-t::after, .ct-dot:focus-visible .ct-dot-t::after { transform: scaleX(1); }
+  .ct-dot-t::after { transform-origin: center; }
+  /* el punto CSS (sin escena): núcleo + resplandor, late con --beat (S.pulse del hero) */
+  .ct-dot-css {
+    position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px;
+    background: radial-gradient(circle, #ff8a8b 0 3px, #e8272a 4.5px, rgba(232, 39, 42, .42) 9px, rgba(232, 39, 42, .1) 28px, rgba(232, 39, 42, 0) 58px);
+    transform: scale(calc(.82 + var(--beat) * .5));
+  }
+  .ct-stage.is-live .ct-dot-css { display: none; }
+  .ct-dot:hover .ct-dot-css { transform: scale(calc(1.05 + var(--beat) * .5)); }
+
+  /* ---------- pie: la barra de estado del monitor (en la línea del interruptor de sonido) ---------- */
+  .ct-foot {
+    position: absolute; left: var(--pad); right: var(--pad); bottom: 0; height: var(--foot);
+    display: flex; align-items: center; gap: clamp(24px, 2.8vw, 48px); padding-right: 200px;
+    border-top: 1px solid rgba(232, 228, 222, .14);
+    font: 10.5px/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim-scene);
+    text-shadow: var(--halo);
+  }
+  .ct-foot p { margin: 0; white-space: nowrap; }
+  .ct-foot-logo {
+    --hit: 8px;
+    display: inline-flex; align-items: center; height: 28px; padding: var(--hit); margin: calc(-1 * var(--hit));
+    color: #fff;
+  }
+  .ct-foot-logo svg { display: block; height: 100%; width: auto; }
+  .ct-foot-logo:focus-visible { outline-offset: -4px; }
+  .ct-foot .jnav-lang { color: var(--dim-scene); }
+  .ct-foot .jnav-lang a { color: inherit; text-decoration: none; }
+  .ct-foot .jnav-lang a:hover, .ct-foot .jnav-lang a[aria-current] { color: #fff; }
+  .ct-foot .jnav-lang-sep { color: rgba(232, 228, 222, .3); }
+
+  /* alturas cortas (1024×700, 1200×674): la columna de texto se compacta para no tocar el pie */
+  @media (max-height: 720px) {
+    .ct-copy { top: calc(clamp(84px, 11vh, 110px) + 26px); }
+    .ct-head { font-size: clamp(72px, min(9.6vw, 14.5vh), 176px); }
+    .ct-sub { font-size: 17px; line-height: 1.35; }
+    .ct-links a { padding: 4px 0; }
+  }
+  @media (max-width: 1199px) {
+    .ct-copy { width: 46vw; }
+    .ct-foot { gap: 22px; }
+    .ct-foot p:nth-of-type(2) { display: none; }   /* «hecho con»: lo que sobra a 1024–1199 junto al interruptor */
+  }
+}

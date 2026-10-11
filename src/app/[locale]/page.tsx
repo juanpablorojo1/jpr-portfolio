@@ -54,7 +54,10 @@ export default function HomePage() {
           <Experience />
         </TransitionZone>
 
-        <TransitionZone sectionId="contact" zIndex={60}>
+        {/* Contact «Señal»: con la escena viva entra transparente (hero-controller) y es la convergencia (ContactStage):
+            todas las líneas llegan al punto que late, que es el CTA. overflow clip para que su escenario sticky funcione.
+            Sin escena: el layout anterior, opaco. */}
+        <TransitionZone sectionId="contact" zIndex={60} overflowClip>
           <Contact />
         </TransitionZone>
       </main>

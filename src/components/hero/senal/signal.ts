@@ -64,6 +64,11 @@ export type Senal = {
       box: ancho y alto de cada rótulo en px (los mide el HTML), para que la escena no lo saque del cuadro. live: la
       traza está armada y se dibuja (escena). */
   exp: { v0: number; counts: [number, number, number]; tags: HTMLElement[]; box: Array<{ w: number; h: number }>; live: boolean };
+  /** Contact «la convergencia»: lo comparten el HTML (ContactStage.tsx) y la escena (convergence.js).
+      v0: u en que la sección asoma por abajo (la mide el HTML; NaN sin sección). dot: el enlace del CTA (la escena le
+      escribe la posición del punto y data-vis en el mismo frame del render). hover / press: el puntero sobre el enlace
+      / apretándolo (HTML; la escena agranda o comprime el punto). live: la convergencia está armada y se dibuja. */
+  ctc: { v0: number; dot: HTMLElement | null; hover: boolean; press: boolean; live: boolean };
 };
 
 export function createSignal(search: string): Senal {
@@ -163,6 +168,7 @@ export function createSignal(search: string): Senal {
     fbf: { tags: [], active: -1, hover: -1, paused: false, open: -1, live: false },
     stk: { items: [], active: -1, live: false },
     exp: { v0: NaN, counts: [0, 0, 0], tags: [], box: [], live: false },
+    ctc: { v0: NaN, dot: null, hover: false, press: false, live: false },
   };
   return S;
 }
