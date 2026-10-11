@@ -16,10 +16,9 @@ import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { GAL_ABOUT_OUT } from './gallery';
-import { buildCorridor } from './corridor';
-import { buildNetwork } from './network';
-import { buildEcg } from './ecg';
-import { buildConvergence } from './convergence';
+// corridor / network / ecg / convergence: en shots.js, importado por proximidad (startCorridor)
+let shotsMod = null;
+const loadShots = () => (shotsMod = shotsMod || import('./shots'));
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -721,7 +720,8 @@ async function boot({ S, root, after, assetBase }, ctl) {
     if (corr || corrBuilding || !wideMQ.matches || isMobile() || S.dead || ctl.disposed) return;
     corrBuilding = true;
     const t0 = performance.now();
-    buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW: U.galW, yieldToMain })
+    loadShots()
+      .then(({ buildCorridor }) => (ctl.disposed || S.dead ? null : buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW: U.galW, yieldToMain })))
       .then(async (c) => {
         if (!c || ctl.disposed || S.dead) return;
         c.place({ yT: lay.yT, railZ: RAIL_Z, aboutPos: lay.endPos, aboutLook: lay.endLook });
@@ -765,6 +765,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     } catch (e) { console.warn('[senal] ' + name + ':', e && e.message); return null; }
   }
   async function startNetwork(c) {
+    const { buildNetwork, buildEcg, buildConvergence } = await loadShots();
     const n = await attachExt(c, 'network', () => buildNetwork({ corr: c, camera, S, ctl, RED, OFF, galW: U.galW, yieldToMain }));
     if (n) { stk = n; ctl.info.stk = n.info; }
     if (ctl.disposed || S.dead) return;
