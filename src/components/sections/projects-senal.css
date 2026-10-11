@@ -30,9 +30,12 @@
   }
   @supports (height: 100svh) { .pj-stage { height: 100svh; } }
 
+  /* sobre la escena (las películas desenfocadas de KIBBO llegan a esta franja): el texto chico de los rótulos
+     (--dim-scene) con la misma sombra que el eyebrow; al 62 % y sin sombra se perdía sobre los claros */
   .pj-label, .pj-count {
     position: absolute; top: clamp(84px, 11vh, 110px); margin: 0;
-    font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
+    font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--dim-scene);
+    text-shadow: 0 1px 12px rgba(0, 0, 0, .9), 0 0 3px rgba(0, 0, 0, .8);
   }
   .pj-label { left: var(--pad); display: flex; align-items: center; gap: 10px; }
   .pj-count { right: var(--pad); }

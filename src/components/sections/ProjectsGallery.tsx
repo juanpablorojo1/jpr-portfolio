@@ -338,10 +338,14 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
             {it.note && <p className="pj-mnote">{it.note}</p>}
             <button type="button" className="pj-open" data-open-case={k} aria-haspopup="dialog" aria-controls={`pj-case-${k}`}>
               <span className="sr-only">{t('case.open_aria', { title: it.title })}: </span>
+              {/* la flecha cierra el paso anterior y el + va pegado al último: si el botón parte en dos líneas,
+                  ninguna empieza con «→» ni con «+» (U3: a 1200 en ES parte después de «Decisiones clave →») */}
               {it.steps.map((s, i) => (
-                <span key={s} className="pj-step">{i > 0 && <i aria-hidden="true">→</i>}<span>{s}</span></span>
+                <span key={s} className="pj-step">
+                  <span>{s}</span>
+                  {i < it.steps.length - 1 ? <i aria-hidden="true">→</i> : <em aria-hidden="true">+</em>}
+                </span>
               ))}
-              <em aria-hidden="true">+</em>
             </button>
           </article>
         ))}
