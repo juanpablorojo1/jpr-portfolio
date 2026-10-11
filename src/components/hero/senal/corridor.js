@@ -133,7 +133,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
        espera y los que siguen): paredes, piso y vano existen antes de que la señal encienda la primera placa. */
   const redFar = uniform(1), redNear = uniform(1), ambX = uniform(0), roomI = uniform(0), entryI = uniform(0), dotK = uniform(0);
   // post (más abajo); acá porque el polvo de la sala (projector.js) también los lee
-  const focusU = uniform(7), rangeU = uniform(1.6), bokehU = uniform(12.0), voidK = uniform(0), grainK = uniform(0);
+  const focusU = uniform(7), rangeU = uniform(1.6), bokehU = uniform(12.0), voidK = uniform(0), grainK = uniform(0), farK = uniform(50);
   const ROOM_POS = new THREE.Vector3(0, 2.1, Z_END - 4.5);
   const roomPos = vec3(ROOM_POS.x, ROOM_POS.y, ROOM_POS.z);
   const appear = galW;                           // el pasillo existe sólo con la galería abierta (0 en el About)
@@ -416,7 +416,10 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
      pasa a la distancia de foco (voidK 0 → 1, continuo: arranca en foco + 3 rangos, que ya es desenfoque pleno). */
   const camFar = camera.far;
   const viewZ0 = scenePass.getViewZNode();
-  const viewZ = select(viewZ0.lessThan(-(camFar - 0.5)), focusU.add(min(rangeU, 40).mul(3).mul(float(1).sub(voidK))).negate(), viewZ0);
+  // farK (en rangos): tope del desenfoque de fondo. Sólo en la salida en puntos de Frame by Frame (0,35 ≈ 28 % del
+  // bokeh): las motas que flotan delante del piso tomaban su desenfoque y quedaban como discos al pie de la pantalla
+  const viewZc = min(viewZ0.negate(), focusU.add(rangeU.mul(farK))).negate();
+  const viewZ = select(viewZ0.lessThan(-(camFar - 0.5)), focusU.add(min(rangeU, 40).mul(3).mul(float(1).sub(voidK))).negate(), viewZc);
   const dofN = dof(col, viewZ, focusU, rangeU, bokehU);
   const redOnly = (c) => { const r = max(c.r.sub(max(c.g, c.b).mul(1.15)), 0); return vec4(r, r.mul(0.04), r.mul(0.05), 1); };
   const bl = bloom(mix(dofN, redOnly(dofN), galW), 1.2, 0.6, 0.12);
@@ -490,7 +493,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const railEndX = () => group.position.x + RAIL_STOP;
 
   /* ---------- estado por frame ---------- */
-  const st8 = { nearK: 1, focus: 7, range: 4, bokeh: 12, mode: '', open: -1, openA: 0, lastOpen: 0, headZ: 7, endK: 0, liveDone: false };
+  const st8 = { nearK: 1, focus: 7, range: 4, bokeh: 12, farK: 50, mode: '', open: -1, openA: 0, lastOpen: 0, headZ: 7, endK: 0, liveDone: false };
   const P = new THREE.Vector3(), L = new THREE.Vector3(), tmp = new THREE.Vector3(), q = new THREE.Vector3(), fwd = new THREE.Vector3();
   const flicker = (t) => {
     if (t < 0) return 0;
@@ -608,6 +611,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const bT = fm === 'end' || fm === 'rise' || fm === 'fbf-end' ? 6 : fm === 'intro' ? 8 : 12;
     st8.bokeh = damp(st8.bokeh, bT, 2.4, dt);
     bokehU.value = st8.bokeh;
+    st8.farK = damp(st8.farK, fm === 'fbf-end' ? 0.35 : 50, 2.4, dt);
+    farK.value = st8.farK;
     // El DOF lee la profundidad de lo que hay DETRÁS de las cintas (transparentes, sin depthWrite). En el giro, detrás
     // de la recta está el vacío (plano lejano, ~120 m) y la recta se ablandaba en una banda gruesa. El DOF entra
     // recién cuando el pasillo llena el cuadro (u 0,8 → 1,6); antes el rango es enorme y no desenfoca nada.
