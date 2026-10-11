@@ -511,8 +511,11 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     focusU.value = st8.focus;
     const rT = mode.startsWith('travel') ? 7.5 : mode === 'end' ? 3.2 : mode === 'about' ? 4 : THREE.MathUtils.lerp(2.0, 2.6, smooth(6, 12, st8.focus));
     st8.range = damp(st8.range, rT, 2.4, dt);
-    // relevo con el post del hero: con galW chico el DOF no desenfoca nada
-    rangeU.value = st8.range + (1 - gw) * (1 - gw) * 400;
+    // El DOF lee la profundidad de lo que hay DETRÁS de las cintas (transparentes, sin depthWrite). En el giro, detrás
+    // de la recta está el vacío (plano lejano, ~120 m) y la recta se ablandaba en una banda gruesa. El DOF entra
+    // recién cuando el pasillo llena el cuadro (u 0,8 → 1,6); antes el rango es enorme y no desenfoca nada.
+    const dofIn = gw * smooth(0.8, 1.6, u);
+    rangeU.value = st8.range + (1 - dofIn) * (1 - dofIn) * 1e5;
   }
 
   /** Rótulos HTML anclados a su punto 3D (mismo frame que el render). */
