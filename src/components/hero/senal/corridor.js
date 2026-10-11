@@ -572,7 +572,9 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       boxU.forEach((b, i) => { b.ig.value = igs[i]; });
       group.visible = prevVis;
     }
-    try { await pending; } catch (e) { /* idem */ }
+    // tope de 4 s: en WebGL 2 la compilación paralela se sondea con rAF y con la pestaña oculta no termina nunca;
+    // pasado el tope, lo que falte compila en el primer frame (un tirón) en lugar de dejar el pasillo sin abrir
+    try { await Promise.race([pending, new Promise((r) => setTimeout(r, 4000))]); } catch (e) { /* idem */ }
   }
 
   return {
