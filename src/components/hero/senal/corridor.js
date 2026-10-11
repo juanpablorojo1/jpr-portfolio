@@ -19,12 +19,16 @@
        cabezal por el pasillo hasta el final del riel y las placas quedan detrás de cámara, apagándose.
    (c) borde de acrílico leído como marco: sin franja de luz alrededor de la placa; el panel cae suave hacia los
        bordes (tubos y difusor), la carcasa es un aparato (filo fino arriba y a los lados, zócalo de comando abajo con
-       el LED rojo donde termina el ramal) y la luz se derrama en los azulejos. */
+       el LED rojo donde termina el ramal) y la luz se derrama en los azulejos.
+
+   Pared negra (pedido de Juan, 2026-10-11: «Tampoco me gusta la pared gris con grillado, prefiero una pared negra con
+   sombras»): la pared es negra mate (albedo ~0,022, micro-rugosidad apenas visible), sin azulejos ni guardasilla; la
+   profundidad sale del derrame de cada aparato (halo junto al marco, con su sombra de contacto) y de la caída de luz. */
 import * as THREE from 'three/webgpu';
 import {
   uniform, texture, uv, vec2, vec3, vec4, float, smoothstep, exp, abs, fract, mix, max, screenUV,
   length, time, sin, cos, positionWorld, distance, luminance, cameraPosition, step, dot, instancedBufferAttribute,
-  normalWorld, select, min, clamp
+  normalWorld, select, min, clamp, mx_noise_float
 } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
@@ -36,6 +40,7 @@ import { createPlateVideos } from './plate-video';
 
 export const WALL = 3.2, CEIL = 3.4, Z_IN = 2, Z_END = -62;
 const BOX_W = 2.6, BOX_H = BOX_W * 756 / 1600, BOX_Y = 1.75;
+const BZ = 0.024, BOT = 0.12, DEPTH = 0.12;     // carcasa: filo, zócalo de comando, profundidad
 const RAIL_STOP = Z_END + 0.7;
 const STANDBY = 0.07;                           // negatoscopio en espera: un resto de luz antes de que llegue la señal                  // el riel termina en el umbral del último vano
 const ST = GAL_PROJECTS.map((p, k) => ({ ...p, dwell: GAL_DWELLS[k] }));
@@ -160,15 +165,29 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const fogF = (k = 1) => float(1).sub(exp(distance(positionWorld, cameraPosition).mul(-0.05 * k)));
   const withFog = (c, k = 1) => mix(c, FOG, fogF(k));
 
+  /* pared negra mate (2026-10-11, reemplaza azulejos + juntas + guardasilla de albedo 0,12): albedo ~0,022 con
+     micro-rugosidad (ruido de dos escalas, ±12 %: se lee a contraluz, nunca como dibujo). La profundidad la da la luz:
+     - halo de cada aparato en su propia pared (la luz que escapa por el borde de la carcasa, despegada 12 cm), con una
+       sombra de contacto de ~6 cm pegada al marco y caída rápida: entre estaciones, la pared vuelve a negro;
+     - lightAt (alcance largo) sobre el albedo bajo: islas de luz y cruces casi a oscuras. */
   const wallMat = new THREE.MeshBasicNodeMaterial();
   {
     const p = toL(positionWorld);
-    const g1 = abs(fract(vec2(p.z, p.y).div(vec2(0.3, 0.3))).sub(0.5)).mul(2);       // azulejo
-    const g2 = abs(fract(vec2(p.z, p.y).div(vec2(2.4, 1.2))).sub(0.5)).mul(2);       // juntas de panel
-    const tile = smoothstep(0.93, 0.985, max(g1.x, g1.y)).mul(0.35).add(smoothstep(0.975, 0.995, max(g2.x, g2.y)).mul(0.9));
-    const dado = smoothstep(0.995, 1.0, fract(p.y.div(1.05))).mul(step(p.y, 1.1)).mul(0.6);  // guardasilla
-    const alb = float(0.12).add(tile.mul(0.3)).add(dado.mul(0.35));
-    wallMat.colorNode = withFog(lightAt(p).mul(alb).add(float(0.0022).mul(appear)));
+    const q = vec3(p.z, p.y, p.x);
+    const rough = mx_noise_float(q.mul(9.0)).mul(0.07).add(mx_noise_float(q.mul(1.4)).mul(0.08)).add(1);
+    const alb = float(0.022).mul(rough);
+    let halo = vec3(0.0);
+    ST.forEach((st, k) => {
+      const s = st.side, ig = boxU[k].ig;
+      const same = smoothstep(0.0, 0.5, p.x.mul(s));                                   // sólo su pared
+      const zc = st.z, yc = BOX_Y - (BOT - BZ) / 2, hw = BOX_W / 2 + BZ, hh = (BOX_H + BZ + BOT) / 2;
+      const dz = max(abs(p.z.sub(zc)).sub(hw), 0), dy = max(abs(p.y.sub(yc)).sub(hh), 0);
+      const d = length(vec2(dz, dy));
+      const contact = smoothstep(0.0, 0.07, d);                                       // sombra del marco en la pared
+      const glow = exp(d.mul(-4.2)).mul(0.04).add(exp(d.mul(-1.3)).mul(0.005));
+      halo = halo.add(OFF.mul(ig.mul(glow).mul(contact).mul(same)));
+    });
+    wallMat.colorNode = withFog(lightAt(p).mul(alb).add(halo.mul(rough).mul(appear)).add(float(0.0005).mul(appear)));
   }
   const FLOOR_NEAR = Z_IN + 4, FLOOR_FAR = Z_END - 120;   // sigue bajo la sala de proyección (projector.js)
   const floorMat = new THREE.MeshBasicNodeMaterial();
@@ -244,7 +263,6 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     headMatLocal.colorNode = RED.mul(6.0).mul(float(1).sub(smoothstep(0.0, 0.5, r)).pow(3));
     headMatLocal.opacityNode = float(1).sub(smoothstep(0.0, 0.5, r));
   }
-  const BZ = 0.024, BOT = 0.12, DEPTH = 0.12;
   // video demo de cada placa (plate-video.js): se funde sobre la captura principal cuando la placa está en foco
   const pv = createPlateVideos({ ST, S, ctl, alive });
   // texturas de las placas y de las películas antes de armar las estaciones, de a una por tarea: los filtros de canvas
@@ -587,7 +605,10 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     // giro de entrada (D-02): el pasillo existe desde u 0,6, antes de que la señal encienda la primera placa
     const entryK = smooth(0.45, 0.75, u) * (1 - smooth(1.5, 2.1, u));
     entryI.value = 0.05 * entryK;
-    grainK.value = Math.max(entryK, thr);
+    // pared negra (2026-10-11): en el pasillo el grano también se atenúa donde no hay luz. Con amplitud plena, el ruido
+    // recortado en 0 levantaba el negro de la pared a gris (~26/255 de media); así la pared queda negra y el grano vive
+    // en las luces. Fuera del pasillo, como antes (giro de entrada y umbral final ya lo hacían)
+    grainK.value = Math.max(entryK, thr, smooth(1.2, 1.8, u));
     // Frame by Frame: lámpara, haz, pantallas y foco (null antes de la sala)
     const fx = proj.update(u, t, dt, gw, P, L, S.inView);
     // Stack, Experience: su escena, foco y rótulos (null fuera de su tramo); manda la última que devuelve algo
