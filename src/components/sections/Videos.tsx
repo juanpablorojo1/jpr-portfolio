@@ -5,12 +5,16 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import StackBadge from '../ui/StackBadge';
 import { VIDEOS, type VideoItem } from '../../lib/content';
+import VideosStage from './VideosStage';
 
 // Motion & Video — data-driven from VIDEOS (src/lib/content.ts) + messages videos.items.<id>.
 // Lives OUTSIDE the card stack (like Skills): a normal-flow block that scrolls over the
 // sticky Projects card, so the stack and the horizontal rail math stay untouched.
-// Videos never autoplay: preload="none", a lazy optimized poster, and playback (with sound
-// and native controls) starts only on click/tap. Starting one pauses the others.
+// Two layouts in the same #videos block:
+// - .fv-stack (these cards): phones/tablets (<1024) and desktop without the 3D scene (reduced motion, ?static,
+//   no GPU). Videos never autoplay: preload="none", a lazy optimized poster, and playback (with sound and native
+//   controls) starts only on click/tap. Starting one pauses the others.
+// - VideosStage: desktop ≥1024 with the «Señal» scene — the projection room (projector.js + videos-senal.css).
 
 function VideoCard({ item }: { item: VideoItem }) {
   const t = useTranslations('videos');
@@ -161,42 +165,45 @@ export default function Videos() {
   const t = useTranslations('videos');
 
   return (
-    <section id="videos" className="py-16 lg:py-24 bg-bg border-t border-border">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="lg:grid lg:grid-cols-4 lg:gap-6 mb-8 lg:mb-12">
-          <div className="lg:col-span-2">
-            <p className="font-mono text-xs text-accent tracking-widest uppercase mb-3 lg:mb-6">{t('label')}</p>
-            <h2
-              className="font-display text-white uppercase leading-none"
-              style={{ fontSize: 'clamp(2.5rem, 7vw, 6rem)' }}
-            >
-              {t('headline')}
-            </h2>
-          </div>
-          <div className="lg:col-span-2 lg:self-end mt-4 lg:mt-0">
-            {/* How the pieces are made: AI post-production note + section stack */}
-            <p className="font-ui text-off-white text-base lg:text-lg leading-snug max-w-xl">{t('note')}</p>
-            <p className="font-mono text-xs text-muted uppercase tracking-widest mt-3">
-              {/* Fine pointer (mouse) says "click", touch says "tap" */}
-              <span className="hidden [@media(pointer:fine)]:inline">{t('intro_click')}</span>
-              <span className="[@media(pointer:fine)]:hidden">{t('intro_tap')}</span>
-            </p>
-            <div className="mt-5">
-              <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-2">{t('stack_label')}</p>
-              <div className="flex flex-wrap gap-2">
-                {(t.raw('stack') as string[]).map((tool) => <StackBadge key={tool} label={tool} />)}
+    <div id="videos">
+      <section className="fv-stack py-16 lg:py-24 bg-bg border-t border-border">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="lg:grid lg:grid-cols-4 lg:gap-6 mb-8 lg:mb-12">
+            <div className="lg:col-span-2">
+              <p className="font-mono text-xs text-accent tracking-widest uppercase mb-3 lg:mb-6">{t('label')}</p>
+              <h2
+                className="font-display text-white uppercase leading-none"
+                style={{ fontSize: 'clamp(2.5rem, 7vw, 6rem)' }}
+              >
+                {t('headline')}
+              </h2>
+            </div>
+            <div className="lg:col-span-2 lg:self-end mt-4 lg:mt-0">
+              {/* How the pieces are made: AI post-production note + section stack */}
+              <p className="font-ui text-off-white text-base lg:text-lg leading-snug max-w-xl">{t('note')}</p>
+              <p className="font-mono text-xs text-muted uppercase tracking-widest mt-3">
+                {/* Fine pointer (mouse) says "click", touch says "tap" */}
+                <span className="hidden [@media(pointer:fine)]:inline">{t('intro_click')}</span>
+                <span className="[@media(pointer:fine)]:hidden">{t('intro_tap')}</span>
+              </p>
+              <div className="mt-5">
+                <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-2">{t('stack_label')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {(t.raw('stack') as string[]).map((tool) => <StackBadge key={tool} label={tool} />)}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Mobile: horizontal snap strip (contained overflow). sm+: grid. */}
-        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-6 sm:scroll-px-0 -mx-6 px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 lg:gap-y-12">
-          {VIDEOS.map((item) => (
-            <VideoCard key={item.id} item={item} />
-          ))}
+          {/* Mobile: horizontal snap strip (contained overflow). sm+: grid. */}
+          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-6 sm:scroll-px-0 -mx-6 px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 lg:gap-y-12">
+            {VIDEOS.map((item) => (
+              <VideoCard key={item.id} item={item} />
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+      <VideosStage />
+    </div>
   );
 }

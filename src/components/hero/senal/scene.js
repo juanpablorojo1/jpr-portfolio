@@ -87,7 +87,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   let syncLoop = () => {};
   const sync = () => {
     if (ctl.disposed || S.dead) return;
-    if (shouldRun()) wdRun(); else wdPause();
+    if (shouldRun()) wdRun(); else { wdPause(); if (corr) corr.fbf.pauseAll(); }   // videos de Frame by Frame: pausa fuera de vista
     syncLoop();
   };
   on(document, 'visibilitychange', sync);
@@ -426,7 +426,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     });
     const hi = Math.min(N - 1, Math.floor(S.headS * N)) * 3;
     head.position.set(P[hi], P[hi + 1], P[hi + 2]);
-    lamp.position.set(corr ? corr.headWorldX() : RAIL_END_FALLBACK, lay.yT, -RAIL_Z);
+    if (corr) corr.headWorld(lamp.position); else lamp.position.set(RAIL_END_FALLBACK, lay.yT, -RAIL_Z);
     U.light.value.set(P[hi], P[hi + 1], P[hi + 2]).lerp(lamp.position, gw);   // en el pasillo, la luz es el cabezal
   }
 
@@ -488,10 +488,13 @@ async function boot({ S, root, after, assetBase }, ctl) {
     // ~0,5 s en lugar de cortar de la pose del About al pasillo
     G.w = on ? smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.45, g) * corrIn : 0;
     U.galW.value = G.w;
-    lampOpacity.value = G.w;
+    lampOpacity.value = G.w * (corr ? corr.fbf.lampK() : 1);
     if (corr) corr.group.visible = G.w > 0.0005;
     S.neg.live = on && G.w > 0.0005;
     if (!S.neg.live) S.neg.hover = -1;
+    // Frame by Frame vive en el mismo pasillo: con la galería cerrada, la sala no corre ni reproduce
+    S.fbf.live = S.neg.live && G.w > 0.5;
+    if (!S.fbf.live) { S.fbf.hover = -1; S.fbf.active = -1; if (corr) corr.fbf.pauseAll(); }
   }
 
   /* ---------- progreso de la cámara ----------
@@ -678,7 +681,13 @@ async function boot({ S, root, after, assetBase }, ctl) {
       corr.placeTags();
       const h = mouse.seen ? corr.pick(mouse.tx, mouse.ty, corr.activeTag(gal.p)) : -1;
       if (h !== S.neg.hover) { S.neg.hover = h; docEl.classList.toggle('pj-hot', h >= 0); }
-    } else if (docEl.classList.contains('pj-hot')) docEl.classList.remove('pj-hot');
+      // Frame by Frame: la pantalla en foco bajo el puntero se abre con clic (VideosStage.tsx)
+      const hf = mouse.seen && S.fbf.live ? corr.pickFbf(mouse.tx, mouse.ty) : -1;
+      if (hf !== S.fbf.hover) { S.fbf.hover = hf; docEl.classList.toggle('fv-hot', hf >= 0); }
+    } else {
+      if (docEl.classList.contains('pj-hot')) docEl.classList.remove('pj-hot');
+      if (docEl.classList.contains('fv-hot')) docEl.classList.remove('fv-hot');
+    }
 
     if (first) { first = false; clearWatchdog(); window.__senal.t.firstFrame = Math.round(performance.now()); S.onLive(); }
     if (hud && (Math.round(t * 10) % 5 === 0)) hud.textContent = `${backend} · ${gpu}  ${window.__senal.fps()} fps  dpr ${renderer.getPixelRatio().toFixed(2)}  p ${p.toFixed(3)}  u ${gal.p.toFixed(2)}${corr ? '  ' + corr.info().mode : ''}`;

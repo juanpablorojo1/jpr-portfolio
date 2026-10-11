@@ -46,6 +46,12 @@ export type Senal = {
       open: caso abierto (−1 ninguno; lo escribe el HTML, la cámara empuja hacia la placa).
       hover: placa bajo el puntero (−1 ninguna; lo escribe la escena). live: el pasillo está armado y se dibuja. */
   neg: { tags: HTMLElement[]; open: number; hover: number; live: boolean };
+  /** Frame by Frame «sala de proyección»: lo comparten el HTML (VideosStage.tsx) y la escena (projector.js).
+      tags: los rótulos de cada pantalla (la escena les escribe un parallax leve en el mismo frame del render).
+      active: pantalla con el haz encima (−1 ninguna; escena). hover: pantalla bajo el puntero (−1; escena).
+      paused: el usuario pausó la vista previa muda (HTML). open: video abierto en el diálogo (−1; HTML): la vista
+      previa se pausa. live: la sala está armada y se dibuja (escena). */
+  fbf: { tags: HTMLElement[]; active: number; hover: number; paused: boolean; open: number; live: boolean };
 };
 
 export function createSignal(search: string): Senal {
@@ -142,6 +148,7 @@ export function createSignal(search: string): Senal {
     inView: true,
     onView: () => {},
     neg: { tags: [], open: -1, hover: -1, live: false },
+    fbf: { tags: [], active: -1, hover: -1, paused: false, open: -1, live: false },
   };
   return S;
 }

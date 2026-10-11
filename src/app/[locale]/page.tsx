@@ -34,9 +34,10 @@ export default function HomePage() {
           <Projects />
         </TransitionZone>
 
-        {/* Videos — outside the card stack, same pattern as Skills: normal flow over the
-            sticky Projects card, so the horizontal rail and the stack stay untouched. */}
-        <div style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
+        {/* Frame by Frame — fuera del card stack, en flujo normal sobre Projects. Escritorio con la escena «Señal»:
+            hero-controller le pone data-see-through / data-gallery y es la sala de proyección (VideosStage);
+            la escena se pausa cuando la tapa Stack. Sin escena: el layout de tarjetas. */}
+        <div className="fbf-zone" data-section="videos" style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
           <Videos />
         </div>
 

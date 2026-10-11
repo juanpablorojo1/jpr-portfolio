@@ -29,6 +29,7 @@ import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { GAL_PROJECTS, GAL_DWELLS, GAL_END, GAL_ABOUT_OUT } from './gallery';
 import { playSound } from '../../../lib/sound';
+import { buildProjector } from './projector';
 
 export const WALL = 3.2, CEIL = 3.4, Z_IN = 2, Z_END = -62;
 const BOX_W = 2.6, BOX_H = BOX_W * 756 / 1600, BOX_Y = 1.75;
@@ -115,6 +116,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const FOG = vec3(0.0030, 0.0028, 0.0028);
   const boxU = ST.map(() => ({ pos: uniform(new THREE.Vector3()), ig: uniform(0) }));
   const headPos = uniform(new THREE.Vector3(0, 0.03, 7)), headI = uniform(1), railI = uniform(1);
+  // Frame by Frame (projector.js): la pantalla encendida alumbra el piso, los cables y el polvo cercano
+  const scrPos = uniform(new THREE.Vector3(0, -50, 0)), scrI = uniform(0);
   const appear = galW;                           // el pasillo existe sólo con la galería abierta (0 en el About)
   const lightAt = (p) => {
     let l = vec3(0.0);
@@ -125,6 +128,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     });
     const dh = distance(p, headPos);
     l = l.add(RED.mul(headI.mul(exp(dh.mul(-1.15)).mul(1.2).add(exp(dh.mul(-0.32)).mul(0.45)))));
+    l = l.add(OFF.mul(scrI.mul(exp(distance(p, scrPos).mul(-0.55)))));
     l = l.add(RED.mul(exp(abs(p.x).mul(-7.0)).mul(exp(p.y.mul(-4.5))).mul(0.3).mul(railI)));    // el riel ilumina su franja de piso (angosta: de cerca no es una banda)
     l = l.add(RED.mul(exp(p.y.mul(-0.6)).mul(0.03).mul(railI))).add(OFF.mul(railI.mul(0.03)));   // ambiente neutro (cae al final): se leen azulejos y vanos
     return l.mul(appear);
@@ -142,7 +146,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const alb = float(0.12).add(tile.mul(0.3)).add(dado.mul(0.35));
     wallMat.colorNode = withFog(lightAt(p).mul(alb).add(float(0.0022).mul(appear)));
   }
-  const FLOOR_NEAR = Z_IN + 4, FLOOR_FAR = Z_END - 30;
+  const FLOOR_NEAR = Z_IN + 4, FLOOR_FAR = Z_END - 56;   // sigue bajo la sala de proyección (projector.js)
   const floorMat = new THREE.MeshBasicNodeMaterial();
   {
     const p = toL(positionWorld);
@@ -341,6 +345,15 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   }
   const dust = new THREE.Sprite(dustMat); dust.count = DUST; dust.frustumCulled = false; group.add(dust);
 
+  /* ---------- Frame by Frame: la sala de proyección, del otro lado del último vano ---------- */
+  ctl.corrStage = 'projector';
+  const END_P = V(0.78, 0.86, -54.8), END_L = V(-0.12, 0.12, -61.8);   // última llave del pasillo (= primera de la sala)
+  const proj = await buildProjector({
+    group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
+    headPos, headI, scrPos, scrI, endP: END_P, endL: END_L, railHeadZ: RAIL_STOP + 0.15,
+  });
+  if (!proj || !alive()) return null;
+
   group.visible = false;
   scene.add(group);
 
@@ -380,7 +393,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     // final: dolly por el pasillo detrás del cabezal; baja hasta quedar cerca del riel, en oblicuo, mirando el fondo.
     // Las placas quedan detrás de cámara (se apagan); el cabezal en el umbral del último vano es la única luz.
     K.push([9.55, V(0.55, 1.3, -50.5), V(-0.25, 0.42, -61.5)]);
-    K.push([GAL_END, V(0.78, 0.86, -54.8), V(-0.12, 0.12, -61.8)]);
+    K.push([GAL_END, END_P.clone(), END_L.clone()]);
     KEYS = K;
     posCurve = new THREE.CatmullRomCurve3(K.map((k) => k[1]), false, 'centripetal');
     lookCurve = new THREE.CatmullRomCurve3(K.map((k) => k[2]), false, 'centripetal');
@@ -435,6 +448,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   function camPose(u, t, dt, mouse, outPos, outLook) {
     const k01 = keyParam(u);
     posCurve.getPoint(k01, P); lookCurve.getPoint(k01, L);
+    if (u > GAL_END) proj.pose(u, camera, P, L);          // Frame by Frame: la sala sigue la misma toma
     // caso abierto: la cámara empuja hacia la placa (oblicua, nunca de frente) y la deja del lado opuesto al texto
     st8.openA = damp(st8.openA, S.neg.open >= 0 ? 1 : 0, 3.2, dt);
     if (S.neg.open >= 0) st8.lastOpen = S.neg.open;
@@ -448,7 +462,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       P.lerp(pOpen, st8.openA); L.lerp(lOpen, st8.openA);
     }
     // cámara siempre viva: deriva lenta (dolly / orbit corto); al final, más calma (el cabezal manda)
-    const calm = 1 - 0.55 * smooth(LAST_OUT, GAL_END, u);
+    const calm = u > GAL_END ? proj.calm(u) : 1 - 0.55 * smooth(LAST_OUT, GAL_END, u);
     P.x += Math.sin(t * 0.23) * 0.17 * calm; P.y += Math.sin(t * 0.31 + 1) * 0.04 * calm; P.z += Math.cos(t * 0.19) * 0.2 * calm;
     L.x += Math.sin(t * 0.17 + 2) * 0.1 * calm; L.y += Math.sin(t * 0.27) * 0.035 * calm;
     outPos.copy(P); group.localToWorld(outPos);
@@ -468,6 +482,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const endK = smooth(LAST_OUT, LAST_OUT + 0.7, u);
     st8.endK = endK;
     railI.value = 1 - 0.75 * endK;
+    // Frame by Frame: lámpara, haz, pantallas y foco (null antes de la sala)
+    const fx = proj.update(u, t, dt, gw, P, L, S.inView);
 
     stations.forEach((s, k) => {
       const d0 = s.st.dwell[0];
@@ -488,7 +504,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     fwd.copy(L).sub(P).normalize();
     let mode, fT;
     const dIdx = ST.findIndex((s) => u >= s.dwell[0] - 0.12 && u <= s.dwell[1] + 0.05);
-    if (S.neg.open >= 0) { mode = 'open' + S.neg.open; fT = q.copy(stations[S.neg.open].lightPos).sub(P).dot(fwd); }
+    if (fx && u > GAL_END) { mode = fx.mode; fT = fx.fT; }
+    else if (S.neg.open >= 0) { mode = 'open' + S.neg.open; fT = q.copy(stations[S.neg.open].lightPos).sub(P).dot(fwd); }
     else if (u < 0.9) { mode = 'about'; fT = 7; }
     else if (u > LAST_OUT + 0.35) { mode = 'end'; fT = q.set(0, 0.03, st8.headZ).sub(P).dot(fwd); }   // el cabezal, nítido
     else if (dIdx >= 0) {
@@ -509,7 +526,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const fTarget = Math.max(0.6, fT);
     st8.focus = damp(st8.focus, fTarget, 2.4, dt);
     focusU.value = st8.focus;
-    const rT = mode.startsWith('travel') ? 7.5 : mode === 'end' ? 3.2 : mode === 'about' ? 4 : THREE.MathUtils.lerp(2.0, 2.6, smooth(6, 12, st8.focus));
+    const rT = fx && u > GAL_END ? fx.rT : mode.startsWith('travel') ? 7.5 : mode === 'end' ? 3.2 : mode === 'about' ? 4 : THREE.MathUtils.lerp(2.0, 2.6, smooth(6, 12, st8.focus));
     st8.range = damp(st8.range, rT, 2.4, dt);
     // El DOF lee la profundidad de lo que hay DETRÁS de las cintas (transparentes, sin depthWrite). En el giro, detrás
     // de la recta está el vacío (plano lejano, ~120 m) y la recta se ablandaba en una banda gruesa. El DOF entra
@@ -520,6 +537,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
 
   /** Rótulos HTML anclados a su punto 3D (mismo frame que el render). */
   function placeTags() {
+    proj.placeTags(camera);
     const tags = S.neg.tags;
     for (let k = 0; k < tags.length && k < ST.length; k++) {
       const el = tags[k];
@@ -552,6 +570,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   async function warm() {
     const prevVis = group.visible;
     group.visible = true;
+    proj.warm(true);
     const culled = [];
     group.traverse((o) => { if (o.isMesh || o.isSprite) { culled.push([o, o.frustumCulled]); o.frustumCulled = false; } });
     const igs = boxU.map((b) => b.ig.value);
@@ -571,6 +590,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       culled.forEach(([o, f]) => { o.frustumCulled = f; });
       boxU.forEach((b, i) => { b.ig.value = igs[i]; });
       group.visible = prevVis;
+      proj.warm(false);
     }
     // tope de 4 s: en WebGL 2 la compilación paralela se sondea con rAF y con la pestaña oculta no termina nunca;
     // pasado el tope, lo que falte compila en el primer frame (un tirón) en lugar de dejar el pasillo sin abrir
@@ -594,8 +614,12 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       return (base + 1.25 * Math.exp(-dz * 0.9) * headI.value / 1.85) * fade * near * back;
     },
     headWorldX: () => group.position.x + st8.headZ,
+    /** cabezal en el mundo (en Frame by Frame sube y es la lámpara del proyector) */
+    headWorld: (out) => group.localToWorld(out.copy(headPos.value)),
+    fbf: proj,
+    pickFbf: (mx, my) => proj.pick(mx, my, camera),
     railY: () => railY,
-    info: () => ({ mode: st8.mode, focus: +st8.focus.toFixed(2), range: +st8.range.toFixed(2), headZ: +st8.headZ.toFixed(2), ig: boxU.map((b) => +b.ig.value.toFixed(2)) }),
+    info: () => ({ mode: st8.mode, focus: +st8.focus.toFixed(2), range: +st8.range.toFixed(2), headZ: +st8.headZ.toFixed(2), ig: boxU.map((b) => +b.ig.value.toFixed(2)), ...proj.info() }),
     activeTag: (u) => ST.findIndex((s) => u >= s.dwell[0] - 0.16 && u <= s.dwell[1] + 0.08),
     ABOUT_OUT: GAL_ABOUT_OUT,
   };
