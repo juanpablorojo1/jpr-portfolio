@@ -118,6 +118,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const headPos = uniform(new THREE.Vector3(0, 0.03, 7)), headI = uniform(1), railI = uniform(1);
   // Frame by Frame (projector.js): la pantalla encendida alumbra el piso, los cables y el polvo cercano
   const scrPos = uniform(new THREE.Vector3(0, -50, 0)), scrI = uniform(0);
+  // caso abierto (0..1, con el damp de la cámara): el barrido de TraumaVision se apaga detrás del panel (D-09)
+  const caseU = uniform(0);
   const appear = galW;                           // el pasillo existe sólo con la galería abierta (0 en el About)
   const lightAt = (p) => {
     let l = vec3(0.0);
@@ -243,7 +245,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
           col = mix(neg, col, revealed);
           const band = exp(abs(u.x.sub(edge)).mul(-260)).mul(step(scanU, 0.999)).mul(step(0.001, scanU));
           const trail = exp(edge.sub(u.x).mul(-18)).mul(revealed).mul(step(scanU, 0.999)).mul(0.25);
-          col = col.add(RED.mul(band.mul(4.5).add(trail)).mul(ig.add(0.3)));
+          col = col.add(RED.mul(band.mul(4.5).add(trail)).mul(ig.add(0.3)).mul(float(1).sub(caseU)));
         }
         film.colorNode = col.mul(appear);
       }
@@ -452,6 +454,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     // caso abierto: la cámara empuja hacia la placa (oblicua, nunca de frente) y la deja del lado opuesto al texto
     st8.openA = damp(st8.openA, S.neg.open >= 0 ? 1 : 0, 3.2, dt);
     if (S.neg.open >= 0) st8.lastOpen = S.neg.open;
+    caseU.value = st8.openA;
     if (st8.openA > 0.001) {
       const so = stations[st8.lastOpen];
       const c = so.lightPos.clone(); c.x = so.st.side * (WALL - 0.12);
@@ -535,6 +538,17 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     rangeU.value = st8.range + (1 - dofIn) * (1 - dofIn) * 1e5;
   }
 
+  // borde izquierdo del interruptor de sonido (fijo abajo a la derecha); se mide una vez por ancho de ventana
+  let sndW = -1, sndL = Infinity;
+  const sndLeft = () => {
+    if (sndW !== innerWidth) {
+      const el = document.querySelector('.snd-toggle');
+      const ow = el ? el.offsetWidth : 0;
+      sndW = ow ? innerWidth : -1;
+      sndL = ow ? innerWidth * (1 - 0.055) - ow - 12 : innerWidth * 0.8;
+    }
+    return sndL;
+  };
   /** Rótulos HTML anclados a su punto 3D (mismo frame que el render). */
   function placeTags() {
     proj.placeTags(camera);
@@ -546,14 +560,26 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       const dist = tagW[k].distanceTo(camera.position);
       const w = el.offsetWidth, h = el.offsetHeight;
       const x = (tmp.x * 0.5 + 0.5) * innerWidth;
-      const yA = (-tmp.y * 0.5 + 0.5) * innerHeight, room = innerHeight - 80 - yA;   // 80: el interruptor de sonido
-      // escala por profundidad; si el rótulo no entra debajo de su ancla, primero se achica (hasta 0,82) y recién
-      // después sube: subir lo monta sobre la placa (Eleven a 1440: el eyebrow caía sobre el borde de la captura)
-      const sc = Math.max(0.82, Math.min(Math.min(1.12, Math.max(0.88, tagRef[k] / dist)), room / h));
-      const y = Math.min(yA, innerHeight - h * sc - 80);
-      const pad = innerWidth * 0.055;
-      let xr = ST[k].side > 0 ? x - w * sc : x;
-      xr = Math.min(Math.max(xr, pad), innerWidth - pad - w * sc);
+      // margen de abajo: 80 px sólo si el rótulo cae sobre el interruptor de sonido (abajo a la derecha); si no,
+      // alcanza con el aire de la página (32). Con el texto chico a 13 px (D-04) los rótulos quedaban en el piso de
+      // 0,82 por esos 48 px aun lejos del interruptor: así recuperan escala.
+      const yA = (-tmp.y * 0.5 + 0.5) * innerHeight;
+      const pad = innerWidth * 0.055, r = ST[k].side > 0;
+      const fit = (bot) => {
+        // escala por profundidad; si el rótulo no entra debajo de su ancla, primero se achica (hasta 0,82) y recién
+        // después sube: subir lo monta sobre la placa (Eleven a 1440: el eyebrow caía sobre el borde de la captura)
+        const sc = Math.max(0.82, Math.min(Math.min(1.12, Math.max(0.88, tagRef[k] / dist)), (innerHeight - bot - yA) / h));
+        const y = Math.min(yA, innerHeight - h * sc - bot);
+        // el rótulo de la pared derecha escala desde su borde derecho (transform-origin 100% 0): su caja visible es
+        // [xr + w·(1 − sc), xr + w]. El tope mide esa caja, no [xr, xr + w·sc]: al cerrar un caso, con la cámara
+        // volviendo, el de Eleven quedaba 9 px fuera del cuadro (D-10).
+        const lead = r ? w * (1 - sc) : 0;
+        const xr = Math.min(Math.max((r ? x - w * sc : x) + lead, pad), innerWidth - pad - w * sc) - lead;
+        return { sc, y, xr, R: xr + lead + w * sc };
+      };
+      let f = fit(32);
+      if (f.R > sndLeft() && f.y + h * f.sc > innerHeight - 80) f = fit(80);
+      const { sc, y, xr } = f;
       el.style.transform = `translate3d(${xr.toFixed(1)}px, ${Math.max(96, y).toFixed(1)}px, 0) scale(${sc.toFixed(3)})`;
     }
   }
