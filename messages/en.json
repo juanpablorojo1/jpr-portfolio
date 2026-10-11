@@ -94,7 +94,8 @@
         "prev": "Previous screenshot",
         "next": "Next screenshot",
         "full_size": "Open full size ↗"
-      }
+      },
+      "close_case": "Close case study"
     },
     "kibbo": {
       "eyebrow": "Case Study · B2B SaaS · Built via Eleven · 2026",
@@ -340,6 +341,12 @@
     "cv_cta": "Download CV ↓",
     "built_with": "Built with Next.js · GSAP · Tailwind",
     "copyright": "© 2026 Juan Pablo Rojo"
+  },
+  "sound": {
+    "label": "Sound",
+    "on": "on",
+    "off": "off",
+    "aria": "Interface sound"
   },
   "meta": {
     "title": "Juan Pablo Rojo — Biomedical Engineering · AI Engineer · Founder",

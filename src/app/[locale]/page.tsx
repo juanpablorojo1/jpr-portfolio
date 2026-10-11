@@ -9,6 +9,7 @@ import Skills from '../../components/sections/Skills';
 import Experience from '../../components/sections/Experience';
 import Contact from '../../components/sections/Contact';
 import TransitionZone from '../../components/motion/TransitionZone';
+import SoundToggle from '../../components/ui/SoundToggle';
 
 export default function HomePage() {
   return (
@@ -53,6 +54,8 @@ export default function HomePage() {
           <Contact />
         </TransitionZone>
       </main>
+      {/* Sonido del sitio (apagado por defecto): un solo interruptor para todas las secciones */}
+      <SoundToggle />
     </>
   );
 }

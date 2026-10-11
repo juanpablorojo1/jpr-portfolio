@@ -41,6 +41,11 @@ export type Senal = {
   inView: boolean;
   onView: (v: boolean) => void;
   watchdog?: { remaining: () => number; running: () => boolean };
+  /** Projects «negatoscopio»: lo comparten el HTML (ProjectsGallery.tsx) y la escena (corridor.js).
+      tags: los rótulos en el espacio (la escena les escribe el transform en el mismo frame del render).
+      open: caso abierto (−1 ninguno; lo escribe el HTML, la cámara empuja hacia la placa).
+      hover: placa bajo el puntero (−1 ninguna; lo escribe la escena). live: el pasillo está armado y se dibuja. */
+  neg: { tags: HTMLElement[]; open: number; hover: number; live: boolean };
 };
 
 export function createSignal(search: string): Senal {
@@ -136,6 +141,7 @@ export function createSignal(search: string): Senal {
     onLive: () => {},
     inView: true,
     onView: () => {},
+    neg: { tags: [], open: -1, hover: -1, live: false },
   };
   return S;
 }

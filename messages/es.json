@@ -94,7 +94,8 @@
         "prev": "Captura anterior",
         "next": "Captura siguiente",
         "full_size": "Ver en tamaño completo ↗"
-      }
+      },
+      "close_case": "Cerrar caso"
     },
     "kibbo": {
       "eyebrow": "Caso · SaaS B2B · Vía Eleven · 2026",
@@ -340,6 +341,12 @@
     "cv_cta": "Descargar CV ↓",
     "built_with": "Hecho con Next.js · GSAP · Tailwind",
     "copyright": "© 2026 Juan Pablo Rojo"
+  },
+  "sound": {
+    "label": "Sonido",
+    "on": "activado",
+    "off": "apagado",
+    "aria": "Sonido de la interfaz"
   },
   "meta": {
     "title": "Juan Pablo Rojo — Ingeniería Biomédica · AI Engineer · Fundador",
