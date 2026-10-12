@@ -598,7 +598,8 @@ async function boot({ S, root, after, assetBase }, ctl) {
       camera.position.lerp(galP, wo);
       hl.lerp(galL, wo);
       fov = lay.fov + ((innerWidth / innerHeight > 1.9 ? 30 : 32) - lay.fov) * G.w;   // aspecto del viewport (la lente corrida agranda camera.aspect)
-    }
+      if (corr.fovAt) fov = lay.fov + (corr.fovAt(g, innerWidth / innerHeight > 1.9 ? 30 : 32) - lay.fov) * G.w;   // la vitrina: óptica más larga
+    } else if (corr && corr.idle) corr.idle();
     // la vitrina (corridor.update) corre la lente para dejar la laptop a un lado del cuadro; fuera de Projects, sin corrimiento
     if (!(G.w > 0 && corr) && camera.view && camera.view.enabled) { camera.clearViewOffset(); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
     if (Math.abs(camera.fov - fov) > 1e-4) { camera.fov = fov; camera.updateProjectionMatrix(); }

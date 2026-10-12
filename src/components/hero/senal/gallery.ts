@@ -24,10 +24,12 @@ export const GAL_DWELLS: ReadonlyArray<readonly [number, number]> = [
 export const GAL_END = 10.0;                // la línea roja llega al final del riel: el cabezal solo
 export const GAL_SECTION_VH = 10.3;         // alto de la sección en viewports (Video entra por abajo en u = 10,3)
 
-/** entrada: la recta se recoge y dibuja la vitrina [0,40 → 1,05]; la tapa se abre; la pantalla se enciende */
-export const VIT_TRACE: readonly [number, number] = [0.4, 1.05];
-export const VIT_OPEN: readonly [number, number] = [0.92, 1.3];
-export const VIT_POWER: readonly [number, number] = [1.12, 1.45];
+/** entrada: la recta se recoge hasta el pie de la notebook; el cenital se enciende de golpe (VIT_OPEN[0]); la tapa se
+    abre; la pantalla se enciende. Todo termina antes de que entre el texto (GAL_DWELLS[0][0] − 0,16 = 1,19): así la
+    pantalla nunca está negra con el bloque ya armado. */
+export const VIT_TRACE: readonly [number, number] = [0.4, 0.88];
+export const VIT_OPEN: readonly [number, number] = [0.9, 1.05];
+export const VIT_POWER: readonly [number, number] = [1.0, 1.14];
 
 export type GalleryId = 'traumavision' | 'kibbo' | 'eleven' | 'leex';
 /** side: de qué lado va el texto (−1 izquierda, 1 derecha); la laptop queda del otro. screen: el home real del
