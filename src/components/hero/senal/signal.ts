@@ -47,12 +47,13 @@ export type Senal = {
       hover: placa bajo el puntero (−1 ninguna; lo escribe la escena). live: el pasillo está armado y se dibuja.
       paused: el usuario pausó el video demo de las placas (HTML; plate-video.js lo respeta, WCAG 2.2.2). */
   neg: { tags: HTMLElement[]; open: number; hover: number; live: boolean; paused: boolean };
-  /** Frame by Frame «sala de proyección»: lo comparten el HTML (VideosStage.tsx) y la escena (projector.js).
-      tags: los rótulos de cada pantalla (la escena les escribe un parallax leve en el mismo frame del render).
-      active: pantalla con el haz encima (−1 ninguna; escena). hover: pantalla bajo el puntero (−1; escena).
-      paused: el usuario pausó la vista previa muda (HTML). open: video abierto en el diálogo (−1; HTML): la vista
-      previa se pausa. live: la sala está armada y se dibuja (escena). */
-  fbf: { tags: HTMLElement[]; active: number; hover: number; paused: boolean; open: number; live: boolean };
+  /** Frame by Frame «Tambor 360» (U3): lo comparten el HTML (VideosStage.tsx) y la escena (projector.js).
+      rot: giro del tambor en caras (continuo, sin módulo: 0 = la primera al frente); lo escribe el HTML (flechas,
+      teclado, arrastre, con su tween) y la escena lo lee en cada frame. drag: el usuario está arrastrando (HTML).
+      sound: el video de frente suena (toggle del HTML; apagado por defecto). active: cara de frente en la estadía
+      (−1 ninguna; escena). hover: cara de frente bajo el puntero (−1; escena): el clic pausa. paused: el usuario
+      pausó los videos (HTML, WCAG 2.2.2). tags/open: sin uso (no hay rótulos ni diálogo). live: armado y se dibuja. */
+  fbf: { rot: number; drag: boolean; sound: boolean; tags: HTMLElement[]; active: number; hover: number; paused: boolean; open: number; live: boolean };
   /** Stack «la red por capas»: lo comparten el HTML (StackStage.tsx) y la escena (network.js).
       items: los rótulos de cada capa (uno por nodo con nombre; la escena les escribe la posición y data-on en el
       mismo frame del render). active: capa en estadía (−1 ninguna; escena). live: la red está armada y se dibuja. */
@@ -165,7 +166,7 @@ export function createSignal(search: string): Senal {
     inView: true,
     onView: () => {},
     neg: { tags: [], open: -1, hover: -1, live: false, paused: false },
-    fbf: { tags: [], active: -1, hover: -1, paused: false, open: -1, live: false },
+    fbf: { rot: 0, drag: false, sound: false, tags: [], active: -1, hover: -1, paused: false, open: -1, live: false },
     stk: { items: [], active: -1, live: false },
     exp: { v0: NaN, counts: [0, 0, 0], tags: [], box: [], live: false },
     ctc: { v0: NaN, dot: null, hover: false, press: false, live: false },

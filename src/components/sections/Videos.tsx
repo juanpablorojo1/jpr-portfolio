@@ -14,7 +14,7 @@ import VideosStage from './VideosStage';
 // - .fv-stack (these cards): phones/tablets (<1024) and desktop without the 3D scene (reduced motion, ?static,
 //   no GPU). Videos never autoplay: preload="none", a lazy optimized poster, and playback (with sound and native
 //   controls) starts only on click/tap. Starting one pauses the others.
-// - VideosStage: desktop ≥1024 with the «Señal» scene — the projection room (projector.js + videos-senal.css).
+// - VideosStage: desktop ≥1024 with the «Señal» scene — the 360 drum, «Tambor 360» (projector.js + videos-senal.css, U3).
 
 function VideoCard({ item }: { item: VideoItem }) {
   const t = useTranslations('videos');

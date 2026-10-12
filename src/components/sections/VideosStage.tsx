@@ -1,154 +1,151 @@
 'use client';
 
-/* Frame by Frame «Señal» · la sala de proyección (escritorio ≥1024 con la escena viva). U4.
-   La escena (projector.js, dentro del pasillo de corridor.js) dibuja la sala, el haz y las pantallas, y reproduce la
-   vista previa muda de la pantalla en foco. Acá vive la capa HTML:
-   - Titular, nota de posproducción por IA y stack, al encenderse el haz (plano de situación).
-   - Un rótulo por pantalla del lado contrario a ella: ficha, título, texto, herramientas, crédito y controles.
-     La escena le escribe un parallax leve en el mismo frame del render (S.fbf.tags). Entra con el gesto del sitio
-     (titular desde z −1100, expo.out 1,2 s; el resto 14 px, 1,0 s); sale en 0,5 s.
-   - «Reproducir» (o clic en la pantalla en foco) abre el video con sonido en un <dialog> modal con controles nativos;
-     mientras está abierto, la vista previa de la escena se pausa (S.fbf.open). «Pausar vista previa» la detiene
-     (S.fbf.paused, WCAG 2.2.2).
-   Los textos y controles siguen en el árbol de accesibilidad aunque estén apagados (opacidad 0): con Tab, el foco
-   en un rótulo apagado lleva el scroll a su estadía. Sin escena viva: los rótulos con su poster en HTML.
-   El guion (estadías, alto de la sección) es frames.ts, el mismo que usa la cámara. */
+/* Frame by Frame «Señal» · el Tambor 360 (escritorio ≥1024). U3 2026-10-12: port de la maqueta A de videos, elegida por
+   Juan («A»). Reemplaza a la sala de proyección (U4). Pedido: «una galeria 360 con videos, sin explicarlos, solo
+   mostrar los videos con una galeria que se va pasando si yo elijo». La escena (projector.js, dentro de corridor.js)
+   dibuja el tambor, la señal, el haz y los videos. Acá vive la capa HTML, sin textos sobre los videos:
+   - Giro del tambor (S.fbf.rot): flechas, ← → durante la estadía y arrastre horizontal (Pointer Events). El scroll no
+     lo gira y nada avanza solo. Giro = tween expo.inOut 1,3 s del valor continuo (se interrumpe y encadena); arrastrando,
+     el tambor sigue al puntero y al soltar se asienta en la cara vecina en la dirección del gesto. Da la vuelta.
+   - Contador «01 / 05» entre las flechas; pausa (WCAG 2.2.2; también con clic sobre la cara de frente) y sonido
+     (apagado por defecto: suena sólo la cara de frente).
+   - Accesibilidad: región con nombre, foco visible, cada video conserva su nombre (lista oculta con el de frente
+     marcado) y el cambio se anuncia en una región viva. Los textos de cada video siguen en las tarjetas (.fv-stack).
+     El crédito CC BY del video de la incubadora aparece mientras está al frente.
+   Sin escena viva (cargando): el póster de la cara de frente en HTML con los mismos controles, cambio por fundido.
+   El guion (estadía, alto de la sección) es frames.ts, el mismo que usa la cámara.
+   Base de la lógica de giro/arrastre: la galería 360 de u2-galeria360 (c736b87), adaptada; sin su diálogo. */
 
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import gsap from 'gsap';
-import { SplitText } from 'gsap/SplitText';
 import { onSignal, type Senal } from '../hero/senal/signal';
-import {
-  FBF_DWELLS, FBF_SCREENS, FBF_SECTION_VH, fbfTagWanted, fbfIntroWanted, fbfChromeWanted, fbfCurrent,
-} from '../hero/senal/frames';
+import { FBF_SECTION_VH, FBF_STAY, fbfCtrlWanted, fbfCanTurn, fbfChromeWanted } from '../hero/senal/frames';
 import { VIDEOS } from '../../lib/content';
-import { idleTask, lazySet, setBatch } from '../../lib/idle';
+import { idleTask, lazySet } from '../../lib/idle';
 import './videos-senal.css';
 
-gsap.registerPlugin(SplitText);
-
 const pad2 = (n: number) => String(n).padStart(2, '0');
+const N = VIDEOS.length;
+const mod = (a: number) => ((a % N) + N) % N;
+const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export default function VideosStage() {
   const t = useTranslations('videos');
   const ref = useRef<HTMLElement>(null);
-  const dlgRef = useRef<HTMLDialogElement>(null);
-  const dlgVideoRef = useRef<HTMLVideoElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<HTMLDivElement>(null);
   const sRef = useRef<Senal | null>(null);
-  const backRef = useRef<HTMLElement | null>(null);
-  // limpieza en el acto (el evento 'close' llega en una tarea aparte: queda de respaldo, la limpieza es idempotente)
-  const cleanupRef = useRef<() => void>(() => {});
-  const onShowRef = useRef<() => void>(() => {});
+  const liveRef = useRef(false);
+  // giro del tambor en caras: v (lo que se ve, con el tween) y target (entero: la cara elegida)
+  const rot = useRef({ v: 0, target: 0 });
+  const twRef = useRef<gsap.core.Tween | null>(null);
+  const [front, setFront] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [openK, setOpenK] = useState(-1);
-  const total = pad2(VIDEOS.length);
+  const [sound, setSound] = useState(false);
+  const total = pad2(N);
 
   useEffect(() => { if (sRef.current) sRef.current.fbf.paused = paused; }, [paused]);
+  useEffect(() => { if (sRef.current) sRef.current.fbf.sound = sound; }, [sound]);
 
-  /* ---------- diálogo: el video con sonido y controles nativos ---------- */
-  const openVideo = (k: number) => {
-    const d = dlgRef.current, v = dlgVideoRef.current;
-    if (!d || !v || d.open) return;
-    backRef.current = document.activeElement as HTMLElement | null;
-    const item = VIDEOS[k];
-    v.poster = item.poster;
-    v.src = item.src;
-    setOpenK(k);
-    if (sRef.current) sRef.current.fbf.open = k;
-    d.showModal();
-    onShowRef.current();
-    v.focus({ preventScroll: true });
-    v.play().catch(() => { /* el navegador lo rechazó: quedan los controles nativos */ });
+  /* ---------- giro ---------- */
+  const writeRot = () => { if (sRef.current) sRef.current.fbf.rot = rot.current.v; };
+  /** con la escena viva, sólo con el tambor encendido y la cámara frente a él */
+  const canTurn = () => {
+    const S = sRef.current;
+    return !liveRef.current || !S ? true : fbfCanTurn(S.state.gal);
   };
-  const closeVideo = () => { const d = dlgRef.current; if (d?.open) d.close(); cleanupRef.current(); };
+  const turnTo = (target: number, dur = 1.3, ease = 'expo.inOut') => {
+    rot.current.target = target;
+    setFront(mod(target));
+    twRef.current?.kill();
+    if (!liveRef.current || reduced()) { rot.current.v = target; writeRot(); return; }
+    twRef.current = gsap.to(rot.current, { v: target, duration: dur, ease, onUpdate: writeRot });
+  };
+  const go = (d: number) => { if (canTurn()) turnTo(rot.current.target + d); };
+  const goRef = useRef(go);
+  goRef.current = go;
 
+  /* ---------- arrastre horizontal (Pointer Events): el tambor sigue al puntero y se asienta al soltar ---------- */
   useEffect(() => {
-    const d = dlgRef.current, v = dlgVideoRef.current;
-    if (!d || !v) return;
-    const SCROLL_KEYS = new Set(['PageDown', 'PageUp', 'Home', 'End']);
-    const block = (e: Event) => { if (d.open) e.preventDefault(); };
-    const keys = (e: KeyboardEvent) => {
-      if (!d.open) return;
-      // en la página de atrás no se scrollea; dentro del video las flechas y el espacio son del reproductor
-      if (SCROLL_KEYS.has(e.key) || ((e.key === ' ' || e.key.startsWith('Arrow')) && e.target !== v)) {
-        if (!(e.target as HTMLElement).closest?.('button')) e.preventDefault();
+    const el = dragRef.current;
+    if (!el) return;
+    let id = -1, x0 = 0, r0 = 0, moved = false, lastX = 0, lastT = 0, vel = 0;
+    const per = () => Math.max(380, innerWidth * 0.3);        // px de arrastre por cara
+    const setDrag = (v: boolean) => { if (sRef.current) sRef.current.fbf.drag = v; };
+    const down = (e: PointerEvent) => {
+      if (e.button !== 0 || !e.isPrimary || !canTurn()) return;
+      id = e.pointerId; x0 = lastX = e.clientX; lastT = performance.now(); vel = 0; moved = false;
+      r0 = rot.current.v;
+      try { el.setPointerCapture(id); } catch { /* puntero sintético o ya liberado */ }
+    };
+    const move = (e: PointerEvent) => {
+      if (e.pointerId !== id) return;
+      const dx = e.clientX - x0;
+      if (!moved && Math.abs(dx) > 6) { moved = true; twRef.current?.kill(); el.classList.add('is-drag'); setDrag(true); }
+      if (!moved) return;
+      const now = performance.now(), dt = Math.max(8, now - lastT);
+      vel = vel * 0.6 + ((e.clientX - lastX) / dt) * 0.4;           // px/ms, suavizado
+      lastX = e.clientX; lastT = now;
+      if (liveRef.current && !reduced()) { rot.current.v = r0 - dx / per(); writeRot(); }
+    };
+    const up = (e: PointerEvent) => {
+      if (e.pointerId !== id) return;
+      id = -1;
+      el.classList.remove('is-drag');
+      setDrag(false);
+      if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+      if (!moved) {
+        // un toque sin arrastre sobre la cara de frente: pausa o reanuda
+        const S = sRef.current;
+        if (!liveRef.current || (S && S.fbf.hover >= 0)) setPaused((p) => !p);
+        return;
       }
+      const dx = e.clientX - x0;
+      const base = Math.round(r0);
+      if (!liveRef.current || reduced()) {                           // por corte: un paso si el gesto alcanzó
+        if (Math.abs(dx) > 40) turnTo(base + (dx < 0 ? 1 : -1));
+        return;
+      }
+      // proyección con la inercia del gesto, entre las dos caras vecinas de donde quedó el tambor (un tirón rápido no
+      // salta dos); al menos un paso si se arrastró más de un 15 % de cara
+      const v = rot.current.v;
+      const proj = v - (vel * 120) / per();
+      let tgt = Math.max(Math.floor(v), Math.min(Math.ceil(v), Math.round(proj)));
+      const drag = -dx / per();
+      if (tgt === base && Math.abs(drag) > 0.15) tgt = base + Math.sign(drag);
+      turnTo(tgt, Math.min(1.0, 0.5 + 0.5 * Math.abs(tgt - rot.current.v)), 'power3.out');
     };
-    let shown = false;
-    const onClose = () => {
-      if (!shown) return;
-      shown = false;
-      v.pause();
-      v.removeAttribute('src');
-      v.load();
-      setOpenK(-1);
-      if (sRef.current) sRef.current.fbf.open = -1;
-      removeEventListener('wheel', block);
-      removeEventListener('touchmove', block);
-      const back = backRef.current;
-      if (back && document.contains(back)) back.focus({ preventScroll: true });
-    };
-    cleanupRef.current = onClose;
-    const onShow = () => {
-      if (shown) return;
-      shown = true;
-      addEventListener('wheel', block, { passive: false });
-      addEventListener('touchmove', block, { passive: false });
-    };
-    // clic en el fondo del diálogo (fuera del video y de la barra) lo cierra
-    const onClick = (e: MouseEvent) => { if (e.target === d) { d.close(); onClose(); } };
-    // Esc: el navegador cierra el diálogo; la limpieza va acá mismo
-    const onCancel = () => { queueMicrotask(onClose); };
-    d.addEventListener('close', onClose);
-    d.addEventListener('cancel', onCancel);
-    d.addEventListener('click', onClick);
-    addEventListener('keydown', keys);
-    onShowRef.current = onShow;
+    el.addEventListener('pointerdown', down);
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
     return () => {
-      d.removeEventListener('close', onClose);
-      d.removeEventListener('cancel', onCancel);
-      d.removeEventListener('click', onClick);
-      removeEventListener('keydown', keys);
-      removeEventListener('wheel', block);
-      removeEventListener('touchmove', block);
-      if (d.open) d.close();
-      onClose();
+      el.removeEventListener('pointerdown', down);
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', up);
     };
+    // canTurn/turnTo/writeRot sólo usan refs: estables para el efecto
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* ---------- coreografía con la cámara ---------- */
+  /* ---------- con la escena viva: visibilidad atada a la cámara; teclado durante la estadía ---------- */
   useEffect(() => {
-    const section = ref.current;
-    if (!section) return;
+    const section = ref.current, ring = ringRef.current;
+    if (!section || !ring) return;
     const mm = gsap.matchMedia();
     mm.add('(min-width: 1024px) and (prefers-reduced-motion: no-preference)', () => {
       const zone = section.closest<HTMLElement>('.fbf-zone');
       const stage = section.querySelector<HTMLElement>('.fv-stage');
       const label = section.querySelector<HTMLElement>('.fv-label');
-      const count = section.querySelector<HTMLElement>('.fv-count');
-      const countN = section.querySelector<HTMLElement>('.fv-count b');
-      const intro = section.querySelector<HTMLElement>('.fv-intro');
-      const head = section.querySelector<HTMLElement>('.fv-head');
-      const tags = Array.from(section.querySelectorAll<HTMLElement>('.fv-tag'));
-      if (!zone || !stage || !label || !count || !countN || !intro || !head || tags.length !== FBF_DWELLS.length) return;
+      if (!zone || !stage || !label) return;
       let S: Senal | null = null;
-      const offSignal = onSignal((s) => { S = s; sRef.current = s; s.fbf.tags = tags; });
-      let alive = true;
-
-      type T = { el: HTMLElement; title: HTMLElement; rest: HTMLElement[]; split: SplitText | null; on: boolean; tl: gsap.core.Timeline | null };
-      const mk = (el: HTMLElement, title: HTMLElement, rest: HTMLElement[]): T => ({ el, title, rest, split: null, on: false, tl: null });
-      const ts: T[] = tags.map((el) => mk(el, el.querySelector<HTMLElement>('.fv-title')!, Array.from(el.querySelectorAll<HTMLElement>('.fv-eyebrow, .fv-chips, .fv-cap, .fv-made, .fv-credit, .fv-acts'))));
-      const it: T = mk(intro, head, Array.from(intro.querySelectorAll<HTMLElement>('.fv-note, .fv-hint, .fv-tools')));
-      const all = [...ts, it];
+      const offSignal = onSignal((s) => {
+        S = s; sRef.current = s;
+        s.fbf.rot = rot.current.v; s.fbf.paused = paused; s.fbf.sound = sound; s.fbf.drag = false;
+      });
       let chromeOn = false;
-      let cancelPrep = () => {};
-      const hideJobs: Array<[HTMLElement | HTMLElement[] | null, gsap.TweenVars]> = [
-        [[label, count], { opacity: 0, y: 14 }],
-        ...all.flatMap((c): Array<[HTMLElement | HTMLElement[], gsap.TweenVars]> => [[c.rest, { opacity: 0, y: 14 }], [c.title, { opacity: 0 }]]),
-      ];
-
-      // L: el aterrizaje del About (el mismo que usa la cámara: trig.end = alto de la zona del hero)
       let land = 1;
       const measure = () => {
         const hz = document.querySelector<HTMLElement>('.transition-zone[data-section="hero"]');
@@ -156,176 +153,137 @@ export default function VideosStage() {
       };
       measure();
       addEventListener('resize', measure);
-      // estado inicial (todo apagado): ya si la sección está cerca de la vista; si no, en su tarea ociosa o al primer
-      // scroll, fuera de la hidratación (D-01). Lejos no se ve: el resultado es el mismo.
-      const hidden = lazySet(section, hideJobs);
+      const hidden = lazySet(section, [[label, { opacity: 0, y: 14 }]]);
 
-      const show = (c: T) => {
-        c.on = true;
-        c.tl?.kill();
-        c.el.setAttribute('data-on', '');
-        c.tl = gsap.timeline();
-        if (c.split) c.tl.to(c.split.chars, { z: 0, y: 0, rotationX: 0, opacity: 1, duration: 1.2, ease: 'expo.out', stagger: 0.012 }, 0.12);
-        c.tl.to(c.rest, { opacity: 1, y: 0, duration: 1.0, ease: 'expo.out', stagger: 0.07 }, 0.05);
+      // ← → con el tambor frente a la cámara (no en campos de texto ni con modificadores)
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.defaultPrevented) return;
+        const tg = e.target as HTMLElement | null;
+        if (tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
+        if (!ring.hasAttribute('data-on')) return;
+        e.preventDefault();
+        goRef.current(e.key === 'ArrowRight' ? 1 : -1);
       };
-      const hide = (c: T) => {
-        c.on = false;
-        c.tl?.kill();
-        c.tl = gsap.timeline({ onComplete: () => { c.el.removeAttribute('data-on'); c.el.style.transform = ''; } });
-        if (c.split) c.tl.to(c.split.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0, duration: 0.5, ease: 'expo.out', stagger: 0.003 }, 0);
-        c.tl.to(c.rest, { opacity: 0, y: 14, duration: 0.35, ease: 'expo.out' }, 0);
-      };
-
-      // clic en la escena sobre la pantalla en foco: abre su video con sonido
-      const onDocClick = (e: MouseEvent) => {
-        if (e.button !== 0 || !S || S.fbf.hover < 0) return;
-        if ((e.target as HTMLElement).closest('a, button, input, dialog, [role="dialog"], .jnav')) return;
-        if (ts[S.fbf.hover]?.on) openVideo(S.fbf.hover);
-      };
-      document.addEventListener('click', onDocClick);
-      // teclado: el foco en un rótulo apagado lleva el scroll a su estadía (la cámara encara la pantalla)
-      const onFocusIn = (e: FocusEvent) => {
-        if (dlgRef.current?.open) return;
-        const tag = (e.target as HTMLElement).closest<HTMLElement>('.fv-tag');
-        if (!tag) return;
-        const k = tags.indexOf(tag);
-        if (k < 0 || ts[k].on) return;
-        const [d0, d1] = FBF_DWELLS[k];
-        window.scrollTo({ top: land + ((d0 + d1) / 2) * innerHeight, behavior: 'instant' as ScrollBehavior });
+      addEventListener('keydown', onKey);
+      // teclado: el foco en la galería apagada lleva el scroll a la estadía (la cámara queda frente al tambor)
+      const onFocusIn = () => {
+        if (!liveRef.current || !S) return;
+        if (fbfCtrlWanted(S.state.gal)) return;
+        window.scrollTo({ top: land + ((FBF_STAY[0] + FBF_STAY[1]) / 2) * innerHeight, behavior: 'instant' as ScrollBehavior });
       };
       section.addEventListener('focusin', onFocusIn);
 
       const tick = () => {
         if (!zone.hasAttribute('data-gallery')) return;
-        const raw = (scrollY - land) / innerHeight;
         const live = !!(zone.hasAttribute('data-see-through') && S && !S.dead && S.fbf.live);
-        const u = live && S ? S.state.gal : raw;            // con escena: el texto llega con la cámara
-        stage.classList.toggle('is-live', live);
+        if (live !== liveRef.current) {
+          liveRef.current = live;
+          stage.classList.toggle('is-live', live);
+          if (!live) { twRef.current?.kill(); rot.current.v = rot.current.target; }
+        }
+        if (S && S.fbf.rot !== rot.current.v) S.fbf.rot = rot.current.v;
+        const u = live && S ? S.state.gal : (scrollY - land) / innerHeight;
         const wantChrome = fbfChromeWanted(u);
         if (wantChrome !== chromeOn) {
           chromeOn = wantChrome;
-          gsap.to([label, count], { opacity: wantChrome ? 1 : 0, y: wantChrome ? 0 : 14, duration: wantChrome ? 0.8 : 0.35, ease: 'expo.out', overwrite: true });
+          gsap.to(label, { opacity: wantChrome ? 1 : 0, y: wantChrome ? 0 : 14, duration: wantChrome ? 0.8 : 0.35, ease: 'expo.out', overwrite: true });
         }
-        const n = pad2(fbfCurrent(u) + 1);
-        if (countN.textContent !== n) countN.textContent = n;
-        const wi = fbfIntroWanted(u);
-        if (wi && !it.on) show(it); else if (!wi && it.on) hide(it);
-        ts.forEach((c, k) => {
-          const want = fbfTagWanted(k, u);
-          if (want && !c.on) show(c); else if (!want && c.on) hide(c);
-        });
+        ring.toggleAttribute('data-on', !live || fbfCtrlWanted(u));
       };
-
-      // titulares partidos fuera de la hidratación, en su propia tarea ociosa (D-01): partir, medir, preparar
-      document.fonts.ready.then(() => {
-        if (!alive) return;
-        cancelPrep = idleTask(() => {
-          if (!alive) return;
-          hidden.ensure();
-          all.forEach((c) => { c.split = SplitText.create(c.title, { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' }); });
-          measure();
-          setBatch([
-            ...all.map((c): [Element[], gsap.TweenVars] => [c.split!.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 }]),
-            ...all.map((c): [HTMLElement, gsap.TweenVars] => [c.title, { opacity: 1 }]),
-          ]);
-          gsap.ticker.add(tick);
-        });
-      });
+      const cancelPrep = idleTask(() => { hidden.ensure(); measure(); gsap.ticker.add(tick); });
 
       return () => {
-        alive = false;
         cancelPrep();
         hidden.cancel();
         gsap.ticker.remove(tick);
         removeEventListener('resize', measure);
-        document.removeEventListener('click', onDocClick);
+        removeEventListener('keydown', onKey);
         section.removeEventListener('focusin', onFocusIn);
-        if (S) { S.fbf.tags = []; S.fbf.paused = false; }
+        twRef.current?.kill();
+        if (S) { S.fbf.paused = false; S.fbf.sound = false; S.fbf.drag = false; }
         offSignal();
         sRef.current = null;
+        liveRef.current = false;
+        rot.current.v = rot.current.target;
         stage.classList.remove('is-live');
+        ring.setAttribute('data-on', '');
         document.documentElement.classList.remove('fv-hot');
-        all.forEach((c) => {
-          c.tl?.kill();
-          c.el.removeAttribute('data-on');
-          c.el.style.transform = '';
-          if (c.split) { gsap.killTweensOf(c.split.chars); c.split.revert(); }
-          gsap.set([...c.rest, c.title], { clearProps: 'opacity,transform' });
-        });
-        gsap.set([label, count], { clearProps: 'opacity,transform' });
+        gsap.set(label, { clearProps: 'opacity,transform' });
       };
     });
     return () => mm.revert();
-    // openVideo sólo usa refs: estable para el efecto
+    // paused/sound (valor inicial) sólo se leen al montar; el resto son refs
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const stack = t.raw('stack') as string[];
-  const cur = openK >= 0 ? VIDEOS[openK] : null;
+  const fItem = VIDEOS[front];
+  const fTitle = t(`items.${fItem.id}.title`);
 
   return (
-    <section ref={ref} className="fv-gal" aria-label={t('label')} style={{ height: `${FBF_SECTION_VH * 100}vh` }}>
+    <section ref={ref} className="fv-gal" aria-labelledby="fv-h" style={{ height: `${FBF_SECTION_VH * 100}vh` }}>
       <div className="fv-stage">
-        <p className="fv-label"><span className="fv-dot" aria-hidden="true" />{t('label')}</p>
-        <p className="fv-count" aria-hidden="true"><b>01</b> / {total}</p>
+        <p className="fv-label" aria-hidden="true"><span className="fv-dot" />{t('label')}</p>
+        <h2 id="fv-h" className="sr-only">{t('headline')}</h2>
 
-        {/* plano de situación: titular, cómo se hacen las piezas y con qué */}
-        <div className="fv-intro">
-          <h2 className="fv-head font-display" aria-label={t('headline')}>{t('headline')}</h2>
-          <p className="fv-note">{t('note')}</p>
-          <p className="fv-hint">{t('intro_click')}</p>
-          <div className="fv-tools">
-            <p className="fv-k">{t('stack_label')}</p>
-            <p className="fv-mono">{stack.join(' · ')}</p>
+        <div
+          ref={ringRef}
+          className="fv-ring"
+          data-on=""
+          role="region"
+          aria-roledescription={t('gallery_role')}
+          aria-label={t('headline')}
+          tabIndex={0}
+        >
+          {/* sin escena viva: el póster de la cara de frente, con fundido al cambiar (con la escena, el tambor es 3D) */}
+          <div className="fv-front" aria-hidden="true">
+            {VIDEOS.map((item, k) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={item.id} src={item.poster} alt="" decoding="async" loading="lazy" width={item.width} height={item.height}
+                data-land={item.width > item.height ? '' : undefined} data-on={k === front ? '' : undefined} />
+            ))}
           </div>
-        </div>
+          <div ref={dragRef} className="fv-drag" aria-hidden="true" />
 
-        {/* una ficha por pantalla, del lado contrario a ella (frames.ts: side) */}
-        {VIDEOS.map((item, k) => {
-          const title = t(`items.${item.id}.title`);
-          const audio = item.audioLang === 'es' ? t('audio_es') : item.audioLang === 'en' ? t('audio_en') : null;
-          return (
-            <article key={item.id} className="fv-tag" data-side={FBF_SCREENS[k].side < 0 ? 'r' : 'l'} data-land={item.width > item.height ? '' : undefined} aria-labelledby={`fv-t-${k}`}>
-              {/* sin escena viva: el poster en HTML (con la escena, la pantalla está en la sala) */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="fv-poster" src={item.poster} alt="" loading="lazy" decoding="async" width={item.width} height={item.height} />
-              <p className="fv-eyebrow"><b>{pad2(k + 1)}</b> / {total} · {t(`items.${item.id}.eyebrow`)}</p>
-              <h3 id={`fv-t-${k}`} className="fv-title font-display" aria-label={title}>{title}</h3>
-              <p className="fv-chips">{item.duration}{audio && <> · {audio}</>}</p>
-              <p className="fv-cap">{t(`items.${item.id}.caption`)}</p>
-              <p className="fv-made">{t(`items.${item.id}.made_with`)}</p>
-              {item.creditHref && (
-                <p className="fv-credit">
-                  {t.rich(`items.${item.id}.credit`, {
-                    license: (chunks) => <a href={item.creditHref} target="_blank" rel="noopener noreferrer license">{chunks}</a>,
-                  })}
-                </p>
-              )}
-              <div className="fv-acts">
-                <button type="button" className="fv-btn fv-play" onClick={() => openVideo(k)} aria-label={t('play_aria', { title })} aria-haspopup="dialog">
-                  <svg width="9" height="10" viewBox="0 0 14 16" fill="currentColor" aria-hidden="true"><path d="M0 0 L14 8 L0 16 Z" /></svg>
-                  {t('play')}
-                </button>
-                <button type="button" className="fv-btn fv-pause" onClick={() => setPaused((p) => !p)}>
-                  {paused
-                    ? <svg width="9" height="10" viewBox="0 0 14 16" fill="currentColor" aria-hidden="true"><path d="M0 0 L14 8 L0 16 Z" /></svg>
-                    : <svg width="9" height="10" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true"><path d="M0 0h3.5v12H0zM6.5 0H10v12H6.5z" /></svg>}
-                  {paused ? t('preview_play') : t('preview_pause')}
-                </button>
-              </div>
-            </article>
-          );
-        })}
+          {/* el nombre de cada video, para lectores de pantalla */}
+          <ol className="sr-only">
+            {VIDEOS.map((item, k) => (
+              <li key={item.id} aria-current={k === front ? 'true' : undefined}>
+                {t('slide_aria', { n: k + 1, total: N, title: t(`items.${item.id}.title`) })}
+              </li>
+            ))}
+          </ol>
+          <p className="sr-only" aria-live="polite">{t('slide_aria', { n: front + 1, total: N, title: fTitle })}</p>
+
+          <div className="fv-ctrl">
+            <button type="button" className="fv-btn fv-arrow" onClick={() => go(-1)} aria-label={t('prev')}>
+              <span aria-hidden="true">←</span>
+            </button>
+            <p className="fv-pos" aria-hidden="true"><b>{pad2(front + 1)}</b> / {total}</p>
+            <button type="button" className="fv-btn fv-arrow" onClick={() => go(1)} aria-label={t('next')}>
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+          <div className="fv-acts">
+            <button type="button" className="fv-tgl" onClick={() => setPaused((p) => !p)} aria-pressed={paused} aria-label={paused ? t('resume') : t('pause')}>
+              {paused
+                ? <svg width="9" height="10" viewBox="0 0 14 16" fill="currentColor" aria-hidden="true"><path d="M0 0 L14 8 L0 16 Z" /></svg>
+                : <svg width="9" height="10" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true"><path d="M0 0h3.5v12H0zM6.5 0H10v12H6.5z" /></svg>}
+            </button>
+            <button type="button" className="fv-tgl fv-snd" onClick={() => setSound((s) => !s)} aria-pressed={sound}>
+              <span className="fv-bars" aria-hidden="true"><i /><i /><i /></span>
+              {t('sound')}
+            </button>
+          </div>
+          {fItem.creditHref && (
+            <p className="fv-credit">
+              {t.rich(`items.${fItem.id}.credit`, {
+                license: (chunks) => <a href={fItem.creditHref} target="_blank" rel="noopener noreferrer license">{chunks}</a>,
+              })}
+            </p>
+          )}
+        </div>
       </div>
-
-      {/* el video con sonido: diálogo modal nativo (Esc, foco atrapado por el navegador, foco de vuelta al cerrar) */}
-      <dialog ref={dlgRef} className="fv-dlg" aria-labelledby="fv-dlg-t">
-        <div className="fv-dlg-bar">
-          <p id="fv-dlg-t">{cur ? <><b>{pad2(openK + 1)}</b> / {total} · {t(`items.${cur.id}.title`)}</> : ''}</p>
-          <button type="button" className="fv-btn" onClick={closeVideo}>{t('close')}</button>
-        </div>
-        <video ref={dlgVideoRef} className="fv-dlg-video" controls playsInline preload="none" data-portfolio-video="" />
-      </dialog>
     </section>
   );
 }

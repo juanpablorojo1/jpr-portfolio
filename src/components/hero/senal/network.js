@@ -29,8 +29,8 @@ import {
   uniform, uv, vec3, float, smoothstep, exp, abs, mix, max, length, time, sin, cos, attribute,
   instancedBufferAttribute, distance, normalize, cross, step, fract, positionGeometry
 } from 'three/tsl';
-import { FBF_END, FBF_SCREENS } from './frames';
-import { STK_CONNECT, STK_INTRO, STK_DWELLS, STK_OUT, STK_END, STK_LAYERS, stkItemsWindow, stkWave } from './stack';
+import { FBF_END, FBF_HOME } from './frames';
+import { STK_CONNECT, STK_INTRO, STK_DWELLS, STK_OUT, STK_END, STK_LAYERS, STK_SHIFT, stkItemsWindow, stkWave } from './stack';
 import { VIDEOS } from '../../../lib/content';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -158,7 +158,8 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
 
   /* ---------- nube: el polvo del haz al apagarse la última pantalla (Frame by Frame) ---------- */
   const R = rng(20261011);
-  const sc = FBF_SCREENS[FBF_SCREENS.length - 1], vd = VIDEOS[FBF_SCREENS.length - 1];
+  // la cara de frente del Tambor 360 en reposo (U3); la nube va entre la lámpara del haz y ella
+  const sc = FBF_HOME, vd = VIDEOS[0];
   const sh = sc.h, sw = sh * vd.width / vd.height;
   const lampC = V(0, 3.6, sc.z + 6.2 - 1.1);         // la lámpara al final de la sala (projector.js: riel de techo)
   const scM = new THREE.Matrix4().makeRotationY(sc.yaw).setPosition(sc.x, sc.y, sc.z);
@@ -758,7 +759,7 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
     const w = STK_LAYERS.map((_, k) => stkWave(k, u));
     W.value.set(w[0], w[1], w[2], w[3]);
     cW.value = smooth(STK_CONNECT[0] - 0.05, STK_CONNECT[1], u);
-    apU.value = smooth(22.2, 22.75, u);
+    apU.value = smooth(22.2 + STK_SHIFT, 22.75 + STK_SHIFT, u);
     preU.value = 0.22 * smooth(STK_DWELLS[0][1] - 0.15, STK_DWELLS[0][1] + 0.1, u);
     outK.value = smooth(STK_OUT[0], STK_OUT[0] + 0.55, u);
     pathOut.value = smooth(STK_OUT[0], STK_END, u);

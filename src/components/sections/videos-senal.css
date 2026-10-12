@@ -1,7 +1,9 @@
-/* Frame by Frame «Señal» — la sala de proyección (escritorio ≥1024 con la escena viva o por venir: data-gallery en
-   .fbf-zone, lo pone hero-controller). Sin data-gallery (reduced motion, ?static, sin GPU, <1024): las tarjetas
-   (.fv-stack). Con la escena viva (.fv-stage.is-live) la sala es transparente y las pantallas están en el 3D; sin
-   ella, cada ficha muestra su poster en HTML. CSS propio con prefijo .fv (mismo sistema que .pj de Projects). */
+/* Frame by Frame «Señal» — el Tambor 360 (escritorio ≥1024 con la escena viva o por venir: data-gallery en .fbf-zone,
+   lo pone hero-controller). U3 2026-10-12, port de la maqueta A de videos. Sin data-gallery (reduced motion, ?static,
+   sin GPU, <1024): las tarjetas (.fv-stack). Con la escena viva (.fv-stage.is-live) la sección es transparente y el
+   tambor está en el 3D; acá sólo van los controles (flechas, posición, pausa, sonido), la capa de arrastre y el
+   crédito CC BY del video de frente. Sin escena (cargando): el póster de la cara de frente, con fundido al cambiar.
+   Tokens de 02-brand: rojo #E8272A sólo como acento, radios 0, botón de doble marco, JetBrains Mono para metadatos. */
 
 .fv-gal { display: none; }
 
@@ -12,9 +14,7 @@
 
   .fv-stage {
     --pad: 5.5vw;
-    --dim: rgba(232, 228, 222, .62);
-    --dim-scene: rgba(232, 228, 222, .82);
-    --line: rgba(232, 228, 222, .28);
+    --line: rgba(232, 228, 222, .2);
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --mono: var(--font-jetbrains-mono), ui-monospace, monospace;
     position: sticky; top: 0; height: 100vh; overflow: hidden;
@@ -23,128 +23,110 @@
   }
   @supports (height: 100svh) { .fv-stage { height: 100svh; } }
 
-  /* rótulo de sección y contador: el mismo sistema que Projects */
-  .fv-label, .fv-count {
-    position: absolute; top: clamp(84px, 11vh, 110px); margin: 0;
+  /* rótulo de sección: el mismo sistema que Projects */
+  .fv-label {
+    position: absolute; top: clamp(84px, 11vh, 110px); left: var(--pad); margin: 0;
+    display: flex; align-items: center; gap: 10px;
     font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: #e8e4de;
     text-shadow: 0 0 2px rgba(0, 0, 0, .95), 0 0 6px rgba(0, 0, 0, .9), 0 1px 14px rgba(0, 0, 0, .85);
   }
-  .fv-label { left: var(--pad); display: flex; align-items: center; gap: 10px; }
-  .fv-count { right: var(--pad); }
-  /* índice en tono pleno con el cuadrado rojo, como Projects (D-03) / Stack / Experience: el rojo, sólo como acento (B-01) */
-  .fv-count b, .fv-eyebrow b, .fv-dlg-bar p b { color: #e8e4de; font-weight: 400; }
-  .fv-count b::before, .fv-eyebrow b::before, .fv-dlg-bar p b::before {
+  .fv-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
+
+  /* ---------- la galería: región con foco, arrastre, controles ---------- */
+  .fv-ring { position: absolute; inset: 0; outline: none; }
+  .fv-ring:focus-visible::after {
+    content: ''; position: absolute; inset: 14px; border: 1px solid rgba(232, 39, 42, .5); pointer-events: none;
+  }
+  /* arrastre: el centro del cuadro, donde está el tambor (no tapa el menú ni los controles) */
+  .fv-drag {
+    position: absolute; left: var(--pad); right: var(--pad); top: 120px; bottom: 132px;
+    cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  }
+  .fv-ring[data-on] .fv-drag { pointer-events: auto; }
+  .fv-drag.is-drag { cursor: grabbing; }
+  /* la cara de frente bajo el puntero: el clic pausa o reanuda (scene.js pone fv-hot en <html>) */
+  html.fv-hot .fv-ring[data-on] .fv-drag:not(.is-drag) { cursor: pointer; }
+
+  .fv-ctrl, .fv-acts, .fv-credit {
+    position: absolute; bottom: max(4.2vh, 30px);
+    opacity: 0; transform: translateY(12px);
+    transition: opacity .5s var(--ease-out), transform .9s var(--ease-out);
+  }
+  .fv-ring[data-on] .fv-ctrl, .fv-ring[data-on] .fv-acts, .fv-ring[data-on] .fv-credit { opacity: 1; transform: none; }
+  .fv-ctrl { left: 50%; translate: -50% 0; display: flex; align-items: center; gap: 16px; }
+  .fv-acts { right: var(--pad); display: flex; align-items: center; gap: 6px; }
+  .fv-pos {
+    margin: 0; min-width: 5.2em; text-align: center;
+    font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: rgba(232, 228, 222, .62);
+    text-shadow: 0 0 2px rgba(0, 0, 0, .95), 0 1px 14px rgba(0, 0, 0, .85);
+  }
+  /* índice en tono pleno con el cuadrado rojo, como Projects / Stack / Experience */
+  .fv-pos b { color: #e8e4de; font-weight: 400; }
+  .fv-pos b::before {
     content: ''; display: inline-block; width: 5px; height: 5px; margin: 0 .75em 0 0; vertical-align: .2em;
     background: #e8272a; box-shadow: 0 0 8px rgba(232, 39, 42, .6);
   }
-  .fv-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
 
-  /* ---------- plano de situación ---------- */
-  .fv-intro {
-    position: absolute; left: var(--pad); bottom: max(9vh, 64px); width: min(44vw, 700px);
-  }
-  .fv-head {
-    margin: 0; font-weight: 400; text-transform: uppercase; color: #fff;
-    font-size: clamp(92px, 9.6vw, 176px); line-height: .84; letter-spacing: .005em;
-    perspective: 900px; text-shadow: 0 2px 40px rgba(0, 0, 0, .6);
-  }
-  .fv-note {
-    margin: 22px 0 0; max-width: 50ch; font-size: clamp(17px, 1.3vw, 20px); line-height: 1.42; color: #e8e4de;
-    text-shadow: 0 1px 16px rgba(0, 0, 0, .9);
-  }
-  .fv-hint {
-    margin: 14px 0 0; font: 10.5px/1.5 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim-scene);
-    text-shadow: 0 1px 10px rgba(0, 0, 0, .9);
-  }
-  .fv-tools { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(232, 228, 222, .16); max-width: 62ch; }
-
-  /* ---------- ficha de cada pantalla ---------- */
-  .fv-tag {
-    position: absolute; top: 132px; bottom: max(10vh, 96px); width: clamp(380px, 31vw, 480px);   /* 96: encima del interruptor de sonido */
-    display: flex; flex-direction: column; justify-content: flex-end;
-    will-change: transform;
-  }
-  .fv-tag[data-side='l'] { left: var(--pad); }
-  .fv-tag[data-side='r'] { right: var(--pad); }
-  .fv-tag > * { flex-shrink: 0; }
-  .fv-poster { display: none; }
-
-  .fv-eyebrow, .fv-k {
-    margin: 0; font: 10.5px/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim-scene);
-    text-shadow: 0 1px 12px rgba(0, 0, 0, .9);
-  }
-  .fv-title {
-    margin: 10px 0 0; font-weight: 400; text-transform: uppercase; color: #fff;
-    font-size: clamp(44px, 3.9vw, 70px); line-height: .9; letter-spacing: .005em;
-    perspective: 900px; text-shadow: 0 2px 30px rgba(0, 0, 0, .65);
-  }
-  .fv-head .word, .fv-title .word { display: inline-block; white-space: nowrap; transform-style: preserve-3d; }
-  .fv-head .char, .fv-title .char { display: inline-block; will-change: transform, opacity; }
-  .fv-chips {
-    margin: 12px 0 0; font: 10.5px/1.5 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: #e8e4de;
-    text-shadow: 0 1px 10px rgba(0, 0, 0, .9);
-  }
-  .fv-cap {
-    margin: 14px 0 0; font-size: 17px; line-height: 1.45; color: rgba(232, 228, 222, .9);
-    text-shadow: 0 1px 16px rgba(0, 0, 0, .9);
-  }
-  .fv-made, .fv-credit, .fv-mono {
-    margin: 12px 0 0; font: 11px/1.65 var(--mono); letter-spacing: .02em; color: var(--dim-scene);
-    text-shadow: 0 1px 10px rgba(0, 0, 0, .9);
-  }
-  .fv-tools .fv-mono { margin-top: 4px; }
-  .fv-credit { margin-top: 6px; }
-  .fv-credit a { color: #e8e4de; text-decoration: underline; text-decoration-color: rgba(232, 228, 222, .4); text-underline-offset: 3px; pointer-events: auto; }
-  .fv-credit a:hover, .fv-credit a:focus-visible { color: #fff; text-decoration-color: #e8272a; outline: none; }
-  .fv-credit a:focus-visible { box-shadow: 0 1px 0 #e8272a; }
-
-  .fv-acts { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+  /* botón de doble marco en ángulo recto: marco exterior + celda interior; el rojo entra desde el borde al hover */
   .fv-btn {
-    display: inline-flex; align-items: center; gap: 9px; min-height: 40px; padding: 0 14px;
-    border: 1px solid var(--line); background: rgba(8, 8, 8, .55); color: #e8e4de; cursor: pointer;
-    font: 10.5px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; white-space: nowrap;
-    transition: border-color .25s var(--ease-out), background-color .25s var(--ease-out), color .25s var(--ease-out);
+    display: inline-flex; padding: 4px; border: 1px solid rgba(232, 228, 222, .16); background: rgba(5, 5, 5, .55);
+    color: #fff; cursor: pointer; pointer-events: none;
+    transition: border-color .3s var(--ease-out), transform .18s var(--ease-out);
   }
-  .fv-btn svg { flex-shrink: 0; color: #e8272a; transition: color .25s var(--ease-out); }
-  .fv-tag[data-on] .fv-btn { pointer-events: auto; }
-  .fv-btn:hover, .fv-btn:focus-visible { border-color: #e8272a; outline: none; }
-  .fv-btn:focus-visible { box-shadow: 0 0 0 1px #e8272a; }
-  .fv-btn:active { background: rgba(232, 39, 42, .16); }
-  .fv-play { border-color: #e8272a; }
-  .fv-play:hover, .fv-play:focus-visible { background: #e62529; color: #fff; }
-  .fv-play:hover svg, .fv-play:focus-visible svg { color: #fff; }
+  .fv-ring[data-on] .fv-btn, .fv-ring[data-on] .fv-tgl, .fv-ring[data-on] .fv-credit a { pointer-events: auto; }
+  .fv-btn > span {
+    position: relative; z-index: 0; width: 46px; height: 46px; display: grid; place-items: center; overflow: hidden;
+    border: 1px solid rgba(232, 228, 222, .1); font: 400 17px/1 var(--mono);
+  }
+  .fv-btn > span::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; background: #e8272a;
+    transform: scaleX(0); transform-origin: 0 50%; transition: transform .5s var(--ease-out);
+  }
+  .fv-ctrl .fv-btn:first-child > span::before { transform-origin: 100% 50%; }
+  .fv-btn:hover, .fv-btn:focus-visible { border-color: rgba(232, 39, 42, .75); outline: none; }
+  .fv-btn:hover > span::before, .fv-btn:focus-visible > span::before { transform: scaleX(1); }
+  .fv-btn:focus-visible { box-shadow: 0 0 0 2px #080808, 0 0 0 3px #e8272a; }
+  .fv-btn:active { transform: scale(.95); }
 
-  /* la pantalla en foco bajo el puntero se abre (scene.js pone fv-hot en <html>) */
-  html.fv-hot, html.fv-hot body { cursor: pointer; }
+  /* pausa y sonido: discretos (mono, sin relleno) */
+  .fv-tgl {
+    display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; pointer-events: none;
+    border: 1px solid transparent; background: none; color: rgba(232, 228, 222, .62); cursor: pointer;
+    font: 10.5px/1 var(--mono); letter-spacing: .18em; text-transform: uppercase;
+    text-shadow: 0 0 2px rgba(0, 0, 0, .95), 0 1px 14px rgba(0, 0, 0, .85);
+    transition: color .25s var(--ease-out), border-color .25s var(--ease-out);
+  }
+  .fv-tgl:hover, .fv-tgl:focus-visible { color: #fff; border-color: rgba(232, 228, 222, .2); outline: none; }
+  .fv-tgl:focus-visible { box-shadow: 0 0 0 1px #e8272a; }
+  .fv-tgl[aria-pressed="true"] { color: #e8e4de; }
+  .fv-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+  .fv-bars i { display: block; width: 2px; height: 3px; background: currentColor; transition: height .3s var(--ease-out); }
+  .fv-snd[aria-pressed="true"] .fv-bars i:nth-child(1) { height: 7px; }
+  .fv-snd[aria-pressed="true"] .fv-bars i:nth-child(2) { height: 12px; }
+  .fv-snd[aria-pressed="true"] .fv-bars i:nth-child(3) { height: 5px; }
 
-  /* ---------- sin escena viva: la ficha lleva su poster ---------- */
-  .fv-stage:not(.is-live) .fv-tag .fv-poster {
-    display: block; width: auto; height: min(34vh, 300px); max-width: 100%; object-fit: cover; margin-bottom: 18px;
-    border: 1px solid rgba(232, 228, 222, .16);
+  /* crédito CC BY del video de frente (sólo la incubadora lo lleva) */
+  .fv-credit {
+    left: var(--pad); max-width: min(30vw, 420px); margin: 0;
+    font: 10px/1.55 var(--mono); letter-spacing: .04em; color: rgba(232, 228, 222, .62);
+    text-shadow: 0 0 2px rgba(0, 0, 0, .95), 0 1px 14px rgba(0, 0, 0, .85);
   }
-  .fv-stage:not(.is-live) .fv-tag[data-land] .fv-poster { height: auto; width: 100%; max-height: 34vh; }
-  .fv-stage:not(.is-live) .fv-tag { transform: none !important; }
+  .fv-credit a { color: #e8e4de; text-decoration: underline; text-decoration-color: rgba(232, 228, 222, .4); text-underline-offset: 3px; }
+  .fv-credit a:hover, .fv-credit a:focus-visible { color: #fff; text-decoration-color: #e8272a; outline: none; }
 
-  /* ---------- el video con sonido ---------- */
-  .fv-dlg {
-    position: fixed; inset: 0; width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0;
-    padding: 0 var(--fv-pad, 5.5vw); border: 0; background: rgba(8, 8, 8, .96); color: #e8e4de;
-    font-family: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
-    opacity: 0; transition: opacity .4s cubic-bezier(0.16, 1, 0.3, 1), overlay .4s allow-discrete, display .4s allow-discrete;
+  /* ---------- sin escena viva: el póster de la cara de frente (fundido entre pósters) ---------- */
+  .fv-front { position: absolute; inset: 0; pointer-events: none; }
+  .fv-front img {
+    position: absolute; left: 50%; top: 47%; transform: translate(-50%, -50%);
+    height: min(70vh, 700px); width: auto; max-width: none; object-fit: cover;
+    border: 1px solid rgba(232, 228, 222, .16); opacity: 0; transition: opacity .45s var(--ease-out);
   }
-  .fv-dlg[open] { display: flex; flex-direction: column; opacity: 1; }
-  @starting-style { .fv-dlg[open] { opacity: 0; } }
-  .fv-dlg::backdrop { background: rgba(8, 8, 8, .6); }
-  .fv-dlg-bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: 88px; flex-shrink: 0; }
-  .fv-dlg-bar p { margin: 0; font: 10.5px/1.4 var(--font-jetbrains-mono), ui-monospace, monospace; letter-spacing: .16em; text-transform: uppercase; }
-  .fv-dlg .fv-btn {
-    --line: rgba(232, 228, 222, .28); --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-    font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
-  }
-  .fv-dlg-video { flex: 1; min-height: 0; width: 100%; margin-bottom: 40px; background: #080808; object-fit: contain; outline: none; }
-  .fv-dlg-video:focus-visible { box-shadow: 0 0 0 1px #e8272a; }
+  .fv-front img[data-land] { height: auto; width: min(66vw, 1100px); }
+  .fv-front img[data-on] { opacity: 1; }
+  .fv-stage.is-live .fv-front { display: none; }
+  .fv-stage:not(.is-live) .fv-acts .fv-tgl:first-child { display: none; }
 }
 
 @media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
-  .fv-btn, .fv-btn svg, .fv-dlg { transition: none; }
+  .fv-btn, .fv-btn > span::before, .fv-tgl, .fv-ctrl, .fv-acts, .fv-credit, .fv-front img { transition: none; }
 }

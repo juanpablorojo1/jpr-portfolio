@@ -247,6 +247,13 @@
     "preview_pause": "Pausar vista previa",
     "preview_play": "Reanudar vista previa",
     "close": "Cerrar",
+    "prev": "Video anterior",
+    "next": "Video siguiente",
+    "gallery_role": "galería",
+    "slide_aria": "Video {n} de {total}: {title}",
+    "pause": "Pausar los videos",
+    "resume": "Reanudar los videos",
+    "sound": "Sonido",
     "items": {
       "b6_story": {
         "eyebrow": "LEEX · Incubadora B6",

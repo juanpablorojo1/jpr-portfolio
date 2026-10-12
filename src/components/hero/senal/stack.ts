@@ -16,19 +16,24 @@ import { FBF_V0, FBF_SECTION_VH, FBF_END } from './frames';
 
 /** u en que la sección de Stack entra por abajo (= fin de Video) */
 export const STK_V0 = FBF_V0 + FBF_SECTION_VH;
+/** corrimiento del guion de Stack respecto del diseño original (FBF_END 20,75): el Tambor 360 de Frame by Frame
+    (U3 2026-10-12) acortó la sección de Video. Los números de abajo son los aprobados + STK_SHIFT: misma coreografía,
+    empieza antes. */
+export const STK_SHIFT = FBF_END - 20.75;
+const sh = (u: number) => u + STK_SHIFT;
 /** los puntos del haz se conectan [empieza, conectados] */
-export const STK_CONNECT: readonly [number, number] = [FBF_END, 21.55];
+export const STK_CONNECT: readonly [number, number] = [FBF_END, sh(21.55)];
 /** titular de la sección (la señal sale de la nube) */
-export const STK_INTRO: readonly [number, number] = [21.45, 22.45];
+export const STK_INTRO: readonly [number, number] = [sh(21.45), sh(22.45)];
 /** estadía frente a cada capa [entra, sale]: biomédica, IA, web, automatización */
 export const STK_DWELLS: ReadonlyArray<readonly [number, number]> = [
-  [22.85, 23.95],
-  [24.55, 25.65],
-  [26.25, 27.35],
-  [27.95, 29.05],
+  [sh(22.85), sh(23.95)],
+  [sh(24.55), sh(25.65)],
+  [sh(26.25), sh(27.35)],
+  [sh(27.95), sh(29.05)],
 ];
 /** la red se apaga y el camino de la señal se endereza [empieza, recta] */
-export const STK_OUT: readonly [number, number] = [29.25, 30.0];
+export const STK_OUT: readonly [number, number] = [sh(29.25), sh(30.0)];
 export const STK_END = STK_OUT[1];
 /** alto de la sección en viewports: Experience entra por abajo en u = STK_V0 + STK_SECTION_VH */
 export const STK_SECTION_VH = 9.4;

@@ -174,7 +174,9 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const post = dofN.add(bl).mul(mix(vigHero, vigNeg, galW)).add(grainN.mul(galW).mul(fbfK).mul(grainAmp));
   // QA (?vmask): la máscara de las pantallas teñida de verde
   const maskDbg = S.params && S.params.has('vmask');
-  pipeline.outputNode = maskDbg ? mix(post, vec4(0, 0.4, 0, 1), vit.maskNode.mul(0.5)) : mix(post, col, vit.maskNode);
+  // las caras del tambor de Frame by Frame (projector.js) tampoco pasan por el post (U3)
+  const clean = max(vit.maskNode, proj.maskNode);
+  pipeline.outputNode = maskDbg ? mix(post, vec4(0, 0.4, 0, 1), clean.mul(0.5)) : mix(post, col, clean);
   ctl.nodes.push(dofN, bl);
   ctl.pipelines.push(pipeline);
 
