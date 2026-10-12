@@ -594,8 +594,10 @@ async function boot({ S, root, after, assetBase }, ctl) {
       wo = smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.15, g);
       camera.position.lerp(galP, wo);
       hl.lerp(galL, wo);
-      fov = lay.fov + ((camera.aspect > 1.9 ? 30 : 32) - lay.fov) * G.w;
+      fov = lay.fov + ((innerWidth / innerHeight > 1.9 ? 30 : 32) - lay.fov) * G.w;   // aspecto del viewport (la lente corrida agranda camera.aspect)
     }
+    // la vitrina (corridor.update) corre la lente para dejar la laptop a un lado del cuadro; fuera de Projects, sin corrimiento
+    if (!(G.w > 0 && corr) && camera.view && camera.view.enabled) { camera.clearViewOffset(); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
     if (Math.abs(camera.fov - fov) > 1e-4) { camera.fov = fov; camera.updateProjectionMatrix(); }
     const abK = abRig * (1 - wo);
     if (abK > 0) {
@@ -625,7 +627,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     // ~0,5 s en lugar de cortar de la pose del About al pasillo
     G.w = on ? smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.45, g) * corrIn : 0;
     U.galW.value = G.w;
-    lampOpacity.value = G.w * (corr ? corr.fbf.lampK() : 1);
+    lampOpacity.value = G.w * (corr ? corr.fbf.lampK() * corr.lampVis() : 1);
     if (corr) corr.group.visible = G.w > 0.0005;
     S.neg.live = on && G.w > 0.0005;
     if (!S.neg.live) S.neg.hover = -1;

@@ -102,7 +102,7 @@ export const LEEX_SCREENSHOTS = [
 
 // ── Videos demostrativos de Projects (Track C, 2026-10-11) ──
 // No son Frame by Frame (VIDEOS, más abajo). Loops mudos 1280×720: MP4 H.264 primero y WebM VP9 de respaldo.
-// Los usan la placa del negatoscopio (plate-video.js, VideoTexture) y el caso (ProjectDemo.tsx).
+// Los usa el caso (ProjectDemo.tsx). La vitrina de Projects muestra el home de cada producto, no el demo.
 // alt en messages projects.<id>.demo_alt. LEEX: el poster dice «IN DEVELOPMENT — LAUNCHING SOON».
 export type ProjectDemoId = 'traumavision' | 'kibbo' | 'leex' | 'eleven';
 export interface ProjectDemo {

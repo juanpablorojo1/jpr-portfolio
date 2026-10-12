@@ -1,48 +1,48 @@
-/* «Señal» · Projects: el negatoscopio (escritorio ≥1024 con la escena viva). Port de la maqueta A
-   (clients/jpr-portfolio/maquetas/2026-10-10-projects/a/), elegida por Juan el 2026-10-10.
-   Un solo guion compartido por la escena 3D (corridor.js: cámara, placas, foco) y el HTML (ProjectsGallery.tsx:
-   rótulos en el espacio, casos, alto de la sección). Las unidades son viewports de scroll contados desde el
-   aterrizaje del About (L): u = (scrollY − L) / innerHeight. La zona de Projects llega arriba en u = 1 y queda
+/* «Señal» · Projects: la vitrina en el vacío (escritorio ≥1024 con la escena viva). Port de la maqueta A
+   (clients/jpr-portfolio/maquetas/2026-10-11-projects/a/), elegida por Juan el 2026-10-12 con un cambio: sin despiece,
+   cada proyecto es UNA laptop íntegra con el home real del producto nítido.
+   Un solo guion compartido por la escena 3D (vitrina.js dentro de corridor.js: cámara, laptops, señal) y el HTML
+   (ProjectsGallery.tsx: bloque de texto, caso, alto de la sección). Las unidades son viewports de scroll contados desde
+   el aterrizaje del About (L): u = (scrollY − L) / innerHeight. La zona de Projects llega arriba en u = 1 y queda
    pegada hasta que la tapa Video (entra por abajo en u = GAL_SECTION_VH).
 
-   Coreografía: el About se despide (0,35); la cámara gira 90° y la recta del About se vuelve el riel que entra a un
-   pasillo de radiología a oscuras. Cada proyecto es una placa en un negatoscopio de pared, en paredes alternadas y a
-   distinta profundidad; la señal sube por un ramal y lo enciende. Estadía = la cámara encara la placa en oblicuo con
-   rack focus desde las películas colgadas en primer plano. Al final los negatoscopios se apagan y la cámara sigue al
-   cabezal hasta el final del riel: queda como la única luz, y Frame by Frame lo recibe. */
+   Coreografía: el About se despide (0,35); la recta del About se recoge y dibuja la vitrina; adentro aparece la laptop
+   de TraumaVision cerrada, la señal la abre y la pantalla se enciende desde la línea roja hacia arriba. Estadía = la
+   cámara orbita ~28° alrededor del objeto entero, el nombre gigante se desliza detrás. Relevo = la tapa se entorna, la
+   señal sale del canto como un cometa, cruza el vacío y la laptop siguiente llega girando desde la profundidad y abre la
+   tapa; el layout se espeja. Salida: la última laptop se cierra en una línea roja que corre por el riel hasta el
+   umbral: el cabezal queda solo y Frame by Frame lo recibe (frames.ts, sin cambios). */
 
-export const GAL_ABOUT_OUT = 0.35;          // el About se va y arranca el giro
-/** estadía de la cámara frente a cada placa [entra, sale], en el orden del encargo */
+export const GAL_ABOUT_OUT = 0.35;          // el About se va y la recta empieza a recogerse
+/** estadía de la cámara frente a cada laptop [entra, sale], en el orden del sitio */
 export const GAL_DWELLS: ReadonlyArray<readonly [number, number]> = [
-  [2.2, 3.4],     // TraumaVision (pared izquierda)
-  [4.2, 5.3],     // KIBBO (derecha)
-  [6.1, 7.1],     // LEEX (izquierda, más lejos; el foco se queda corto)
-  [7.9, 9.0],     // Eleven (derecha)
+  [1.35, 2.55],   // TraumaVision (texto a la izquierda)
+  [3.55, 4.75],   // KIBBO (texto a la derecha)
+  [5.75, 6.95],   // Eleven (izquierda)
+  [7.95, 9.0],    // LEEX (derecha)
 ];
-export const GAL_END = 10.0;                // la cámara llega al final del riel: el cabezal solo
+export const GAL_END = 10.0;                // la línea roja llega al final del riel: el cabezal solo
 export const GAL_SECTION_VH = 10.3;         // alto de la sección en viewports (Video entra por abajo en u = 10,3)
 
-export type GalleryId = 'traumavision' | 'kibbo' | 'leex' | 'eleven';
-/** side: −1 pared izquierda, 1 derecha. z: profundidad en el pasillo (m). Imágenes de public/projects/<proyecto>/
-    (Track C, 2026-10-10; donde había versión difuminada en _work/ va esa). La primera película (la del índice) es el
-    thumb del proyecto: el detalle que lo identifica. xray (sólo con scan): la radiografía dentro de la captura
-    principal en uv [x0, x1, y0, y1] (y desde abajo), medida sobre tv-01-resultado-revisar.jpg (1900×912: visor
-    x 343–1300, y 146–768 px). El video demo de cada placa sale de PROJECT_DEMOS (content.ts), por id. */
+/** entrada: la recta se recoge y dibuja la vitrina [0,40 → 1,05]; la tapa se abre; la pantalla se enciende */
+export const VIT_TRACE: readonly [number, number] = [0.4, 1.05];
+export const VIT_OPEN: readonly [number, number] = [0.92, 1.3];
+export const VIT_POWER: readonly [number, number] = [1.12, 1.45];
+
+export type GalleryId = 'traumavision' | 'kibbo' | 'eleven' | 'leex';
+/** side: de qué lado va el texto (−1 izquierda, 1 derecha); la laptop queda del otro. screen: el home real del
+    producto (public/projects/<proyecto>/), recortado a 2:1 desde la columna cropX (px de la imagen). word: el nombre
+    gigante detrás. pos / yaw: dónde está la laptop en el vacío (coordenadas de la vitrina: x a la derecha del About,
+    y arriba, −z hacia la profundidad; TraumaVision en el origen, sobre la recta). */
 export const GAL_PROJECTS: ReadonlyArray<{
-  id: GalleryId; side: -1 | 1; z: number; main: string; sec: string;
-  films: ReadonlyArray<readonly [string, number]>; blur?: boolean; far?: boolean; scan?: boolean;
-  xray?: readonly [number, number, number, number];
+  id: GalleryId; side: -1 | 1; screen: string; cropX?: number; word: string;
+  pos: readonly [number, number, number]; yaw: number;
 }> = [
-  { id: 'traumavision', side: -1, z: -8, main: 'traumavision/tv-01-resultado-revisar.jpg', sec: 'traumavision/tv-04-historial.jpg', scan: true,
-    xray: [0.181, 0.684, 0.158, 0.840],
-    films: [['traumavision/thumb.jpg', 0.38], ['traumavision/tv-05-metricas-acierto.jpg', 0.82]] },
-  { id: 'kibbo', side: 1, z: -20, main: 'kibbo/kibbo-01-hero.jpg', sec: 'kibbo/kibbo-04-dashboard-blur.jpg',
-    films: [['kibbo/thumb.jpg', 0.3], ['kibbo/kibbo-03-on-the-phone-blur.jpg', 0.65]] },
-  { id: 'leex', side: -1, z: -32, main: 'leex/leex-04-veredicto-blur.jpg', sec: 'leex/leex-01-deteccion-lote.jpg', blur: true, far: true,
-    films: [['leex/thumb.jpg', 0.3], ['leex/leex-05-tablero-blur.jpg', 0.5]] },
-  { id: 'eleven', side: 1, z: -44, main: 'eleven/eleven-01-hero.jpg', sec: 'eleven/eleven-05-portafolio.jpg',
-    films: [['eleven/thumb.jpg', 0.3], ['eleven/eleven-04-muro.jpg', 0.5]] },
+  { id: 'traumavision', side: -1, screen: 'traumavision/tv-01-resultado-revisar.jpg', word: 'TRAUMAVISION', pos: [0, 0, 0], yaw: 0 },
+  { id: 'kibbo', side: 1, screen: 'kibbo/kibbo-01-hero.jpg', word: 'KIBBO', pos: [-16, 0.25, -9], yaw: 0.22 },
+  { id: 'eleven', side: -1, screen: 'eleven/eleven-01-hero.jpg', word: 'ELEVEN', pos: [-32, 0.05, -3.5], yaw: -0.16 },
+  { id: 'leex', side: 1, screen: 'leex/leex-01-deteccion-lote.jpg', cropX: 18, word: 'LEEX', pos: [-47.5, 0, -10], yaw: 0.2 },
 ];
 
-/** rótulo visible (lo esencial de cada proyecto en el espacio): un poco antes y después de la estadía */
+/** bloque de texto visible: un poco antes y después de la estadía */
 export const tagWanted = (k: number, u: number) => u >= GAL_DWELLS[k][0] - 0.16 && u <= GAL_DWELLS[k][1] + 0.08;
