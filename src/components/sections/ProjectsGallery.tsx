@@ -49,9 +49,6 @@ type Item = {
   stats: Stat[]; note?: string; steps: string[]; body: ReactNode; demo?: CaseStudyData['demo'];
   /** los «stats» son datos en palabras, no cifras (Eleven): van como ficha rótulo / valor (D-08) */
   facts?: boolean;
-  /** pantalla LED (gallery.ts, led): la línea técnica de la portada. La escena dibuja nombre, índice y esta línea en
-      la pantalla (data-led-*); el rótulo deja a la vista sólo las cifras y «Ver proyecto» (el resto, para lectores) */
-  ledLine?: string;
 };
 
 export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kibboShotCount, openTraumavision, openEleven, openKibbo, openLeex }: Props) {
@@ -325,7 +322,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
   const items: Item[] = [
     {
       title: traumavision.title, eyebrow: t('traumavision.label'), caseEyebrow: traumavision.eyebrow, sub: traumavision.subtitle,
-      stats: traumavision.stats, note: t('traumavision.metrics_note'), steps: steps4, demo: traumavision.demo, ledLine: t('traumavision.led_line'),
+      stats: traumavision.stats, note: t('traumavision.metrics_note'), steps: steps4, demo: traumavision.demo,
       body: caseBody(traumavision, TRAUMAVISION_STACK, screens(traumavision.shots.length, openTraumavision), undefined, (
         <><p className="pj-k">{t('traumavision.pipeline_label')}</p><p className="pj-mono">{tvPipeline}</p></>
       )),
@@ -372,30 +369,23 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
 
         {/* Lo esencial de cada proyecto, en el espacio (la escena lo ancla bajo su negatoscopio) */}
         {items.map((it, k) => (
-          <article key={GAL_PROJECTS[k].id} className={`pj-tag${it.soon ? ' pj-soon' : ''}${it.ledLine ? ' pj-led' : ''}`} data-side={GAL_PROJECTS[k].side > 0 ? 'r' : 'l'} aria-label={t('case.plate_aria', { n: k + 1, total: GAL_DWELLS.length, title: it.title })}
-            {...(it.ledLine ? { 'data-led-name': it.title, 'data-led-line': it.ledLine, 'data-led-eyebrow': `${pad2(k + 1)} / ${total} · ${it.eyebrow}` } : {})}>
+          <article key={GAL_PROJECTS[k].id} className={`pj-tag${it.soon ? ' pj-soon' : ''}`} data-side={GAL_PROJECTS[k].side > 0 ? 'r' : 'l'} aria-label={t('case.plate_aria', { n: k + 1, total: GAL_DWELLS.length, title: it.title })}>
             <p className="pj-eyebrow"><b>{pad2(k + 1)}</b> / {total} · {it.eyebrow}</p>
             {it.badge && <p className="pj-badge"><span className="pj-dot" aria-hidden="true" />{it.badge}</p>}
             <h2 id={`pj-t-${k}`} className="pj-title font-display" aria-label={it.title}>{it.title}</h2>
             {it.sub && <p className="pj-sub">{it.sub}</p>}
-            {it.ledLine && <p className="pj-sub pj-led-line">{it.ledLine}</p>}
             {statsDl(it.stats, it.facts ? 'pj-stats pj-facts' : 'pj-stats')}
             {it.note && <p className="pj-mnote">{it.note}</p>}
             <button type="button" className="pj-open" data-open-case={k} aria-haspopup="dialog" aria-controls={`pj-case-${k}`}>
               <span className="sr-only">{t('case.open_aria', { title: it.title })}: </span>
-              {/* pantalla LED: «Ver proyecto» (pedido de Juan: «un boton para entrar al detalle de cada trabajo») */}
-              {it.ledLine ? (
-                <span className="pj-step pj-view"><span>{t('case.view_project')}</span><i aria-hidden="true">→</i></span>
-              ) : (
-                /* la flecha cierra el paso anterior y el + va pegado al último: si el botón parte en dos líneas,
-                   ninguna empieza con «→» ni con «+» (U3: a 1200 en ES parte después de «Decisiones clave →») */
-                it.steps.map((s, i) => (
-                  <span key={s} className="pj-step">
-                    <span>{s}</span>
-                    {i < it.steps.length - 1 ? <i aria-hidden="true">→</i> : <em aria-hidden="true">+</em>}
-                  </span>
-                ))
-              )}
+              {/* la flecha cierra el paso anterior y el + va pegado al último: si el botón parte en dos líneas,
+                  ninguna empieza con «→» ni con «+» (U3: a 1200 en ES parte después de «Decisiones clave →») */}
+              {it.steps.map((s, i) => (
+                <span key={s} className="pj-step">
+                  <span>{s}</span>
+                  {i < it.steps.length - 1 ? <i aria-hidden="true">→</i> : <em aria-hidden="true">+</em>}
+                </span>
+              ))}
             </button>
           </article>
         ))}
