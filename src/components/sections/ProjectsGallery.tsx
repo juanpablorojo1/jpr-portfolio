@@ -210,6 +210,10 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         const live = !!(zone.hasAttribute('data-see-through') && S && !S.dead && S.neg.live);
         const u = live && S ? S.state.gal : raw;            // con escena: el texto llega con la cámara
         stage.classList.toggle('is-anchored', live);
+        // la vitrina tiene su propio negro, grano y viñeta en la escena: el grano DOM del hero (fijo, z 30) y la barra
+        // sólida del nav lo levantaban a #080808 plano (design-critic D-06)
+        const vit = live && u > 0.3 && u < LAST_OUT + 0.9;
+        if (vit !== html.classList.contains('pj-vit')) html.classList.toggle('pj-vit', vit);
         const wantChrome = u >= 1.25 && u <= LAST_OUT + 0.2;
         if (wantChrome !== chromeOn) {
           chromeOn = wantChrome;
@@ -255,7 +259,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         if (S) { S.neg.tags = []; S.neg.open = -1; }
         offSignal();
         stage.classList.remove('is-anchored');
-        html.classList.remove('pj-hot');
+        html.classList.remove('pj-hot', 'pj-vit');
         ts.forEach((c) => {
           c.tl?.kill();
           c.el.removeAttribute('data-on');

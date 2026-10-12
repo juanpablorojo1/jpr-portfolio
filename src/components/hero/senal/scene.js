@@ -923,6 +923,9 @@ async function boot({ S, root, after, assetBase }, ctl) {
     if (corr && (G.w > 0 || corrPost)) {
       const cb = corr.bloom, w = G.w;
       cb.strength.value = bs + (1.2 - bs) * w; cb.radius.value = 0.55 + 0.05 * w; cb.threshold.value = 0.55 - 0.43 * w;
+      // vitrina: halo corto (≤ ~6 px) para que el rojo del canto y la bisagra sea un hilo y no tiña el teclado (D-04)
+      const vw = corr.vitW ? corr.vitW() : 0;
+      if (vw > 0) { cb.radius.value += (0.12 - cb.radius.value) * vw; cb.strength.value += (0.75 - cb.strength.value) * vw; }
       pl = corr.pipeline; corrPost = false;
     }
     if (!skipRender) pl.render();

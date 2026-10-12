@@ -182,7 +182,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const ca = vec4(col.sample(screenUV.add(caOff)).r, dofN.g, col.sample(screenUV.sub(caOff)).b, 1);
   const baseC = mix(dofN, ca, vW);
   const lumB = luminance(baseC.rgb);
-  const cold = mix(vec3(0.9, 0.96, 1.08), vec3(1), smoothstep(0.0, 0.06, lumB));
+  // sombras frías por multiplicación (D-10: B − R ≈ +2–3 en 8 bit en los oscuros), luz neutra arriba
+  const cold = mix(vec3(0.86, 0.97, 1.16), vec3(1), smoothstep(0.0, 0.08, lumB));
   const graded = max(baseC.rgb.sub(0.00035), 0).mul(cold);
   const vigVit = float(1).sub(smoothstep(0.32, 1.0, length(cOff.mul(vec2(1.25, 1.0))).mul(1.45)).mul(0.22));
   const gNorm = grainN.div(0.03);                                      // −0,5..0,5
@@ -376,6 +377,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     fovAt: (u, base) => base + (VIT_FOV - base) * (1 - smooth(LAST_OUT + 0.2, GAL_END, u)) * smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.6, u),
     /** la galería cerrada (scene.js no llama a update): silencio */
     idle: () => vit.idle(),
+    /** peso de la vitrina (1 en Projects): scene.js achica el halo del bloom ahí (el rojo es un hilo, no neón: D-04) */
+    vitW: () => vit.voidW.value,
     headWorldX: () => group.position.x + st8.headZ,
     /** cabezal en el mundo (en Frame by Frame sube y es la lámpara del proyector) */
     headWorld: (out) => group.localToWorld(out.copy(headPos.value)),

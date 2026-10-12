@@ -16,7 +16,8 @@
    - El rojo #E8272A ya no es un marco: una línea fina en el canto de la tapa y otra en la bisagra (luz de borde). */
 import * as THREE from 'three/webgpu';
 import {
-  uniform, texture, uv, vec3, float, smoothstep, exp, abs, mix, max, step, positionWorld, normalWorld, normalize, dot, length
+  uniform, texture, uv, vec3, float, smoothstep, exp, abs, mix, max, step, positionWorld, normalWorld, normalize, dot, length,
+  normalLocal, positionLocal, mx_noise_float
 } from 'three/tsl';
 
 export const SW = 3.2, SH = 1.6;                               // pantalla (2:1)
@@ -31,7 +32,8 @@ const SLOPE = Math.atan((T_BACK - T_FRONT) / LD);
 export const HINGE_Y = FEET + T_BACK + 0.004, HINGE_Z = FRONT - LD + 0.05;
 export const OPEN = -0.2;                                      // tapa abierta ≈ 110°
 export const CLOSED = Math.PI / 2 + SLOPE;                     // cerrada, apoyada sobre la cuña
-export const CENTER = new THREE.Vector3(0, 0.78, FRONT - LD * 0.6);
+// objetivo de la cámara: más alto que el centro del objeto, así la base asienta al ~68–70 % del cuadro (D-08)
+export const CENTER = new THREE.Vector3(0, 0.9, FRONT - LD * 0.6);
 export const SCREEN_Y = CHIN + SH / 2;                         // centro de la pantalla en la tapa (local de la bisagra)
 
 function rrect(w, h, r, x0 = -w / 2, y0 = 0) {
@@ -47,7 +49,7 @@ function rrect(w, h, r, x0 = -w / 2, y0 = 0) {
 let GEO = null;
 function geometries() {
   if (GEO) return GEO;
-  const BV = 0.012;
+  const BV = 0.016;                                             // chaflán de 1,5 mm: la hairline que atrapa la luz
   // base: extrusión vertical de un rectángulo redondeado; la tapa superior baja hacia el frente (cuña) y el chaflán
   // queda con su medida real arriba y abajo
   const base = new THREE.ExtrudeGeometry(rrect(LW - 2 * BV, LD - 2 * BV, 0.15, -(LW - 2 * BV) / 2, BV), { depth: 1, bevelEnabled: true, bevelThickness: BV, bevelSize: BV, bevelSegments: 3, curveSegments: 12 });
@@ -64,7 +66,7 @@ function geometries() {
     base.computeBoundingSphere();
   }
   // tapa: placa de ~4 mm con chaflán; la cara de la pantalla queda en z = 0 (local de la bisagra), hacia +z
-  const LB = 0.006;
+  const LB = 0.0075;
   const lid = new THREE.ExtrudeGeometry(rrect(LW - 2 * LB, LIDH - 2 * LB, 0.11, -(LW - 2 * LB) / 2, LB), { depth: LID_T - 2 * LB, bevelEnabled: true, bevelThickness: LB, bevelSize: LB, bevelSegments: 2, curveSegments: 10 });
   lid.translate(0, 0, -(LID_T - LB));
   const bezel = new THREE.ShapeGeometry(rrect(LW - 0.014, LIDH - 0.014, 0.104, -(LW - 0.014) / 2, 0.007), 10);
@@ -104,11 +106,18 @@ export async function studioEnv(renderer) {
       const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m);
       p.position.copy(pos); p.lookAt(look); sc.add(p);
     };
+    // alto rango: negro puro y pocas fuentes MUY brillantes (×4–6). Con envMapIntensity bajo, el metal queda negro
+    // salvo donde refleja una fuente: bandas que se deslizan al orbitar y chaflanes que se encienden (D-01)
     const O = new THREE.Vector3(0, 0, 0);
-    box(7, 3.2, 3.2, new THREE.Vector3(0, 6, -1), O);          // cenital grande (los planos de arriba)
-    box(1.1, 6, 2.2, new THREE.Vector3(-6, 1.6, 2.5), O);      // tira lateral izquierda: el canto izquierdo brilla
-    box(0.9, 5, 1.0, new THREE.Vector3(6, 1.4, -2.5), O);      // tira derecha, más baja (relación de luz)
-    box(5, 0.5, 0.6, new THREE.Vector3(0, 0.6, 7), O);         // tira baja de frente: el chaflán delantero
+    box(9, 2.0, 16, new THREE.Vector3(0, 6, -3.2), O);         // softbox largo cenital-trasero: banda sobre deck y tapa
+    box(1.0, 6.5, 10, new THREE.Vector3(-6.5, 1.8, 1.2), O);   // strip lateral izquierdo: el canto izquierdo
+    box(0.8, 4.5, 3.5, new THREE.Vector3(6, 1.2, -2.2), O);    // strip derecho, bajo (relación de luz)
+    box(6.5, 0.32, 7, new THREE.Vector3(0, 0.45, 7.5), O);     // tira baja de frente: la hairline del chaflán delantero
+    {                                                          // tira diagonal detrás de cámara: el reflejo del bisel (D-05)
+      const m = new THREE.MeshBasicNodeMaterial({ side: THREE.DoubleSide }); m.colorNode = vec3(1.2);   // ≤ ~5 % sobre el vidrio negro
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 6), m);
+      p.position.set(2.8, 3.2, 7.5); p.lookAt(O); p.rotateZ(0.62); sc.add(p);
+    }
     const pm = new THREE.PMREMGenerator(renderer);
     const rt = pm.fromScene(sc, 0.0);              // el renderer ya está inicializado (fromSceneAsync quedó deprecado en r181)
     sc.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
@@ -126,6 +135,7 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
   const u = {
     light: uniform(0), pw: uniform(0), rim: uniform(0), expo: uniform(0.9),
     scrC: uniform(new THREE.Vector3()), scrN: uniform(new THREE.Vector3(0, 0, 1)), scrCol: uniform(new THREE.Color(scrColor)),
+    scrX: uniform(new THREE.Vector3(1, 0, 0)), scrY: uniform(new THREE.Vector3(0, 1, 0)),   // ejes de la pantalla (el reflejo del piso)
   };
   // luz de la pantalla sobre una superficie (luz de área aproximada): Lambert en la superficie y en la pantalla
   const spill = (k) => {
@@ -136,11 +146,21 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
     return vec3(u.scrCol).mul(cosS.mul(cosE).mul(k).div(d.mul(d).mul(0.9).add(1))).mul(u.pw).mul(u.light);
   };
   const envI = 0.42;
-  const alu = new THREE.MeshPhysicalNodeMaterial({ color: 0x7d8086, metalness: 0.9, roughness: 0.4, anisotropy: 0.3, envMap: env, envMapIntensity: envI });
-  alu.emissiveNode = spill(0.05).mul(appear);
+  /* aluminio: arenado (roughness 0,42 con micro-rayado ±0,05) y chaflanes de corte diamante pulidos (0,15). El chaflán
+     se detecta por la normal de la geometría: ni tapa (eje de las caras) ni costado, sino diagonal (D-01). */
+  const aluFor = (axis) => {
+    const m = new THREE.MeshPhysicalNodeMaterial({ color: 0x7d8086, metalness: 0.9, roughness: 0.42, anisotropy: 0.3, envMap: env, envMapIntensity: envI });
+    const nA = abs(axis === 'y' ? normalLocal.y : normalLocal.z);
+    const bevel = smoothstep(0.12, 0.35, nA).mul(float(1).sub(smoothstep(0.86, 0.97, nA)));
+    const scratch = mx_noise_float(positionLocal.mul(vec3(3.0, 90.0, 3.0))).mul(0.035).add(mx_noise_float(positionLocal.mul(14.0)).mul(0.025));
+    m.roughnessNode = mix(float(0.42).add(scratch), float(0.15), bevel);
+    m.emissiveNode = spill(0.07).mul(appear);
+    return m;
+  };
+  const alu = aluFor('y'), aluLid = aluFor('z');
   const aluDark = new THREE.MeshPhysicalNodeMaterial({ color: 0x55585e, metalness: 0.9, roughness: 0.5, envMap: env, envMapIntensity: envI * 0.8 });
   const keyM = new THREE.MeshStandardNodeMaterial({ color: 0x17181b, metalness: 0, roughness: 0.72, envMap: env, envMapIntensity: envI * 0.5 });
-  keyM.emissiveNode = spill(0.11).mul(appear);
+  keyM.emissiveNode = spill(0.2).mul(appear);                  // el resplandor de la pantalla sobre las teclas, neutro
   const wellM = new THREE.MeshBasicNodeMaterial();
   wellM.colorNode = vec3(0.0012, 0.0012, 0.0014).add(spill(0.01)).mul(appear);
   const padM = new THREE.MeshPhysicalNodeMaterial({ color: 0x1d1e22, metalness: 0, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.08, envMap: env, envMapIntensity: envI });
@@ -149,8 +169,11 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
   const footM = new THREE.MeshStandardNodeMaterial({ color: 0x0a0a0b, roughness: 0.9 });
   const camM = new THREE.MeshBasicNodeMaterial();
   camM.colorNode = vec3(0.012, 0.013, 0.02).mul(appear);
+  // rojo de borde: hilo nítido (D-04). La bisagra más baja (no tiñe el teclado); el canto de la tapa, hairline visible
   const lineM = new THREE.MeshBasicNodeMaterial();
-  lineM.colorNode = RED.mul(u.rim.mul(1.7)).mul(appear);
+  lineM.colorNode = RED.mul(u.rim.mul(0.8)).mul(appear);
+  const lidLineM = new THREE.MeshBasicNodeMaterial();
+  lidLineM.colorNode = RED.mul(u.rim.mul(2.2)).mul(appear);
   // pantalla: el home tal cual, con la exposición calibrada (el blanco de la UI no revienta sobre el negro);
   // enciende desde la línea roja de abajo hacia arriba. Sin post: corridor.js la saca con la máscara.
   const scrM = new THREE.MeshBasicNodeMaterial();
@@ -193,18 +216,19 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
   const pad = new THREE.Mesh(G.pad, padM); pad.position.set(0, 0.0009, -0.13); deck.add(pad);
   // bisagra de barril y su línea roja
   const barrel = new THREE.Mesh(G.hinge, aluDark); barrel.position.set(0, FEET + T_BACK - 0.012, HINGE_Z - 0.012); root.add(barrel);
-  const hLine = new THREE.Mesh(G.line, lineM); hLine.scale.set(LW * 0.72, 0.0028, 0.0028); hLine.position.set(0, FEET + T_BACK + 0.02, HINGE_Z + 0.022); root.add(hLine);
+  const hLine = new THREE.Mesh(G.line, lineM); hLine.scale.set(LW * 0.72, 0.0016, 0.0016); hLine.position.set(0, FEET + T_BACK + 0.012, HINGE_Z + 0.03); root.add(hLine);
   // tapa
   const hinge = new THREE.Group(); hinge.position.set(0, HINGE_Y, HINGE_Z); hinge.rotation.x = CLOSED; root.add(hinge);
-  const lid = new THREE.Mesh(G.lid, alu); hinge.add(lid);
+  const lid = new THREE.Mesh(G.lid, aluLid); hinge.add(lid);
   const bezel = new THREE.Mesh(G.bezel, glassM); bezel.position.z = 0.0006; hinge.add(bezel);
   const camDot = new THREE.Mesh(G.cam, camM); camDot.position.set(0, LIDH - BZ_T / 2, 0.0011); hinge.add(camDot);
   const screen = new THREE.Mesh(G.screen, scrM); screen.position.set(0, SCREEN_Y, 0.0014); screen.renderOrder = 2; hinge.add(screen);
-  const rimLine = new THREE.Mesh(G.line, lineM); rimLine.scale.set(LW - 0.26, 0.003, 0.006); rimLine.position.set(0, LIDH + 0.0004, -LID_T / 2); hinge.add(rimLine);
+  const rimLine = new THREE.Mesh(G.line, lidLineM); rimLine.scale.set(LW - 0.26, 0.0045, LID_T * 0.62); rimLine.position.set(0, LIDH + 0.0018, -LID_T / 2); hinge.add(rimLine);
 
-  const mats = [alu, aluDark, keyM, padM, glassM];
+  const mats = [alu, aluLid, aluDark, keyM, padM, glassM];
+  const baseI = new Map([[alu, envI], [aluLid, envI], [aluDark, envI * 0.8], [keyM, envI * 0.5], [padM, envI], [glassM, envI * 1.1]]);
   /** luz real (0..1): los reflejos del estudio caen con la luz del cuadro (apagón = negro) */
-  function setLight(v) { u.light.value = v; mats.forEach((m) => { m.envMapIntensity = (m === glassM ? envI * 1.1 : m === keyM ? envI * 0.5 : m === aluDark ? envI * 0.8 : envI) * v; }); }
+  function setLight(v) { u.light.value = v; mats.forEach((m) => { m.envMapIntensity = baseI.get(m) * v; }); }
   const tmpC = new THREE.Vector3(), tmpN = new THREE.Vector3();
   /** centro y normal de la pantalla en el mundo (para la luz que derrama) */
   function syncScreen() {
@@ -212,6 +236,8 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
     tmpC.setFromMatrixPosition(screen.matrixWorld);
     tmpN.set(0, 0, 1).transformDirection(screen.matrixWorld);
     u.scrC.value.copy(tmpC); u.scrN.value.copy(tmpN);
+    u.scrX.value.set(1, 0, 0).transformDirection(screen.matrixWorld);
+    u.scrY.value.set(0, 1, 0).transformDirection(screen.matrixWorld);
   }
   return { root, hinge, screen, u, setLight, syncScreen };
 }

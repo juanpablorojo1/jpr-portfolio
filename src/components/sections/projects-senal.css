@@ -117,6 +117,16 @@
   .pj-view:active { transform: scale(.98); }
   .pj-view:focus-visible { outline: 2px solid #e8272a; outline-offset: 4px; }
 
+  /* D-06: en la vitrina el negro es de la escena (#020205 con viñeta y grano propio). El grano DOM del hero (fijo,
+     z 30: 3 % de ruido blanco + líneas al 1,2 %) y la barra sólida #080808 del nav lo aplastaban a #080808 plano.
+     Se apagan con un fundido (sin costura al entrar y salir); el nav queda como un degradé al negro de la escena. */
+  .senal .grain { transition: opacity .6s linear; }
+  html.pj-vit .senal .grain { opacity: 0; }
+  html.pj-vit .jnav.is-scrolled {
+    background: linear-gradient(180deg, rgba(2, 2, 5, .92) 0%, rgba(2, 2, 5, .55) 70%, rgba(2, 2, 5, 0) 100%);
+    border-bottom-color: transparent;
+  }
+
   /* la pantalla bajo el puntero se puede abrir (vitrina.js pone pj-hot en <html>) */
   html.pj-hot, html.pj-hot body { cursor: pointer; }
 
