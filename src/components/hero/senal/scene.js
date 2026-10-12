@@ -765,6 +765,12 @@ async function boot({ S, root, after, assetBase }, ctl) {
         ctl.info.t.corridor = Math.round(performance.now() - t0);
         console.info('[senal] corridor ready in', ctl.info.t.corridor, 'ms');
         startNetwork(c);
+        // QA (?qa&u=4.15): salta a esa posición (viewports desde el aterrizaje del About) con la cámara ya asentada,
+        // para capturas repetibles; después el loop sigue normal (los textos entran en tiempo real)
+        if (qa && params.has('u') && ctl.info.advance) {
+          const uq = parseFloat(params.get('u'));
+          if (Number.isFinite(uq)) setTimeout(() => { if (ctl.disposed || S.dead) return; ctl.info.advance(3, uq); ctl.info.resume(); console.info('[senal] qa jump u', uq, 'scrollY', Math.round(scrollY)); }, 60);
+        }
       })
       .catch((e) => { console.warn('[senal] corridor:', e && e.message); })
       .finally(() => { corrBuilding = false; });
