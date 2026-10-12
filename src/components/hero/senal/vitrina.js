@@ -65,7 +65,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
   const loadImg = (f) => new Promise((res, rej) => { const i = new Image(); i.decoding = 'async'; i.onload = () => res(i); i.onerror = rej; i.src = assetBase + f; });
   const imgs = await Promise.all(GAL_PROJECTS.map((p) => loadImg(p.screen)));
   if (!alive()) return null;
-  const STAY_D = 8.1;                            // distancia cámara → pantalla al final del dolly-in (la más cerca: ≈1:1 ahí)
+  const STAY_D = 8.25;                           // distancia cámara → pantalla al final del dolly-in (la más cerca: ≈1:1 ahí)
   const screenDevPx = () => {
     const visW = 2 * STAY_D * Math.tan(THREE.MathUtils.degToRad(VIT_FOV / 2)) * (innerWidth / innerHeight);
     return Math.round((SW / visW) * innerWidth * Math.min(devicePixelRatio || 1, 2));
@@ -101,7 +101,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
 
   /* ---------- la señal: cinta de luz que mira a cámara, con ventana [s0, s1] sobre su largo ---------- */
   const camL = uniform(new THREE.Vector3());     // cámara en coordenadas de la vitrina (las cintas viven ahí)
-  function makeRibbon(points, { width = 0.04, core = 0.11, glow = 0.4, near = [0.4, 2.6], gain = 1 } = {}) {
+  function makeRibbon(points, { width = 0.04, core = 0.11, glow = 0.4, near = [0.4, 2.6], gain = 1, mirror = false } = {}) {
     const segs = points.length - 1;
     const pos = new Float32Array(segs * 4 * 3), tan = new Float32Array(segs * 4 * 3), side = new Float32Array(segs * 4), sv = new Float32Array(segs * 4);
     const idx = [];
@@ -129,14 +129,20 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     const aTan = attribute('aTan', 'vec3'), aSide = attribute('aSide', 'float'), aS = attribute('aS', 'float');
     const toCam = normalize(camL.sub(positionLocal));
     const n = normalize(cross(aTan, toCam));
-    m.positionNode = positionLocal.add(n.mul(aSide).mul(width));
+    // reflejo (mirror): la cinta espejada bajo el piso se ensancha y se ablanda con la profundidad (el desenfoque de un
+    // piso pulido crece con la distancia) y se funde hacia abajo (R2-04)
+    const depth = mirror ? positionLocal.y.negate().max(0) : float(0);
+    const wN = mirror ? float(width).mul(depth.mul(2.2).add(1)) : float(width);
+    m.positionNode = positionLocal.add(n.mul(aSide).mul(wN));
     const x = abs(aSide);
-    const coreP = exp(x.mul(x).div(core * core * 2).negate());
+    const coreW = mirror ? float(core).mul(depth.mul(3.0).add(1.6)) : float(core);
+    const coreP = exp(x.mul(x).div(coreW.mul(coreW).mul(2)).negate());
     const glowP = exp(x.mul(4.2).negate()).mul(glow).mul(float(1).sub(x));
     const win = smoothstep(u.s0, u.s0.add(0.25), aS).mul(float(1).sub(smoothstep(u.s1.sub(0.015), u.s1, aS)));
     const headF = exp(u.s1.sub(aS).max(0).mul(-2.2)).mul(u.head);
     const nearF = smoothstep(near[0], near[1], distance(positionLocal, camL));
-    const I = win.mul(u.inten).mul(nearF).mul(appear).mul(gain);
+    const fadeD = mirror ? exp(depth.mul(-1.6)).div(depth.mul(2.2).add(1)) : float(1);   // la energía se reparte al ensancharse
+    const I = win.mul(u.inten).mul(nearF).mul(appear).mul(gain).mul(fadeD);
     m.colorNode = REDL.mul(glowP.add(coreP.mul(1.5))).add(vec3(1, 0.86, 0.84).mul(coreP.mul(coreP).mul(float(0.45).add(headF.mul(1.4)))))
       .add(REDL.mul(headF.mul(glowP).mul(1.2))).mul(I);
     m.opacityNode = float(1);
@@ -169,8 +175,10 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
       const v = uv();
       const p = v.sub(0.5).mul(vec2(9, 7));                       // m desde el centro del piso (x, −z)
       const pz = p.y.negate().add(FRONT - LD / 2 + 0.2);          // z local (el piso se gira: v.y crece hacia −z)
-      // charco elíptico del cenital (D-02): pico ~#18 bajo la notebook, cae al negro en ~1,5 anchos de la notebook
-      const pool = exp(length(vec2(p.x.mul(0.66), p.y.sub(0.2).mul(0.85))).mul(-1.25));
+      // charco elíptico del cenital (R2-03): meseta ~#18 que se VE a los lados y delante de la base (antes el pico
+      // exponencial quedaba debajo de la notebook, tapado, y a los costados ya era ~#06) y cae a ~#03 en ~1,5 anchos
+      const rE = length(vec2(p.x.div(LW / 2), p.y.sub(0.25).div(1.55)));   // 1 ≈ el borde de la notebook
+      const pool = float(1).sub(smoothstep(0.85, 2.2, rE)).mul(float(1).sub(rE.mul(0.12)));
       // luz de la pantalla sobre el piso, adelante; y el reflejo corto del chaflán delantero
       const spillF = exp(abs(p.x).mul(-1.1)).mul(exp(pz.sub(FRONT).max(0).mul(-1.5))).mul(smoothstep(FRONT - 0.2, FRONT + 0.15, pz));
       const streak = exp(abs(pz.sub(FRONT + 0.04)).mul(-34)).mul(smoothstep(LW / 2 + 0.1, LW / 2 - 0.4, abs(p.x)));
@@ -183,15 +191,21 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
       const tt = dot(lu.scrC.sub(positionWorld), lu.scrN).div(den.abs().max(1e-4).mul(den.sign()));
       const rel = positionWorld.add(rv.mul(tt)).sub(lu.scrC);
       const lx = dot(rel, lu.scrX).div(SW / 2), ly = dot(rel, lu.scrY).div(SH / 2);
-      const inR = smoothstep(1.0, 0.94, abs(lx)).mul(smoothstep(1.0, 0.94, abs(ly))).mul(step(0, tt));
+      // R2-05: sin bordes duros. Extremos difuminados (~25 % del ancho), arranque suave en el canto y fundido corto
+      // (~20 px CSS). Valores en lineal pensados en sRGB: 1,2 % de un blanco ≈ #1C pegado al canto, #0C–#10 al asomar.
+      const inR = smoothstep(1.0, 0.72, abs(lx)).mul(smoothstep(1.0, 0.85, abs(ly))).mul(step(0, tt));
       const rUV = vec2(lx.mul(0.5).add(0.5), ly.mul(0.5).add(0.5)).clamp(0.002, 0.998);
-      const refl = texture(scrTex[k], rUV).bias(3.2).rgb.mul(lu.expo);
-      const reflK = inR.mul(exp(pz.sub(FRONT).max(0).mul(-1 / 0.2))).mul(smoothstep(FRONT - 0.01, FRONT + 0.06, pz)).mul(0.08).mul(lu.pw);
-      const col = vec3(1, 0.97, 0.94).mul(pool.mul(0.0095)).add(vec3(lu.scrCol).mul(spillF.mul(0.006).mul(lu.pw)))
-        .add(vec3(0.9, 0.92, 1).mul(streak.mul(0.006))).add(refl.mul(reflK));
+      const refl = texture(scrTex[k], rUV).bias(3.6).rgb.mul(lu.expo);
+      const dz = pz.sub(FRONT).max(0);
+      const reflK = inR.mul(exp(dz.mul(-1 / 0.32))).mul(smoothstep(FRONT - 0.02, FRONT + 0.12, pz)).mul(0.012).mul(lu.pw);
+      // el reflejo de la hairline del chaflán delantero: más tenue, a lo ancho con extremos blandos
+      const streakK = streak.mul(smoothstep(LW / 2 + 0.05, LW / 2 - 0.6, abs(p.x)));
+      const col = vec3(1, 0.97, 0.94).mul(pool.mul(0.0095)).add(vec3(lu.scrCol).mul(spillF.mul(0.004).mul(lu.pw)))
+        .add(vec3(0.9, 0.92, 1).mul(streakK.mul(0.003))).add(refl.mul(reflK));
       flM.colorNode = col.mul(lu.light).mul(appear);
-      const r = length(p.mul(vec2(0.42, 0.55)));
-      flM.opacityNode = float(0.94).mul(smoothstep(1.7, 0.55, r)).mul(lu.light.mul(0.6).add(0.4)).mul(appear);
+      // el piso existe sólo con luz (R2-07: apagado no deja un rectángulo más oscuro que el fondo)
+      const r = length(p.mul(vec2(0.36, 0.5)));
+      flM.opacityNode = float(0.94).mul(smoothstep(1.75, 0.6, r)).mul(lu.light).mul(appear);
     }
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(9, 7), flM);
     floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0.0006, FRONT - LD / 2 + 0.2); floor.renderOrder = -1;
@@ -249,23 +263,27 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
 
   /* ---------- el cono cenital en el humo: plano que mira a cámara, perfil gaussiano y humo que corre ---------- */
   const beams = laps.map((lap) => {
-    const g = new THREE.PlaneGeometry(6, 9.5); g.translate(0, -4.75, 0);
+    // R2-03: ápice más bajo (6,5 m; sigue fuera de cuadro) para que en lo visible el cono se abra ~1,9× hacia el piso
+    const H = 6.6;
+    const g = new THREE.PlaneGeometry(6, H); g.translate(0, -H / 2, 0);
     const op = uniform(0);
     const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
     const x = uv().x.sub(0.5).mul(2), y = uv().y;
-    // cono con penumbra (D-07): borde legible a los dos lados, ápice arriba fuera de cuadro, termina en el charco
-    const spread = mix(float(0.04), float(0.6), float(1).sub(y));
+    // cono con penumbra: borde legible a los dos lados, más luz arriba y caída hacia el piso, termina en el charco
+    const spread = mix(float(0.03), float(0.6), float(1).sub(y));
     const xs = abs(x.div(spread));
-    const prof = float(1).sub(smoothstep(0.62, 1.0, xs)).mul(xs.mul(xs).mul(-0.35).add(1))
-      .mul(smoothstep(0.0, 0.06, y)).mul(smoothstep(1.0, 0.94, y));
-    // humo: ruido que modula ±25 % y deriva lento (sube y se corre)
-    const drift = vec2(time.mul(0.018), time.mul(-0.035));
-    const smoke = mx_noise_float(vec3(uv().mul(vec2(2.4, 4.0)).add(drift), time.mul(0.04))).mul(0.25)
-      .add(mx_noise_float(vec3(uv().mul(vec2(6.0, 9.0)).add(drift.mul(1.7)).add(9.1), time.mul(0.07))).mul(0.12)).add(1);
+    const prof = float(1).sub(smoothstep(0.6, 1.0, xs)).mul(xs.mul(xs).mul(-0.3).add(1))
+      .mul(smoothstep(0.0, 0.05, y)).mul(smoothstep(1.0, 0.94, y)).mul(mix(float(0.55), float(1.2), y));
+    // humo a escala visible (R2-03): volutas de ~0,7 m (~150 px a 1440) y ~0,25 m, ±35 %, con deriva lenta
+    const pm = uv().mul(vec2(6, H));                               // metros sobre el plano
+    const drift = vec2(time.mul(0.03), time.mul(-0.05));
+    const n1 = mx_noise_float(vec3(pm.mul(1.4).add(drift), time.mul(0.035)));
+    const n2 = mx_noise_float(vec3(pm.mul(3.8).add(drift.mul(1.8)).add(9.1), time.mul(0.06)));
+    const smoke = n1.mul(0.75).add(n2.mul(0.35)).add(1).max(0.25);
     m.colorNode = vec3(1, 0.96, 0.92).mul(prof.mul(smoke)).mul(op).mul(appear);
     m.opacityNode = float(1);
     const mesh = new THREE.Mesh(g, m); mesh.renderOrder = 5;
-    mesh.position.copy(toWorldLocal(lap, V(0, 9.4, FRONT - LD * 0.55)));
+    mesh.position.copy(toWorldLocal(lap, V(0, H - 0.1, FRONT - LD * 0.55)));
     group.add(mesh);
     return { mesh, op };
   });
@@ -331,8 +349,9 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     const pts = new THREE.CatmullRomCurve3([start, mid1, mid2, pre, end], false, 'centripetal').getPoints(200);
     let tl = 0; for (let i = 1; i < pts.length; i++) tl += pts[i].distanceTo(pts[i - 1]);
     const r = makeRibbon(pts, { width: 0.04 });
-    // su reflejo en el piso negro brillante (D-03): la misma cinta espejada en y, al 14 %
-    const rm = makeRibbon(pts.map((q) => V(q.x, -q.y, q.z)), { width: 0.05, gain: 0.14 });
+    // su reflejo en el piso negro brillante: la misma cinta espejada en y, que se ensancha, se ablanda y se funde
+    // con la profundidad (≤ ~20 % perceptual cerca del piso, R2-04)
+    const rm = makeRibbon(pts.map((q) => V(q.x, -q.y, q.z)), { width: 0.04, gain: 0.2, mirror: true });
     relays.push({ r, rm, len: tl, mid: pts[Math.floor(pts.length * 0.5)].clone(), start });
   }
   // salida: la última pantalla se apaga en la línea; sale de la bisagra de LEEX hacia la recta del pasillo
@@ -345,7 +364,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     const pts = new THREE.CatmullRomCurve3([exitStart, exitStart.clone().add(V(-1.6, -0.05, 1.2)), V(exitJoinX + 3.2, 0.02, 2.4), V(exitJoinX + 0.9, 0, 0.35), j], false, 'centripetal').getPoints(140);
     if (exit) { [exit.mesh, exit.rm.mesh].forEach((ms) => { group.remove(ms); ms.geometry.dispose(); ms.material.dispose(); }); }
     exit = makeRibbon(pts, { width: 0.04 });
-    exit.rm = makeRibbon(pts.map((q) => V(q.x, -q.y, q.z)), { width: 0.05, gain: 0.14 });
+    exit.rm = makeRibbon(pts.map((q) => V(q.x, -q.y, q.z)), { width: 0.04, gain: 0.2, mirror: true });
     let len = 0; for (let i = 1; i < pts.length; i++) len += pts[i].distanceTo(pts[i - 1]);
     exit.len = len;
   }
@@ -368,14 +387,16 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
   let endP = V(), endL = V();
   const centers = laps.map((lap) => toWorldLocal(lap, CENTER));
   const sgn = (k) => (k % 2 === 0 ? 1 : -1);
-  const shiftOf = (k) => -laps[k].pr.side * 0.205;
+  // R2-06: 0,19 (antes 0,205) y el dolly 1–2 % más lejos: en LEEX el borde de la base pasa de ~53 a ~78 px (la grilla,
+  // 5,5vw) y el hueco con el texto queda en ~68 px (≥ 64). En TraumaVision el hueco baja de ~150 a ~130.
+  const shiftOf = (k) => -laps[k].pr.side * 0.19;
   function orbit(k, th, ph, d, out) {
     const c = centers[k], a = laps[k].yaw + th;
     return out.set(c.x + Math.sin(a) * Math.cos(ph) * d, c.y + Math.sin(ph) * d, c.z + Math.cos(a) * Math.cos(ph) * d);
   }
   // distancias para una óptica de 30° (antes 32°): la pantalla queda del mismo tamaño en el cuadro
   // el dolly-in termina ~9 % más cerca que en d3bd5c3 (D-08): pantalla ~560–600 px CSS a 1440 al final de la estadía
-  const STAY = { th: 0.16, d0: 9.2, d1: 7.85, ph0: 0.07, ph1: 0.045 };
+  const STAY = { th: 0.16, d0: 9.35, d1: 8.0, ph0: 0.07, ph1: 0.045 };
   const stayPose = (k, s, out) => orbit(k, sgn(k) * lerp(-STAY.th, STAY.th, sineIO(s)), lerp(STAY.ph0, STAY.ph1, s), lerp(STAY.d0, STAY.d1, sineIO(s)), out);
   const relayCurves = [];
   function buildKeys() {
@@ -543,9 +564,15 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
       const away = 1 - arrive, spin = (k % 2 === 0 ? -1 : 1) * 1.0 * away;
       lap.outer.position.copy(lap.home).add(tmpW.set(0, -0.3 * away, -6.5 * away).applyAxisAngle(V(0, 1, 0), lap.yaw));
       lap.outer.rotation.y = lap.yaw + spin;
-      const vis = (k === 0 ? u > 0.5 : T0 > 0.12) && (T1 < 1 || lap.light > 0.004);
+      // sólo existe con luz: a oscuras (llegando o después del apagón) no deja una silueta más negra que el fondo (R2-07)
+      const vis = (k === 0 ? u > 0.5 : T0 > 0.12) && lap.light > 0.004;
       lap.outer.visible = vis;
-      if (vis) lap.nb.syncScreen();
+      if (vis) {
+        lap.nb.syncScreen();
+        // el glint del canto de la tapa recorre la línea con la órbita (R2-02)
+        const ca = Math.atan2(st.P.x - centers[k].x, st.P.z - centers[k].z) - lap.yaw;
+        lap.u.glint.value = Math.max(-1, Math.min(1, ca / 0.25));
+      }
       // nombre gigante: a contraluz, se desliza al revés de la órbita; cae con la luz
       const w = words[k];
       const stayS = range(u, D[k][0], D[k][1]);

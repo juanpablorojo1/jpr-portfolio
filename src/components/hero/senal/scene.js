@@ -925,7 +925,9 @@ async function boot({ S, root, after, assetBase }, ctl) {
       cb.strength.value = bs + (1.2 - bs) * w; cb.radius.value = 0.55 + 0.05 * w; cb.threshold.value = 0.55 - 0.43 * w;
       // vitrina: halo corto (≤ ~6 px) para que el rojo del canto y la bisagra sea un hilo y no tiña el teclado (D-04)
       const vw = corr.vitW ? corr.vitW() : 0;
-      if (vw > 0) { cb.radius.value += (0.12 - cb.radius.value) * vw; cb.strength.value += (0.75 - cb.strength.value) * vw; }
+      // R2-02: umbral alto en la vitrina: la línea del canto (≤ el rojo de marca, 0,81 lineal) no entra al bloom; sólo
+      // la cabeza de la señal, que tiene su propio resplandor en el shader
+      if (vw > 0) { cb.radius.value += (0.12 - cb.radius.value) * vw; cb.strength.value += (0.75 - cb.strength.value) * vw; cb.threshold.value += (0.9 - cb.threshold.value) * vw; }
       pl = corr.pipeline; corrPost = false;
     }
     if (!skipRender) pl.render();

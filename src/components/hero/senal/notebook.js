@@ -109,7 +109,10 @@ export async function studioEnv(renderer) {
     // alto rango: negro puro y pocas fuentes MUY brillantes (×4–6). Con envMapIntensity bajo, el metal queda negro
     // salvo donde refleja una fuente: bandas que se deslizan al orbitar y chaflanes que se encienden (D-01)
     const O = new THREE.Vector3(0, 0, 0);
-    box(9, 2.0, 16, new THREE.Vector3(0, 6, -3.2), O);         // softbox largo cenital-trasero: banda sobre deck y tapa
+    box(9, 2.0, 8, new THREE.Vector3(0, 6, -3.2), O);          // softbox cenital-trasero: los planos que miran arriba-atrás
+    // R2-01: donde cae el rayo de cámara reflejado en el deck (la cámara mira el deck rasante, ~8–12°: el reflejo sale
+    // hacia atrás y apenas arriba del horizonte) va un softbox ancho y bajo. Esa es la banda que cruza el deck.
+    box(10, 1.3, 14, new THREE.Vector3(0, 1.7, -7), O);
     box(1.0, 6.5, 10, new THREE.Vector3(-6.5, 1.8, 1.2), O);   // strip lateral izquierdo: el canto izquierdo
     box(0.8, 4.5, 3.5, new THREE.Vector3(6, 1.2, -2.2), O);    // strip derecho, bajo (relación de luz)
     box(6.5, 0.32, 7, new THREE.Vector3(0, 0.45, 7.5), O);     // tira baja de frente: la hairline del chaflán delantero
@@ -136,6 +139,7 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
     light: uniform(0), pw: uniform(0), rim: uniform(0), expo: uniform(0.9),
     scrC: uniform(new THREE.Vector3()), scrN: uniform(new THREE.Vector3(0, 0, 1)), scrCol: uniform(new THREE.Color(scrColor)),
     scrX: uniform(new THREE.Vector3(1, 0, 0)), scrY: uniform(new THREE.Vector3(0, 1, 0)),   // ejes de la pantalla (el reflejo del piso)
+    glint: uniform(0),                                                                     // dónde está el glint del canto (−1..1)
   };
   // luz de la pantalla sobre una superficie (luz de área aproximada): Lambert en la superficie y en la pantalla
   const spill = (k) => {
@@ -149,11 +153,12 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
   /* aluminio: arenado (roughness 0,42 con micro-rayado ±0,05) y chaflanes de corte diamante pulidos (0,15). El chaflán
      se detecta por la normal de la geometría: ni tapa (eje de las caras) ni costado, sino diagonal (D-01). */
   const aluFor = (axis) => {
-    const m = new THREE.MeshPhysicalNodeMaterial({ color: 0x7d8086, metalness: 0.9, roughness: 0.42, anisotropy: 0.3, envMap: env, envMapIntensity: envI });
+    const m = new THREE.MeshPhysicalNodeMaterial({ color: 0x7d8086, metalness: 0.9, roughness: 0.3, anisotropy: 0.3, envMap: env, envMapIntensity: envI });
     const nA = abs(axis === 'y' ? normalLocal.y : normalLocal.z);
     const bevel = smoothstep(0.12, 0.35, nA).mul(float(1).sub(smoothstep(0.86, 0.97, nA)));
-    const scratch = mx_noise_float(positionLocal.mul(vec3(3.0, 90.0, 3.0))).mul(0.035).add(mx_noise_float(positionLocal.mul(14.0)).mul(0.025));
-    m.roughnessNode = mix(float(0.42).add(scratch), float(0.15), bevel);
+    const scratch = mx_noise_float(positionLocal.mul(vec3(3.0, 90.0, 3.0))).mul(0.03).add(mx_noise_float(positionLocal.mul(14.0)).mul(0.02));
+    // R2-01: 0,30 (no 0,42): con 0,42 el softbox se difuminaba en un levante parejo; así sobrevive su forma
+    m.roughnessNode = mix(float(0.3).add(scratch), float(0.15), bevel);
     m.emissiveNode = spill(0.07).mul(appear);
     return m;
   };
@@ -172,8 +177,16 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
   // rojo de borde: hilo nítido (D-04). La bisagra más baja (no tiñe el teclado); el canto de la tapa, hairline visible
   const lineM = new THREE.MeshBasicNodeMaterial();
   lineM.colorNode = RED.mul(u.rim.mul(0.8)).mul(appear);
+  // R2-02: el núcleo nunca pasa del rojo de marca (sin ×2,2: R se clipeaba y G/B subían a rosa) y la intensidad varía a
+  // lo largo del canto: más alta donde pega el cenital, cae ~50 % hacia las esquinas, y un glint que la recorre con la
+  // órbita (u.glint: −1..1). El halo es una segunda cinta, fina y tenue (≤ 4 px); el bloom de la vitrina ya no la toma.
+  const lx = positionLocal.x.mul(2);                                 // −1..1 a lo largo de la línea (caja unitaria escalada)
+  const along = float(1).sub(lx.mul(lx).mul(0.5)).add(exp(lx.sub(u.glint).pow(2).mul(-14)).mul(0.35)).min(1);
   const lidLineM = new THREE.MeshBasicNodeMaterial();
-  lidLineM.colorNode = RED.mul(u.rim.mul(2.2)).mul(appear);
+  lidLineM.colorNode = RED.mul(u.rim.min(1).mul(along)).mul(appear);
+  const haloM = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  haloM.colorNode = RED.mul(u.rim.min(1).mul(along).mul(0.16)).mul(appear);
+  haloM.opacityNode = float(1);
   // pantalla: el home tal cual, con la exposición calibrada (el blanco de la UI no revienta sobre el negro);
   // enciende desde la línea roja de abajo hacia arriba. Sin post: corridor.js la saca con la máscara.
   const scrM = new THREE.MeshBasicNodeMaterial();
@@ -223,7 +236,8 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
   const bezel = new THREE.Mesh(G.bezel, glassM); bezel.position.z = 0.0006; hinge.add(bezel);
   const camDot = new THREE.Mesh(G.cam, camM); camDot.position.set(0, LIDH - BZ_T / 2, 0.0011); hinge.add(camDot);
   const screen = new THREE.Mesh(G.screen, scrM); screen.position.set(0, SCREEN_Y, 0.0014); screen.renderOrder = 2; hinge.add(screen);
-  const rimLine = new THREE.Mesh(G.line, lidLineM); rimLine.scale.set(LW - 0.26, 0.0045, LID_T * 0.62); rimLine.position.set(0, LIDH + 0.0018, -LID_T / 2); hinge.add(rimLine);
+  const rimLine = new THREE.Mesh(G.line, lidLineM); rimLine.scale.set(LW - 0.26, 0.004, LID_T * 0.62); rimLine.position.set(0, LIDH + 0.0018, -LID_T / 2); hinge.add(rimLine);
+  const rimHalo = new THREE.Mesh(G.line, haloM); rimHalo.scale.set(LW - 0.22, 0.016, LID_T * 0.9); rimHalo.position.set(0, LIDH + 0.003, -LID_T / 2); rimHalo.renderOrder = 3; hinge.add(rimHalo);
 
   const mats = [alu, aluLid, aluDark, keyM, padM, glassM];
   const baseI = new Map([[alu, envI], [aluLid, envI], [aluDark, envI * 0.8], [keyM, envI * 0.5], [padM, envI], [glassM, envI * 1.1]]);
