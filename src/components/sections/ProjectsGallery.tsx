@@ -1,26 +1,26 @@
 'use client';
 
-/* Projects «Señal» · el negatoscopio (escritorio ≥1024 con la escena viva). Port de la maqueta A.
-   La escena (corridor.js, dentro de la escena persistente) dibuja el pasillo y las placas; acá vive la capa HTML:
-   - Rótulos en el espacio: lo esencial de cada proyecto (eyebrow, título, bajada, cifras y la entrada al caso),
-     anclado a un punto 3D bajo su negatoscopio. La escena les escribe el transform en el mismo frame del render
-     (S.neg.tags); este componente decide cuándo entran y salen (con la cámara: S.state.gal, con su damp).
+/* Projects «Señal» · la vitrina en el vacío (escritorio ≥1024 con la escena viva). Port de la maqueta A (2026-10-12).
+   La escena (vitrina.js dentro de corridor.js, en la escena persistente) dibuja las cuatro laptops; acá vive la capa HTML:
+   - El bloque de cada proyecto (folio N.º, eyebrow, nombre, línea técnica, cifra y «Ver proyecto»), del lado opuesto a
+     la laptop. Es la capa más cercana: la escena le escribe el transform (parallax opuesto a la órbita) en el mismo frame
+     del render (S.neg.tags); este componente decide cuándo entra y sale (con la cámara: S.state.gal, con su damp).
      Entrada: el gesto del sitio (titular desde z −1100, expo.out 1,2 s; el resto 14 px, 1,0 s); salida 0,5 s.
-     Los rótulos apagados siguen en el árbol de accesibilidad (opacidad 0): con Tab, el foco en la entrada de un
-     caso lleva el scroll a su estadía y la cámara lo encara.
-   - El caso completo (problema → mi rol → decisiones clave → resultado): diálogo modal que se abre con la entrada
-     del rótulo o con clic en la placa (S.neg.hover), y se cierra con [ESC], el botón o un clic en la escena.
-     La cámara empuja hacia la placa (S.neg.open) y la deja del lado opuesto al texto.
-   Sin escena todavía (o sin GPU con data-gallery): los rótulos quedan en su posición de respaldo (CSS).
+     Los bloques apagados siguen en el árbol de accesibilidad (opacidad 0): con Tab, el foco en «Ver proyecto» lleva el
+     scroll a su estadía.
+   - El caso completo (problema → mi rol → decisiones clave → resultado): diálogo modal que se abre con «Ver proyecto» o
+     con clic en la pantalla de la laptop (S.neg.hover), y se cierra con [ESC], el botón o un clic en la escena. Cubre el
+     lado del texto; la laptop queda a la vista.
+   Sin escena todavía (o sin GPU con data-gallery): los bloques quedan en su posición de respaldo (CSS).
    El guion (estadías, alto de la sección) es gallery.ts, el mismo que usa la cámara. */
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useTranslations } from 'next-intl';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 import { onSignal, type Senal } from '../hero/senal/signal';
 import { GAL_DWELLS, GAL_SECTION_VH, GAL_PROJECTS, tagWanted } from '../hero/senal/gallery';
-import { TRAUMAVISION_STACK, ELEVEN_STACK, KIBBO_STACK, LEEX_STACK } from '../../lib/content';
+import { TRAUMAVISION_STACK, ELEVEN_STACK, KIBBO_STACK, LEEX_STACK, TRAUMAVISION_METRICS } from '../../lib/content';
 import type { CaseStudyData } from './CaseStudy';
 import ProjectDemo from '../ui/ProjectDemo';
 import { idleTask, lazySet, setBatch } from '../../lib/idle';
@@ -44,22 +44,18 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
 const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
 
 type Stat = { label: string; value: string };
+/** la cifra del bloque: número, unidad (el «%» va en rojo) y rótulo; la nota junta las otras cifras del sitio */
+type Fig = { num: string; unit?: string; label: string; note?: string };
 type Item = {
-  title: string; eyebrow: string; caseEyebrow?: string; sub?: string; badge?: string; soon?: boolean;
-  stats: Stat[]; note?: string; steps: string[]; body: ReactNode; demo?: CaseStudyData['demo'];
-  /** los «stats» son datos en palabras, no cifras (Eleven): van como ficha rótulo / valor (D-08) */
-  facts?: boolean;
+  title: string; eyebrow: string; caseEyebrow?: string; sub?: string; line: string; badge?: string; soon?: boolean;
+  stats: Stat[]; fig: Fig; body: ReactNode; demo?: CaseStudyData['demo'];
 };
 
 export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kibboShotCount, openTraumavision, openEleven, openKibbo, openLeex }: Props) {
   const t = useTranslations('projects');
+  const locale = useLocale();
   const ref = useRef<HTMLElement>(null);
   const total = pad2(GAL_DWELLS.length);
-  // video demo de las placas (plate-video.js): pausa del usuario, WCAG 2.2.2 (como la vista previa de Frame by Frame)
-  const [platesPaused, setPlatesPaused] = useState(false);
-  const pausedRef = useRef(false);
-  const sRef = useRef<Senal | null>(null);
-  useEffect(() => { pausedRef.current = platesPaused; if (sRef.current) sRef.current.neg.paused = platesPaused; }, [platesPaused]);
 
   useEffect(() => {
     const section = ref.current;
@@ -71,27 +67,25 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       const label = section.querySelector<HTMLElement>('.pj-label');
       const count = section.querySelector<HTMLElement>('.pj-count');
       const countN = section.querySelector<HTMLElement>('.pj-count b');
-      const vpause = section.querySelector<HTMLElement>('.pj-vpause');
       const tags = Array.from(section.querySelectorAll<HTMLElement>('.pj-tag'));
       const panels = Array.from(section.querySelectorAll<HTMLElement>('.pj-panel'));
       if (!zone || !stage || !label || !count || !countN || tags.length !== GAL_DWELLS.length) return;
       const html = document.documentElement;
       let S: Senal | null = null;
-      const offSignal = onSignal((s) => { S = s; sRef.current = s; s.neg.tags = tags; s.neg.paused = pausedRef.current; });
+      const offSignal = onSignal((s) => { S = s; s.neg.tags = tags; });
       let alive = true;
 
       type T = { el: HTMLElement; title: HTMLElement; rest: HTMLElement[]; split: SplitText | null; on: boolean; tl: gsap.core.Timeline | null };
       const ts: T[] = tags.map((el) => ({
         el,
         title: el.querySelector<HTMLElement>('.pj-title')!,
-        rest: Array.from(el.querySelectorAll<HTMLElement>('.pj-eyebrow, .pj-badge, .pj-sub, .pj-stats > div, .pj-mnote, .pj-open')),
+        rest: Array.from(el.querySelectorAll<HTMLElement>('.pj-folio, .pj-eyebrow, .pj-badge, .pj-line, .pj-fig, .pj-view')),
         split: null, on: false, tl: null,
       }));
       let chromeOn = false;
       let cancelPrep = () => {};
       const hideJobs: Array<[HTMLElement | HTMLElement[] | null, gsap.TweenVars]> = [
         [[label, count], { opacity: 0, y: 14 }],
-        [vpause, { autoAlpha: 0, y: 14 }],
         ...ts.flatMap((c): Array<[HTMLElement | HTMLElement[], gsap.TweenVars]> => [[c.rest, { opacity: 0, y: 14 }], [c.title, { opacity: 0 }]]),
       ];
 
@@ -165,7 +159,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         gsap.to(p, { opacity: 0, duration: 0.35, ease: 'expo.out', overwrite: true, onComplete: () => { if (openK !== k) p.removeAttribute('data-open'); } });
         if (!silent) {
           // vuelve a donde estaba el foco; si se abrió con clic en la placa, a la entrada del caso en su rótulo
-          const back = lastFocus && lastFocus !== document.body && document.contains(lastFocus) ? lastFocus : tags[k].querySelector<HTMLElement>('.pj-open');
+          const back = lastFocus && lastFocus !== document.body && document.contains(lastFocus) ? lastFocus : tags[k].querySelector<HTMLElement>('.pj-view');
           restoring = true; back?.focus({ preventScroll: true }); restoring = false;
         } else if (p.contains(document.activeElement)) (document.activeElement as HTMLElement).blur();
       };
@@ -220,7 +214,6 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         if (wantChrome !== chromeOn) {
           chromeOn = wantChrome;
           gsap.to([label, count], { opacity: wantChrome ? 1 : 0, y: wantChrome ? 0 : 14, duration: wantChrome ? 0.8 : 0.35, ease: 'expo.out', overwrite: true });
-          if (vpause) gsap.to(vpause, { autoAlpha: wantChrome ? 1 : 0, y: wantChrome ? 0 : 14, duration: wantChrome ? 0.8 : 0.35, ease: 'expo.out', overwrite: true });
         }
         const cur = GAL_DWELLS.reduce((a, d, i) => (u >= d[0] - 0.5 ? i : a), 0);
         const n = pad2(cur + 1);
@@ -259,8 +252,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         section.removeEventListener('click', onClose);
         section.removeEventListener('focusin', onFocusIn);
         if (openK >= 0) closeCase(true);
-        if (S) { S.neg.tags = []; S.neg.open = -1; S.neg.paused = false; }
-        sRef.current = null;
+        if (S) { S.neg.tags = []; S.neg.open = -1; }
         offSignal();
         stage.classList.remove('is-anchored');
         html.classList.remove('pj-hot');
@@ -273,7 +265,6 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         });
         panels.forEach((p) => { gsap.killTweensOf(p); p.removeAttribute('data-open'); gsap.set(p, { clearProps: 'opacity' }); });
         gsap.set([label, count], { clearProps: 'opacity,transform' });
-        if (vpause) gsap.set(vpause, { clearProps: 'opacity,visibility,transform' });
       };
     });
     return () => mm.revert();
@@ -316,20 +307,24 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
   const tvPipeline = tvSteps.map((x, i) => (
     <span key={x}><span className="pj-nb">{x}{i < tvSteps.length - 1 && <i> →</i>}</span>{i < tvSteps.length - 1 && ' '}</span>
   ));
-  const steps4 = [L.problem, L.role, L.decisions, L.result];
+  // la cifra del bloque: la primera del sitio en grande; la nota junta las dos siguientes (sin texto nuevo)
+  const num = (v: number, d: number) => new Intl.NumberFormat(locale, { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
+  const noteOf = (stats: Stat[]) => stats.slice(1, 3).map((s) => `${s.value} ${s.label}`).join(' · ');
+  const recall = TRAUMAVISION_METRICS.find((m) => m.key === 'recall')!;
 
-  // mismo orden que GAL_PROJECTS (gallery.ts): TraumaVision, KIBBO, LEEX, Eleven
+  // mismo orden que GAL_PROJECTS (gallery.ts): TraumaVision, KIBBO, Eleven, LEEX
   const items: Item[] = [
     {
       title: traumavision.title, eyebrow: t('traumavision.label'), caseEyebrow: traumavision.eyebrow, sub: traumavision.subtitle,
-      stats: traumavision.stats, note: t('traumavision.metrics_note'), steps: steps4, demo: traumavision.demo,
+      line: t('traumavision.led_line'), stats: traumavision.stats, demo: traumavision.demo,
+      fig: { num: num(recall.value, recall.decimals), unit: recall.suffix, label: t('traumavision.metric_recall'), note: t('traumavision.metrics_note') },
       body: caseBody(traumavision, TRAUMAVISION_STACK, screens(traumavision.shots.length, openTraumavision), undefined, (
         <><p className="pj-k">{t('traumavision.pipeline_label')}</p><p className="pj-mono">{tvPipeline}</p></>
       )),
     },
     {
-      title: kibbo.title, eyebrow: kibbo.eyebrow, sub: kibbo.subtitle, stats: kibbo.stats,
-      steps: steps4, demo: kibbo.demo,
+      title: kibbo.title, eyebrow: kibbo.eyebrow, sub: kibbo.subtitle, line: kibbo.subtitle, stats: kibbo.stats, demo: kibbo.demo,
+      fig: { num: kibbo.stats[0].value, label: kibbo.stats[0].label, note: noteOf(kibbo.stats) },
       body: caseBody(kibbo, KIBBO_STACK, (
         <>
           {screens(kibboShotCount, openKibbo)}
@@ -338,19 +333,19 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       )),
     },
     {
-      title: leex.title, eyebrow: leex.eyebrow, sub: leex.subtitle, badge: leex.badge, soon: true, stats: leex.stats,
-      steps: steps4, demo: leex.demo,
-      body: caseBody(leex, LEEX_STACK, screens(leex.shots.length, openLeex), leex.shotsNote),
-    },
-    {
-      title: eleven.title, eyebrow: t('eleven.subtitle'), caseEyebrow: eleven.eyebrow, sub: t('eleven.description'), stats: eleven.stats,
-      steps: steps4, facts: true, demo: eleven.demo,
+      title: eleven.title, eyebrow: eleven.eyebrow, sub: t('eleven.description'), line: t('eleven.description'), stats: eleven.stats, demo: eleven.demo,
+      fig: { num: eleven.stats[0].value, label: eleven.stats[0].label, note: eleven.stats.slice(1).map((s) => `${s.label} ${s.value}`).join(' · ') },
       body: caseBody(eleven, ELEVEN_STACK, (
         <>
           {screens(eleven.shots.length, openEleven)}
           {eleven.cta && <a className="pj-btn pj-cta" href={eleven.cta.href} target="_blank" rel="noopener noreferrer">{eleven.cta.label}</a>}
         </>
       ), undefined, undefined, true),
+    },
+    {
+      title: leex.title, eyebrow: leex.eyebrow, sub: leex.subtitle, line: leex.subtitle, badge: leex.badge, soon: true, stats: leex.stats, demo: leex.demo,
+      fig: { num: leex.stats[0].value, label: leex.stats[0].label, note: noteOf(leex.stats) },
+      body: caseBody(leex, LEEX_STACK, screens(leex.shots.length, openLeex), leex.shotsNote),
     },
   ];
 
@@ -359,40 +354,31 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       <div className="pj-stage">
         <p className="pj-label"><span className="pj-dot" aria-hidden="true" />{t('label')}</p>
         <p className="pj-count" aria-hidden="true"><b>01</b> / {total}</p>
-        {/* pausa del video demo de las placas (la escena lo respeta: S.neg.paused) */}
-        <button type="button" className="pj-vpause" onClick={() => setPlatesPaused((p) => !p)}>
-          {platesPaused
-            ? <svg width="9" height="10" viewBox="0 0 14 16" fill="currentColor" aria-hidden="true"><path d="M0 0 L14 8 L0 16 Z" /></svg>
-            : <svg width="9" height="10" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true"><path d="M0 0h3.5v12H0zM6.5 0H10v12H6.5z" /></svg>}
-          {platesPaused ? t('case.demo_play') : t('case.demo_pause')}
-        </button>
 
-        {/* Lo esencial de cada proyecto, en el espacio (la escena lo ancla bajo su negatoscopio) */}
+        {/* Lo esencial de cada proyecto, del lado opuesto a su laptop (la escena le escribe el parallax) */}
         {items.map((it, k) => (
-          <article key={GAL_PROJECTS[k].id} className={`pj-tag${it.soon ? ' pj-soon' : ''}`} data-side={GAL_PROJECTS[k].side > 0 ? 'r' : 'l'} aria-label={t('case.plate_aria', { n: k + 1, total: GAL_DWELLS.length, title: it.title })}>
-            <p className="pj-eyebrow"><b>{pad2(k + 1)}</b> / {total} · {it.eyebrow}</p>
+          <article key={GAL_PROJECTS[k].id} className={`pj-tag${it.soon ? ' pj-soon' : ''}`} data-side={GAL_PROJECTS[k].side > 0 ? 'r' : 'l'} aria-labelledby={`pj-t-${k}`}>
+            {/* cabecera editorial (maqueta C): filete rojo + folio */}
+            <p className="pj-folio" aria-hidden="true"><span className="pj-rule" />{t('case.folio')} {pad2(k + 1)} / {total}</p>
+            <p className="pj-eyebrow">{it.eyebrow}</p>
             {it.badge && <p className="pj-badge"><span className="pj-dot" aria-hidden="true" />{it.badge}</p>}
             <h2 id={`pj-t-${k}`} className="pj-title font-display" aria-label={it.title}>{it.title}</h2>
-            {it.sub && <p className="pj-sub">{it.sub}</p>}
-            {statsDl(it.stats, it.facts ? 'pj-stats pj-facts' : 'pj-stats')}
-            {it.note && <p className="pj-mnote">{it.note}</p>}
-            <button type="button" className="pj-open" data-open-case={k} aria-haspopup="dialog" aria-controls={`pj-case-${k}`}>
+            <p className="pj-line">{it.line}</p>
+            <div className="pj-fig">
+              <p className="pj-num">{it.fig.num}{it.fig.unit && <small>{it.fig.unit}</small>}</p>
+              <p className="pj-lab"><strong>{it.fig.label}</strong>{it.fig.note && <span>{it.fig.note}</span>}</p>
+            </div>
+            <button type="button" className="pj-view" data-open-case={k} aria-haspopup="dialog" aria-controls={`pj-case-${k}`}>
               <span className="sr-only">{t('case.open_aria', { title: it.title })}: </span>
-              {/* la flecha cierra el paso anterior y el + va pegado al último: si el botón parte en dos líneas,
-                  ninguna empieza con «→» ni con «+» (U3: a 1200 en ES parte después de «Decisiones clave →») */}
-              {it.steps.map((s, i) => (
-                <span key={s} className="pj-step">
-                  <span>{s}</span>
-                  {i < it.steps.length - 1 ? <i aria-hidden="true">→</i> : <em aria-hidden="true">+</em>}
-                </span>
-              ))}
+              <span className="pj-lbl">{t('case.view_project')}</span>
+              <span className="pj-arr" aria-hidden="true">→</span>
             </button>
           </article>
         ))}
 
-        {/* El caso completo: se abre al entrar (clic en la placa o en la entrada del rótulo). */}
+        {/* El caso completo: se abre con «Ver proyecto» o con clic en la pantalla; cubre el lado del texto. */}
         {items.map((it, k) => (
-          <section key={GAL_PROJECTS[k].id} id={`pj-case-${k}`} className={`pj-panel${it.soon ? ' pj-soon' : ''}`} data-side={GAL_PROJECTS[k].side < 0 ? 'r' : 'l'}
+          <section key={GAL_PROJECTS[k].id} id={`pj-case-${k}`} className={`pj-panel${it.soon ? ' pj-soon' : ''}`} data-side={GAL_PROJECTS[k].side > 0 ? 'r' : 'l'}
             role="dialog" aria-modal="true" aria-labelledby={`pj-c-${k}`}>
             <button type="button" className="pj-close" aria-label={t('case.close_case')}>{t('case.lightbox.close')}</button>
             <header className="pj-c-head">
