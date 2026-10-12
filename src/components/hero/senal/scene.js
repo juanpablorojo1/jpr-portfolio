@@ -87,6 +87,9 @@ async function boot({ S, root, after, assetBase }, ctl) {
   ctl.offs.push(clearWatchdog);
   // pausa / reanudación: la disparan visibilitychange y S.onView. syncLoop la completa el loop, más abajo.
   let syncLoop = () => {};
+  // el pasillo (Projects → Contact) se declara acá y no donde se arma: sync corre desde S.onView y visibilitychange
+  // durante los await del arranque, y leía `corr` en su zona muerta temporal (ReferenceError en la consola)
+  let corr = null, corrBuilding = false, corrIn = 0;
   const sync = () => {
     if (ctl.disposed || S.dead) return;
     if (shouldRun()) wdRun(); else { wdPause(); if (corr) corr.fbf.pauseAll(); }   // videos de Frame by Frame: pausa fuera de vista
@@ -345,7 +348,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const lamp = new THREE.Sprite(lampMat);
   lamp.scale.setScalar(0.24); lamp.renderOrder = 3;
   scene.add(lamp);
-  let corr = null, corrBuilding = false, corrIn = 0;
+  // corr, corrBuilding, corrIn: declarados arriba, junto a sync
   let stk = null, ecgX = null, ctcX = null;     // Stack (network.js), Experience (ecg.js) y Contact (convergence.js): se enganchan con el pasillo listo
 
   /* ---------- composición (fracciones del viewport, idénticas a la figura HTML) ---------- */
