@@ -229,24 +229,37 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       };
 
       // titulares partidos fuera de la hidratación, en su propia tarea ociosa (D-01): partir, medir, preparar
+      // Si la sección ya está a la vista o cerca (recarga a mitad de página, salto ?qa, scroll rápido), se prepara YA y
+      // no en la cola ociosa: con la escena dibujando, esa cola (de a una tarea por sección, hasta 1,5 s cada una) podía
+      // demorar 10–18 s y los bloques no entraban (LEEX tras el salto ?qa, ronda 3)
+      let prepared = false;
+      const prep = () => {
+        if (!alive || prepared) return;
+        prepared = true;
+        removeEventListener('scroll', onNear);
+        hidden.ensure();
+        ts.forEach((c) => { c.split = SplitText.create(c.title, { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' }); });
+        measure();
+        setBatch([
+          ...ts.map((c): [Element[], gsap.TweenVars] => [c.split!.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 }]),
+          ...ts.map((c): [HTMLElement, gsap.TweenVars] => [c.title, { opacity: 1 }]),
+        ]);
+        gsap.ticker.add(tick);
+      };
+      const near = () => { const r = section.getBoundingClientRect(); return r.top < innerHeight * 2 && r.bottom > -innerHeight; };
+      let fontsOk = false;
+      function onNear() { if (fontsOk && near()) { cancelPrep(); prep(); } }
+      addEventListener('scroll', onNear, { passive: true });
       document.fonts.ready.then(() => {
         if (!alive) return;
-        cancelPrep = idleTask(() => {
-          if (!alive) return;
-          hidden.ensure();
-          ts.forEach((c) => { c.split = SplitText.create(c.title, { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' }); });
-          measure();
-          setBatch([
-            ...ts.map((c): [Element[], gsap.TweenVars] => [c.split!.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 }]),
-            ...ts.map((c): [HTMLElement, gsap.TweenVars] => [c.title, { opacity: 1 }]),
-          ]);
-          gsap.ticker.add(tick);
-        });
+        fontsOk = true;
+        if (near()) prep(); else cancelPrep = idleTask(prep);
       });
 
       return () => {
         alive = false;
         cancelPrep();
+        removeEventListener('scroll', onNear);
         hidden.cancel();
         gsap.ticker.remove(tick);
         removeEventListener('resize', measure);

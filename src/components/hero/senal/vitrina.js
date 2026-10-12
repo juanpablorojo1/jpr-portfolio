@@ -613,9 +613,10 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     // salida: la última pantalla se apaga en la línea, que corre hacia la recta del pasillo
     if (exit) {
       const X = range(u, LAST_OUT, GAL_END);
-      const hd = exit.len * easeIO(range(X, 0.12, 0.56));
+      // R3-02: la línea llega a la recta antes (X 0,36) y el cabezal la sigue por delante de la cámara (exitHead)
+      const hd = exit.len * easeIO(range(X, 0.08, 0.36));
       exit.u.s1.value = hd; exit.u.s0.value = Math.max(0, hd - 7);
-      exit.u.head.value = X < 0.56 ? 1 : 0.2;
+      exit.u.head.value = X < 0.36 ? 1 : 0.2;
       exit.u.inten.value = X > 0.1 ? 1 - sm(range(X, 0.62, 0.8)) : 0;
       exit.mesh.visible = exit.u.inten.value > 0.001;
       for (const key of ['s0', 's1', 'head', 'inten']) exit.rm.u[key].value = exit.u[key].value;
@@ -656,8 +657,10 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
   function exitHead(u) {
     if (u <= LAST_OUT) return null;
     const X = range(u, LAST_OUT, GAL_END);
-    const a = easeIO(range(X, 0.54, 0.97));
-    return { z: lerp(railZOf(exitJoinX), railStop + 0.15, a), joinZ: railZOf(exitJoinX), k: sm(range(X, 0.5, 0.6)) };
+    // R3-02: el cabezal arranca rápido (salida cúbica) y va siempre por delante de la cámara: en u 9,6 (X 0,6) ya está
+    // a ~80 % del camino, adelante y en cuadro, con la estela desde la unión. Antes estaba en la unión, detrás de la cámara.
+    const r = range(X, 0.33, 0.92), a = 1 - Math.pow(1 - r, 3);
+    return { z: lerp(railZOf(exitJoinX), railStop + 0.15, a), joinZ: railZOf(exitJoinX), k: sm(range(X, 0.3, 0.38)) };
   }
   /** la recta del About se recoge hasta el pie de TraumaVision y se apaga cuando el cenital la encuentra */
   function railWindow(u) {

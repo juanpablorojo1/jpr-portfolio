@@ -112,7 +112,9 @@ export async function studioEnv(renderer) {
     box(9, 2.0, 8, new THREE.Vector3(0, 6, -3.2), O);          // softbox cenital-trasero: los planos que miran arriba-atrás
     // R2-01: donde cae el rayo de cámara reflejado en el deck (la cámara mira el deck rasante, ~8–12°: el reflejo sale
     // hacia atrás y apenas arriba del horizonte) va un softbox ancho y bajo. Esa es la banda que cruza el deck.
-    box(10, 1.3, 14, new THREE.Vector3(0, 1.7, -7), O);
+    // R3-01: a 1/3 de alto y ×0,36 de ganancia (1,3 m ×14 quemaba el deck entero a blanco: p50 253): el pico de la
+    // banda queda en ~#80–#A0 y el resto del deck en el grafito
+    box(10, 0.45, 5, new THREE.Vector3(0, 1.75, -7), O);
     box(1.0, 6.5, 10, new THREE.Vector3(-6.5, 1.8, 1.2), O);   // strip lateral izquierdo: el canto izquierdo
     box(0.8, 4.5, 3.5, new THREE.Vector3(6, 1.2, -2.2), O);    // strip derecho, bajo (relación de luz)
     box(6.5, 0.32, 7, new THREE.Vector3(0, 0.45, 7.5), O);     // tira baja de frente: la hairline del chaflán delantero
@@ -153,12 +155,12 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
   /* aluminio: arenado (roughness 0,42 con micro-rayado ±0,05) y chaflanes de corte diamante pulidos (0,15). El chaflán
      se detecta por la normal de la geometría: ni tapa (eje de las caras) ni costado, sino diagonal (D-01). */
   const aluFor = (axis) => {
-    const m = new THREE.MeshPhysicalNodeMaterial({ color: 0x7d8086, metalness: 0.9, roughness: 0.3, anisotropy: 0.3, envMap: env, envMapIntensity: envI });
+    const m = new THREE.MeshPhysicalNodeMaterial({ color: 0x7d8086, metalness: 0.9, roughness: 0.34, anisotropy: 0.3, envMap: env, envMapIntensity: envI });
     const nA = abs(axis === 'y' ? normalLocal.y : normalLocal.z);
     const bevel = smoothstep(0.12, 0.35, nA).mul(float(1).sub(smoothstep(0.86, 0.97, nA)));
     const scratch = mx_noise_float(positionLocal.mul(vec3(3.0, 90.0, 3.0))).mul(0.03).add(mx_noise_float(positionLocal.mul(14.0)).mul(0.02));
-    // R2-01: 0,30 (no 0,42): con 0,42 el softbox se difuminaba en un levante parejo; así sobrevive su forma
-    m.roughnessNode = mix(float(0.3).add(scratch), float(0.15), bevel);
+    // R2-01/R3-01: 0,34 (0,42 difuminaba el softbox en un levante parejo; 0,30 con el softbox fuerte quemaba el deck)
+    m.roughnessNode = mix(float(0.34).add(scratch), float(0.15), bevel);
     m.emissiveNode = spill(0.07).mul(appear);
     return m;
   };

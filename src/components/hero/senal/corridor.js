@@ -60,6 +60,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const focusU = uniform(7), rangeU = uniform(1.6), bokehU = uniform(12.0), voidK = uniform(0), grainK = uniform(0), farK = uniform(50);
   // el tramo del riel (piso, polvo, grano): aparece con la salida de Projects; en la vitrina no hay piso ni grano
   const fbfK = uniform(0);
+  // polvo del tramo final: recién en Video (R3-02: en la salida de Projects eran ~1150 motas fuera de cualquier haz)
+  const dustK = uniform(0);
   const ROOM_POS = new THREE.Vector3(0, 2.1, Z_END - 4.5);
   const roomPos = vec3(ROOM_POS.x, ROOM_POS.y, ROOM_POS.z);
   const appear = galW;                           // existe sólo con la galería abierta (0 en el About)
@@ -125,7 +127,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const soft = float(1).sub(smoothstep(0.0, 0.5, length(uv().sub(0.5))));
     dustMat.colorNode = lightAt(toL(positionWorld)).mul(2.2).add(OFF.mul(0.01).mul(appear));
     const oof = smoothstep(rangeU.mul(0.35), rangeU, near.sub(focusU).abs()).mul(0.8).mul(dotK);
-    dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(fogF())).mul(smoothstep(0.3, 0.9, near)).mul(float(1).sub(oof)).mul(appear).mul(fbfK);
+    dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(fogF())).mul(smoothstep(0.3, 0.9, near)).mul(float(1).sub(oof)).mul(appear).mul(dustK);
   }
   const dust = new THREE.Sprite(dustMat); dust.count = DUST; dust.frustumCulled = false; group.add(dust);
 
@@ -225,6 +227,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const u0Of = (x) => (typeof x.U0 === 'function' ? x.U0() : x.U0);
   const extAt = (u) => { let e = null; for (const x of exts) if (u > u0Of(x)) e = x; return e; };
   let mouseRef = { x: 0, y: 0 };
+  let hallRef = null;
 
   /** Pose de cámara para u (coordenadas del pasillo → mundo). */
   function camPose(u, t, dt, mouse, outPos, outLook) {
@@ -265,7 +268,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     dotK.value = thr;
     fbfK.value = smooth(LAST_OUT + 0.3, GAL_END - 0.05, u);
     floorM.visible = fbfK.value > 0.001;
-    dust.visible = fbfK.value > 0.001;
+    dustK.value = smooth(GAL_END - 0.1, GAL_END + 0.4, u);
+    dust.visible = dustK.value > 0.001;
     const fbfMid = smooth(FBF_INTRO[0], FBF_INTRO[1], u) * (1 - smooth(FBF_OFF - 0.2, FBF_OFF + 0.2, u));
     voidK.value = smooth(LAST_OUT + 0.15, LAST_OUT + 0.6, u) * (1 - 0.22 * fbfMid);
     grainK.value = thr;
@@ -273,6 +277,10 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     vit.update(u, t, dt, gw);
     // Frame by Frame: lámpara, haz, pantallas y foco (null antes de la sala)
     const fx = proj.update(u, t, dt, gw, P, L, S.inView);
+    // R3-02: la sala de Video (pantallas en espera y su polvo) no se adivina en la salida de Projects: aparecía cortada
+    // arriba a la izquierda, a ~8 %, como un resto. Entra cuando la cámara ya mira la sala (sin tocar projector.js).
+    if (!hallRef) hallRef = group.getObjectByName('fbf-hall');
+    if (hallRef && u < GAL_END - 0.15) hallRef.visible = false;
     let ex = null;
     for (const x of exts) { const r = x.update(u, t, dt, gw, P, L); if (r) ex = r; }
 
