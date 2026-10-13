@@ -62,6 +62,11 @@ export async function buildProjector({
   hall.visible = false;
   group.add(hall);
   const camL = uniform(new THREE.Vector3());         // cámara en coordenadas del pasillo (cintas y haz miran a cámara)
+  /* Video hereda la fotografía de la vitrina (negro aplastado sin velo, sombras frías, viñeta suave, grano sólo en la
+     luz) y su fondo #050505: es el mismo vacío y la misma toma, así el empalme Projects → Video no tiene salto de
+     gradación (design-critic, ronda 4). corridor.js usa max(vitrina, lookW); vuelve al look del pasillo recién en el
+     apagado del tambor, camino a Stack. */
+  const lookW = uniform(0);
   const texs = [];
   const sharp = (t) => {
     t.colorSpace = THREE.SRGBColorSpace; t.generateMipmaps = true;
@@ -413,6 +418,7 @@ export async function buildProjector({
     const on = u > LAST_OUT + 0.1;
     hall.visible = on;
     const ready = on && gw > 0.5;
+    lookW.value = on ? gw * (1 - smooth(FBF_OFF + 0.1, FBF_END, u)) : 0;
     if (!on) { st.active = -1; S.fbf.active = -1; scrI.value = 0; pauseAll(); return null; }
     camL.value.copy(P);                               // P ya está en coordenadas del pasillo (camPose)
 
@@ -579,7 +585,7 @@ export async function buildProjector({
   void housingMat; void metalMat; void prep; void focusU; void rangeU; void cameraPosition;
 
   return {
-    pose, calm, update, placeTags, pick, pauseAll, warm, maskNode,
+    pose, calm, update, placeTags, pick, pauseAll, warm, maskNode, lookW,
     lampK: () => st.lampK,
     info: () => ({
       fbf: st.mode, rot: +st.rot.toFixed(2), active: st.active, spin: +st.spin.toFixed(2),

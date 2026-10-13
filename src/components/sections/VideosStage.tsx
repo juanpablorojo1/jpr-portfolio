@@ -20,7 +20,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import gsap from 'gsap';
 import { onSignal, type Senal } from '../hero/senal/signal';
-import { FBF_SECTION_VH, FBF_STAY, fbfCtrlWanted, fbfCanTurn, fbfChromeWanted } from '../hero/senal/frames';
+import { FBF_SECTION_VH, FBF_STAY, FBF_OFF, fbfCtrlWanted, fbfCanTurn, fbfChromeWanted } from '../hero/senal/frames';
+import { GAL_DWELLS } from '../hero/senal/gallery';
 import { VIDEOS } from '../../lib/content';
 import { idleTask, lazySet } from '../../lib/idle';
 import './videos-senal.css';
@@ -29,6 +30,11 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
 const N = VIDEOS.length;
 const mod = (a: number) => ((a % N) + N) % N;
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** Video hereda el negro de Projects sin el grano DOM ni el nav sólido (html.fv-vit, como html.pj-vit): se enciende
+    mientras la línea roja todavía viaja (salida de Projects, antes de que pj-vit se apague en LAST_OUT + 0,9) y se
+    apaga con el tambor, camino a Stack. Así el cambio nunca cae en un corte (design-critic, ronda 4). */
+const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
+const fvVitWanted = (u: number) => u > LAST_OUT + 0.45 && u < FBF_OFF + 0.45;
 
 export default function VideosStage() {
   const t = useTranslations('videos');
@@ -190,8 +196,26 @@ export default function VideosStage() {
           gsap.to(label, { opacity: wantChrome ? 1 : 0, y: wantChrome ? 0 : 14, duration: wantChrome ? 0.8 : 0.35, ease: 'expo.out', overwrite: true });
         }
         ring.toggleAttribute('data-on', !live || fbfCtrlWanted(u));
+        const vit = live && fvVitWanted(u);
+        if (vit !== html.classList.contains('fv-vit')) html.classList.toggle('fv-vit', vit);
       };
-      const cancelPrep = idleTask(() => { hidden.ensure(); measure(); gsap.ticker.add(tick); });
+      const html = document.documentElement;
+      // a la vista o cerca (recarga a mitad de página, salto ?qa&u=, scroll rápido): se prepara YA y no en la cola ociosa
+      // (con la escena dibujando, esa cola podía demorar 10–18 s; mismo arreglo que Projects en 14710fd). La salida de
+      // Projects ya cuenta como cerca: ahí se enciende fv-vit.
+      let prepared = false;
+      const prep = () => {
+        if (prepared) return;
+        prepared = true;
+        removeEventListener('scroll', onNear);
+        hidden.ensure(); measure(); gsap.ticker.add(tick);
+      };
+      const near = () => { const r = section.getBoundingClientRect(); return r.top < innerHeight * 2 && r.bottom > -innerHeight; };
+      function onNear() { if (near()) { cancelIdle(); prep(); } }
+      addEventListener('scroll', onNear, { passive: true });
+      let cancelIdle = () => {};
+      if (near()) prep(); else cancelIdle = idleTask(prep);
+      const cancelPrep = () => { cancelIdle(); removeEventListener('scroll', onNear); };
 
       return () => {
         cancelPrep();
@@ -208,7 +232,7 @@ export default function VideosStage() {
         rot.current.v = rot.current.target;
         stage.classList.remove('is-live');
         ring.setAttribute('data-on', '');
-        document.documentElement.classList.remove('fv-hot');
+        document.documentElement.classList.remove('fv-hot', 'fv-vit');
         gsap.set(label, { clearProps: 'opacity,transform' });
       };
     });

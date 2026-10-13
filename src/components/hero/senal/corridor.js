@@ -148,6 +148,9 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     headPos, headI, scrPos, scrI, endP: END_P, endL: END_L, railHeadZ: RAIL_STOP + 0.15, focusU, rangeU,
   });
   if (!proj || !alive()) return null;
+  // Video (Tambor 360) sigue en el negro y la fotografía de la vitrina hasta su apagado (U3, costura Projects → Video)
+  const lookW = max(vit.voidW, proj.lookW);
+  scene.backgroundNode = mix(vec3(0.00243), vit.bgNode, lookW);
 
   group.visible = false;
   scene.add(group);
@@ -178,7 +181,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
      - negro aplastado (sin velo: se resta un piso y nada queda gris) y sombras frías por multiplicación (no levanta);
      - viñeta del ~22 % en las esquinas (la del pasillo llegaba al 80 %);
      - grano fino proporcional a la luz (en el negro no se ve: no lo levanta). */
-  const vW = vit.voidW;
+  const vW = lookW;
   const cOff = screenUV.sub(0.5);
   const caOff = cOff.mul(dot(cOff, cOff).mul(0.0042));
   const ca = vec4(col.sample(screenUV.add(caOff)).r, dofN.g, col.sample(screenUV.sub(caOff)).b, 1);

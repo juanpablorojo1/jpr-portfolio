@@ -23,6 +23,14 @@
   }
   @supports (height: 100svh) { .fv-stage { height: 100svh; } }
 
+  /* Video hereda el negro de la vitrina: sin el grano DOM del hero ni la barra sólida del nav (VideosStage pone fv-vit
+     en <html> desde la salida de Projects hasta el apagado del tambor; el fundido de .grain vive en projects-senal.css) */
+  html.fv-vit .senal .grain { opacity: 0; }
+  html.fv-vit .jnav.is-scrolled {
+    background: linear-gradient(180deg, rgba(2, 2, 5, .92) 0%, rgba(2, 2, 5, .55) 70%, rgba(2, 2, 5, 0) 100%);
+    border-bottom-color: transparent;
+  }
+
   /* rótulo de sección: el mismo sistema que Projects */
   .fv-label {
     position: absolute; top: clamp(84px, 11vh, 110px); left: var(--pad); margin: 0;
