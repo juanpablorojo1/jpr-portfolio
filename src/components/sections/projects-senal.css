@@ -1,31 +1,31 @@
-/* Projects Â«SeÃ±alÂ» â€” la vitrina en el vacÃ­o (escritorio â‰¥1024 con la escena viva o por venir: data-gallery en la zona,
+/* Projects «Señal» — la vitrina en el vacío (escritorio ≥1024 con la escena viva o por venir: data-gallery en la zona,
    lo pone hero-controller). Sin data-gallery (reduced motion, ?static, sin GPU, <1024) queda el layout apilado.
    El bloque de cada proyecto (.pj-tag) va del lado opuesto a su laptop; la escena le escribe el transform (parallax
-   opuesto a la Ã³rbita) en el frame del render (.pj-stage.is-anchored). Sin escena viva queda en su posiciÃ³n de
-   respaldo, abajo a la izquierda. El caso completo (.pj-panel) es un diÃ¡logo del lado del texto. CSS propio con prefijo .pj.
-   Tokens (02-brand.md): fondo #050505 en la vitrina, rojo #E8272A sÃ³lo en la seÃ±al, el Ã­ndice y el Â«%Â»; Bebas Neue
-   para el nombre, Barlow Condensed 500 para la lÃ­nea tÃ©cnica, JetBrains Mono para cifras y metadatos; radios 0;
-   botÃ³n de doble marco. */
+   opuesto a la órbita) en el frame del render (.pj-stage.is-anchored). Sin escena viva queda en su posición de
+   respaldo, abajo a la izquierda. El caso completo (.pj-panel) es un diálogo del lado del texto. CSS propio con prefijo .pj.
+   Tokens (02-brand.md): fondo #050505 en la vitrina, rojo #E8272A sólo en la señal, el índice y el «%»; Bebas Neue
+   para el nombre, Barlow Condensed 400 para la línea técnica (el sitio carga 400 y 700), JetBrains Mono para cifras y metadatos; radios 0;
+   botón de doble marco. */
 
 .pj-gal { display: none; }
 
 @media (min-width: 1024px) {
   .transition-zone[data-gallery] .pj-stack { display: none; }
   .transition-zone[data-gallery] .pj-gal { display: block; position: relative; background: #080808; }
-  /* escena viva detrÃ¡s: la galerÃ­a es transparente y sin la decoraciÃ³n del card stack (palabra de fondo y lÃ­nea
-     vertical: sobre la escena serÃ­an una costura, y el mix-blend-mode cuesta fps) */
+  /* escena viva detrás: la galería es transparente y sin la decoración del card stack (palabra de fondo y línea
+     vertical: sobre la escena serían una costura, y el mix-blend-mode cuesta fps) */
   .transition-zone[data-see-through] .pj-gal { background: transparent; }
   .transition-zone[data-see-through] > [aria-hidden='true'] { display: none !important; }
 
   .pj-stage {
     --pad: 5.5vw;            /* el margen del hero y del About */
     --dim: rgba(232, 228, 222, .62);
-    /* texto chico sobre la escena: el fondo es el vacÃ­o (#050505 con el pozo de luz, L â‰¤ 0,01) */
+    /* texto chico sobre la escena: el fondo es el vacío (#050505 con el pozo de luz, L ≤ 0,01) */
     --dim-scene: rgba(232, 228, 222, .66);   /* metadatos un punto más tenues (≥ 6:1 sobre el peor fondo: el nombre gigante, ~#1A) */
     --line: rgba(232, 228, 222, .16);
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --mono: var(--font-jetbrains-mono), ui-monospace, monospace;
-    /* sticky dentro de la secciÃ³n (la zona sola se despega: lo que queda debajo es mÃ¡s corto que la galerÃ­a) */
+    /* sticky dentro de la sección (la zona sola se despega: lo que queda debajo es más corto que la galería) */
     position: sticky; top: 0; height: 100vh; overflow: hidden;
     pointer-events: none;
     color: #e8e4de; font-family: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
@@ -38,8 +38,8 @@
   }
   .pj-label { left: var(--pad); display: flex; align-items: center; gap: 10px; }
   .pj-count { right: var(--pad); color: var(--dim-scene); }
-  /* D-03: el rojo en texto chico no llega a contraste (y la marca lo reserva para texto grande): el Ã­ndice va en
-     off-white pleno y el rojo queda en el cuadrado que lo acompaÃ±a (el mismo marcador en contador y caso) */
+  /* D-03: el rojo en texto chico no llega a contraste (y la marca lo reserva para texto grande): el índice va en
+     off-white pleno y el rojo queda en el cuadrado que lo acompaña (el mismo marcador en contador y caso) */
   .pj-count b, .pj-k b { color: #e8e4de; font-weight: 400; }
   .pj-count b::before, .pj-k b::before, .pj-panel .pj-eyebrow b::before {
     content: ''; display: inline-block; width: 5px; height: 5px; margin: 0 .75em 0 0; vertical-align: .2em;
@@ -82,7 +82,9 @@
   .pj-title .char { display: inline-block; will-change: transform, opacity; }
   .pj-line {
     margin: 18px 0 0; max-width: 30ch;
-    font: 500 clamp(21px, 1.7vw, 27px)/1.18 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; color: rgba(232, 228, 222, .9);
+    /* B-02: 400, el peso que carga layout.tsx (el 500 caía en 400: sin cambio visual). R56-04: sin palabra huérfana */
+    font: 400 clamp(21px, 1.7vw, 27px)/1.18 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; color: rgba(232, 228, 222, .9);
+    text-wrap: pretty;
   }
   .pj-fig {
     display: flex; align-items: flex-end; gap: 22px; margin-top: 30px; padding-top: 20px;
@@ -94,28 +96,35 @@
   .pj-lab strong { display: block; color: #e8e4de; font-weight: 400; }
   .pj-lab span { display: block; }
 
-  /* Â«Ver proyectoÂ»: marco doble en Ã¡ngulo recto; la flecha en su propia celda; el rojo barre la etiqueta al pasar */
+  /* «Ver proyecto»: marco doble en ángulo recto; la flecha en su propia celda; el rojo barre la etiqueta al pasar */
+  /* B-04: la misma receta de doble marco que .fv-btn (Video): fondo #050505 al 55 %, marco exterior hueso al 16 %,
+     celdas con marco interior hueso al 10 %, anillo de foco de 1 px. B-02: 700, el peso cargado (el 600 caía en 700). */
   .pj-view {
     margin-top: 28px; display: inline-flex; align-items: stretch; padding: 4px; cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, .16); background: rgba(8, 8, 8, .55); color: #fff;
-    font: 600 15px/1 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; letter-spacing: .16em; text-transform: uppercase;
+    border: 1px solid rgba(232, 228, 222, .16); background: rgba(5, 5, 5, .55); color: #fff;
+    font: 700 15px/1 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; letter-spacing: .16em; text-transform: uppercase;
     transition: border-color .3s var(--ease-out), transform .2s var(--ease-out);
   }
   .pj-tag[data-on] .pj-view { pointer-events: auto; }
-  .pj-view .pj-lbl { position: relative; z-index: 0; display: flex; align-items: center; height: 46px; padding: 0 22px 0 18px; overflow: hidden; }
+  .pj-view .pj-lbl {
+    position: relative; z-index: 0; display: flex; align-items: center; height: 46px; padding: 0 22px 0 18px; overflow: hidden;
+    border: 1px solid rgba(232, 228, 222, .1); transition: color .3s var(--ease-out);
+  }
   .pj-view .pj-lbl::before {
     content: ''; position: absolute; inset: 0; z-index: -1; background: #e8272a;
     transform: scaleX(0); transform-origin: 0 50%; transition: transform .5s var(--ease-out);
   }
   .pj-view .pj-arr {
-    width: 46px; height: 46px; display: grid; place-items: center; border-left: 1px solid rgba(255, 255, 255, .14);
+    width: 46px; height: 46px; display: grid; place-items: center; border: 1px solid rgba(232, 228, 222, .1); border-left: 0;
     font: 400 18px/1 var(--mono); transition: transform .45s var(--ease-out), color .3s;
   }
-  .pj-view:hover, .pj-view:focus-visible { border-color: rgba(232, 39, 42, .75); }
+  .pj-view:hover, .pj-view:focus-visible { border-color: rgba(232, 39, 42, .75); outline: none; }
   .pj-view:hover .pj-lbl::before, .pj-view:focus-visible .pj-lbl::before { transform: scaleX(1); }
+  /* B-03: sobre el rojo, texto #080808 (4,53:1; el blanco daba 4,42:1 a 15 px) */
+  .pj-view:hover .pj-lbl, .pj-view:focus-visible .pj-lbl { color: #080808; }
   .pj-view:hover .pj-arr, .pj-view:focus-visible .pj-arr { transform: translateX(3px); color: #e8272a; }
-  .pj-view:active { transform: scale(.98); }
-  .pj-view:focus-visible { outline: 2px solid #e8272a; outline-offset: 4px; }
+  .pj-view:active { transform: scale(.95); }
+  .pj-view:focus-visible { box-shadow: 0 0 0 2px #080808, 0 0 0 3px #e8272a; }
 
   /* D-06: en la vitrina el negro es de la escena (#020205 con viñeta y grano propio). El grano DOM del hero (fijo,
      z 30: 3 % de ruido blanco + líneas al 1,2 %) y la barra sólida #080808 del nav lo aplastaban a #080808 plano.
@@ -166,13 +175,13 @@
   .pj-dec span { font: 400 26px/1 var(--font-bebas-neue), sans-serif; color: #e8272a; }
   .pj-dec strong { color: #fff; font-weight: 700; }
   .pj-c-stats { display: flex; gap: 28px; flex-wrap: wrap; margin: 16px 0 0; }
-  /* cuatro cifras (TraumaVision) en 2 Ã— 2: en la columna del resultado entraban 3 + 1 suelta */
+  /* cuatro cifras (TraumaVision) en 2 × 2: en la columna del resultado entraban 3 + 1 suelta */
   .pj-c-stats:has(> div:nth-child(4):last-child) { display: grid; grid-template-columns: repeat(2, max-content); gap: 18px 40px; }
   .pj-nb { white-space: nowrap; }
   .pj-c-stats div { display: flex; flex-direction: column-reverse; gap: 6px; }
   .pj-c-stats dt { font: 10.5px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); max-width: 15ch; }
   .pj-c-stats dd { margin: 0; font: 400 36px/1 var(--font-bebas-neue), sans-serif; color: #e8e4de; }
-  /* D-08: Eleven no tiene cifras sino datos (fundaciÃ³n, clientes, enfoque): ficha vertical rÃ³tulo / valor */
+  /* D-08: Eleven no tiene cifras sino datos (fundación, clientes, enfoque): ficha vertical rótulo / valor */
   .pj-c-stats.pj-facts { display: grid; grid-template-columns: max-content max-content; gap: 0 22px; }
   .pj-c-stats.pj-facts > div { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: baseline; border-top: 1px solid var(--line); padding: 8px 0 7px; }
   .pj-c-stats.pj-facts > div:last-child { border-bottom: 1px solid var(--line); }
@@ -185,7 +194,7 @@
     font: 10.5px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; text-decoration: none;
     transition: border-color .2s, background-color .2s, color .2s;
   }
-  .pj-btn span { color: var(--dim); }   /* D-03: el nÃºmero no va en rojo (texto chico) */
+  .pj-btn span { color: var(--dim); }   /* D-03: el número no va en rojo (texto chico) */
   .pj-btn:hover, .pj-btn:focus-visible { border-color: #e8272a; outline: none; }
   .pj-btn:active { background: rgba(232, 39, 42, .12); }
   .pj-cta { border-color: #e8272a; }
