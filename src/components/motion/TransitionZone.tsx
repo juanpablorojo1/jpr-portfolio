@@ -33,6 +33,8 @@ export default function TransitionZone({
     <div
       className="transition-zone"
       data-section={sectionId}
+      // data-gallery lo pone GALLERY_SCRIPT (page.tsx) antes de hidratar, a propósito (layout sin salto): no es un desajuste
+      suppressHydrationWarning
       style={{
         position: 'sticky',
         top: 0,

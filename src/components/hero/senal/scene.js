@@ -87,6 +87,9 @@ async function boot({ S, root, after, assetBase }, ctl) {
   ctl.offs.push(clearWatchdog);
   // pausa / reanudación: la disparan visibilitychange y S.onView. syncLoop la completa el loop, más abajo.
   let syncLoop = () => {};
+  // el pasillo (Projects → Contact) se declara acá y no donde se arma: sync corre desde S.onView y visibilitychange
+  // durante los await del arranque, y leía `corr` en su zona muerta temporal (ReferenceError en la consola)
+  let corr = null, corrBuilding = false, corrIn = 0;
   const sync = () => {
     if (ctl.disposed || S.dead) return;
     if (shouldRun()) wdRun(); else { wdPause(); if (corr) corr.fbf.pauseAll(); }   // videos de Frame by Frame: pausa fuera de vista
@@ -345,7 +348,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const lamp = new THREE.Sprite(lampMat);
   lamp.scale.setScalar(0.24); lamp.renderOrder = 3;
   scene.add(lamp);
-  let corr = null, corrBuilding = false, corrIn = 0;
+  // corr, corrBuilding, corrIn: declarados arriba, junto a sync
   let stk = null, ecgX = null, ctcX = null;     // Stack (network.js), Experience (ecg.js) y Contact (convergence.js): se enganchan con el pasillo listo
 
   /* ---------- composición (fracciones del viewport, idénticas a la figura HTML) ---------- */
@@ -595,7 +598,8 @@ async function boot({ S, root, after, assetBase }, ctl) {
       camera.position.lerp(galP, wo);
       hl.lerp(galL, wo);
       fov = lay.fov + ((innerWidth / innerHeight > 1.9 ? 30 : 32) - lay.fov) * G.w;   // aspecto del viewport (la lente corrida agranda camera.aspect)
-    }
+      if (corr.fovAt) fov = lay.fov + (corr.fovAt(g, innerWidth / innerHeight > 1.9 ? 30 : 32) - lay.fov) * G.w;   // la vitrina: óptica más larga
+    } else if (corr && corr.idle) corr.idle();
     // la vitrina (corridor.update) corre la lente para dejar la laptop a un lado del cuadro; fuera de Projects, sin corrimiento
     if (!(G.w > 0 && corr) && camera.view && camera.view.enabled) { camera.clearViewOffset(); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
     if (Math.abs(camera.fov - fov) > 1e-4) { camera.fov = fov; camera.updateProjectionMatrix(); }
@@ -762,6 +766,12 @@ async function boot({ S, root, after, assetBase }, ctl) {
         ctl.info.t.corridor = Math.round(performance.now() - t0);
         console.info('[senal] corridor ready in', ctl.info.t.corridor, 'ms');
         startNetwork(c);
+        // QA (?qa&u=4.15): salta a esa posición (viewports desde el aterrizaje del About) con la cámara ya asentada,
+        // para capturas repetibles; después el loop sigue normal (los textos entran en tiempo real)
+        if (qa && params.has('u') && ctl.info.advance) {
+          const uq = parseFloat(params.get('u'));
+          if (Number.isFinite(uq)) setTimeout(() => { if (ctl.disposed || S.dead) return; ctl.info.advance(3, uq); ctl.info.resume(); console.info('[senal] qa jump u', uq, 'scrollY', Math.round(scrollY)); }, 60);
+        }
       })
       .catch((e) => { console.warn('[senal] corridor:', e && e.message); })
       .finally(() => { corrBuilding = false; });
@@ -913,6 +923,11 @@ async function boot({ S, root, after, assetBase }, ctl) {
     if (corr && (G.w > 0 || corrPost)) {
       const cb = corr.bloom, w = G.w;
       cb.strength.value = bs + (1.2 - bs) * w; cb.radius.value = 0.55 + 0.05 * w; cb.threshold.value = 0.55 - 0.43 * w;
+      // vitrina: halo corto (≤ ~6 px) para que el rojo del canto y la bisagra sea un hilo y no tiña el teclado (D-04)
+      const vw = corr.vitW ? corr.vitW() : 0;
+      // R2-02: umbral alto en la vitrina: la línea del canto (≤ el rojo de marca, 0,81 lineal) no entra al bloom; sólo
+      // la cabeza de la señal, que tiene su propio resplandor en el shader
+      if (vw > 0) { cb.radius.value += (0.12 - cb.radius.value) * vw; cb.strength.value += (0.75 - cb.strength.value) * vw; cb.threshold.value += (0.9 - cb.threshold.value) * vw; }
       pl = corr.pipeline; corrPost = false;
     }
     if (!skipRender) pl.render();

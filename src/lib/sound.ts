@@ -9,6 +9,10 @@ import type { Howl } from 'howler';
 const SOUNDS = {
   // motor de enfoque (rack focus): 0,26 s, sintetizado para la maqueta A (tools-focus-sound.mjs)
   focus: { src: '/sounds/focus.wav', volume: 0.55 },
+  // vitrina de Projects (assets-src/sounds/gen-vitrina-sounds.mjs): golpe del cenital, clic de bisagra, zumbido
+  spot: { src: '/sounds/spot.wav', volume: 0.5 },
+  hinge: { src: '/sounds/hinge.wav', volume: 0.35 },
+  hum: { src: '/sounds/hum.wav', volume: 0.07, loop: true },
 } as const;
 export type SoundName = keyof typeof SOUNDS;
 
@@ -25,7 +29,8 @@ function load() {
   if (loading) return loading;
   loading = import('howler').then(({ Howl }) => {
     (Object.keys(SOUNDS) as SoundName[]).forEach((n) => {
-      loaded[n] = new Howl({ src: [SOUNDS[n].src], volume: SOUNDS[n].volume, preload: true });
+      const s = SOUNDS[n] as { src: string; volume: number; loop?: boolean };
+      loaded[n] = new Howl({ src: [s.src], volume: s.volume, loop: !!s.loop, preload: true });
     });
   }).catch(() => { loading = null; });
   return loading;
@@ -63,6 +68,23 @@ export function playSound(name: SoundName, opts: { rate?: number; minGap?: numbe
   last[name] = now;
   const id = h.play();
   if (opts.rate) h.rate(opts.rate, id);
+}
+
+/** Sonido en loop (zumbido): suena mientras `want` y el interruptor estén encendidos; entra y sale con fundido corto. */
+const looping: Partial<Record<SoundName, number>> = {};
+export function loopSound(name: SoundName, want: boolean) {
+  const h = loaded[name];
+  const id = looping[name];
+  const v = SOUNDS[name].volume;
+  if (want && soundOn()) {
+    if (!h) { load(); return; }
+    if (id === undefined) { const nid = h.play(); h.volume(0, nid); h.fade(0, v, 600, nid); looping[name] = nid; }
+  } else if (h && id !== undefined) {
+    h.fade(v, 0, 400, id);
+    const stopId = id;
+    setTimeout(() => h.stop(stopId), 420);
+    delete looping[name];
+  }
 }
 
 /** Para los tests/QA: libera los Howl (no hace falta en uso normal). */

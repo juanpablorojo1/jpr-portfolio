@@ -24,7 +24,7 @@ import { GAL_DWELLS, GAL_END, GAL_ABOUT_OUT, tagWanted } from './gallery';
 import { FBF_BEAM, FBF_INTRO, FBF_OFF } from './frames';
 import { playSound } from '../../../lib/sound';
 import { buildProjector } from './projector';
-import { buildVitrina } from './vitrina';
+import { buildVitrina, VIT_FOV } from './vitrina';
 
 export const WALL = 3.2, CEIL = 3.4, Z_IN = 2, Z_END = -62;
 const RAIL_STOP = Z_END + 0.7;                  // el riel termina en el umbral de la sala de proyección
@@ -60,6 +60,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const focusU = uniform(7), rangeU = uniform(1.6), bokehU = uniform(12.0), voidK = uniform(0), grainK = uniform(0), farK = uniform(50);
   // el tramo del riel (piso, polvo, grano): aparece con la salida de Projects; en la vitrina no hay piso ni grano
   const fbfK = uniform(0);
+  // polvo del tramo final: recién en Video (R3-02: en la salida de Projects eran ~1150 motas fuera de cualquier haz)
+  const dustK = uniform(0);
   const ROOM_POS = new THREE.Vector3(0, 2.1, Z_END - 4.5);
   const roomPos = vec3(ROOM_POS.x, ROOM_POS.y, ROOM_POS.z);
   const appear = galW;                           // existe sólo con la galería abierta (0 en el About)
@@ -125,7 +127,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const soft = float(1).sub(smoothstep(0.0, 0.5, length(uv().sub(0.5))));
     dustMat.colorNode = lightAt(toL(positionWorld)).mul(2.2).add(OFF.mul(0.01).mul(appear));
     const oof = smoothstep(rangeU.mul(0.35), rangeU, near.sub(focusU).abs()).mul(0.8).mul(dotK);
-    dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(fogF())).mul(smoothstep(0.3, 0.9, near)).mul(float(1).sub(oof)).mul(appear).mul(fbfK);
+    dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(fogF())).mul(smoothstep(0.3, 0.9, near)).mul(float(1).sub(oof)).mul(appear).mul(dustK);
   }
   const dust = new THREE.Sprite(dustMat); dust.count = DUST; dust.frustumCulled = false; group.add(dust);
 
@@ -171,7 +173,25 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const vigNeg = smoothstep(1.05, 0.2, length(screenUV.sub(0.5).mul(vec2(1.2, 1.0))).mul(1.3)).mul(0.82).add(0.18);
   const grainN = fract(sin(dot(screenUV.mul(vec2(1731.3, 977.1)).add(fract(time.mul(13.7)).mul(91.7)), vec2(12.9898, 78.233))).mul(43758.5453)).sub(0.5).mul(0.03);
   const grainAmp = mix(float(1), smoothstep(0.0, 0.05, luminance(dofN.rgb)).mul(0.65).add(0.35), grainK);
-  const post = dofN.add(bl).mul(mix(vigHero, vigNeg, galW)).add(grainN.mul(galW).mul(fbfK).mul(grainAmp));
+  /* Fotografía de la vitrina (vW = vit.voidW: 1 en Projects, 0 desde la salida a Video). Fuera de la pantalla:
+     - aberración cromática mínima, sólo hacia los bordes del cuadro (r², ≤ 1,3 px a 1440 en la esquina);
+     - negro aplastado (sin velo: se resta un piso y nada queda gris) y sombras frías por multiplicación (no levanta);
+     - viñeta del ~22 % en las esquinas (la del pasillo llegaba al 80 %);
+     - grano fino proporcional a la luz (en el negro no se ve: no lo levanta). */
+  const vW = vit.voidW;
+  const cOff = screenUV.sub(0.5);
+  const caOff = cOff.mul(dot(cOff, cOff).mul(0.0042));
+  const ca = vec4(col.sample(screenUV.add(caOff)).r, dofN.g, col.sample(screenUV.sub(caOff)).b, 1);
+  const baseC = mix(dofN, ca, vW);
+  const lumB = luminance(baseC.rgb);
+  // sombras frías por multiplicación (D-10: B − R ≈ +2–3 en 8 bit en los oscuros), luz neutra arriba
+  const cold = mix(vec3(0.86, 0.97, 1.16), vec3(1), smoothstep(0.0, 0.08, lumB));
+  const graded = max(baseC.rgb.sub(0.00035), 0).mul(cold);
+  const vigVit = float(1).sub(smoothstep(0.32, 1.0, length(cOff.mul(vec2(1.25, 1.0))).mul(1.45)).mul(0.22));
+  const gNorm = grainN.div(0.03);                                      // −0,5..0,5
+  const vitLook = vec4(graded.mul(vigVit).mul(gNorm.mul(0.07).add(1)), 1).add(bl.mul(vigVit));
+  const corrLook = dofN.add(bl).mul(mix(vigHero, vigNeg, galW)).add(grainN.mul(galW).mul(fbfK).mul(grainAmp));
+  const post = mix(corrLook, vitLook, vW);
   // QA (?vmask): la máscara de las pantallas teñida de verde
   const maskDbg = S.params && S.params.has('vmask');
   // las caras del tambor de Frame by Frame (projector.js) tampoco pasan por el post (U3)
@@ -209,6 +229,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const u0Of = (x) => (typeof x.U0 === 'function' ? x.U0() : x.U0);
   const extAt = (u) => { let e = null; for (const x of exts) if (u > u0Of(x)) e = x; return e; };
   let mouseRef = { x: 0, y: 0 };
+  let hallRef = null;
 
   /** Pose de cámara para u (coordenadas del pasillo → mundo). */
   function camPose(u, t, dt, mouse, outPos, outLook) {
@@ -249,7 +270,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     dotK.value = thr;
     fbfK.value = smooth(LAST_OUT + 0.3, GAL_END - 0.05, u);
     floorM.visible = fbfK.value > 0.001;
-    dust.visible = fbfK.value > 0.001;
+    dustK.value = smooth(GAL_END - 0.1, GAL_END + 0.4, u);
+    dust.visible = dustK.value > 0.001;
     const fbfMid = smooth(FBF_INTRO[0], FBF_INTRO[1], u) * (1 - smooth(FBF_OFF - 0.2, FBF_OFF + 0.2, u));
     voidK.value = smooth(LAST_OUT + 0.15, LAST_OUT + 0.6, u) * (1 - 0.22 * fbfMid);
     grainK.value = thr;
@@ -257,6 +279,10 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     vit.update(u, t, dt, gw);
     // Frame by Frame: lámpara, haz, pantallas y foco (null antes de la sala)
     const fx = proj.update(u, t, dt, gw, P, L, S.inView);
+    // R3-02: la sala de Video (pantallas en espera y su polvo) no se adivina en la salida de Projects: aparecía cortada
+    // arriba a la izquierda, a ~8 %, como un resto. Entra cuando la cámara ya mira la sala (sin tocar projector.js).
+    if (!hallRef) hallRef = group.getObjectByName('fbf-hall');
+    if (hallRef && u < GAL_END - 0.15) hallRef.visible = false;
     let ex = null;
     for (const x of exts) { const r = x.update(u, t, dt, gw, P, L); if (r) ex = r; }
 
@@ -270,8 +296,8 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     else if (u > LAST_OUT + 0.35) { mode = 'end'; fT = q.set(0, 0.03, st8.headZ).sub(P).dot(fwd); }   // el cabezal, nítido
     else { mode = vi; fT = 8; }
     if (mode !== st8.mode) {
-      // en la vitrina suena al llegar a cada laptop (no al salir ni en el relevo)
-      if (st8.mode && st8.liveDone && gw > 0.5 && !/^(relay|enter|exit)/.test(mode)) playSound('focus', { rate: fT > st8.focus ? 0.92 : 1.1 });
+      // en la vitrina suenan el cenital y la bisagra (vitrina.js); el rack focus queda para Frame by Frame en adelante
+      if (st8.mode && st8.liveDone && gw > 0.5 && !/^(relay|enter|exit|stay)/.test(mode)) playSound('focus', { rate: fT > st8.focus ? 0.92 : 1.1 });
       st8.mode = mode;
     }
     st8.liveDone = true;
@@ -357,6 +383,12 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       }
       return b * near;
     },
+    /** óptica: la vitrina usa una más larga (VIT_FOV); vuelve a la del sitio con la salida a Video */
+    fovAt: (u, base) => base + (VIT_FOV - base) * (1 - smooth(LAST_OUT + 0.2, GAL_END, u)) * smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.6, u),
+    /** la galería cerrada (scene.js no llama a update): silencio */
+    idle: () => vit.idle(),
+    /** peso de la vitrina (1 en Projects): scene.js achica el halo del bloom ahí (el rojo es un hilo, no neón: D-04) */
+    vitW: () => vit.voidW.value,
     headWorldX: () => group.position.x + st8.headZ,
     /** cabezal en el mundo (en Frame by Frame sube y es la lámpara del proyector) */
     headWorld: (out) => group.localToWorld(out.copy(headPos.value)),

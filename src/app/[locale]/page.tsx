@@ -48,14 +48,14 @@ export default function HomePage() {
         {/* Frame by Frame — fuera del card stack, en flujo normal sobre Projects. Escritorio con la escena «Señal»:
             hero-controller le pone data-see-through / data-gallery y es la sala de proyección (VideosStage);
             la escena se pausa cuando la tapa Stack. Sin escena: el layout de tarjetas. */}
-        <div className="fbf-zone" data-section="videos" style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
+        <div className="fbf-zone" data-section="videos" suppressHydrationWarning style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
           <Videos />
         </div>
 
         {/* Stack — fuera del card stack, en flujo normal. Escritorio con la escena «Señal»: hero-controller le pone
             data-see-through / data-gallery y es la red por capas (StackStage); la escena se pausa cuando la tapa
             Experience (zIndex 50). Sin escena: la grilla de grupos. */}
-        <div className="stack-zone" style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
+        <div className="stack-zone" suppressHydrationWarning style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
           <Skills />
         </div>
 
