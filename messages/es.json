@@ -55,7 +55,7 @@
       "shot_labels": ["REVISAR", "VISOR", "SIN HALLAZGOS", "HISTORIAL", "ACIERTO"],
       "eyebrow": "Caso · Tesis · UNC Córdoba · 2026",
       "metrics_note": "Test interno de la tesis · 3.038 imágenes",
-      "led_line": "Web app para detección de fracturas mediante IA",
+      "led_line": "Web app para detección de fracturas de muñeca pediátrica mediante IA",
       "pipeline": "DICOM → CLAHE → YOLOv8m → Detección → Informe PDF",
       "problem": "La tesis buscó construir una segunda lectura para radiografías de muñeca pediátrica: un sistema que marca en la imagen la zona probable de fractura mientras la decisión queda en manos del médico. Alcance: solo muñeca pediátrica (pacientes de hasta 19 años), proyección de frente o de perfil, radiografía convencional.",
       "role": "Autor del Proyecto Integrador (UNC), con dos asesoras de la UNC. Armé el pipeline de datos, entrené y evalué el modelo, desarrollé la aplicación web y escribí el análisis regulatorio.",
@@ -76,6 +76,7 @@
       ]
     },
     "eleven": {
+      "led_line": "Agencia web y de IA sobre un pipeline de agentes con Claude API",
       "title": "Eleven Estudio Digital",
       "subtitle": "Agencia web e IA · Argentina",
       "description": "Agencia que fundé en 2026. Desarrolla productos web y agentes de IA para pymes, sobre Next.js, Supabase y Claude API.",
@@ -160,6 +161,7 @@
       "demo_play_aria": "Reproducir demo: {title}"
     },
     "kibbo": {
+      "led_line": "Sitio bilingüe y SEO/GEO para una plataforma de mantenimiento de equipos hospitalarios",
       "eyebrow": "Caso · SaaS B2B · Vía Eleven · 2026",
       "title": "KIBBO",
       "subtitle": "Sitio bilingüe y SEO/GEO para un CMMS de equipamiento hospitalario.",
@@ -202,6 +204,7 @@
       ]
     },
     "leex": {
+      "led_line": "Web app para detección de licitaciones públicas y borradores de veredicto con IA",
       "badge": "En desarrollo — lanzamiento próximo",
       "eyebrow": "Caso · Sistema interno B2B · LEEX · 2026",
       "title": "Sistema de Licitaciones LEEX",

@@ -340,7 +340,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       )),
     },
     {
-      title: kibbo.title, eyebrow: kibbo.eyebrow, sub: kibbo.subtitle, line: kibbo.subtitle, stats: kibbo.stats, demo: kibbo.demo,
+      title: kibbo.title, eyebrow: kibbo.eyebrow, sub: kibbo.subtitle, line: t('kibbo.led_line'), stats: kibbo.stats, demo: kibbo.demo,
       fig: { num: kibbo.stats[0].value, label: kibbo.stats[0].label, note: noteOf(kibbo.stats) },
       body: caseBody(kibbo, KIBBO_STACK, (
         <>
@@ -350,7 +350,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       )),
     },
     {
-      title: eleven.title, eyebrow: eleven.eyebrow, sub: t('eleven.description'), line: t('eleven.description'), stats: eleven.stats, demo: eleven.demo,
+      title: eleven.title, eyebrow: eleven.eyebrow, sub: t('eleven.description'), line: t('eleven.led_line'), stats: eleven.stats, demo: eleven.demo,
       fig: { num: eleven.stats[0].value, label: eleven.stats[0].label, note: eleven.stats.slice(1).map((s) => `${s.label} ${s.value}`).join(' · ') },
       body: caseBody(eleven, ELEVEN_STACK, (
         <>
@@ -360,7 +360,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       ), undefined, undefined, true),
     },
     {
-      title: leex.title, eyebrow: leex.eyebrow, sub: leex.subtitle, line: leex.subtitle, badge: leex.badge, soon: true, stats: leex.stats, demo: leex.demo,
+      title: leex.title, eyebrow: leex.eyebrow, sub: leex.subtitle, line: t('leex.led_line'), badge: leex.badge, soon: true, stats: leex.stats, demo: leex.demo,
       fig: { num: leex.stats[0].value, label: leex.stats[0].label, note: noteOf(leex.stats) },
       body: caseBody(leex, LEEX_STACK, screens(leex.shots.length, openLeex), leex.shotsNote),
     },
