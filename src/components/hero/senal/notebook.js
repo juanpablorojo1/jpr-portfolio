@@ -93,10 +93,16 @@ const ROWS = [
 ];
 const PITCH = 0.2, GAP = 0.032, ROW_GAP = 0.03;
 
-/** Estudio de reflejos: softboxes sobre negro, filtrado con PMREM. Devuelve la textura o null si falla. */
-export async function studioEnv(renderer) {
+/** Estudio de reflejos filtrado con PMREM. Devuelve la textura o null si falla.
+    Con `hdr` (public/senal/env/studio_vitrina.hdr: Poly Haven «Studio Small 09», CC0, gradado a estudio negro): el
+    fondo del estudio es la foto real (dos octaboxes con su rejilla: uno detrás de la notebook, otro adelante a la
+    derecha) y sólo quedan, encima, las tiras procedurales de las hairlines aprobadas (lateral, baja de frente, diagonal
+    del bisel). El HDRI aporta lo que lo procedural no podía: la estructura de un reflejo de estudio de verdad, que se
+    desliza por el apoyamuñecas al orbitar (R4-03). Sin `hdr` (no cargó): el estudio procedural de la ronda 4 entero. */
+export async function studioEnv(renderer, hdr = null) {
   try {
     const sc = new THREE.Scene();
+    if (hdr) { hdr.mapping = THREE.EquirectangularReflectionMapping; sc.background = hdr; }
     const box = (w, h, k, pos, look) => {
       const m = new THREE.MeshBasicNodeMaterial({ side: THREE.DoubleSide });
       // softbox con borde suave (difusor), no un rectángulo duro
@@ -109,14 +115,13 @@ export async function studioEnv(renderer) {
     // alto rango: negro puro y pocas fuentes MUY brillantes (×4–6). Con envMapIntensity bajo, el metal queda negro
     // salvo donde refleja una fuente: bandas que se deslizan al orbitar y chaflanes que se encienden (D-01)
     const O = new THREE.Vector3(0, 0, 0);
-    box(9, 2.0, 8, new THREE.Vector3(0, 6, -3.2), O);          // softbox cenital-trasero: los planos que miran arriba-atrás
-    // R2-01: donde cae el rayo de cámara reflejado en el deck (la cámara mira el deck rasante, ~8–12°: el reflejo sale
-    // hacia atrás y apenas arriba del horizonte) va un softbox ancho y bajo. Esa es la banda que cruza el deck.
-    // R3-01: a 1/3 de alto y ×0,36 de ganancia (1,3 m ×14 quemaba el deck entero a blanco: p50 253): el pico de la
-    // banda queda en ~#80–#A0 y el resto del deck en el grafito
-    box(10, 0.45, 5, new THREE.Vector3(0, 1.75, -7), O);
-    box(1.0, 6.5, 10, new THREE.Vector3(-6.5, 1.8, 1.2), O);   // strip lateral izquierdo: el canto izquierdo
-    box(0.8, 4.5, 3.5, new THREE.Vector3(6, 1.2, -2.2), O);    // strip derecho, bajo (relación de luz)
+    if (!hdr) {
+      box(9, 2.0, 8, new THREE.Vector3(0, 6, -3.2), O);        // softbox cenital-trasero: los planos que miran arriba-atrás
+      // R2-01/R3-01: donde cae el rayo de cámara reflejado en el deck (rasante, ~8–12° sobre el horizonte, atrás)
+      box(10, 0.45, 5, new THREE.Vector3(0, 1.75, -7), O);
+      box(0.8, 4.5, 3.5, new THREE.Vector3(6, 1.2, -2.2), O);  // strip derecho, bajo (relación de luz)
+    }
+    box(1.0, 6.5, hdr ? 6 : 10, new THREE.Vector3(-6.5, 1.8, 1.2), O);   // strip lateral izquierdo: el canto izquierdo
     box(6.5, 0.32, 7, new THREE.Vector3(0, 0.45, 7.5), O);     // tira baja de frente: la hairline del chaflán delantero
     {                                                          // tira diagonal detrás de cámara: el reflejo del bisel (D-05)
       const m = new THREE.MeshBasicNodeMaterial({ side: THREE.DoubleSide }); m.colorNode = vec3(1.2);   // ≤ ~5 % sobre el vidrio negro
@@ -126,6 +131,7 @@ export async function studioEnv(renderer) {
     const pm = new THREE.PMREMGenerator(renderer);
     const rt = pm.fromScene(sc, 0.0);              // el renderer ya está inicializado (fromSceneAsync quedó deprecado en r181)
     sc.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+    if (hdr) { sc.background = null; hdr.dispose(); }   // ya está en el PMREM: la textura equirect no hace falta
     return rt.texture;
   } catch (e) {
     console.warn('[vitrina] studio env:', e && e.message);
@@ -135,7 +141,10 @@ export async function studioEnv(renderer) {
 
 /** Arma una notebook. u: uniforms propios (light = la luz real del cuadro, pw = encendido de la pantalla,
     rim = la línea roja, scrC/scrN = centro y normal de la pantalla en el mundo, scrCol = color promedio del home). */
-export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
+export function buildNotebook({ screenTex, scrColor, env, appear, RED, hdrEnv = false }) {
+  // con el HDRI los octaboxes reales son fuentes más concentradas: el vidrio (trackpad, bisel) refleja menos para no
+  // pasar de su meta (trackpad ≥ 1,8:1 contra el deck; bisel ≤ ~8 %)
+  const padK = hdrEnv ? 0.1 : 0.3, glassK = hdrEnv ? 0.5 : 1.1;
   const G = geometries();
   const u = {
     light: uniform(0), pw: uniform(0), rim: uniform(0), expo: uniform(0.9),
@@ -177,11 +186,11 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
   wellM.colorNode = vec3(0.0012, 0.0012, 0.0014).add(spill(0.01)).mul(appear);
   // R4-01: vidrio oscuro (~#40 contra el apoyamuñecas ~#6E, ≥ 1,8:1). A ese ángulo rasante el Fresnel del coat lo
   // levantaba al gris del deck (1,1:1): coat a la mitad y reflejos del estudio al 30 %. Filo claro de ~1 px alrededor.
-  const padM = new THREE.MeshPhysicalNodeMaterial({ color: 0x121316, metalness: 0, roughness: 0.2, clearcoat: 0.5, clearcoatRoughness: 0.1, envMap: env, envMapIntensity: envI * 0.3 });
+  const padM = new THREE.MeshPhysicalNodeMaterial({ color: 0x121316, metalness: 0, roughness: 0.2, clearcoat: 0.5, clearcoatRoughness: hdrEnv ? 0.25 : 0.1, envMap: env, envMapIntensity: envI * padK });
   const padEdgeM = new THREE.MeshBasicNodeMaterial();
   padEdgeM.colorNode = vec3(0.075, 0.077, 0.082).mul(u.light).mul(appear);
   padM.emissiveNode = spill(0.03).mul(appear);
-  const glassM = new THREE.MeshPhysicalNodeMaterial({ color: 0x030304, metalness: 0, roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.04, envMap: env, envMapIntensity: envI * 1.1 });
+  const glassM = new THREE.MeshPhysicalNodeMaterial({ color: 0x030304, metalness: 0, roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.04, envMap: env, envMapIntensity: envI * glassK });
   const footM = new THREE.MeshStandardNodeMaterial({ color: 0x0a0a0b, roughness: 0.9 });
   const camM = new THREE.MeshBasicNodeMaterial();
   camM.colorNode = vec3(0.012, 0.013, 0.02).mul(appear);
@@ -254,7 +263,7 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
   const rimHalo = new THREE.Mesh(G.line, haloM); rimHalo.scale.set(LW - 0.22, 0.016, LID_T * 0.9); rimHalo.position.set(0, LIDH + 0.003, -LID_T / 2); rimHalo.renderOrder = 3; hinge.add(rimHalo);
 
   const mats = [alu, aluLid, aluDark, keyM, padM, glassM];
-  const baseI = new Map([[alu, envI], [aluLid, envI], [aluDark, envI * 0.8], [keyM, envI * 0.5], [padM, envI * 0.3], [glassM, envI * 1.1]]);
+  const baseI = new Map([[alu, envI], [aluLid, envI], [aluDark, envI * 0.8], [keyM, envI * 0.5], [padM, envI * padK], [glassM, envI * glassK]]);
   /** luz real (0..1): los reflejos del estudio caen con la luz del cuadro (apagón = negro) */
   function setLight(v) { u.light.value = v; mats.forEach((m) => { m.envMapIntensity = baseI.get(m) * v; }); }
   const tmpC = new THREE.Vector3(), tmpN = new THREE.Vector3();

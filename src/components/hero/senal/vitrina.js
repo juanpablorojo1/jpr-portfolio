@@ -91,8 +91,17 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
   for (let k = 0; k < N; k++) { scrTex.push(screenTex(imgs[k], GAL_PROJECTS[k].cropX)); await yieldToMain(); if (!alive()) return null; }
   const scrCols = imgs.map(averageColor);
 
-  // reflejos: estudio de softboxes filtrado con PMREM (0 KB: se arma acá, no se baja un HDRI)
-  const env = await studioEnv(renderer);
+  // reflejos: el estudio real (HDRI de Poly Haven gradado a estudio negro, 512 KB) + las tiras de las hairlines,
+  // filtrado con PMREM. Carga diferida: esto corre recién cuando se arma el pasillo (proximidad o 2,5 s de idle), lejos
+  // del LCP. Si el HDRI no carga, queda el estudio procedural.
+  let hdr = null;
+  try {
+    const { HDRLoader } = await import('three/addons/loaders/HDRLoader.js');
+    hdr = await new HDRLoader().loadAsync('/senal/env/studio_vitrina.hdr');
+  } catch (e) { console.warn('[vitrina] hdri:', e && e.message); }
+  if (!alive()) { if (hdr) hdr.dispose(); return null; }
+  const hdrEnv = !!hdr;
+  const env = await studioEnv(renderer, hdr);
   if (!alive()) return null;
 
   /* ---------- la luz: un cenital duro que sigue a la notebook encendida ---------- */
@@ -165,7 +174,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     const home = V(...pr.pos);
     outer.position.copy(home); outer.rotation.y = pr.yaw;
     group.add(outer);
-    const nb = buildNotebook({ screenTex: scrTex[k], scrColor: scrCols[k], env, appear, RED: REDL });
+    const nb = buildNotebook({ screenTex: scrTex[k], scrColor: scrCols[k], env, appear, RED: REDL, hdrEnv });
     outer.add(nb.root);
     const lu = nb.u;
     // piso negro brillante: sólo existe donde llega la luz (el pozo del cenital y la luz de la pantalla adelante);
