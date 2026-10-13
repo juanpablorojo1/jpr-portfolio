@@ -94,7 +94,7 @@
       "cta": "Ver sitio",
       "eyebrow": "Caso · Agencia propia · Argentina · 2026",
       "problem": "Un proyecto para una pyme pasa por discovery, estrategia, marca, desarrollo y QA, y lo que sale de cada etapa tiene que revisarse antes de que lo use la siguiente.",
-      "role_text": "Fundador. Diseñé el pipeline de agentes de la agencia, lo opero y reviso cada punto de control.",
+      "role_text": "Fundador. Diseñé el pipeline de agentes de la agencia y lo opero.",
       "decisions": [
         { "title": "Un agente por etapa.", "body": "El pipeline reparte el trabajo entre agentes especializados sobre Claude API, uno por etapa, para que cada resultado se pueda revisar por separado antes de avanzar." },
         { "title": "Cada punto de control lo aprueba una persona.", "body": "Los agentes preparan cada entrega; yo la reviso y la apruebo en cada punto de control, como en el desarrollo de KIBBO." }

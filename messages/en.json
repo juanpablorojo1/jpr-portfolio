@@ -94,7 +94,7 @@
       "cta": "View Site",
       "eyebrow": "Case Study · Own agency · Argentina · 2026",
       "problem": "An SMB project runs through discovery, strategy, brand, development and QA, and each stage's output has to be checked before the next one uses it.",
-      "role_text": "Founder. I designed the agency's agent pipeline, run it, and review each checkpoint.",
+      "role_text": "Founder. I designed the agency's agent pipeline and run it.",
       "decisions": [
         { "title": "One agent per stage.", "body": "The pipeline splits the work across specialized agents on the Claude API, one per stage, so each output can be checked on its own before it moves on." },
         { "title": "A person signs off every checkpoint.", "body": "Agents prepare each deliverable; I review and approve it at every checkpoint, as on the KIBBO build." }
