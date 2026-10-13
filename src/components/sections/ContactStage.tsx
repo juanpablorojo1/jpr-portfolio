@@ -147,7 +147,7 @@ export default function ContactStage() {
       };
 
       // teclado: el foco en un enlace de Contact antes de que la sección llegue lleva el scroll a su lugar
-      const onFocus = () => { if (cNow < CTC.arrive - 0.05) { measure(); window.scrollTo({ top, behavior: 'auto' }); } };   // F-01: medir antes de saltar
+      const onFocus = () => { if (cNow < CTC.arrive - 0.05) { measure(); window.scrollTo({ top, behavior: 'instant' as ScrollBehavior }); } };   // F-01: medir antes de saltar
       section.addEventListener('focusin', onFocus);
       // el puntero sobre el punto: la escena lo agranda (hover) o lo comprime (press)
       const set = (k: 'hover' | 'press', v: boolean) => () => { if (S) S.ctc[k] = v; };

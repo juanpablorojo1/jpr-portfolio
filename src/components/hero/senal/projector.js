@@ -49,6 +49,7 @@ const AP = W / (2 * Math.tan(Math.PI / N));        // apotema
 const R = W / (2 * Math.sin(Math.PI / N));          // radio a las aristas
 const FZ = FBF_DRUM.frontZ, ZC = FZ - AP;            // cara de frente / eje del tambor
 const LAMP = V(0, 3.6, FZ + 5.1);                    // de dónde baja el haz (network.js arma la nube entre esto y la cara)
+const REFL = false;                                  // reflejo de las caras en el piso: apagado (R7-02)
 const FILL = 0.7;                                    // la cara de frente: ~70 % del alto del cuadro (≈ 630 px a 1440×900)
 
 /** Arma el tambor. Devuelve el controlador o null si se desmontó a mitad. */
@@ -184,7 +185,10 @@ export async function buildProjector({
     ringM.position.set(0, -H / 2 - 0.012, 0.03); ringM.renderOrder = 6; g.add(ringM);
     const rf = reflMat(poster, u);
     const refl = new THREE.Mesh(new THREE.PlaneGeometry(W, H), rf.m);
-    refl.position.set(0, -2 * (Y0 + H / 2), 0.012); refl.renderOrder = -1; g.add(refl);
+    refl.position.set(0, -2 * (Y0 + H / 2), 0.012); refl.renderOrder = -1;
+    // R7-02: el reflejo de las caras caía justo detrás de los controles (y ≈ 794–860 a 1440) y se leía como una caja de
+    // bordes rectos sobre el piso; queda fuera de la escena (el piso ya toma la luz del video en el charco)
+    if (REFL) g.add(refl);
     const hl = haloMat(poster, u, 2.3);
     const halo = new THREE.Mesh(new THREE.PlaneGeometry(W * 2.3, H * 2.3), hl.m);
     halo.position.z = -0.45; halo.renderOrder = 1; g.add(halo);
@@ -205,7 +209,7 @@ export async function buildProjector({
     WIDE.g.add(bz);
     const rf = reflMat(WIDE.nodes[0].value, u);
     const refl = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), rf.m);
-    refl.renderOrder = -1; WIDE.g.add(refl);
+    refl.renderOrder = -1; if (REFL) WIDE.g.add(refl);
     WIDE.nodes.push(sc.tn, rf.tn);
     wide = { u, scr, bz, refl, H2, W2, asp, e: 0 };
   }
@@ -313,13 +317,18 @@ export async function buildProjector({
     const ax = bB.sub(bA), len = length(ax), dir = ax.div(len);
     const sp = clamp(dot(base.sub(bA), dir).div(len), 0, 1);
     const radial = length(base.sub(bA.add(dir.mul(sp.mul(len)))));
-    const inB = smoothstep(sp.mul(1.1).add(0.08), sp.mul(0.3), radial).mul(smoothstep(0.05, 0.2, sp)).mul(float(1).sub(smoothstep(0.6, 0.95, sp)));
+    const inB = float(1).sub(smoothstep(sp.mul(0.3), sp.mul(1.1).add(0.08), radial))   // 0 fuera del cono (bordes en orden: WGSL/GLSL)
+      .mul(smoothstep(0.05, 0.2, sp)).mul(float(1).sub(smoothstep(0.6, 0.95, sp)));
     const near = distance(positionWorld, cameraPosition);
     m.scaleNode = seed.mul(0.013).add(0.006).mul(smoothstep(0.2, 2.2, near).mul(-0.6).add(1.6));
     const soft = float(1).sub(smoothstep(0.0, 0.5, length(uv().sub(0.5))));
     m.colorNode = lightAt(toL(positionWorld)).mul(2.0).add(RED.mul(inB.mul(beamI).mul(1.6))).add(OFF.mul(0.005));
     // R56-05: sólo existe donde hay luz: dentro del haz o en el charco del video (frente al tambor); nada en el vacío
-    const pool = exp(distance(toL(positionWorld), scrPos).mul(-1.1)).mul(scrI.mul(2.2)).min(1);
+    // R7-01: el charco es del piso: gaussiana corta alrededor de la luz del video y sólo en la franja baja (nada sobre
+    // el horizonte); fuera del cono del haz y del charco, cero
+    const pl = toL(positionWorld);
+    const dp = distance(pl, scrPos);
+    const pool = exp(dp.mul(dp).mul(-0.9)).mul(float(1).sub(smoothstep(0.2, 0.7, pl.y))).mul(scrI.mul(2.0)).min(1);
     const lit = max(inB.mul(beamI), pool);
     m.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(smoothstep(0.3, 0.9, near)).mul(lit).mul(appear);
     const dust = new THREE.Sprite(m); dust.count = DUST; dust.frustumCulled = false; dust.renderOrder = 30;
