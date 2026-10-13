@@ -29,8 +29,8 @@ import {
   positionLocal, positionWorld, cameraPosition, distance, normalize, cross, attribute, instancedBufferAttribute, screenUV, time,
   mx_noise_float
 } from 'three/tsl';
-import { GAL_PROJECTS, GAL_DWELLS, GAL_END, GAL_ABOUT_OUT, VIT_TRACE, VIT_OPEN, VIT_POWER } from './gallery';
-import { buildNotebook, studioEnv, averageColor, SW, SH, LW, LD, FRONT, HINGE_Y, HINGE_Z, OPEN, CLOSED, CENTER, SCREEN_Y } from './notebook';
+import { GAL_PROJECTS, GAL_DWELLS, GAL_END, GAL_ABOUT_OUT, VIT_TRACE, VIT_OPEN, VIT_POWER, GAL_TAG_Y } from './gallery';
+import { buildNotebook, studioEnv, averageColor, SW, SH, LW, LD, FRONT, HINGE_Y, HINGE_Z, OPEN, CLOSED, CENTER, SCREEN_Y, LIDH } from './notebook';
 import { playSound, loopSound } from '../../../lib/sound';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -684,6 +684,29 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
   }
 
   /* ---------- texto: el bloque como capa cercana (parallax opuesto a la órbita) ---------- */
+  // D-01: el bloque centrado, pero nunca más abajo que la franja GAL_TAG_Y (su pie ≥ 16 px sobre el interruptor global
+  // de sonido, con margen para el parallax vertical). Si no entra, ProjectsGallery lo compacta (--fit).
+  const { top: TAG_TOP, foot: TAG_FOOT } = GAL_TAG_Y;
+  // D-04: hueco mínimo entre la notebook (su silueta proyectada en este frame) y el bloque, en toda la estadía: el
+  // dolly-in la agranda hacia el texto en la segunda mitad (a 1440×900 bajaba a 26 px en u 8,85). Sólo en LEEX, el
+  // caso medido; la cámara no cambia: el bloque se corre lo justo hacia afuera, con un máximo suave (sin quiebre al
+  // engancharse) y a ≥ 24 px del borde. La tinta del texto es más angosta que la caja: sigue dentro de la grilla.
+  const TAG_GAP = 72, GAP_K = [false, false, false, true], gapPts = [V()];
+  const smax = (a, b, r) => { const h = Math.max(r - Math.abs(a - b), 0) / r; return Math.max(a, b) + h * h * r / 4; };
+  /** borde derecho (px CSS) de la notebook k en este frame: base (local de la notebook) y tapa (local de la bisagra) */
+  function lapRightPx(lap) {
+    let e = -Infinity;
+    const take = (m, x, y, z) => {
+      const q = gapPts[0].set(x, y, z).applyMatrix4(m).project(camera);
+      if (q.z < 1) e = Math.max(e, (q.x + 1) / 2 * innerWidth);      // detrás de la cámara no cuenta
+    };
+    const rm = lap.root.matrixWorld, hm = lap.hinge.matrixWorld;
+    for (const x of [-LW / 2, LW / 2]) {
+      for (const y of [0, 0.2]) for (const z of [FRONT, FRONT - LD]) take(rm, x, y, z);
+      for (const y of [0, LIDH]) for (const z of [0, -0.045]) take(hm, x, y, z);
+    }
+    return e;
+  }
   function placeTags(tags, mouse) {
     const u = st.u;
     for (let k = 0; k < tags.length && k < N; k++) {
@@ -695,9 +718,10 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
       const w = el.offsetWidth, h = el.offsetHeight;
       const px = RM ? 0 : -(mouse.x * 10) - sgn(k) * (sineIO(s) - 0.5) * 40 - st.swayT * 140;
       const py = RM ? 0 : -mouse.y * 6 + st.swayP * 120;
-      const x = side < 0 ? pad : innerWidth - pad - w;
-      const y = Math.max(96, (innerHeight - h) / 2 + 22);
-      el.style.transform = `translate3d(${(x + px).toFixed(1)}px, ${(y + py).toFixed(1)}px, 0)`;
+      let x = (side < 0 ? pad : innerWidth - pad - w) + px;
+      if (GAP_K[k] && side > 0 && laps[k].outer.visible) x = Math.min(smax(x, lapRightPx(laps[k]) + TAG_GAP, 24), innerWidth - 24 - w);
+      const y = Math.max(TAG_TOP, Math.min((innerHeight - h) / 2 + 22, innerHeight - TAG_FOOT - h));
+      el.style.transform = `translate3d(${x.toFixed(1)}px, ${(y + py).toFixed(1)}px, 0)`;
     }
   }
 

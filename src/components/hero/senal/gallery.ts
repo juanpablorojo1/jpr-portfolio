@@ -21,6 +21,10 @@ export const GAL_DWELLS: ReadonlyArray<readonly [number, number]> = [
   [5.75, 6.95],   // Eleven (izquierda)
   [7.95, 9.0],    // LEEX (derecha)
 ];
+/** franja vertical del bloque de texto de cada proyecto (px): arriba, debajo del menú; abajo, ≥ 16 px sobre el
+    interruptor global de sonido (bottom 28 + alto 36) más el parallax vertical. vitrina.js lo ubica ahí y
+    ProjectsGallery.tsx lo compacta (--fit) si no entra (D-01). */
+export const GAL_TAG_Y = { top: 96, foot: 88 } as const;
 export const GAL_END = 10.0;                // la línea roja llega al final del riel: el cabezal solo
 export const GAL_SECTION_VH = 10.3;         // alto de la sección en viewports (Video entra por abajo en u = 10,3)
 

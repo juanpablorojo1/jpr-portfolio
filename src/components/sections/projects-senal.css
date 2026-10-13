@@ -60,12 +60,14 @@
      18 px hacia la derecha y el hueco con la notebook pasa de ~56 a ~74 px (≥ 64) sin mover la cámara aprobada.
      «LICITACIONES», la palabra más larga, mide ~430 px a 1440: entra. */
   .pj-tag[data-side='r'] { text-align: left; width: clamp(430px, calc(34vw - 18px), 542px); }
+  /* D-01: --fit (ProjectsGallery.tsx) < 1 sólo si el bloque no entra en la altura del viewport (p. ej. LEEX en ES a
+     1536×730): escala el título, la línea, la cifra y los aires verticales en proporción. Por defecto 1: sin cambio. */
   /* respaldo sin escena viva: abajo a la izquierda, sin transform */
   .pj-stage:not(.is-anchored) .pj-tag { left: var(--pad); top: auto; bottom: 10vh; transform: none !important; }
 
   /* cabecera editorial (maqueta C): filete rojo + folio */
   .pj-folio {
-    display: flex; align-items: center; gap: 14px; margin: 0 0 16px;
+    display: flex; align-items: center; gap: 14px; margin: 0 0 calc(16px * var(--fit, 1));
     font: 12px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--dim-scene);
   }
   .pj-rule { display: inline-block; width: 44px; height: 1px; background: #e8272a; box-shadow: 0 0 6px rgba(232, 39, 42, .7); }
@@ -80,23 +82,23 @@
   }
   .pj-title {
     /* blanco hueso, un punto más bajo que el blanco de la UI que muestra la pantalla */
-    margin: 14px 0 0 -.04em; font-weight: 400; text-transform: uppercase; color: #e8e4de;
-    font-size: clamp(64px, 6.6vw, 116px); line-height: .86; letter-spacing: .005em; text-wrap: balance;
+    margin: calc(14px * var(--fit, 1)) 0 0 -.04em; font-weight: 400; text-transform: uppercase; color: #e8e4de;
+    font-size: calc(clamp(64px, 6.6vw, 116px) * var(--fit, 1)); line-height: .86; letter-spacing: .005em; text-wrap: balance;
     perspective: 900px;
   }
   .pj-title .word { display: inline-block; white-space: nowrap; transform-style: preserve-3d; }
   .pj-title .char { display: inline-block; will-change: transform, opacity; }
   .pj-line {
-    margin: 18px 0 0; max-width: 30ch;
+    margin: calc(18px * var(--fit, 1)) 0 0; max-width: 30ch;
     /* B-02: 400, el peso que carga layout.tsx (el 500 caía en 400: sin cambio visual). R56-04: sin palabra huérfana */
-    font: 400 clamp(21px, 1.7vw, 27px)/1.18 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; color: rgba(232, 228, 222, .9);
+    font: 400 max(18px, calc(clamp(21px, 1.7vw, 27px) * var(--fit, 1)))/1.18 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; color: rgba(232, 228, 222, .9);
     text-wrap: pretty;
   }
   .pj-fig {
-    display: flex; align-items: flex-end; gap: 22px; margin-top: 30px; padding-top: 20px;
+    display: flex; align-items: flex-end; gap: 22px; margin-top: calc(30px * var(--fit, 1)); padding-top: calc(20px * var(--fit, 1));
     border-top: 1px solid rgba(255, 255, 255, .12);
   }
-  .pj-num { margin: 0; font: 400 clamp(44px, 3.9vw, 58px)/.9 var(--mono); letter-spacing: -.03em; color: #fff; white-space: nowrap; }
+  .pj-num { margin: 0; font: 400 calc(clamp(44px, 3.9vw, 58px) * var(--fit, 1))/.9 var(--mono); letter-spacing: -.03em; color: #fff; white-space: nowrap; }
   .pj-num small { font-size: .5em; margin-left: .06em; color: #e8272a; }
   .pj-lab { margin: 0; padding-bottom: 4px; font: 11px/1.55 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim-scene); }
   .pj-lab strong { display: block; color: #e8e4de; font-weight: 400; }
@@ -106,7 +108,7 @@
   /* B-04: la misma receta de doble marco que .fv-btn (Video): fondo #050505 al 55 %, marco exterior hueso al 16 %,
      celdas con marco interior hueso al 10 %, anillo de foco de 1 px. B-02: 700, el peso cargado (el 600 caía en 700). */
   .pj-view {
-    margin-top: 28px; display: inline-flex; align-items: stretch; padding: 4px; cursor: pointer;
+    margin-top: calc(28px * var(--fit, 1)); display: inline-flex; align-items: stretch; padding: 4px; cursor: pointer;
     border: 1px solid rgba(232, 228, 222, .16); background: rgba(5, 5, 5, .55); color: #fff;
     font: 700 15px/1 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; letter-spacing: .16em; text-transform: uppercase;
     transition: border-color .3s var(--ease-out), transform .2s var(--ease-out);

@@ -19,7 +19,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 import { onSignal, type Senal } from '../hero/senal/signal';
-import { GAL_DWELLS, GAL_SECTION_VH, GAL_PROJECTS, tagWanted } from '../hero/senal/gallery';
+import { GAL_DWELLS, GAL_SECTION_VH, GAL_PROJECTS, GAL_TAG_Y, tagWanted } from '../hero/senal/gallery';
 import { TRAUMAVISION_STACK, ELEVEN_STACK, KIBBO_STACK, LEEX_STACK, TRAUMAVISION_METRICS } from '../../lib/content';
 import type { CaseStudyData } from './CaseStudy';
 import ProjectDemo from '../ui/ProjectDemo';
@@ -233,12 +233,36 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       // no en la cola ociosa: con la escena dibujando, esa cola (de a una tarea por sección, hasta 1,5 s cada una) podía
       // demorar 10–18 s y los bloques no entraban (LEEX tras el salto ?qa, ronda 3)
       let prepared = false;
+      /* D-01: cada bloque tiene que entrar en la franja GAL_TAG_Y (en 1536×730 el de LEEX en ES medía 661 px y el
+         «Ver proyecto» quedaba cortado). Si no entra, se compacta en proporción (--fit escala el título, la línea, la
+         cifra y los aires; projects-senal.css) lo justo para que entre: búsqueda binaria del --fit más grande que entra
+         (los cortes de línea no son lineales). Sin cambio cuando entra. Se mide con el texto que haya, así que aguanta
+         un copy más largo. */
+      const FIT_MIN = 0.6;
+      const fitTags = () => {
+        const avail = innerHeight - GAL_TAG_Y.top - GAL_TAG_Y.foot;
+        for (const el of tags) {
+          el.style.removeProperty('--fit');
+          if (el.offsetHeight <= avail) continue;
+          let lo = FIT_MIN, hi = 1;
+          for (let i = 0; i < 7; i++) {
+            const mid = (lo + hi) / 2;
+            el.style.setProperty('--fit', mid.toFixed(3));
+            if (el.offsetHeight <= avail) lo = mid; else hi = mid;
+          }
+          el.style.setProperty('--fit', lo.toFixed(3));
+        }
+      };
+      let fitRaf = 0;
+      const onFitResize = () => { if (!prepared) return; cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fitTags); };
+      addEventListener('resize', onFitResize);
       const prep = () => {
         if (!alive || prepared) return;
         prepared = true;
         removeEventListener('scroll', onNear);
         hidden.ensure();
         ts.forEach((c) => { c.split = SplitText.create(c.title, { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' }); });
+        fitTags();
         measure();
         setBatch([
           ...ts.map((c): [Element[], gsap.TweenVars] => [c.split!.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 }]),
@@ -263,6 +287,8 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         hidden.cancel();
         gsap.ticker.remove(tick);
         removeEventListener('resize', measure);
+        removeEventListener('resize', onFitResize);
+        cancelAnimationFrame(fitRaf);
         removeEventListener('keydown', onKey);
         document.removeEventListener('click', onDocClick);
         section.removeEventListener('click', onOpenClick);
@@ -277,6 +303,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
           c.tl?.kill();
           c.el.removeAttribute('data-on');
           c.el.style.transform = '';
+          c.el.style.removeProperty('--fit');
           if (c.split) { gsap.killTweensOf(c.split.chars); c.split.revert(); }
           gsap.set([...c.rest, c.title], { clearProps: 'opacity,transform' });
         });
