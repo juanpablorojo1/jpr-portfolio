@@ -141,7 +141,7 @@ export async function studioEnv(renderer, hdr = null) {
 
 /** Arma una notebook. u: uniforms propios (light = la luz real del cuadro, pw = encendido de la pantalla,
     rim = la línea roja, scrC/scrN = centro y normal de la pantalla en el mundo, scrCol = color promedio del home). */
-export function buildNotebook({ screenTex, scrColor, env, appear, RED, hdrEnv = false }) {
+export function buildNotebook({ screenTex, scrColor, env, appear, RED, hdrEnv = false, aluK = 1 }) {
   // con el HDRI los octaboxes reales son fuentes más concentradas: el vidrio (trackpad, bisel) refleja menos para no
   // pasar de su meta (trackpad ≥ 1,8:1 contra el deck; bisel ≤ ~8 %)
   const padK = hdrEnv ? 0.1 : 0.3, glassK = hdrEnv ? 0.5 : 1.1;
@@ -151,6 +151,7 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED, hdrEnv = 
     scrC: uniform(new THREE.Vector3()), scrN: uniform(new THREE.Vector3(0, 0, 1)), scrCol: uniform(new THREE.Color(scrColor)),
     scrX: uniform(new THREE.Vector3(1, 0, 0)), scrY: uniform(new THREE.Vector3(0, 1, 0)),   // ejes de la pantalla (el reflejo del piso)
     glint: uniform(0),                                                                     // dónde está el glint del canto (−1..1)
+    lidK: uniform(0),                                                                      // tapa abierta (1) → cerrada (0): el reflejo del home la sigue
   };
   // luz de la pantalla sobre una superficie (luz de área aproximada): Lambert en la superficie y en la pantalla
   const spill = (k) => {
@@ -168,18 +169,23 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED, hdrEnv = 
     const nA = abs(axis === 'y' ? normalLocal.y : normalLocal.z);
     const bevel = smoothstep(0.12, 0.35, nA).mul(float(1).sub(smoothstep(0.86, 0.97, nA)));
     const scratch = mx_noise_float(positionLocal.mul(vec3(3.0, 90.0, 3.0))).mul(0.03).add(mx_noise_float(positionLocal.mul(14.0)).mul(0.02));
-    // R2-01/R3-01: 0,34 (0,42 difuminaba el softbox en un levante parejo; 0,30 con el softbox fuerte quemaba el deck)
-    m.roughnessNode = mix(float(0.34).add(scratch), float(0.15), bevel);
+    // R2-01/R3-01: 0,34 (0,42 difuminaba el softbox en un levante parejo; 0,30 con el softbox fuerte quemaba el deck).
+    // R56-01: la franja trasera del deck (entre el teclado y la bisagra) la ve la cámara muy rasante: con Fresnel ≈ 1
+    // devolvía el octabox a 255 durante la órbita. Ahí el acabado es satinado (0,62): sin destello, sin perder el tono.
+    const rear = axis === 'y' ? smoothstep(FRONT - LD + 0.5, FRONT - LD + 0.2, positionLocal.z) : float(0);
+    m.roughnessNode = mix(mix(float(0.34).add(scratch), float(0.62), rear), float(0.15), bevel.mul(float(1).sub(rear)));
     m.emissiveNode = spill(0.07).mul(appear);
-    // R4-03: el apoyamuñecas cae ~1,4:1 hacia el frente (el estudio sólo «llega» atrás); sólo en la base
-    if (axis === 'y') {
-      const c = new THREE.Color(0x7d8086);
-      m.colorNode = vec3(c.r, c.g, c.b).mul(mix(float(0.7), float(1), smoothstep(FRONT - 0.05, FRONT - 1.0, positionLocal.z)));
-    }
+    // R4-03: el apoyamuñecas cae ~1,4:1 hacia el frente (el estudio sólo «llega» atrás); sólo en la base.
+    // Observación R5-6: con el HDRI y su ángulo, el de TraumaVision leía plata (#88–#A0): aluK lo baja al grafito de
+    // KIBBO/LEEX (#6D–#7F) sin tocar la banda (la forma del reflejo no cambia, sólo su nivel)
+    const c = new THREE.Color(0x7d8086).multiplyScalar(aluK);
+    if (axis === 'y') m.colorNode = vec3(c.r, c.g, c.b).mul(mix(float(0.7), float(1), smoothstep(FRONT - 0.05, FRONT - 1.0, positionLocal.z)));
+    else m.color.copy(c);
     return m;
   };
   const alu = aluFor('y'), aluLid = aluFor('z');
-  const aluDark = new THREE.MeshPhysicalNodeMaterial({ color: 0x55585e, metalness: 0.9, roughness: 0.5, envMap: env, envMapIntensity: envI * 0.8 });
+  // bisagra: barril satinado (R56-01: no devuelve el octabox rasante como destello) y reflejos a la mitad
+  const aluDark = new THREE.MeshPhysicalNodeMaterial({ color: 0x55585e, metalness: 0.9, roughness: 0.6, envMap: env, envMapIntensity: envI * 0.5 });
   const keyM = new THREE.MeshStandardNodeMaterial({ color: 0x17181b, metalness: 0, roughness: 0.72, envMap: env, envMapIntensity: envI * 0.5 });
   keyM.emissiveNode = spill(0.2).mul(appear);                  // el resplandor de la pantalla sobre las teclas, neutro
   const wellM = new THREE.MeshBasicNodeMaterial();
@@ -263,7 +269,7 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED, hdrEnv = 
   const rimHalo = new THREE.Mesh(G.line, haloM); rimHalo.scale.set(LW - 0.22, 0.016, LID_T * 0.9); rimHalo.position.set(0, LIDH + 0.003, -LID_T / 2); rimHalo.renderOrder = 3; hinge.add(rimHalo);
 
   const mats = [alu, aluLid, aluDark, keyM, padM, glassM];
-  const baseI = new Map([[alu, envI], [aluLid, envI], [aluDark, envI * 0.8], [keyM, envI * 0.5], [padM, envI * padK], [glassM, envI * glassK]]);
+  const baseI = new Map([[alu, envI], [aluLid, envI], [aluDark, envI * 0.5], [keyM, envI * 0.5], [padM, envI * padK], [glassM, envI * glassK]]);
   /** luz real (0..1): los reflejos del estudio caen con la luz del cuadro (apagón = negro) */
   function setLight(v) { u.light.value = v; mats.forEach((m) => { m.envMapIntensity = baseI.get(m) * v; }); }
   const tmpC = new THREE.Vector3(), tmpN = new THREE.Vector3();

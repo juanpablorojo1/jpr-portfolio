@@ -34,7 +34,10 @@ for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
   const below = y > H * 0.52 ? 0.3 : 1;                 // piso del estudio
   const k = scale * (w + (1 - w) * 0.03) * below;
   const xo = ((x + shift) % W + W) % W, o = (y * W + xo) * 3;
-  for (let c = 0; c < 3; c++) out[o + c] = px[i * 3 + c] * k;
+  // R56-01: tope de radiancia (lámparas desnudas y núcleo de los octaboxes, hasta 123): con Fresnel rasante el metal
+  // las devolvía a 255 en la bisagra durante la órbita. Tope = 1,6 × la media del octabox (~8), conservando el tono.
+  const Lk = L * k, cap = 8, f = Lk > cap ? cap / Lk : 1;
+  for (let c = 0; c < 3; c++) out[o + c] = px[i * 3 + c] * k * f;
 }
 const head = Buffer.from(`#?RADIANCE\n# Poly Haven "Studio Small 09" (CC0), 1K -> 512x256, graded for the jpr-web vitrina\nFORMAT=32-bit_rle_rgbe\n\n-Y ${H} +X ${W}\n`, 'ascii');
 const data = Buffer.alloc(W * H * 4);

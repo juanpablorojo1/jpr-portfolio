@@ -174,7 +174,8 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     const home = V(...pr.pos);
     outer.position.copy(home); outer.rotation.y = pr.yaw;
     group.add(outer);
-    const nb = buildNotebook({ screenTex: scrTex[k], scrColor: scrCols[k], env, appear, RED: REDL, hdrEnv });
+    // aluK: TraumaVision (de frente al octabox principal) leía plata con el HDRI; lo baja al grafito de los otros tres
+    const nb = buildNotebook({ screenTex: scrTex[k], scrColor: scrCols[k], env, appear, RED: REDL, hdrEnv, aluK: hdrEnv && pr.yaw === 0 ? 0.8 : 1 });
     outer.add(nb.root);
     const lu = nb.u;
     // piso negro brillante: sólo existe donde llega la luz (el pozo del cenital y la luz de la pantalla adelante);
@@ -206,10 +207,10 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
       const rUV = vec2(lx.mul(0.5).add(0.5), ly.mul(0.5).add(0.5)).clamp(0.002, 0.998);
       const refl = texture(scrTex[k], rUV).bias(3.6).rgb.mul(lu.expo);
       const dz = pz.sub(FRONT).max(0);
-      const reflK = inR.mul(exp(dz.mul(-1 / 0.32))).mul(smoothstep(FRONT - 0.02, FRONT + 0.12, pz)).mul(0.012).mul(lu.pw);
+      const reflK = inR.mul(exp(dz.mul(-1 / 0.32))).mul(smoothstep(FRONT - 0.02, FRONT + 0.12, pz)).mul(0.012).mul(lu.pw).mul(lu.lidK);   // R56-03: se apaga con la tapa
       // el reflejo de la hairline del chaflán delantero: más tenue, a lo ancho con extremos blandos
       const streakK = streak.mul(smoothstep(LW / 2 + 0.05, LW / 2 - 0.6, abs(p.x)));
-      const col = vec3(1, 0.97, 0.94).mul(pool.mul(0.0095)).add(vec3(lu.scrCol).mul(spillF.mul(0.004).mul(lu.pw)))
+      const col = vec3(1, 0.97, 0.94).mul(pool.mul(0.0095)).add(vec3(lu.scrCol).mul(spillF.mul(0.004).mul(lu.pw).mul(lu.lidK)))
         .add(vec3(0.9, 0.92, 1).mul(streakK.mul(0.003))).add(refl.mul(reflK));
       flM.colorNode = col.mul(lu.light).mul(appear);
       // el piso existe sólo con luz (R2-07: apagado no deja un rectángulo más oscuro que el fondo)
@@ -259,10 +260,12 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     // entero o casi entero dentro del cuadro: a lo sumo ~7 m de ancho, centrado detrás de la notebook y por encima
     // de la tapa (el cono lo recorta), lejos del borde del cuadro
     const asp = c.width / c.height;
-    const h = Math.min(2.6, 7 / asp);
+    // R56-02: ≤ 5,6 m de ancho y corrido ~0,6 m hacia el lado del texto: con la órbita, el dolly y el parallax el
+    // extremo libre queda ≥ ~5 % adentro del cuadro (antes, a 7 m, «TRAUMAVISIO» cortado al final de la estadía)
+    const h = Math.min(2.6, 5.6 / asp);
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(h * asp, h), m);
     const side = lap.pr.side;
-    const base = V(0, 1.95 + h / 2, FRONT - LD - 4.2);
+    const base = V(side * 0.6, 1.95 + h / 2, FRONT - LD - 4.2);
     mesh.position.copy(base); mesh.renderOrder = -2;
     lap.outer.add(mesh);
     return { mesh, op, base, side };
@@ -569,6 +572,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
       lap.lastLid = lidA;
       lap.lidA = lidA;
       lap.hinge.rotation.x = lerp(CLOSED, OPEN, lidA);
+      lap.u.lidK.value = sm(range(lidA, 0.75, 1));
       // llega girando desde la profundidad (en la oscuridad: se ve cuando la luz lo encuentra)
       const away = 1 - arrive, spin = (k % 2 === 0 ? -1 : 1) * 1.0 * away;
       lap.outer.position.copy(lap.home).add(tmpW.set(0, -0.3 * away, -6.5 * away).applyAxisAngle(V(0, 1, 0), lap.yaw));
