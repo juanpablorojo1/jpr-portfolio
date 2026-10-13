@@ -60,12 +60,11 @@
       "problem": "La tesis buscó construir una segunda lectura para radiografías de muñeca pediátrica: un sistema que marca en la imagen la zona probable de fractura mientras la decisión queda en manos del médico. Alcance: solo muñeca pediátrica (pacientes de hasta 19 años), proyección de frente o de perfil, radiografía convencional.",
       "role": "Autor del Proyecto Integrador (UNC), con dos asesoras de la UNC. Armé el pipeline de datos, entrené y evalué el modelo, desarrollé la aplicación web y escribí el análisis regulatorio.",
       "decisions": [
-        { "title": "Dejar el clasificador y pasar a detección.", "body": "Un clasificador DenseNet-121 anterior tenía fuga de datos y se apoyaba en los marcadores de plomo L/R en vez de en el hueso; sus cifras se descartaron y el proyecto pasó a un detector YOLOv8m que encierra cada hallazgo en una caja." },
         { "title": "Partir por paciente.", "body": "GRAZPEDWRI-DX (20.327 imágenes de 6.091 pacientes) se dividió 70/15/15 por paciente, así ningún paciente aparece a la vez en entrenamiento y en test." },
-        { "title": "Fijar el umbral antes del test.", "body": "El umbral de decisión (0,22) se fijó en validación, como el valor más alto que mantenía la sensibilidad por imagen en 96% o más, antes de la primera corrida del test." },
-        { "title": "Probar con datos de otro país.", "body": "El modelo final corrió sin reentrenar sobre PediURF, un dataset pediátrico de Shenzhen, China (1.000 casos, 1.790 imágenes)." }
+        { "title": "Fijar el umbral antes del test.", "body": "El umbral de decisión (0,22) se fijó en validación, como el valor más alto que mantenía la sensibilidad por imagen en 96% o más, sin usar el test para ajustarlo." },
+        { "title": "Probar con datos de otro país.", "body": "El modelo corrió sin reentrenar sobre PediURF, un dataset pediátrico de Shenzhen, China (1.000 casos, 1.790 imágenes)." }
       ],
-      "result": "Test interno (3.038 imágenes, 914 pacientes no vistos): sensibilidad 96,7%, especificidad 93,1% y AUC-ROC 0,987 por imagen; mAP@50 de caja 0,944. Test externo (PediURF): sensibilidad 97,4% y especificidad 88,3% por imagen. Evaluado con datos retrospectivos; no está registrado ante la ANMAT ni autorizado para uso clínico. Código público bajo AGPL-3.0. En etapa de escalado con Emprende U 2026; extenderlo a otras regiones requiere datasets etiquetados por expertos.",
+      "result": "Test interno (3.038 imágenes, 914 pacientes no vistos): sensibilidad 96,7%, especificidad 93,1% y AUC-ROC 0,987 por imagen; mAP@50 de caja 0,944. Test externo (PediURF): sensibilidad 97,4% y especificidad 88,3% por imagen. Evaluado con datos retrospectivos; no está registrado ante la ANMAT ni autorizado para uso clínico. Código público bajo AGPL-3.0. En etapa de escalado con Emprende U 2026.",
       "demo_alt": "Video demo de TraumaVision, sin sonido, 36 s: ingreso, carga del estudio (imagen individual o ZIP de DICOM), un resultado REVISAR con la zona marcada por YOLOv8m, el visor invertido con el puntaje por zona, la revisión del médico, el informe PDF, un caso negativo, el historial, el desempeño del modelo y el alcance y las limitaciones.",
       "shots_alt": [
         "TraumaVision: resultado REVISAR, una zona marcada sobre el radio distal con un puntaje del detector de 0,83, por encima del corte de aviso de 0,22, y el aviso de confirmar con lectura médica",
@@ -170,7 +169,7 @@
       "decisions": [
         { "title": "Hablarle al técnico, no al comprador.", "body": "Tercera persona, sin afirmaciones promocionales y cada afirmación respaldada por una pantalla real del producto, porque quien lee es quien lo va a operar todos los días." },
         { "title": "Separar KIBBO de LEEX.", "body": "Las cifras del fabricante de hardware se atribuyen a LEEX, así el sitio de KIBBO afirma solo lo que KIBBO puede respaldar." },
-        { "title": "Darle al móvil un sistema propio.", "body": "«Expediente» organiza cada página como una ficha, en vez de comprimir el scroll de escritorio en un teléfono." },
+        { "title": "Darle al móvil un sistema propio.", "body": "En el teléfono, cada página se organiza como una ficha, en vez de comprimir el scroll de escritorio." },
         { "title": "Hacer del inglés una edición completa.", "body": "Slugs propios, hreflang recíproco y el canonical en español intacto; las citas de usuarios quedan textuales en español con traducción rotulada, para no atribuirle a nadie palabras que no dijo." }
       ],
       "result": "En vivo en kibbo.io en español e inglés, en reemplazo del WordPress anterior, con GA4 midiendo desde el lanzamiento.",
@@ -196,7 +195,7 @@
         { "label": "Comunidad", "caption": "/en/cases-and-network: «No one manages a fleet alone»." },
         { "label": "Confianza", "caption": "/en/trust-and-security: «How the information travels»." },
         { "label": "Recurso", "caption": "Una guía de recursos escrita para que la citen buscadores y asistentes de IA." },
-        { "label": "Móvil", "caption": "Móvil: el sistema «Expediente», diseñado aparte del escritorio." }
+        { "label": "Móvil", "caption": "Móvil: un sistema de fichas, diseñado aparte del escritorio." }
       ],
       "seo_shots": [
         { "label": "JSON-LD", "caption": "JSON-LD servido en kibbo.io/en: grafo Organization y FAQPage." },

@@ -60,12 +60,11 @@
       "problem": "The thesis set out to build a second reader for pediatric wrist X-rays: a system that marks the likely fracture site on the image while the physician keeps the decision. Scope: pediatric wrist only (patients up to 19), frontal or lateral view, conventional radiography.",
       "role": "Author of the capstone project (Proyecto Integrador, UNC), with two UNC advisors. I built the data pipeline, trained and evaluated the model, developed the web app and wrote the regulatory analysis.",
       "decisions": [
-        { "title": "Drop the classifier, switch to detection.", "body": "An earlier DenseNet-121 classifier had data leakage and relied on the lead L/R markers instead of the bone, so its figures were discarded and the project moved to a YOLOv8m detector that boxes each finding." },
         { "title": "Split by patient.", "body": "GRAZPEDWRI-DX (20,327 images from 6,091 patients) was split 70/15/15 by patient, so no patient appears in both training and test." },
-        { "title": "Fix the threshold before the test.", "body": "The decision threshold (0.22) was set on the validation set, as the highest value that kept image-level sensitivity at 96% or more, before the first test run." },
-        { "title": "Test on data from another country.", "body": "The final model ran without retraining on PediURF, a pediatric dataset from Shenzhen, China (1,000 cases, 1,790 images)." }
+        { "title": "Fix the threshold before the test.", "body": "The decision threshold (0.22) was set on the validation set, as the highest value that kept image-level sensitivity at 96% or more; test data never tuned it." },
+        { "title": "Test on data from another country.", "body": "The model ran without retraining on PediURF, a pediatric dataset from Shenzhen, China (1,000 cases, 1,790 images)." }
       ],
-      "result": "Internal test set (3,038 images, 914 unseen patients): 96.7% sensitivity, 93.1% specificity and AUC-ROC 0.987 per image; box mAP@50 0.944. External test (PediURF): 97.4% sensitivity and 88.3% specificity per image. Evaluated on retrospective data; not registered with ANMAT or authorized for clinical use. Code public under AGPL-3.0. Now scaling through Emprende U 2026; extending it to other regions requires expert-labeled datasets.",
+      "result": "Internal test set (3,038 images, 914 unseen patients): 96.7% sensitivity, 93.1% specificity and AUC-ROC 0.987 per image; box mAP@50 0.944. External test (PediURF): 97.4% sensitivity and 88.3% specificity per image. Evaluated on retrospective data; not registered with ANMAT or authorized for clinical use. Code public under AGPL-3.0. Now scaling through Emprende U 2026.",
       "demo_alt": "TraumaVision demo video, silent, 36 s: sign-in, study upload (single image or a DICOM ZIP), a REVIEW result with the zone marked by YOLOv8m, the inverted viewer with the score per zone, the physician review, the PDF report, a negative case, the history, model performance, and scope and limitations.",
       "shots_alt": [
         "TraumaVision: REVIEW result, a zone marked over the distal radius with a 0.83 detector score, above the 0.22 alert cut-off, and the notice to confirm with a medical reading",
@@ -170,7 +169,7 @@
       "decisions": [
         { "title": "Write to the technician, not the buyer.", "body": "Third person, no promotional claims, and every statement backed by a real product screen, because the reader is the person who will operate it every day." },
         { "title": "Keep KIBBO and LEEX apart.", "body": "Figures from the hardware manufacturer are credited to LEEX, so the KIBBO site claims only what KIBBO can back." },
-        { "title": "Give mobile its own system.", "body": "\"Expediente\" (case file) lays out each page as a record instead of compressing the desktop scroll into a phone." },
+        { "title": "Give mobile its own system.", "body": "On phones, each page is laid out as a record instead of the desktop scroll compressed onto a small screen." },
         { "title": "Make English a full edition.", "body": "Own slugs, reciprocal hreflang and the Spanish canonical kept intact; user quotes stay verbatim in Spanish with a labeled translation, so no one is misquoted." }
       ],
       "result": "Live on kibbo.io in Spanish and English, replacing the legacy WordPress site, with GA4 measuring from launch.",
@@ -196,7 +195,7 @@
         { "label": "Community", "caption": "/en/cases-and-network: \"No one manages a fleet alone.\"" },
         { "label": "Trust", "caption": "/en/trust-and-security: \"How the information travels.\"" },
         { "label": "Resource", "caption": "A resource guide written to be cited by search engines and AI assistants." },
-        { "label": "Mobile", "caption": "Mobile: the «Expediente» layout, separate from desktop." }
+        { "label": "Mobile", "caption": "Mobile: a record-style layout, separate from desktop." }
       ],
       "seo_shots": [
         { "label": "JSON-LD", "caption": "JSON-LD served on kibbo.io/en: Organization graph and FAQPage." },
