@@ -17,6 +17,7 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
 import { useTranslations } from 'next-intl';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import { onSignal, type Senal } from '../hero/senal/signal';
 import {
@@ -100,6 +101,9 @@ export default function ExperienceStage() {
       };
       measure();
       addEventListener('resize', measure);
+      // F-01: L (el aterrizaje del About) cambia después del montaje (alto final de la zona del hero): se vuelve a medir en
+      // cada refresh de ScrollTrigger (el mismo momento en que scene.js recalcula trig.end)
+      ScrollTrigger.addEventListener('refresh', measure);
       // estado inicial (todo apagado): ya si la sección está cerca de la vista; si no, en su tarea ociosa o al primer
       // scroll, fuera de la hidratación (D-01). Lejos no se ve: el resultado es el mismo.
       const hidden = lazySet(section, hideJobs);
@@ -184,6 +188,7 @@ export default function ExperienceStage() {
         hidden.cancel();
         gsap.ticker.remove(tick);
         removeEventListener('resize', measure);
+        ScrollTrigger.removeEventListener('refresh', measure);
         ro.disconnect();
         if (S) { S.exp.tags = []; S.exp.box = []; S.exp.v0 = NaN; }
         offSignal();

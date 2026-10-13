@@ -19,6 +19,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { onSignal, type Senal } from '../hero/senal/signal';
 import { FBF_SECTION_VH, FBF_STAY, FBF_OFF, fbfCtrlWanted, fbfCanTurn, fbfChromeWanted } from '../hero/senal/frames';
 import { GAL_DWELLS } from '../hero/senal/gallery';
@@ -159,6 +160,9 @@ export default function VideosStage() {
       };
       measure();
       addEventListener('resize', measure);
+      // F-01: L (el aterrizaje del About) cambia después del montaje (alto final de la zona del hero): se vuelve a medir en
+      // cada refresh de ScrollTrigger (el mismo momento en que scene.js recalcula trig.end)
+      ScrollTrigger.addEventListener('refresh', measure);
       const hidden = lazySet(section, [[label, { opacity: 0, y: 14 }]]);
 
       // ← → con el tambor frente a la cámara (no en campos de texto ni con modificadores)
@@ -176,6 +180,7 @@ export default function VideosStage() {
       const onFocusIn = () => {
         if (!liveRef.current || !S) return;
         if (fbfCtrlWanted(S.state.gal)) return;
+        measure();                                            // F-01: siempre fresco antes de saltar
         window.scrollTo({ top: land + ((FBF_STAY[0] + FBF_STAY[1]) / 2) * innerHeight, behavior: 'instant' as ScrollBehavior });
       };
       section.addEventListener('focusin', onFocusIn);
@@ -222,6 +227,7 @@ export default function VideosStage() {
         hidden.cancel();
         gsap.ticker.remove(tick);
         removeEventListener('resize', measure);
+        ScrollTrigger.removeEventListener('refresh', measure);
         removeEventListener('keydown', onKey);
         section.removeEventListener('focusin', onFocusIn);
         twRef.current?.kill();
@@ -289,7 +295,7 @@ export default function VideosStage() {
             </button>
           </div>
           <div className="fv-acts">
-            <button type="button" className="fv-tgl" onClick={() => setPaused((p) => !p)} aria-pressed={paused} aria-label={paused ? t('resume') : t('pause')}>
+            <button type="button" className="fv-tgl fv-pause" onClick={() => setPaused((p) => !p)} data-on={paused ? '' : undefined} aria-label={paused ? t('resume') : t('pause')}>
               {paused
                 ? <svg width="9" height="10" viewBox="0 0 14 16" fill="currentColor" aria-hidden="true"><path d="M0 0 L14 8 L0 16 Z" /></svg>
                 : <svg width="9" height="10" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true"><path d="M0 0h3.5v12H0zM6.5 0H10v12H6.5z" /></svg>}

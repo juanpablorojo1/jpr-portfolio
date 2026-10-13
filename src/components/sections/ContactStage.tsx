@@ -14,6 +14,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import { onSignal, type Senal } from '../hero/senal/signal';
 import { CTC, CTC_VH } from '../hero/senal/contact';
@@ -83,6 +84,9 @@ export default function ContactStage() {
       };
       measure();
       addEventListener('resize', measure);
+      // F-01: L (el aterrizaje del About) cambia después del montaje (alto final de la zona del hero): se vuelve a medir en
+      // cada refresh de ScrollTrigger (el mismo momento en que scene.js recalcula trig.end)
+      ScrollTrigger.addEventListener('refresh', measure);
       const ro = new ResizeObserver(measure);
       ro.observe(main);
 
@@ -143,7 +147,7 @@ export default function ContactStage() {
       };
 
       // teclado: el foco en un enlace de Contact antes de que la sección llegue lleva el scroll a su lugar
-      const onFocus = () => { if (cNow < CTC.arrive - 0.05) window.scrollTo({ top, behavior: 'auto' }); };
+      const onFocus = () => { if (cNow < CTC.arrive - 0.05) { measure(); window.scrollTo({ top, behavior: 'auto' }); } };   // F-01: medir antes de saltar
       section.addEventListener('focusin', onFocus);
       // el puntero sobre el punto: la escena lo agranda (hover) o lo comprime (press)
       const set = (k: 'hover' | 'press', v: boolean) => () => { if (S) S.ctc[k] = v; };
@@ -173,6 +177,7 @@ export default function ContactStage() {
         cancelPrep();
         gsap.ticker.remove(tick);
         removeEventListener('resize', measure);
+        ScrollTrigger.removeEventListener('refresh', measure);
         ro.disconnect();
         section.removeEventListener('focusin', onFocus);
         evs.forEach(([e, f]) => dot.removeEventListener(e, f));

@@ -106,7 +106,7 @@
   }
   .fv-tgl:hover, .fv-tgl:focus-visible { color: #fff; border-color: rgba(232, 228, 222, .2); outline: none; }
   .fv-tgl:focus-visible { box-shadow: 0 0 0 1px #e8272a; }
-  .fv-tgl[aria-pressed="true"] { color: #e8e4de; }
+  .fv-snd[aria-pressed="true"], .fv-pause[data-on] { color: #e8e4de; }
   .fv-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
   .fv-bars i { display: block; width: 2px; height: 3px; background: currentColor; transition: height .3s var(--ease-out); }
   .fv-snd[aria-pressed="true"] .fv-bars i:nth-child(1) { height: 7px; }
@@ -116,11 +116,12 @@
   /* crédito CC BY del video de frente (sólo la incubadora lo lleva) */
   .fv-credit {
     left: var(--pad); max-width: min(30vw, 420px); margin: 0;
-    font: 10px/1.55 var(--mono); letter-spacing: .04em; color: rgba(232, 228, 222, .62);
+    font: 10.5px/1.55 var(--mono); letter-spacing: .04em; color: rgba(232, 228, 222, .62);
     text-shadow: 0 0 2px rgba(0, 0, 0, .95), 0 1px 14px rgba(0, 0, 0, .85);
   }
   .fv-credit a { color: #e8e4de; text-decoration: underline; text-decoration-color: rgba(232, 228, 222, .4); text-underline-offset: 3px; }
-  .fv-credit a:hover, .fv-credit a:focus-visible { color: #fff; text-decoration-color: #e8272a; outline: none; }
+  .fv-credit a:hover, .fv-credit a:focus-visible { color: #fff; text-decoration-color: #e8272a; }
+  .fv-credit a:focus-visible { outline: 1px solid #e8272a; outline-offset: 3px; }
 
   /* ---------- sin escena viva: el póster de la cara de frente (fundido entre pósters) ---------- */
   .fv-front { position: absolute; inset: 0; pointer-events: none; }

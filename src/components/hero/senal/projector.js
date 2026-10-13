@@ -25,6 +25,7 @@ import {
   uniform, texture, uv, vec2, vec3, float, smoothstep, exp, abs, mix, length, max, min, step, screenUV,
   positionLocal, positionWorld, cameraPosition, distance, normalize, cross, attribute, instancedBufferAttribute, time, sin, cos, dot, clamp
 } from 'three/tsl';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GAL_END, GAL_DWELLS } from './gallery';
 import { FBF_RUN, FBF_BEAM, FBF_STAY, FBF_OFF, FBF_END, FBF_DRUM } from './frames';
 import { VIDEOS } from '../../../lib/content';
@@ -81,11 +82,23 @@ export async function buildProjector({
   await yieldToMain();
   if (!alive()) return null;
 
-  /* ---------- materiales del objeto: grafito que toma la luz del pasillo (la señal roja, el video encendido) ---------- */
-  const graphite = new THREE.MeshBasicNodeMaterial();
-  graphite.colorNode = withFog(lightAt(toL(positionWorld)).mul(0.24).add(float(0.0042)), 0.4).mul(appear);
-  const bezelM = new THREE.MeshBasicNodeMaterial();
-  bezelM.colorNode = withFog(lightAt(toL(positionWorld)).mul(0.08).add(float(0.0016)), 0.4).mul(appear);
+  /* ---------- materiales del objeto: el mismo grafito PBR y el mismo estudio HDRI que la notebook (R56-06) ----------
+     El env no se vuelve a cargar ni a filtrar: se toma el PMREM que ya armó la vitrina (studioEnv, notebook.js) de uno de
+     sus materiales. Cuerpo arenado (roughness .5), aristas y chaflanes pulidos (.28) que atrapan el estudio; bisel de
+     vidrio negro con clearcoat. La luz del pasillo (la señal roja, el video encendido) entra como emisión tenue. */
+  let env = null;
+  const vitG = group.getObjectByName('vitrina');
+  if (vitG) vitG.traverse((o) => {
+    if (env || !o.material) return;
+    for (const m of Array.isArray(o.material) ? o.material : [o.material]) if (!env && m && m.envMap) env = m.envMap;
+  });
+  const spill = lightAt(toL(positionWorld));
+  const graphite = new THREE.MeshPhysicalNodeMaterial({ color: 0x55585e, metalness: 0.9, roughness: 0.5, envMap: env, envMapIntensity: 0.34 });
+  graphite.emissiveNode = spill.mul(0.1);
+  const polished = new THREE.MeshPhysicalNodeMaterial({ color: 0x7d8086, metalness: 0.9, roughness: 0.28, envMap: env, envMapIntensity: 0.42 });
+  polished.emissiveNode = spill.mul(0.12);
+  const bezelM = new THREE.MeshPhysicalNodeMaterial({ color: 0x030304, metalness: 0, roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.04, envMap: env, envMapIntensity: 0.2 });
+  bezelM.emissiveNode = spill.mul(0.02);
 
   const root = new THREE.Group();
   root.position.set(0, 0, ZC);
@@ -97,9 +110,14 @@ export async function buildProjector({
   plinth.position.y = Y0 / 2; drum.add(plinth);
   const cap = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.03, R + 0.03, 0.06, N, 1, false, Math.PI / N), graphite);
   cap.position.y = Y0 + H + 0.03; drum.add(cap);
+  // chaflanes pulidos: filetes finos en el canto del zócalo y en los dos cantos de la tapa
+  for (const y of [Y0 - 0.006, Y0 + H + 0.003, Y0 + H + 0.057]) {
+    const ch = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.036, R + 0.036, 0.012, N, 1, false, Math.PI / N), polished);
+    ch.position.y = y; drum.add(ch);
+  }
   for (let k = 0; k < N; k++) {
     const a = k * STEP + STEP / 2;
-    const p = new THREE.Mesh(new THREE.BoxGeometry(0.045, H + 0.02, 0.045), graphite);
+    const p = new THREE.Mesh(new RoundedBoxGeometry(0.045, H + 0.02, 0.045, 2, 0.012), polished);
     p.position.set(Math.sin(a) * (R + 0.004), Y0 + H / 2, Math.cos(a) * (R + 0.004)); p.rotation.y = a;
     drum.add(p);
   }
@@ -118,7 +136,7 @@ export async function buildProjector({
     const tn = texture(tex, st).level(3.6);
     // aditivo y sin prueba de profundidad: se dibuja sobre el piso de puntos (el piso es opaco y lo taparía)
     const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-    const fade = smoothstep(0.5, 1.0, uv().y);
+    const fade = smoothstep(0.8, 1.0, uv().y).pow(1.6);
     m.colorNode = tn.rgb.mul(fade).mul(u.refl).mul(appear);
     m.opacityNode = float(1);
     return { m, tn };
@@ -158,7 +176,8 @@ export async function buildProjector({
       const x = uv().x, y = abs(uv().y.sub(0.5)).mul(2);
       const win = smoothstep(ring.a.sub(0.012), ring.a, x).mul(float(1).sub(smoothstep(ring.b, ring.b.add(0.012), x)));
       const core = exp(y.mul(y).mul(-9));
-      rm.colorNode = RED.mul(core.mul(2.4)).add(vec3(1, 0.86, 0.84).mul(core.mul(core).mul(0.25))).mul(win).mul(ring.inten).mul(appear);
+      // B-01: el núcleo lee #E8272A (G/R ≈ 0,17 en sRGB), sin el centro blanco-salmón: sólo rojo de marca, sin quemar
+      rm.colorNode = RED.mul(core.mul(1.5)).mul(win).mul(ring.inten).mul(appear);
       rm.opacityNode = float(1);
     }
     const ringM = new THREE.Mesh(new THREE.PlaneGeometry(W + 0.05, 0.02), rm);
@@ -229,8 +248,8 @@ export async function buildProjector({
     const headF = exp(u.s1.sub(aS).max(0).mul(-2.2)).mul(u.head);
     const nearF = smoothstep(near[0], near[1], distance(positionLocal, camL));
     const I = win.mul(u.inten).mul(nearF).mul(appear);
-    m.colorNode = RED.mul(glowP.add(coreP.mul(1.6))).add(vec3(1, 0.86, 0.84).mul(coreP.mul(coreP).mul(float(0.55).add(headF.mul(1.4)))))
-      .add(RED.mul(headF.mul(glowP).mul(1.2))).mul(I);
+    // B-01: núcleo y cabeza en el rojo de marca (sin el blanco-salmón): la cabeza es más rojo, no más blanco
+    m.colorNode = RED.mul(glowP.add(coreP.mul(1.3)).add(headF.mul(coreP.add(glowP)).mul(0.8))).mul(I);
     m.opacityNode = float(1);
     const mesh = new THREE.Mesh(geo, m);
     mesh.frustumCulled = false; mesh.renderOrder = 20;
@@ -283,7 +302,7 @@ export async function buildProjector({
     const DUST = 900;
     const dPos = new Float32Array(DUST * 3), dSeed = new Float32Array(DUST);
     for (let i = 0; i < DUST; i++) {
-      dPos[i * 3] = (Math.random() - 0.5) * 12; dPos[i * 3 + 1] = 0.1 + Math.random() * 4.6; dPos[i * 3 + 2] = FZ + 13 - Math.random() * 22;
+      dPos[i * 3] = (Math.random() - 0.5) * 6; dPos[i * 3 + 1] = 0.1 + Math.random() * 4.2; dPos[i * 3 + 2] = FZ + 6.5 - Math.random() * 8;
       dSeed[i] = Math.random();
     }
     const m = new THREE.SpriteNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -299,7 +318,10 @@ export async function buildProjector({
     m.scaleNode = seed.mul(0.013).add(0.006).mul(smoothstep(0.2, 2.2, near).mul(-0.6).add(1.6));
     const soft = float(1).sub(smoothstep(0.0, 0.5, length(uv().sub(0.5))));
     m.colorNode = lightAt(toL(positionWorld)).mul(2.0).add(RED.mul(inB.mul(beamI).mul(1.6))).add(OFF.mul(0.005));
-    m.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(smoothstep(0.3, 0.9, near)).mul(appear);
+    // R56-05: sólo existe donde hay luz: dentro del haz o en el charco del video (frente al tambor); nada en el vacío
+    const pool = exp(distance(toL(positionWorld), scrPos).mul(-1.1)).mul(scrI.mul(2.2)).min(1);
+    const lit = max(inB.mul(beamI), pool);
+    m.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(smoothstep(0.3, 0.9, near)).mul(lit).mul(appear);
     const dust = new THREE.Sprite(m); dust.count = DUST; dust.frustumCulled = false; dust.renderOrder = 30;
     hall.add(dust);
   }
@@ -442,7 +464,10 @@ export async function buildProjector({
     const run = easeIO(range(u, FBF_RUN[0], FBF_RUN[1]));
     const off = smooth(FBF_OFF - 0.05, FBF_OFF + 0.45, u);
     const s1 = run * RUN_LEN;
-    line.u.s1.value = s1; line.u.s0.value = Math.max(0, s1 - (run < 1 ? 9 : 3.2));
+    // R56-07: llegada la señal, la cola se recoge hasta el zócalo (en la estadía, en el piso bajaba por el centro del
+    // cuadro y partía el contador); queda la subida al anillo
+    const tail = run < 1 ? 9 : lerp(3.2, RUN_LEN - (LZ0 - LZ1) + 0.06, smooth(FBF_RUN[1], FBF_STAY[0] - 0.05, u));
+    line.u.s1.value = s1; line.u.s0.value = Math.max(0, s1 - tail);
     line.u.head.value = run < 1 ? 1 : 0.25;
     line.u.inten.value = (u > FBF_RUN[0] - 0.02 ? 1 : 0) * (1 - 0.35 * smooth(FBF_STAY[0], FBF_STAY[0] + 0.3, u)) * (1 - off);
     line.mesh.visible = line.u.inten.value > 0.001;
@@ -483,7 +508,7 @@ export async function buildProjector({
       f.front = Math.pow(clamp01(f.facing), 3);
       f.u.dim.value = lerp(0.16, 1, sm(f.front)) * lerp(0.6, 1, pw) * fadeK;
       f.u.lift.value = (1 - pw) * 0.03 * (pw > 0.001 ? 1 : 0);
-      f.u.refl.value = 0.075 * f.front * pw * fadeK;
+      f.u.refl.value = 0.03 * f.front * pw * fadeK;
       f.u.halo.value = 0.022 * f.front * pw;
       f.ring.inten.value = ringI * lerp(0.4, 1.1, f.front);
       f.scr.visible = pw > 0.0005;
@@ -505,7 +530,7 @@ export async function buildProjector({
       wide.u.cropW.value = Math.min(1, (sw / sh) / wide.asp);
       wide.u.dim.value = fadeK;
       wide.refl.scale.set(sw, sh, 1); wide.refl.position.set(0, -2 * (Y0 + H / 2) - y, z);
-      wide.u.refl.value = 0.075 * e;
+      wide.u.refl.value = 0.03 * e;
       WIDE.u.dim.value *= lerp(1, 0.06, e); WIDE.u.refl.value *= 1 - e; WIDE.u.halo.value *= 1 - e;
     }
 
@@ -546,7 +571,10 @@ export async function buildProjector({
     else { mode = 'fbf-drum'; fT = q.set(0, FY, FZ).sub(P).dot(fwd); rT = 400; }
     st.mode = mode;
     projectMask();
-    return { mode, fT, rT };
+    // R56-05: frente al tambor el piso de puntos sólo se ve en el charco del video (y el rojo del anillo): el ambiente
+    // del pasillo baja a 15 % después de la costura (u > 10,75) y vuelve en el apagado, camino a Stack
+    const ambK = 1 - 0.85 * smooth(FBF_RUN[1] - 0.2, FBF_STAY[0], u) * (1 - smooth(FBF_OFF, FBF_END, u));
+    return { mode, fT, rT, ambK };
   }
 
   /** máscara: las caras que miran a cámara (hasta 3) y el 16:9 afuera. En update, con la cámara ya puesta (scene.js

@@ -282,6 +282,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     vit.update(u, t, dt, gw);
     // Frame by Frame: lámpara, haz, pantallas y foco (null antes de la sala)
     const fx = proj.update(u, t, dt, gw, P, L, S.inView);
+    if (fx && fx.ambK !== undefined) ambX.value *= fx.ambK;   // Tambor: el piso sólo en el charco del video (U3, R56-05)
     // R3-02: la sala de Video (pantallas en espera y su polvo) no se adivina en la salida de Projects: aparecía cortada
     // arriba a la izquierda, a ~8 %, como un resto. Entra cuando la cámara ya mira la sala (sin tocar projector.js).
     if (!hallRef) hallRef = group.getObjectByName('fbf-hall');
