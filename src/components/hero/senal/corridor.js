@@ -184,7 +184,13 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const vW = lookW;
   const cOff = screenUV.sub(0.5);
   const caOff = cOff.mul(dot(cOff, cOff).mul(0.0042));
-  const ca = vec4(col.sample(screenUV.add(caOff)).r, dofN.g, col.sample(screenUV.sub(caOff)).b, 1);
+  // D-03 (2026-10-13): los tres canales salen de la MISMA imagen (la del DOF). Antes R y B se leían del pase crudo
+  // (nítido) y G del DOF: con el DOF encendido (costura Projects → Video, u 9,3–11,3, foco en la señal) el verde
+  // desenfocado se abría alrededor de cada punto del piso y de las aristas del tambor lejano (halo verde) y el centro
+  // nítido quedaba en R+B (violeta). En la vitrina el DOF está apagado (CoC 0: su salida es el pase tal cual), así que
+  // ahí la aberración no cambia.
+  const dofT = dofN.getTextureNode();
+  const ca = vec4(dofT.sample(screenUV.add(caOff)).r, dofN.g, dofT.sample(screenUV.sub(caOff)).b, 1);
   const baseC = mix(dofN, ca, vW);
   const lumB = luminance(baseC.rgb);
   // sombras frías por multiplicación (D-10: B − R ≈ +2–3 en 8 bit en los oscuros), luz neutra arriba
