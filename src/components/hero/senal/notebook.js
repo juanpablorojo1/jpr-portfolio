@@ -162,6 +162,11 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
     // R2-01/R3-01: 0,34 (0,42 difuminaba el softbox en un levante parejo; 0,30 con el softbox fuerte quemaba el deck)
     m.roughnessNode = mix(float(0.34).add(scratch), float(0.15), bevel);
     m.emissiveNode = spill(0.07).mul(appear);
+    // R4-03: el apoyamuñecas cae ~1,4:1 hacia el frente (el estudio sólo «llega» atrás); sólo en la base
+    if (axis === 'y') {
+      const c = new THREE.Color(0x7d8086);
+      m.colorNode = vec3(c.r, c.g, c.b).mul(mix(float(0.7), float(1), smoothstep(FRONT - 0.05, FRONT - 1.0, positionLocal.z)));
+    }
     return m;
   };
   const alu = aluFor('y'), aluLid = aluFor('z');
@@ -170,7 +175,11 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
   keyM.emissiveNode = spill(0.2).mul(appear);                  // el resplandor de la pantalla sobre las teclas, neutro
   const wellM = new THREE.MeshBasicNodeMaterial();
   wellM.colorNode = vec3(0.0012, 0.0012, 0.0014).add(spill(0.01)).mul(appear);
-  const padM = new THREE.MeshPhysicalNodeMaterial({ color: 0x1d1e22, metalness: 0, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.08, envMap: env, envMapIntensity: envI });
+  // R4-01: vidrio oscuro (~#40 contra el apoyamuñecas ~#6E, ≥ 1,8:1). A ese ángulo rasante el Fresnel del coat lo
+  // levantaba al gris del deck (1,1:1): coat a la mitad y reflejos del estudio al 30 %. Filo claro de ~1 px alrededor.
+  const padM = new THREE.MeshPhysicalNodeMaterial({ color: 0x121316, metalness: 0, roughness: 0.2, clearcoat: 0.5, clearcoatRoughness: 0.1, envMap: env, envMapIntensity: envI * 0.3 });
+  const padEdgeM = new THREE.MeshBasicNodeMaterial();
+  padEdgeM.colorNode = vec3(0.075, 0.077, 0.082).mul(u.light).mul(appear);
   padM.emissiveNode = spill(0.03).mul(appear);
   const glassM = new THREE.MeshPhysicalNodeMaterial({ color: 0x030304, metalness: 0, roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.04, envMap: env, envMapIntensity: envI * 1.1 });
   const footM = new THREE.MeshStandardNodeMaterial({ color: 0x0a0a0b, roughness: 0.9 });
@@ -185,7 +194,9 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
   const lx = positionLocal.x.mul(2);                                 // −1..1 a lo largo de la línea (caja unitaria escalada)
   const along = float(1).sub(lx.mul(lx).mul(0.5)).add(exp(lx.sub(u.glint).pow(2).mul(-14)).mul(0.35)).min(1);
   const lidLineM = new THREE.MeshBasicNodeMaterial();
-  lidLineM.colorNode = RED.mul(u.rim.min(1).mul(along)).mul(appear);
+  // R4-02: a 1440 el hilo (≈1 px) se mezclaba con el gris de la tapa y quedaba rosado: núcleo ×1,25 (R satura, G/B
+  // siguen ≈ 0 → R ≥ 1,6× G) y un poco más alto; el halo no cambia
+  lidLineM.colorNode = RED.mul(u.rim.min(1).mul(along).mul(1.25)).mul(appear);
   const haloM = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
   haloM.colorNode = RED.mul(u.rim.min(1).mul(along).mul(0.16)).mul(appear);
   haloM.opacityNode = float(1);
@@ -229,6 +240,7 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
     deck.add(im);
   }
   const pad = new THREE.Mesh(G.pad, padM); pad.position.set(0, 0.0009, -0.13); deck.add(pad);
+  const padEdge = new THREE.Mesh(G.pad, padEdgeM); padEdge.scale.set(1.009, 1, 1.017); padEdge.position.set(0, 0.0006, -0.124); deck.add(padEdge);
   // bisagra de barril y su línea roja
   const barrel = new THREE.Mesh(G.hinge, aluDark); barrel.position.set(0, FEET + T_BACK - 0.012, HINGE_Z - 0.012); root.add(barrel);
   const hLine = new THREE.Mesh(G.line, lineM); hLine.scale.set(LW * 0.72, 0.0016, 0.0016); hLine.position.set(0, FEET + T_BACK + 0.012, HINGE_Z + 0.03); root.add(hLine);
@@ -238,11 +250,11 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED }) {
   const bezel = new THREE.Mesh(G.bezel, glassM); bezel.position.z = 0.0006; hinge.add(bezel);
   const camDot = new THREE.Mesh(G.cam, camM); camDot.position.set(0, LIDH - BZ_T / 2, 0.0011); hinge.add(camDot);
   const screen = new THREE.Mesh(G.screen, scrM); screen.position.set(0, SCREEN_Y, 0.0014); screen.renderOrder = 2; hinge.add(screen);
-  const rimLine = new THREE.Mesh(G.line, lidLineM); rimLine.scale.set(LW - 0.26, 0.004, LID_T * 0.62); rimLine.position.set(0, LIDH + 0.0018, -LID_T / 2); hinge.add(rimLine);
+  const rimLine = new THREE.Mesh(G.line, lidLineM); rimLine.scale.set(LW - 0.26, 0.0055, LID_T * 0.62); rimLine.position.set(0, LIDH + 0.0018, -LID_T / 2); hinge.add(rimLine);
   const rimHalo = new THREE.Mesh(G.line, haloM); rimHalo.scale.set(LW - 0.22, 0.016, LID_T * 0.9); rimHalo.position.set(0, LIDH + 0.003, -LID_T / 2); rimHalo.renderOrder = 3; hinge.add(rimHalo);
 
   const mats = [alu, aluLid, aluDark, keyM, padM, glassM];
-  const baseI = new Map([[alu, envI], [aluLid, envI], [aluDark, envI * 0.8], [keyM, envI * 0.5], [padM, envI], [glassM, envI * 1.1]]);
+  const baseI = new Map([[alu, envI], [aluLid, envI], [aluDark, envI * 0.8], [keyM, envI * 0.5], [padM, envI * 0.3], [glassM, envI * 1.1]]);
   /** luz real (0..1): los reflejos del estudio caen con la luz del cuadro (apagón = negro) */
   function setLight(v) { u.light.value = v; mats.forEach((m) => { m.envMapIntensity = baseI.get(m) * v; }); }
   const tmpC = new THREE.Vector3(), tmpN = new THREE.Vector3();
