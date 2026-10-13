@@ -177,11 +177,16 @@ export default function VideosStage() {
       };
       addEventListener('keydown', onKey);
       // teclado: el foco en la galería apagada lleva el scroll a la estadía (la cámara queda frente al tambor)
+      // F-01: el foco dispara primero el scroll-into-view nativo (alinea .fv-ring con el borde de la sección, menos el
+      // scroll-padding del nav: u ≈ 11,23). El salto propio va en el frame siguiente, después de ese scroll, y sólo si
+      // los controles todavía no están encendidos.
       const onFocusIn = () => {
-        if (!liveRef.current || !S) return;
-        if (fbfCtrlWanted(S.state.gal)) return;
-        measure();                                            // F-01: siempre fresco antes de saltar
-        window.scrollTo({ top: land + ((FBF_STAY[0] + FBF_STAY[1]) / 2) * innerHeight, behavior: 'instant' as ScrollBehavior });
+        if (!liveRef.current || !S || fbfCtrlWanted(S.state.gal)) return;
+        requestAnimationFrame(() => {
+          if (!liveRef.current || !S || fbfCtrlWanted(S.state.gal)) return;
+          measure();                                          // siempre fresco antes de saltar
+          window.scrollTo({ top: land + ((FBF_STAY[0] + FBF_STAY[1]) / 2) * innerHeight, behavior: 'instant' as ScrollBehavior });
+        });
       };
       section.addEventListener('focusin', onFocusIn);
 
