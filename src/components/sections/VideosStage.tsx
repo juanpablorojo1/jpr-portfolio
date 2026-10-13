@@ -154,9 +154,14 @@ export default function VideosStage() {
       });
       let chromeOn = false;
       let land = 1;
+      // D-02: borde superior e inferior de la sección (px de página) para saber, sin escena viva, si los controles
+      // (siempre encendidos en ese modo) están abajo en cuadro, donde vive el interruptor global de sonido
+      let secTop = 0, secBot = 0;
       const measure = () => {
         const hz = document.querySelector<HTMLElement>('.transition-zone[data-section="hero"]');
         land = Math.max(1, (hz?.parentElement?.offsetTop ?? 0) + (hz?.offsetHeight ?? 0));
+        const r = section.getBoundingClientRect();
+        secTop = r.top + scrollY; secBot = r.bottom + scrollY;
       };
       measure();
       addEventListener('resize', measure);
@@ -208,6 +213,11 @@ export default function VideosStage() {
         ring.toggleAttribute('data-on', !live || fbfCtrlWanted(u));
         const vit = live && fvVitWanted(u);
         if (vit !== html.classList.contains('fv-vit')) html.classList.toggle('fv-vit', vit);
+        // D-02: con los controles del Tambor en cuadro, el interruptor global de sonido (SoundToggle) se retira: los
+        // dos viven abajo a la derecha y el global le robaba el clic a «Sonido del video». Sin escena viva, los
+        // controles están encendidos siempre: cuentan mientras el escenario fijo cubre el borde inferior.
+        const ctrl = live ? fbfCtrlWanted(u) : scrollY > secTop - innerHeight * 0.15 && scrollY + innerHeight < secBot + innerHeight * 0.15;
+        if (ctrl !== html.classList.contains('fv-drum-ui')) html.classList.toggle('fv-drum-ui', ctrl);
       };
       const html = document.documentElement;
       // a la vista o cerca (recarga a mitad de página, salto ?qa&u=, scroll rápido): se prepara YA y no en la cola ociosa
@@ -243,7 +253,7 @@ export default function VideosStage() {
         rot.current.v = rot.current.target;
         stage.classList.remove('is-live');
         ring.setAttribute('data-on', '');
-        document.documentElement.classList.remove('fv-hot', 'fv-vit');
+        document.documentElement.classList.remove('fv-hot', 'fv-vit', 'fv-drum-ui');
         gsap.set(label, { clearProps: 'opacity,transform' });
       };
     });
