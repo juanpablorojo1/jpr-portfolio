@@ -152,8 +152,9 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     const nearF = smoothstep(near[0], near[1], distance(positionLocal, camL));
     const fadeD = mirror ? exp(depth.mul(-1.6)).div(depth.mul(2.2).add(1)) : float(1);   // la energía se reparte al ensancharse
     const I = win.mul(u.inten).mul(nearF).mul(appear).mul(gain).mul(fadeD);
-    m.colorNode = REDL.mul(glowP.add(coreP.mul(1.5))).add(vec3(1, 0.86, 0.84).mul(coreP.mul(coreP).mul(float(0.45).add(headF.mul(1.4)))))
-      .add(REDL.mul(headF.mul(glowP).mul(1.2))).mul(I);
+    // núcleo en rojo de marca, sin mezcla blanca (el mismo criterio que la señal del Tambor, 3a727b6): la cabeza
+    // brilla más, pero en rojo
+    m.colorNode = REDL.mul(glowP.add(coreP.mul(1.3)).add(headF.mul(coreP.add(glowP)).mul(0.8))).mul(I);
     m.opacityNode = float(1);
     const mesh = new THREE.Mesh(g, m);
     mesh.frustumCulled = false; mesh.renderOrder = 20;

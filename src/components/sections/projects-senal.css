@@ -3,9 +3,12 @@
    El bloque de cada proyecto (.pj-tag) va del lado opuesto a su laptop; la escena le escribe el transform (parallax
    opuesto a la órbita) en el frame del render (.pj-stage.is-anchored). Sin escena viva queda en su posición de
    respaldo, abajo a la izquierda. El caso completo (.pj-panel) es un diálogo del lado del texto. CSS propio con prefijo .pj.
-   Tokens (02-brand.md): fondo #050505 en la vitrina, rojo #E8272A sólo en la señal, el índice y el «%»; Bebas Neue
-   para el nombre, Barlow Condensed 400 para la línea técnica (el sitio carga 400 y 700), JetBrains Mono para cifras y metadatos; radios 0;
-   botón de doble marco. */
+   Tokens y su fuente:
+   - 02-brand.md: negro #080808 del sitio, rojo #E8272A (acento; en texto, sólo grande), off-white #E8E4DE, radios 0,
+     Bebas Neue (display), Barlow Condensed 400/700 (los pesos que carga layout.tsx), JetBrains Mono (métricas).
+   - brief 2026-10-12 «Vitrina» §3 (y la maqueta A): fondo #050505 de la vitrina, rojo sólo en la señal, el índice y el
+     «%», Bebas para el nombre, línea técnica en Barlow, cifras y metadatos en Mono, botón de doble marco (receta de
+     .fv-btn, Video). El brief pedía Barlow 500 para la línea técnica: el sitio no carga 500, se dibuja en 400. */
 
 .pj-gal { display: none; }
 
@@ -53,7 +56,10 @@
     position: absolute; left: 0; top: 0; width: clamp(440px, 34vw, 560px);
     will-change: transform;
   }
-  .pj-tag[data-side='r'] { text-align: left; }
+  /* texto a la derecha (KIBBO, LEEX): 18 px más angosto, con el borde derecho en la grilla. El borde izquierdo se corre
+     18 px hacia la derecha y el hueco con la notebook pasa de ~56 a ~74 px (≥ 64) sin mover la cámara aprobada.
+     «LICITACIONES», la palabra más larga, mide ~430 px a 1440: entra. */
+  .pj-tag[data-side='r'] { text-align: left; width: clamp(430px, calc(34vw - 18px), 542px); }
   /* respaldo sin escena viva: abajo a la izquierda, sin transform */
   .pj-stage:not(.is-anchored) .pj-tag { left: var(--pad); top: auto; bottom: 10vh; transform: none !important; }
 
