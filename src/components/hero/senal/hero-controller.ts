@@ -11,9 +11,11 @@ import { setBatch } from '../../../lib/idle';
 
 gsap.registerPlugin(SplitText);
 
-type Opts = { channels: string[] };
+/* phone: el modo (< 1024) lo decide Hero.tsx con un listener de matchMedia. Si la ventana cruza 1024, Hero.tsx desmonta
+   este controlador y lo vuelve a montar en el otro modo (code-reviewer C-01). */
+type Opts = { channels: string[]; phone: boolean };
 
-export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () => void {
+export function initHero(root: HTMLElement, S: Senal, { channels, phone }: Opts): () => void {
   const q = <T extends Element = HTMLElement>(sel: string) => root.querySelector(sel) as T;
   const cleanups: Array<() => void> = [];
   let disposed = false;
@@ -109,8 +111,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
      La entrada (cara que se enciende, nombre que sube, texto, CTAs) es CSS desde el primer pintado (senal.css, bloque
      de celular): no se parte el texto ni se espera a la hidratación (LCP). Este controlador pone lo vivo: la traza en
      canvas 2D sobre la línea del flujo (.m-horizon), el borde rojo que late tenue con cada pico R, el resplandor de
-     «ROJO» y la figura que se apaga mientras el About la tapa. Se decide una vez al montar. */
-  const phone = matchMedia('(max-width: 1023px)').matches;
+     «ROJO» y la figura que se apaga mientras el About la tapa. El modo llega de Hero.tsx (se rehace al cruzar 1024). */
   const heroEl = q('.hero');
   const horizonEl = q('.m-horizon');
   const stageEl = q('.static-stage');
@@ -359,5 +360,12 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
     root.classList.remove('is-lit', 'is-live', 'is-handed', 'is-offscreen', 'is-phone');
     root.classList.add('is-loading');
     heroInner.style.opacity = ''; heroInner.style.transform = '';
+    // C-01: al cruzar 1024 el otro modo arranca limpio, como el HTML del servidor: sin el tamaño en línea del canvas del
+    // teléfono, sin lo que dejó el reveal de GSAP ni el resplandor en línea, con el primer canal
+    cv.style.width = ''; cv.style.height = '';
+    rojoGlow.style.opacity = '';
+    gsap.set(root.querySelectorAll('[data-reveal], .channel'), { clearProps: 'all' });
+    channelEl.classList.remove('is-swapping');
+    channelEl.textContent = CHANNELS[0];
   };
 }

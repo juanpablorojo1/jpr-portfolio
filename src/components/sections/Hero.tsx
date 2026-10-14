@@ -7,7 +7,7 @@
      (afterLoadIdle) y se funde encima en 0,6 s.
    - Reduced motion y ?static van por el mismo camino estático, decidido antes del primer pintado. */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getImageProps } from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import { createSignal, publishSignal } from '../hero/senal/signal';
@@ -58,6 +58,17 @@ export default function Hero() {
   const rootRef = useRef<HTMLDivElement>(null);
   const channels = t.raw('marquee') as string[];
   const fullName = `${t('title')} ${t('surname')}`;
+  /* Modo del hero (< 1024 teléfono 2D / ≥ 1024 escritorio). No se renderiza: sólo decide el efecto de abajo. Si la
+     ventana cruza 1024 (iPad que gira, ventana que se maximiza), el efecto se rehace en el otro modo (stopHero +
+     initHero): antes el modo quedaba fijo al montar y el hero de escritorio quedaba sin texto (code-reviewer C-01). */
+  const [phone, setPhone] = useState(() => typeof window !== 'undefined' && matchMedia(PHONE_MQ).matches);
+  useEffect(() => {
+    const mq = matchMedia(PHONE_MQ);
+    const sync = () => setPhone(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -66,7 +77,6 @@ export default function Hero() {
       root.classList.add('is-static');
     }
     const S = createSignal(location.search);
-    const phone = matchMedia(PHONE_MQ).matches;
     // Celular: la entrada del hero corre por CSS desde el primer pintado (no espera la hidratación). El reloj de la señal
     // arranca en ese mismo instante (FCP), así la traza que dibuja el JS cae a tiempo con el nombre y la cara.
     if (phone) {
@@ -74,7 +84,7 @@ export default function Hero() {
       if (fcp && fcp.startTime < performance.now()) S.t0 = fcp.startTime;
     }
     (window as unknown as { SENAL: unknown }).SENAL = S;
-    const stopHero = initHero(root, S, { channels });
+    const stopHero = initHero(root, S, { channels, phone });
     publishSignal(S);   // después de initHero: en el camino estático S.dead ya es true y el logo queda entero
 
     let cancelled = false;
@@ -122,7 +132,7 @@ export default function Hero() {
     };
     // channels sale de messages y no cambia durante la vida de la página
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [phone]);
 
   const handleViewWork = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
