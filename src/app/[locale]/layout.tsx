@@ -1,29 +1,32 @@
 import type { Metadata } from 'next';
-import { Bebas_Neue, Barlow_Condensed, JetBrains_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '../../../i18n';
+import { SITE_URL } from '../../lib/site';
+import { SOCIAL_LINKS } from '../../lib/content';
 import '../globals.css';
 
-const bebasNeue = Bebas_Neue({
-  weight: '400',
-  subsets: ['latin'],
+// Fuentes locales (public/fonts, las mismas woff2 que la maqueta «Señal»), mismas variables CSS de siempre.
+const bebasNeue = localFont({
+  src: [{ path: '../../../public/fonts/BebasNeue-400.woff2', weight: '400', style: 'normal' }],
   variable: '--font-bebas-neue',
   display: 'swap',
 });
 
-const barlowCondensed = Barlow_Condensed({
-  weight: ['400', '700'],
-  subsets: ['latin'],
+const barlowCondensed = localFont({
+  src: [
+    { path: '../../../public/fonts/BarlowCondensed-400.woff2', weight: '400', style: 'normal' },
+    { path: '../../../public/fonts/BarlowCondensed-700.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-barlow-condensed',
   display: 'swap',
 });
 
-const jetBrainsMono = JetBrains_Mono({
-  weight: ['400'],
-  subsets: ['latin'],
+const jetBrainsMono = localFont({
+  src: [{ path: '../../../public/fonts/JetBrainsMono-400.woff2', weight: '400', style: 'normal' }],
   variable: '--font-jetbrains-mono',
   display: 'swap',
 });
@@ -38,12 +41,14 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
   const t = await getTranslations({ locale, namespace: 'meta' });
   const title = t('title');
   const description = t('description');
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const siteUrl = SITE_URL;
 
   return {
     title: title,
     description: description,
     metadataBase: new URL(siteUrl),
+    // Iconos: convenciones de archivo en src/app (favicon.ico, icon.svg, apple-icon.png). Logo A «Asta».
+    manifest: '/manifest.json',
     openGraph: {
       title: title,
       description: description,
@@ -53,7 +58,7 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
       locale: isEn ? 'en_US' : 'es_AR',
       images: [
         {
-          url: `/og/og-${locale}.png`,
+          url: '/og/og-image.png',
           width: 1200,
           height: 630,
           alt: title,
@@ -62,7 +67,7 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
     },
     twitter: {
       card: 'summary_large_image',
-      images: [`/og/og-${locale}.png`],
+      images: ['/og/og-image.png'],
       title: title,
       description: description,
     },
@@ -75,6 +80,8 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
       languages: {
         'en': `${siteUrl}/en`,
         'es': `${siteUrl}/es`,
+        // La raíz / redirige (307) a /en: es la versión por defecto.
+        'x-default': `${siteUrl}/en`,
       },
     },
   };
@@ -96,12 +103,30 @@ export default async function LocaleLayout({ children, params: { locale } }: Pro
   // Provide messages to client components
   const messages = await getMessages();
 
+  // Datos estructurados (D-07): sólo lo que ya dice el sitio. jobTitle = la línea de rol del título de la página
+  // (meta.title, después de «— »); description = el rol del hero; sameAs = LinkedIn y GitHub del Contacto.
+  const tMeta = await getTranslations({ locale, namespace: 'meta' });
+  const tHero = await getTranslations({ locale, namespace: 'hero' });
+  const personLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Juan Pablo Rojo',
+    jobTitle: tMeta('title').split(' — ').slice(1).join(' — ') || undefined,
+    description: tHero('role'),
+    url: `${SITE_URL}/${locale}`,
+    sameAs: [SOCIAL_LINKS.linkedin, SOCIAL_LINKS.github],
+  };
+
   return (
     <html
       lang={locale}
       className={`${bebasNeue.variable} ${barlowCondensed.variable} ${jetBrainsMono.variable}`}
     >
       <body className="bg-bg text-white font-ui">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd).replace(/</g, '\\u003c') }}
+        />
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>

@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import StackBadge from '../ui/StackBadge';
 import type { CaseShot } from '../ui/CaseLightbox';
+import ProjectDemo from '../ui/ProjectDemo';
+import type { ProjectDemo as DemoSrc } from '../../lib/content';
 
 // Case-study format fixed by Juan: problem → my role → key decisions → result.
 // Desktop: one rail panel of 200vw = two spreads (A: problem + role + screens,
@@ -37,6 +39,8 @@ export interface CaseStudyData {
   shotsNote?: string;
   seo?: { label: string; items: string[]; shots: CaseShot[] };
   cta?: { href: string; label: string };
+  /** video demo (Track C): PROJECT_DEMOS + alt de messages projects.<id>.demo_alt */
+  demo?: { src: DemoSrc; alt: string };
 }
 
 interface PanelProps {
@@ -394,6 +398,11 @@ export function CaseStudyMobile({ data, onOpen, isLast }: { data: CaseStudyData;
       </div>
 
       <div className="mb-10">
+        {data.demo && (
+          <div className="max-w-4xl lg:max-w-3xl mb-4">
+            <ProjectDemo demo={data.demo.src} title={data.title} alt={data.demo.alt} />
+          </div>
+        )}
         <StripGallery data={data} onOpen={onOpen} viewLabel={t('view_shot')} />
         {data.shotsNote && (
           <p className="font-mono text-[10px] text-muted uppercase tracking-widest mt-3">* {data.shotsNote}</p>

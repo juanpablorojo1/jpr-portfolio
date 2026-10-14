@@ -23,37 +23,14 @@ export const TRAUMAVISION_STACK = [
   'Chart.js', 'GSAP', 'pytest',
 ] as const;
 
+// label + alt in messages projects.traumavision.shot_labels[i] / shots_alt[i], same order
+// Track C (2026-10-10): public/projects/<proyecto>/. Donde había versión difuminada en _work/ se usa esa.
 export const TRAUMAVISION_SCREENSHOTS = [
-  {
-    src: '/images/traumavision-login.jpg',
-    alt: 'TraumaVision — Login screen',
-    label: 'LOGIN',
-  },
-  {
-    src: '/images/traumavision-home.jpg',
-    alt: 'TraumaVision — Upload UI with anatomical region selector',
-    label: 'HOME',
-  },
-  {
-    src: '/images/traumavision-analisis.jpg',
-    alt: 'TraumaVision — Fracture detection with bounding box and a 0.84 detection score',
-    label: 'ANÁLISIS',
-  },
-  {
-    src: '/images/traumavision-historial.jpg',
-    alt: 'TraumaVision — Analysis history with 48 records',
-    label: 'HISTORIAL',
-  },
-  {
-    src: '/images/traumavision-dashboard.jpg',
-    alt: 'TraumaVision — Statistical dashboard',
-    label: 'DASHBOARD',
-  },
-  {
-    src: '/images/traumavision-metrics.jpg',
-    alt: 'TraumaVision — Confusion matrix and performance metrics (YOLOv8m, test set of 3,038 X-rays)',
-    label: 'MÉTRICAS',
-  },
+  { src: '/projects/traumavision/tv-01-resultado-revisar.jpg' },
+  { src: '/projects/traumavision/tv-02-visor-contraste.jpg' },
+  { src: '/projects/traumavision/tv-03-sin-hallazgos.jpg' },
+  { src: '/projects/traumavision/tv-04-historial.jpg' },
+  { src: '/projects/traumavision/tv-05-metricas-acierto.jpg' },
 ] as const;
 
 export const ELEVEN_STACK = [
@@ -64,13 +41,16 @@ export const ELEVEN_STACK = [
   'Canva MCP', 'Vercel MCP', 'next-intl', 'Resend', 'VS Code', 'GitHub Copilot',
 ] as const;
 
+export const ELEVEN_URL = 'https://eleven-pagina.vercel.app';
+
+// label + alt in messages projects.eleven.shot_labels[i] / shots_alt[i], same order
 export const ELEVEN_SCREENSHOTS = [
-  { src: '/images/eleven-01-hero.jpg', alt: 'Eleven — Hero con logo y mascota robot', label: 'HERO' },
-  { src: '/images/eleven-02-servicios.jpg', alt: 'Eleven — Sección por qué nosotros', label: '¿POR QUÉ?' },
-  { src: '/images/eleven-03-servicios2.jpg', alt: 'Eleven — Lo que hacemos, transición', label: 'SERVICIOS' },
-  { src: '/images/eleven-04-servicios3.jpg', alt: 'Eleven — Páginas web y productos digitales', label: 'WEB' },
-  { src: '/images/eleven-05-portfolio.jpg', alt: 'Eleven — Contenido y videos', label: 'CONTENIDO' },
-  { src: '/images/eleven-06-contacto.jpg', alt: 'Eleven — Sección contacto y footer', label: 'CONTACTO' },
+  { src: '/projects/eleven/eleven-01-hero.jpg' },
+  { src: '/projects/eleven/eleven-02-manifiesto.jpg' },
+  { src: '/projects/eleven/eleven-03-servicios.jpg' },
+  { src: '/projects/eleven/eleven-04-muro.jpg' },
+  { src: '/projects/eleven/eleven-05-portafolio.jpg' },
+  { src: '/projects/eleven/eleven-06-terraza.jpg' },
 ] as const;
 
 // ── Case studies (KIBBO, LEEX) ──
@@ -84,13 +64,15 @@ export const KIBBO_STACK = [
   'JSON-LD', 'GA4', 'AWS Amplify', 'Claude Code',
 ] as const;
 
+// 01-06: Track C (2880 px reducidos a 1920×960; 03 y 04 en su versión difuminada: QR, serie y tenant).
+// 07-08 (recurso y móvil) no tienen captura nueva: siguen las del 2026-09-30.
 export const KIBBO_SCREENSHOTS = [
-  '/images/kibbo-en-01-hero.jpg',
-  '/images/kibbo-en-02-problems.jpg',
-  '/images/kibbo-en-03-on-the-floor.jpg',
-  '/images/kibbo-en-04-dashboard.jpg',
-  '/images/kibbo-en-05-community.jpg',
-  '/images/kibbo-en-06-trust.jpg',
+  '/projects/kibbo/kibbo-01-hero.jpg',
+  '/projects/kibbo/kibbo-02-problems.jpg',
+  '/projects/kibbo/kibbo-03-on-the-phone-blur.jpg',
+  '/projects/kibbo/kibbo-04-dashboard-blur.jpg',
+  '/projects/kibbo/kibbo-05-community.jpg',
+  '/projects/kibbo/kibbo-06-trust.jpg',
   '/images/kibbo-en-07-resource.jpg',
   '/images/kibbo-en-08-mobile.jpg',
 ] as const;
@@ -109,13 +91,40 @@ export const LEEX_STACK = [
 
 // Opens with the verdict (the product's core); the detection shot, which shows the
 // "incomplete sweep" warning, sits 3rd with a caption that frames it as a decision.
+// Track C: datos difuminados en la captura; veredicto y tablero, en su versión _work (blur).
 export const LEEX_SCREENSHOTS = [
-  '/images/leex-02-veredicto.jpg',
-  '/images/leex-03-mi-trabajo.jpg',
-  '/images/leex-01-deteccion.jpg',
-  '/images/leex-04-tablero.jpg',
-  '/images/leex-05-fuentes.jpg',
+  '/projects/leex/leex-04-veredicto-blur.jpg',
+  '/projects/leex/leex-02-deteccion-no-apto.jpg',
+  '/projects/leex/leex-01-deteccion-lote.jpg',
+  '/projects/leex/leex-05-tablero-blur.jpg',
+  '/projects/leex/leex-03-fuentes.jpg',
 ] as const;
+
+// ── Videos demostrativos de Projects (Track C, 2026-10-11) ──
+// No son Frame by Frame (VIDEOS, más abajo). Loops mudos 1280×720: MP4 H.264 primero y WebM VP9 de respaldo.
+// Los usa el caso (ProjectDemo.tsx). La vitrina de Projects muestra el home de cada producto, no el demo.
+// alt en messages projects.<id>.demo_alt. LEEX: el poster dice «IN DEVELOPMENT — LAUNCHING SOON».
+export type ProjectDemoId = 'traumavision' | 'kibbo' | 'leex' | 'eleven';
+export interface ProjectDemo {
+  mp4: string;
+  webm: string;
+  poster: string;
+  width: number;
+  height: number;
+  duration: string; // m:ss
+}
+const demo = (id: ProjectDemoId, duration: string): ProjectDemo => ({
+  mp4: `/projects/${id}/${id}-demo.mp4`,
+  webm: `/projects/${id}/${id}-demo.webm`,
+  poster: `/projects/${id}/${id}-demo-poster.jpg`,
+  width: 1280, height: 720, duration,
+});
+export const PROJECT_DEMOS: Readonly<Record<ProjectDemoId, ProjectDemo>> = {
+  traumavision: demo('traumavision', '0:36'),
+  kibbo: demo('kibbo', '0:33'),
+  leex: demo('leex', '0:30'),
+  eleven: demo('eleven', '0:30'),
+};
 
 // ── Motion & Video ──
 // Add a piece = add an entry here + messages videos.items.<id> {eyebrow, title, caption}.

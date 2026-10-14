@@ -1,30 +1,31 @@
 'use client';
 
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
+/* Selector EN / ES del menú «Señal». Links planos a /en y /es (nunca router.replace ni usePathname).
+   Estilos en components/layout/navbar.css (.jnav-lang). */
 export default function LanguageSelector() {
   const locale = useLocale();
+  const t = useTranslations('nav');
 
   return (
-    <div className="flex items-center gap-1 font-mono text-xs tracking-widest">
+    <div className="jnav-lang">
       <a
         href="/en"
-        aria-label="Switch to English"
-        className={`px-1 py-0.5 transition-colors duration-150 ${
-          locale === 'en' ? 'text-accent' : 'text-muted hover:text-off-white'
-        }`}
+        hrefLang="en"
+        aria-label={t('lang_en_aria')}
+        aria-current={locale === 'en' ? 'true' : undefined}
       >
-        EN
+        <span lang="en">EN</span>
       </a>
-      <span className="text-border">|</span>
+      <span className="jnav-lang-sep" aria-hidden="true">/</span>
       <a
         href="/es"
-        aria-label="Cambiar a Español"
-        className={`px-1 py-0.5 transition-colors duration-150 ${
-          locale === 'es' ? 'text-accent' : 'text-muted hover:text-off-white'
-        }`}
+        hrefLang="es"
+        aria-label={t('lang_es_aria')}
+        aria-current={locale === 'es' ? 'true' : undefined}
       >
-        ES
+        <span lang="es">ES</span>
       </a>
     </div>
   );

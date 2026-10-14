@@ -6,32 +6,38 @@
     "experience": "Experience",
     "contact": "Contact",
     "downloadCV": "Download CV",
-    "menu_aria": "Menu"
+    "menu_aria": "Menu",
+    "close_aria": "Close menu",
+    "lang_en_aria": "EN — Switch to English",
+    "lang_es_aria": "ES — Switch to Spanish",
+    "skip_to_content": "Skip to content"
   },
   "hero": {
     "title": "JUAN PABLO",
     "surname": "ROJO",
-    "role": "Biomedical engineering. I build AI, automation and web products.",
+    "role": "Biomedical engineering. I build applied AI, automations and web products.",
     "tagline": "From Hospital Equipment to Clinical AI, Web Products, and Digital Automation.",
     "cta1": "View Projects",
     "cta2": "Download CV",
-    "marquee": ["BIOMEDICAL ENGINEERING", "AI ENGINEER", "AUTOMATION", "WEB PRODUCTS", "FOUNDER", "CÓRDOBA AR"]
+    "marquee": ["BIOMEDICAL ENGINEERING", "AI ENGINEER", "AUTOMATION", "WEB PRODUCTS", "FOUNDER", "CÓRDOBA AR"],
+    "scroll_cue": "scroll"
   },
   "about": {
     "label": "About",
     "headline": "From Biology to Code, From Lab to Product",
     "headline_1": "From Biology to Code,",
     "headline_2": "From Lab to Product",
-    "p1": "Biomedical Engineering at UNC Córdoba: thesis submitted, defense pending. TraumaVision, my capstone project, is an academic prototype that detects pediatric wrist fractures on X-rays. I built it end to end: model, API and web app.",
-    "p2": "Since August 2026: Automation Specialist at LEEX and AI Engineer at KIBBO. I also founded Eleven, an AI-first agency that runs on a 38-agent pipeline I built on the Claude API.",
-    "p3": "First place at Rocking the Industry (RTS Group, 2025) with team Algarroba LID, out of 150 multidisciplinary teams.",
-    "p4": "Based in Córdoba, Argentina. Professional English from full-time work in California.",
-    "sub_tagline": "Healthcare roots. Production software.",
+    "p1": "Biomedical Engineering at UNC Córdoba: thesis submitted, defense pending. The thesis is TraumaVision, an academic prototype that detects fractures on pediatric wrist X-rays. I built the model, the API and the web app.",
+    "p2": "Since August 2026 I work full-time in Córdoba as Automation Specialist at LEEX, a medical equipment company, and as AI Engineer at KIBBO, a maintenance platform for hospital equipment. In 2026 I also founded Eleven, a web and AI agency that runs on an agent pipeline I built on the Claude API.",
+    "p3": "First place at Rocking the Industry (RTS Group, 2025), an industrial hackathon with 150 multidisciplinary teams, with team Algarroba LID.",
+    "p4": "Based in Córdoba, Argentina. English: B2 (LTC Eastbourne, UK) and full-time work in California in an English-only workplace.",
+    "sub_tagline": "Biomedical · AI · Web · Automation",
     "meta_location": "Location",
     "meta_location_value": "Córdoba, AR",
-    "meta_status": "Status",
-    "meta_status_value": "Available",
-    "meta_age": "Age"
+    "meta_status": "Thesis",
+    "meta_status_value": "Submitted",
+    "meta_age": "Age",
+    "photo_alt": "Portrait of Juan Pablo Rojo"
   },
   "projects": {
     "label": "Projects",
@@ -39,45 +45,91 @@
       "label": "Thesis · UNC Córdoba · 2026",
       "title": "TraumaVision AI",
       "subtitle": "Clinical Decision Support for Pediatric Wrist Fractures on X-Rays",
-      "description": "Academic prototype, built end to end: a YOLOv8m detector and a FastAPI web app with PDF reports. Held-out test of 3,038 images: 96.7% sensitivity, 93.1% specificity. External test without retraining: 97.4% / 88.3%. Now scaling through Emprende U 2026; next: more anatomical regions.",
+      "description": "Academic prototype: a YOLOv8m detector inside a FastAPI web app that marks the likely fracture site and issues a PDF report. Thesis internal test set (3,038 images): 96.7% sensitivity, 93.1% specificity. External test without retraining (PediURF): 97.4% / 88.3%. Now scaling through Emprende U 2026.",
       "metric_auc": "AUC-ROC",
       "metric_map50": "mAP@50",
       "metric_recall": "Sensitivity",
       "metric_specificity": "Specificity",
       "pipeline_label": "Pipeline",
       "stack_label": "Stack",
-      "shot_labels": ["LOGIN", "HOME", "ANALYSIS", "HISTORY", "DASHBOARD", "METRICS"]
+      "shot_labels": ["REVIEW", "VIEWER", "NO FINDINGS", "HISTORY", "ACCURACY"],
+      "eyebrow": "Case Study · Thesis · UNC Córdoba · 2026",
+      "metrics_note": "Thesis internal test set · 3,038 images",
+      "led_line": "Web app for AI-based pediatric wrist fracture detection",
+      "pipeline": "DICOM → CLAHE → YOLOv8m → Detection → PDF report",
+      "problem": "The thesis set out to build a second reader for pediatric wrist X-rays: a system that marks the likely fracture site on the image while the physician keeps the decision. Scope: pediatric wrist only (patients up to 19), frontal or lateral view, conventional radiography.",
+      "role": "Author of the capstone project (Proyecto Integrador, UNC), with two UNC advisors. I built the data pipeline, trained and evaluated the model, developed the web app and wrote the regulatory analysis.",
+      "decisions": [
+        { "title": "Split by patient.", "body": "GRAZPEDWRI-DX (20,327 images from 6,091 patients) was split 70/15/15 by patient, so no patient appears in both training and test." },
+        { "title": "Fix the threshold before the test.", "body": "The decision threshold (0.22) was set on the validation set, as the highest value that kept image-level sensitivity at 96% or more; test data never tuned it." },
+        { "title": "Test on data from another country.", "body": "The model ran without retraining on PediURF, a pediatric dataset from Shenzhen, China (1,000 cases, 1,790 images)." }
+      ],
+      "result": "Internal test set (3,038 images, 914 unseen patients): 96.7% sensitivity, 93.1% specificity and AUC-ROC 0.987 per image; box mAP@50 0.944. External test (PediURF): 97.4% sensitivity and 88.3% specificity per image. Evaluated on retrospective data; not registered with ANMAT or authorized for clinical use. Code public under AGPL-3.0. Now scaling through Emprende U 2026.",
+      "demo_alt": "TraumaVision demo video, silent, 36 s: sign-in, study upload (single image or a DICOM ZIP), a REVIEW result with the zone marked by YOLOv8m, the inverted viewer with the score per zone, the physician review, the PDF report, a negative case, the history, model performance, and scope and limitations.",
+      "shots_alt": [
+        "TraumaVision: REVIEW result, a zone marked over the distal radius with a 0.83 detector score, above the 0.22 alert cut-off, and the notice to confirm with a medical reading",
+        "TraumaVision: viewer with inverted contrast and enhancement, the score bar per detection and the keyboard shortcuts",
+        "TraumaVision: NO FINDINGS result, with the notice that it does not rule out a fracture",
+        "TraumaVision: analysis history, filterable by result and model (164 analyses: 102 with findings, 62 without)",
+        "TraumaVision: accuracy measured against physician-diagnosed cases: detects 0.967, rules out 0.931; 3 in 100 fractures go unmarked"
+      ]
     },
     "eleven": {
+      "led_line": "Web and AI agency running on a Claude API agent pipeline",
       "title": "Eleven Estudio Digital",
-      "subtitle": "AI-First Digital Agency · Argentina",
-      "description": "I founded and run an AI-first digital agency that builds web products and AI agents for SMBs, on Next.js, Supabase and the Claude API.",
-      "description_expanded": "I founded and run an AI-first digital agency. I built its 38-agent pipeline on the Claude API, using prompt caching, extended thinking, tool use and MCP integrations (Playwright, Google Drive, Gmail, Calendar, Canva, Vercel). Argentina, 2026.",
+      "subtitle": "Web and AI Agency · Argentina",
+      "description": "Agency I founded in 2026. It builds web products and AI agents for SMBs on Next.js, Supabase and the Claude API.",
+      "description_expanded": "I founded Eleven in 2026 and built its production pipeline: specialized agents on the Claude API for discovery, strategy, brand, development and QA, with prompt caching, extended thinking, tool use and MCP integrations (Playwright, Google Drive, Gmail, Calendar, Canva, Vercel). Agents prepare the work; I review and sign off at each checkpoint, as on the KIBBO build.",
       "role": "Founder",
       "role_label": "Role",
       "stat_founded": "2026",
       "stat_sites": "SMBs",
-      "stat_approach": "AI-FIRST",
+      "stat_approach": "AI AGENTS",
       "stat_founded_label": "Founded",
       "stat_sites_label": "Clients",
-      "stat_approach_label": "Approach",
+      "stat_approach_label": "Pipeline",
       "services_label": "Services",
       "services_list": "Web Products · AI Agents · Digital Content",
-      "shot_labels": ["HERO", "WHY US", "SERVICES", "WEB", "CONTENT", "CONTACT"],
-      "cta": "View Site"
+      "shot_labels": ["FLOOR 01", "MANIFESTO", "SERVICES", "MOTION WALL", "PORTFOLIO", "TERRACE"],
+      "cta": "View Site",
+      "eyebrow": "Case Study · Own agency · Argentina · 2026",
+      "problem": "An SMB project runs through discovery, strategy, brand, development and QA, and each stage's output has to be checked before the next one uses it.",
+      "role_text": "Founder. I designed the agency's agent pipeline and run it.",
+      "decisions": [
+        { "title": "One agent per stage.", "body": "The pipeline splits the work across specialized agents on the Claude API, one per stage, so each output can be checked on its own before it moves on." },
+        { "title": "A person signs off every checkpoint.", "body": "Agents prepare each deliverable; I review and approve it at every checkpoint, as on the KIBBO build." }
+      ],
+      "result": "In operation since 2026. Delivered work includes kibbo.io in Spanish and English (see the KIBBO case).",
+      "demo_alt": "Eleven demo video, silent, 30 s: the elevator site from the loader and the doors opening, floor 01 and the manifesto, the services floor, the transit between floors, the motion wall, the portfolio stack and the contact terrace.",
+      "shots_alt": [
+        "Eleven: floor 01 of the elevator site, the «eleven» wordmark and «Tu negocio, elevado.», with the floor HUD and rail",
+        "Eleven: the full manifesto on floor 01; the words light up with the scroll",
+        "Eleven: floor 03, service 01 «Sistemas», with the type masked over photos",
+        "Eleven: floor 05, the motion wall of isotypes with the verb «Acelerar.»",
+        "Eleven: floor 08, portfolio card P-01 «Sabrina Pilates»",
+        "Eleven: floor 11, the night terrace with «¿Elevamos tu negocio?» and the contact links (email blurred)"
+      ]
     },
     "hackathon": {
       "title": "Rocking the Industry",
       "subtitle": "Industrial Hackathon · RTS Group",
-      "description": "Presented by RTS Group as the world's first industrial hackathon: 150 multidisciplinary teams of five. Team Algarroba LID took first place.",
-      "description_expanded": "Presented by RTS Group as the world's first industrial hackathon: 150 multidisciplinary teams of five working on real industrial engineering challenges. Our team, Algarroba LID, took first place with a proposal for human-in-the-loop agents that automate sensor control in a nuclear power plant.",
+      "description": "Industrial hackathon organized by RTS Group: 150 multidisciplinary teams of five. Team Algarroba LID took first place.",
+      "description_expanded": "Industrial hackathon organized by RTS Group: 150 multidisciplinary teams of five working on industrial engineering challenges. Our team, Algarroba LID, took first place with a proposal for human-in-the-loop agents that automate sensor control in a nuclear power plant.",
       "badge": "1st Place · 2025",
       "event_stat_place": "1ST PLACE",
       "event_stat_team": "ALGARROBA LID",
       "event_stat_organizer": "RTS GROUP · 2025",
       "event_stat_place_label": "Result",
       "event_stat_team_label": "Team",
-      "event_stat_organizer_label": "Event"
+      "event_stat_organizer_label": "Event",
+      "photos_alt": [
+        "Rocking the Industry 2025: the event",
+        "Rocking the Industry 2025: team Algarroba LID",
+        "Rocking the Industry 2025: presentation",
+        "Rocking the Industry 2025: stage",
+        "Rocking the Industry 2025: award",
+        "Rocking the Industry 2025: the team after the result"
+      ]
     },
     "case": {
       "problem": "Problem",
@@ -94,19 +146,31 @@
         "prev": "Previous screenshot",
         "next": "Next screenshot",
         "full_size": "Open full size ↗"
-      }
+      },
+      "open": "Open case",
+      "open_aria": "Open case: {title}",
+      "view_project": "View project",
+      "folio": "No.",
+      "close_case": "Close case study",
+      "plate_aria": "Plate {n} of {total}: {title}",
+      "demo": "Demo",
+      "demo_pause": "Pause demo",
+      "demo_play": "Play demo",
+      "demo_pause_aria": "Pause demo: {title}",
+      "demo_play_aria": "Play demo: {title}"
     },
     "kibbo": {
+      "led_line": "Bilingual website and SEO/GEO for a hospital-equipment maintenance platform",
       "eyebrow": "Case Study · B2B SaaS · Built via Eleven · 2026",
       "title": "KIBBO",
-      "subtitle": "A working hospital-equipment platform, and the website it never had.",
-      "problem": "KIBBO is a management platform (CMMS) for hospital medical equipment. The product worked, but kibbo.io still ran an old WordPress site that didn't explain it and throttled search crawlers. A biomedical engineer had nowhere to understand KIBBO, see it running, or check who already uses it.",
+      "subtitle": "Bilingual website and SEO/GEO for a hospital-equipment CMMS.",
+      "problem": "KIBBO is a CMMS (computerized maintenance management system) for hospital medical equipment. The product worked, but kibbo.io ran an outdated WordPress site that did not explain it and throttled search crawlers. A biomedical engineer evaluating KIBBO could not see the product running or check who already uses it.",
       "role": "Through Eleven, I led design, front-end development, SEO/GEO and the English edition. The build ran on our AI-agent pipeline, with my review and sign-off at every checkpoint.",
       "decisions": [
-        { "title": "Write to the technician, not the buyer.", "body": "Third person, no hype, every claim shown on a real product screen, because the reader is the one who will run it every day." },
-        { "title": "Keep KIBBO and LEEX apart.", "body": "The hardware maker's figures are credited to LEEX, so KIBBO stands as its own product and never claims what it can't back." },
-        { "title": "Give mobile its own system.", "body": "\"Expediente\" reads each page like a case file instead of squeezing the desktop scroll into a phone." },
-        { "title": "Make English a real edition.", "body": "Own slugs, reciprocal hreflang and an untouched Spanish canonical; user quotes stay verbatim in Spanish with a labelled translation, so no one is misquoted." }
+        { "title": "Write to the technician, not the buyer.", "body": "Third person, no promotional claims, and every statement backed by a real product screen, because the reader is the person who will operate it every day." },
+        { "title": "Keep KIBBO and LEEX apart.", "body": "Figures from the hardware manufacturer are credited to LEEX, so the KIBBO site claims only what KIBBO can back." },
+        { "title": "Give mobile its own system.", "body": "On phones, each page is laid out as a record instead of the desktop scroll compressed onto a small screen." },
+        { "title": "Make English a full edition.", "body": "Own slugs, reciprocal hreflang and the Spanish canonical kept intact; user quotes stay verbatim in Spanish with a labeled translation, so no one is misquoted." }
       ],
       "result": "Live on kibbo.io in Spanish and English, replacing the legacy WordPress site, with GA4 measuring from launch.",
       "stats": [
@@ -116,54 +180,57 @@
       ],
       "seo_label": "SEO / GEO",
       "seo_items": [
-        "JSON-LD: Organization, SoftwareApplication, FAQPage; ratings only where shown.",
+        "JSON-LD: Organization, SoftwareApplication, FAQPage; ratings only where visible.",
         "Reciprocal ES/EN hreflang, x-default and a canonical per language.",
         "Sitemap built from one route registry, dated by real edits.",
         "Citable guides: CMMS explainer, tender checklist, country records (ES)."
       ],
       "cta": "View site →",
+      "demo_alt": "KIBBO demo video, silent, 33 s: the kibbo.io home, the device profile opened on the phone from its QR, fleet inventory, the equipment history file, preventive maintenance with the overdue flag, work orders, service providers, the fleet dashboard and the community Q&A.",
       "shots": [
-        { "label": "Home", "caption": "Home — full control of the hospital equipment fleet." },
+        { "label": "Home", "caption": "Home: inventory and maintenance of the equipment fleet." },
         { "label": "Problems", "caption": "Five fleet problems, each answered on a real product screen." },
-        { "label": "How it works", "caption": "How it works — inventory, history file, preventive, work orders." },
-        { "label": "Dashboard", "caption": "/en/how-it-works — \"The institution's real state, on one dashboard.\"" },
-        { "label": "Community", "caption": "/en/cases-and-network — \"No one manages a fleet alone.\"" },
-        { "label": "Trust", "caption": "/en/trust-and-security — \"How the information travels.\"" },
-        { "label": "Resource", "caption": "A resource guide written to be cited by search engines and AI." },
-        { "label": "Mobile", "caption": "Mobile: the «Expediente» system, not a shrunken desktop." }
+        { "label": "On the phone", "caption": "/en/how-it-works, step 1: scan the QR on the device and its record opens on the phone (serial and QR blurred)." },
+        { "label": "Dashboard", "caption": "/en/how-it-works: \"The institution's real state, on one dashboard.\"" },
+        { "label": "Community", "caption": "/en/cases-and-network: \"No one manages a fleet alone.\"" },
+        { "label": "Trust", "caption": "/en/trust-and-security: \"How the information travels.\"" },
+        { "label": "Resource", "caption": "A resource guide written to be cited by search engines and AI assistants." },
+        { "label": "Mobile", "caption": "Mobile: a record-style layout, separate from desktop." }
       ],
       "seo_shots": [
-        { "label": "JSON-LD", "caption": "JSON-LD served on kibbo.io/en — Organization graph and FAQPage." },
-        { "label": "Hreflang", "caption": "The /en head, robots.txt and sitemap pairs — reciprocal ES/EN hreflang." }
+        { "label": "JSON-LD", "caption": "JSON-LD served on kibbo.io/en: Organization graph and FAQPage." },
+        { "label": "Hreflang", "caption": "The /en head, robots.txt and sitemap pairs: reciprocal ES/EN hreflang." }
       ]
     },
     "leex": {
+      "led_line": "Web app for public tender detection and AI-drafted bid verdicts",
       "badge": "In development — launching soon",
       "eyebrow": "Case Study · Internal B2B System · LEEX · 2026",
       "title": "LEEX Tender System",
-      "subtitle": "Finds public tenders across 33 sources and helps sales decide which to bid on.",
-      "problem": "LEEX, an Argentine medical equipment company, sells mainly through public tenders: demand isn't generated, it's detected across dozens of government portals, each with its own format and deadlines. Seeing a tender late means never having it; seeing it without knowing whether you qualify means losing it. The previous tool was a single-user script feeding a spreadsheet.",
-      "role": "I led it end to end: scoped it with sales and management, designed the architecture, and built the engine and web app with a pipeline of AI coding agents under my direction.",
+      "subtitle": "Detects public tenders across 33 sources and drafts bid verdicts for sales.",
+      "problem": "LEEX, an Argentine medical equipment company, sells mainly through public tenders. Tenders are published across dozens of government portals, each with its own format and deadlines. A tender detected late cannot be bid on, and bidding requires checking each requirement against the product sheet. The previous tool was a single-user script feeding a spreadsheet.",
+      "role": "I led it end to end: scoped it with sales and management, designed the architecture, and built the engine and the web app with a pipeline of AI coding agents under my direction.",
       "decisions": [
-        { "title": "Code before AI.", "body": "A deterministic dictionary-plus-vector match filters first and an LLM judges only what survives, because that keeps it cheap, testable and explainable." },
-        { "title": "A person signs every verdict.", "body": "The model drafts a requirement-by-requirement case citing the tender and the product sheet, and sales decides, because a missed tender costs far more than a review." },
-        { "title": "Three sweep states, not two.", "body": "\"Nothing there\", \"couldn't see\" and \"saw far less than usual\", because the expensive failure is the silent one." },
+        { "title": "Code before AI.", "body": "A deterministic dictionary-plus-vector match filters first, and an LLM evaluates only what passes, which keeps the system cheap, testable and explainable." },
+        { "title": "A person signs every verdict.", "body": "The model drafts a requirement-by-requirement case citing the tender and the product sheet, and sales decides, because a missed tender costs more than a review." },
+        { "title": "Three sweep states, not two.", "body": "\"Nothing there\", \"couldn't see\" and \"saw far less than usual\", because a portal that failed silently would otherwise look the same as one with no tenders." },
         { "title": "Public first.", "body": "The engine reads each portal's public view and logs in only as a documented last resort, which reduced credential exposure and let the build start without waiting on access." }
       ],
-      "result": "Running internally on real data: the first full pass went from sweep to triage to human-signed verdicts. Next step: onboarding the sales team.",
+      "result": "In development, launch pending. It runs internally on real data: the first full pass went from sweep to triage to human-signed verdicts. Next step: rollout to the sales team.",
       "stats": [
         { "value": "33", "label": "Procurement sources swept" },
         { "value": "19", "label": "Sources the old tool never reached" },
         { "value": "28", "label": "Product categories matched" },
         { "value": "10k+", "label": "Automated tests" }
       ],
+      "demo_alt": "LEEX Tender System demo video, silent, 30 s, client data and amounts blurred: automatic detection with incomplete sweeps flagged, the NO APTO triage, a tender file with its verdict per requirement, the board, my work, the review queue and source health. In development, launching soon.",
       "blur_note": "Client data and amounts blurred",
       "shots": [
-        { "label": "Verdict", "caption": "The file — a verdict drafted per requirement, with cited evidence." },
-        { "label": "My work", "caption": "My work — due today, on time and past opening, across the whole team." },
-        { "label": "Detection", "caption": "Automatic detection — when a sweep comes back incomplete, the system flags it instead of hiding it." },
-        { "label": "Board", "caption": "The board — due soon, unassigned, in progress, detected." },
-        { "label": "Sources", "caption": "Source health — 'nothing there' is not 'couldn't see'." }
+        { "label": "Verdict", "caption": "The file: a verdict drafted per requirement, with cited evidence." },
+        { "label": "NO APTO", "caption": "The NO APTO (not eligible) tab: what the verdict ruled out, each row with its verdict chip." },
+        { "label": "Detection", "caption": "Automatic detection: when a sweep comes back incomplete, the system flags it." },
+        { "label": "Board", "caption": "The board: due soon, unassigned, in progress, detected." },
+        { "label": "Sources", "caption": "Source health: 'nothing there' is not 'couldn't see'." }
       ]
     }
   },
@@ -172,51 +239,61 @@
     "headline": "Frame by Frame",
     "intro_click": "Click to play with sound.",
     "intro_tap": "Tap to play with sound.",
-    "note": "Post-production by AI agents: Claude Code edits, animates and renders in Remotion; music and SFX for B6 and KIBBO were finished in CapCut. The MRI explainer and the model comparison are 100% AI-made; the three product reels start from iPhone footage.",
+    "note": "AI post-production: Claude Code agents edit, animate and render each piece in Remotion; music and SFX for B6 and KIBBO were finished in CapCut. The three product reels start from iPhone footage; the MRI explainer and the model comparison are 100% AI-made.",
     "stack_label": "Stack",
     "stack": ["Claude Code", "Remotion", "React Three Fiber", "Three.js", "faster-whisper", "edge-tts", "Python / NumPy audio", "FFmpeg", "CapCut"],
     "play": "Play",
     "play_aria": "Play video: {title}",
     "audio_es": "Audio ES",
     "audio_en": "Audio EN",
+    "preview_pause": "Pause preview",
+    "preview_play": "Resume preview",
+    "close": "Close",
+    "prev": "Previous video",
+    "next": "Next video",
+    "gallery_role": "gallery",
+    "slide_aria": "Video {n} of {total}: {title}",
+    "pause": "Pause the videos",
+    "resume": "Resume the videos",
+    "sound": "Video sound",
     "items": {
       "b6_story": {
         "eyebrow": "LEEX · B6 incubator",
         "title": "Where the incubator came from",
-        "caption": "In 1878, a Paris obstetrician had a zoo's poultry incubator adapted for newborns; premature mortality fell from 66% to 38% with controlled heat alone. That idea is now LEEX's B6.",
-        "made_with": "Made with: Claude Code · Remotion · React Three Fiber · faster-whisper · FFmpeg · CapCut — iPhone footage, Wellcome Collection engravings",
+        "caption": "In 1878, a Paris obstetrician had a zoo's poultry incubator adapted for newborns; with controlled heat alone, premature mortality fell from 66% to 38%. LEEX's B6 incubator builds on the same idea.",
+        "made_with": "Made with: Claude Code · Remotion · React Three Fiber · faster-whisper · FFmpeg · CapCut. iPhone footage, Wellcome Collection engravings",
         "credit": "Engravings: Wellcome Collection, via Wikimedia Commons · <license>CC BY 4.0</license> · cropped, color-treated, camera-animated."
       },
       "kibbo_film": {
         "eyebrow": "KIBBO · Product reel",
         "title": "Preventive maintenance, from plan to execution",
-        "caption": "A maintenance plan takes a week to build, and the first unplanned failure pulls schedule and staff out of sync. KIBBO puts every preventive task in one filterable list the whole team can see.",
-        "made_with": "Made with: Claude Code · Remotion · faster-whisper · Python audio · FFmpeg · CapCut — iPhone footage, UI rebuilt in code"
+        "caption": "A maintenance plan takes a week to build, and the first unplanned failure puts schedule and staff out of sync. The reel shows KIBBO's preventive task list: one filterable list, visible to the whole team.",
+        "made_with": "Made with: Claude Code · Remotion · faster-whisper · Python audio · FFmpeg · CapCut. iPhone footage, UI rebuilt in code"
       },
       "v8v_cpr": {
         "eyebrow": "LEEX · V8v bed",
         "title": "One-button CPR position",
-        "caption": "How long does a hospital bed take to be ready for resuscitation? On LEEX's V8v electric bed, one button: press it and the bed lies fully flat, ready for CPR.",
-        "made_with": "Made with: Claude Code · Remotion · faster-whisper · Python-synthesized SFX · FFmpeg — iPhone footage, Mixkit music"
+        "caption": "LEEX's V8v electric hospital bed has a CPR function on a single button: pressing it lays the bed fully flat for resuscitation.",
+        "made_with": "Made with: Claude Code · Remotion · faster-whisper · Python-synthesized SFX · FFmpeg. iPhone footage, Mixkit music"
       },
       "mri_explainer": {
         "eyebrow": "Explainer",
         "title": "How an MRI works",
-        "caption": "No cameras, no X-rays: the body is full of water, and each hydrogen nucleus behaves like a tiny magnet. A strong magnet, a radio pulse tuned to their frequency and gradient coils turn that signal into an image. Not a photograph: the hydrogen in the body, made visible.",
-        "made_with": "Made with: Claude Code · Remotion · React Three Fiber · edge-tts · faster-whisper · NumPy-synthesized score — 100% AI, no stock"
+        "caption": "MRI uses no camera and no X-rays. Hydrogen nuclei in the body's water align in a strong magnetic field; a radio pulse at their resonance frequency excites them, and gradient coils encode position so the returning signal can be reconstructed as an image. Script researched from 20 institutional sources.",
+        "made_with": "Made with: Claude Code · Remotion · React Three Fiber · edge-tts · faster-whisper · NumPy-synthesized score. 100% AI, no stock footage"
       },
       "model_comparison": {
         "eyebrow": "AI models",
         "title": "Same prompt, three models",
-        "caption": "One prompt, three AI models: a 3D gummy citrus slice you can stretch and twist. Real side-by-side recordings show how each result behaves, with the time and tokens each model used. 104,531 impressions on LinkedIn.",
+        "caption": "The same prompt sent to three AI models: a WebGPU soft-body simulation of a gummy citrus slice that can be stretched and twisted. Side-by-side screen recordings show each result with the working time and tokens each model reported. 104,531 impressions on LinkedIn.",
         "made_with": "Made with: WebGPU builds from three AI models · OBS · Remotion · Claude Code"
       }
     }
   },
   "skills": {
     "label": "Tech Stack",
-    "headline": "Clinical Stack",
-    "ai_metrics": "TraumaVision · Sensitivity 96.7% · mAP@50 0.944",
+    "headline": "Stack by Layer",
+    "ai_metrics": "TraumaVision · Sensitivity 96.7% (thesis test set)",
     "lang_en_label": "English",
     "lang_en_value": "B2 · LTC Eastbourne (UK) + California",
     "lang_es_label": "Spanish",
@@ -226,11 +303,11 @@
       "items": ["PyTorch · CUDA", "YOLOv8m · Ultralytics", "Claude API · Anthropic SDK", "OpenCV · CLAHE", "PyDICOM · DICOM", "Scikit-learn", "NumPy · Pandas", "Jupyter · Matplotlib", "Prompt Engineering", "Prompt Caching · Extended Thinking", "Tool Use · Function Calling", "Multi-Agent Orchestration", "RAG Systems", "Replicate · Real-ESRGAN"]
     },
     "cluster_web": {
-      "title": "Web Dev",
+      "title": "Web",
       "items": ["Next.js · React", "TypeScript · JavaScript", "FastAPI · Uvicorn · Python", "Supabase · PostgreSQL · SQLite", "GSAP · ScrollTrigger", "Tailwind CSS · shadcn/ui", "OGL · WebGL", "Vercel · GitHub · Git", "VS Code · GitHub Copilot", "MCP Protocol · Claude Code CLI", "next-intl · i18n", "REST APIs · JSON", "Node.js", "Resend · Email APIs", "HTML · CSS · SVG"]
     },
     "cluster_tools": {
-      "title": "Tools & Automation",
+      "title": "Automation & Media",
       "items": [
         "HyperFrames · Video from HTML",
         "Remotion",
@@ -247,7 +324,8 @@
     "cluster_bio": {
       "title": "Biomedical",
       "items": ["CDSS / SaMD", "JCI Standards", "ANMAT · ISO 13485 · IEC 62304", "Corrective & Preventive Maintenance", "Adult ICU · CCU · OR", "Pediatric ICU · NICU", "Endoscopy · Wards · Outpatient", "Defibrillators · Multiparameter Monitors", "Infusion Pumps · IABP", "Incubators · Radiant Warmers", "Electrical Safety · Fluke", "Neovero CMMS · Inventory", "Biomedical Instrumentation", "Healthcare Regulations"]
-    }
+    },
+    "network_aria": "Stack network in four layers: biomedical engineering, AI, web and automation."
   },
   "experience": {
     "label": "Experience",
@@ -257,37 +335,37 @@
         "year": "Aug 2026–present",
         "company": "LEEX",
         "role": "Automation Specialist",
-        "description": "Automate tender workflows and sales documents with AI. Build SEO/GEO websites and AI agents for lead generation, and optimize Google and Meta Ads campaigns."
+        "description": "Automate tender workflows and sales documents (product sheets, brochures) with AI. Build SEO/GEO websites and lead-generation AI agents, and optimize Google Ads and Meta campaigns."
       },
       {
         "year": "Aug 2026–present",
         "company": "KIBBO",
         "role": "AI Engineer",
-        "description": "Built kibbo.io in Spanish and English for SEO and GEO (AI search). Produce AI-generated content and run AI agents for lead generation."
+        "description": "Built kibbo.io in Spanish and English for SEO and GEO (AI search). Produce AI-assisted content and run lead-generation AI agents."
       },
       {
         "year": "2026–present",
         "company": "Eleven Estudio Digital",
         "role": "Founder",
-        "description": "Founded and run an AI-first digital agency for SMBs. Built a 38-agent pipeline covering discovery, strategy, brand, development and QA."
+        "description": "Founded and run a web and AI agency for SMBs. Built its agent pipeline on the Claude API, covering discovery, strategy, brand, development and QA."
       },
       {
-        "year": "2024",
+        "year": "Mar–Jul 2024",
         "company": "Sanatorio Allende S.A.",
         "role": "Biomedical Engineering Intern",
-        "description": "Performed corrective and preventive maintenance in adult and pediatric ICU, OR and wards, under Joint Commission International (JCI) standards. Equipment: defibrillators (Philips/Feas), multiparameter monitors, infusion pumps (Braun), surgical tables (Steris), incubators (Medix/Atom), Datascope IABP, endoscopes, fetal monitors, ECG/SpO2/capnography. Calibrations with Fluke. Inventory traceability in Neovero CMMS."
+        "description": "Corrective and preventive maintenance of medical equipment in adult and pediatric ICU, OR and wards, under Joint Commission International (JCI) standards. Equipment: defibrillators (Philips/Feas), multiparameter monitors, infusion pumps (Braun), surgical tables (Steris), incubators (Medix/Atom), Datascope IABP, endoscopes, fetal monitors, ECG/SpO2/capnography. Calibrations with Fluke. Inventory traceability in Neovero CMMS."
       },
       {
-        "year": "2023",
-        "company": "UNC — Faculty of Exact, Physical and Natural Sciences",
-        "role": "Teaching Assistant — Human Physiology",
-        "description": "Designed and taught support classes in Human Physiology for engineering students, and led a study group of more than 15 students."
+        "year": "Jul–Dec 2023",
+        "company": "UNC · Faculty of Exact, Physical and Natural Sciences",
+        "role": "Teaching Assistant, Human Physiology",
+        "description": "Prepared and taught support classes in Human Physiology for engineering students, and led a study group of more than 15 students."
       },
       {
         "year": "Dec 2023–Mar 2024",
         "company": "Big Bear Mountain Resort",
         "role": "Rentals Technician",
-        "description": "Full-time equipment rentals, routine technical maintenance and customer service at Big Bear Lake, California, in an English-only environment."
+        "description": "Full-time equipment rentals, routine technical maintenance and customer service at Big Bear Lake, California, in an English-only workplace."
       }
     ],
     "education_label": "Education",
@@ -317,11 +395,11 @@
         "year": "2026",
         "institution": "Emprende U 2026",
         "degree": "TraumaVision AI",
-        "detail": "National entrepreneurship competition for university and high-school students"
+        "detail": "National student entrepreneurship competition · project now scaling"
       },
       {
         "year": "2025",
-        "institution": "Rocking the Industry — RTS Group",
+        "institution": "Rocking the Industry (RTS Group)",
         "degree": "1st place · Team Algarroba LID",
         "detail": "Industrial hackathon · 150 multidisciplinary teams"
       }
@@ -331,18 +409,38 @@
     "label": "Contact",
     "headline_1": "LET'S WORK",
     "headline_2": "TOGETHER.",
-    "subtitle": "Applied AI, web products, automation and hospital equipment. Remote worldwide or on-site in Córdoba, Argentina.",
+    "subtitle": "Applied AI, web products, automation and hospital equipment. Remote, or on-site in Córdoba, Argentina.",
     "email_label": "Email",
     "linkedin_label": "LinkedIn",
     "github_label": "GitHub",
     "instagram_label": "Instagram",
     "phone_label": "WhatsApp",
     "cv_cta": "Download CV ↓",
-    "built_with": "Built with Next.js · GSAP · Tailwind",
-    "copyright": "© 2026 Juan Pablo Rojo"
+    "built_with": "Built with Next.js · Three.js · GSAP",
+    "copyright": "© 2026 Juan Pablo Rojo",
+    "dot_cta": "Send an email",
+    "dot_aria": "Send an email to Juan Pablo Rojo",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copy_aria": "Copy the email address",
+    "logo_alt": "Juan Pablo Rojo logo"
+  },
+  "sound": {
+    "label": "Sound",
+    "on": "on",
+    "off": "off",
+    "aria": "Sound (camera focus)"
+  },
+  "notfound": {
+    "label": "404",
+    "title": "No signal",
+    "body": "There is no page at this address. The button restarts the trace and returns to the home page.",
+    "cta": "Back to home",
+    "cta_aria": "Back to home: restart the signal",
+    "meta_title": "404 · Page not found · Juan Pablo Rojo"
   },
   "meta": {
     "title": "Juan Pablo Rojo — Biomedical Engineering · AI Engineer · Founder",
-    "description": "Biomedical engineering, applied AI, automation and web products. Thesis: TraumaVision, pediatric wrist fracture detection (AUC-ROC 0.987). Founder of Eleven."
+    "description": "Biomedical engineering, applied AI, automation and web products. Thesis: TraumaVision, fracture detection on pediatric wrist X-rays. Founder of Eleven."
   }
 }

@@ -45,6 +45,10 @@ html {
   background-color: var(--color-bg);
   color: var(--color-white);
 }
+/* Con reduced motion los saltos (nav, CTA, #hash) son instantáneos: con smooth acá, behavior:'auto' igual anima. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
 
 body {
   font-family: var(--font-ui);
@@ -214,7 +218,9 @@ body {
 body::after {
   content: '';
   position: fixed;
-  inset: 0;
+  /* grain-shift lo corre hasta ±4 %: con inset 0 quedaba una franja sin grano en el borde (canto de Δ3–4 a la
+     izquierda, design-critic D-15). Con −5 % el grano cubre siempre todo el cuadro. */
+  inset: -5%;
   z-index: 99990;
   pointer-events: none;
   opacity: 0.032;
@@ -244,4 +250,35 @@ body::after {
 
 @media (prefers-reduced-motion: reduce) {
   body::after { animation: none !important; }
+}
+
+/* Saltar al contenido (functional-tester F-04): primer tabulable, fuera de cuadro hasta recibir foco.
+   En reposo no ocupa lugar ni se ve; con foco aparece arriba a la izquierda, sobre el menú. */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 400;                       /* encima del menú (100) y de la línea ECG (200) */
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-white);
+  background: var(--color-bg);
+  border: 1px solid var(--color-accent);
+  transform: translateY(calc(-100% - 24px));
+}
+.skip-link:focus { transform: none; outline: none; }
+
+/* Cambio de idioma con View Transitions (functional-tester F-01): navegación cross-document entre /en y /es
+   (los <a href> planos del selector), sin JS. Un crossfade corto y sobrio de la página entera; mismas curva y
+   duración en las dos capas para que la suma no parpadee. Con reduced motion no se activa: recarga directa. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
 }

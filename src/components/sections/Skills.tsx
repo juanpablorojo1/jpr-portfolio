@@ -3,6 +3,12 @@
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import StackBadge from '../ui/StackBadge';
+import StackStage from './StackStage';
+import { whenNoGallery } from '../../lib/idle';
+
+// Stack — data-driven from messages skills.*. Two layouts in the same #skills block:
+// - .sk-classic (this grid): phones/tablets (<1024) and desktop without the 3D scene (reduced motion, ?static, no GPU).
+// - StackStage: desktop ≥1024 with the «Señal» scene — the layered network (network.js + stack-senal.css).
 
 export default function Skills() {
   const t = useTranslations('skills');
@@ -65,8 +71,9 @@ export default function Skills() {
       }
     };
 
-    animate();
-    return () => { cleanup = true; };
+    // con la galería de escritorio activa esta versión está oculta: sus animaciones esperan (D-01)
+    const stopWait = whenNoGallery(sectionRef.current, () => { animate(); });
+    return () => { cleanup = true; stopWait(); };
   }, []);
 
   const clusterKeys = ['cluster_ai', 'cluster_web', 'cluster_tools', 'cluster_bio'] as const;
@@ -79,10 +86,10 @@ export default function Skills() {
   ];
 
   return (
+    <div id="skills">
     <section
-      id="skills"
       ref={sectionRef}
-      className="py-10 lg:py-24 lg:pb-32 bg-bg"
+      className="sk-classic py-10 lg:py-24 lg:pb-32 bg-bg"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <p className="font-mono text-xs text-accent tracking-widest uppercase mb-3 lg:mb-6">
@@ -162,5 +169,7 @@ export default function Skills() {
         </div>
       </div>
     </section>
+    <StackStage />
+    </div>
   );
 }

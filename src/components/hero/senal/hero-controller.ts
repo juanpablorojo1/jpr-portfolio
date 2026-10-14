@@ -1,0 +1,317 @@
+/* «Señal»: hero en HTML/2D desde el primer frame (port de la maqueta a-senal/hero.js).
+   - Es dueño del reloj, del scroll (objetivo + damping) y de toda la coreografía HTML.
+   - Dibuja el intro de la traza en un canvas 2D hasta que la escena 3D está lista y se funde encima.
+   - Es también el camino estático (reduced motion / ?static / sin GPU).
+   Las clases de estado (is-loading, is-lit, is-live, is-handed, is-static) viven en el wrapper .senal,
+   no en <html>, para no pelear con la hidratación de React. */
+import gsap from 'gsap';
+import { SplitText } from 'gsap/SplitText';
+import type { Senal } from './signal';
+import { setBatch } from '../../../lib/idle';
+
+gsap.registerPlugin(SplitText);
+
+type Opts = { channels: string[] };
+
+export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () => void {
+  const q = <T extends Element = HTMLElement>(sel: string) => root.querySelector(sel) as T;
+  const cleanups: Array<() => void> = [];
+  let disposed = false;
+
+  // grano de película: textura generada una vez. Ruido gris uniforme (0–255, opaco) de 128 px, como antes, pero armado
+  // como BMP sin comprimir en vez de canvas.toDataURL(): codificar PNG un ruido (que no comprime) tomaba 50–80 ms dentro
+  // de la hidratación (delivery-auditor D-01). Mismos pixeles, mismo uso (var(--noise) en .grain).
+  (function makeNoise() {
+    const N = 128, row = N * 3, off = 54, size = off + row * N;
+    const b = new Uint8Array(size), dv = new DataView(b.buffer);
+    b[0] = 0x42; b[1] = 0x4d; dv.setUint32(2, size, true); dv.setUint32(10, off, true);                 // BITMAPFILEHEADER
+    dv.setUint32(14, 40, true); dv.setInt32(18, N, true); dv.setInt32(22, N, true);                    // BITMAPINFOHEADER
+    dv.setUint16(26, 1, true); dv.setUint16(28, 24, true); dv.setUint32(34, row * N, true);            // 24 bits, sin compresión
+    for (let i = off; i < size; i += 3) { const v = Math.round(Math.random() * 255); b[i] = b[i + 1] = b[i + 2] = v; }
+    let bin = '';
+    for (let i = 0; i < size; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000) as unknown as number[]);
+    root.style.setProperty('--noise', `url(data:image/bmp;base64,${btoa(bin)})`);
+  })();
+
+  // hero.marquee de messages/{locale}.json → canales del monitor
+  const CHANNELS = channels.length ? channels : [''];
+
+  /* ---------- texto ---------- */
+  const heroInner = q('.hero-inner');
+  const channelEl = q('.ch-text');
+  const rojoGlow = q('.rojo-glow');
+  let nameSplit: SplitText | null = null, tagSplit: SplitText | null = null;
+  let textReady = false, revealed = false, glowOn = false;
+  let tl: gsap.core.Timeline | null = null;
+
+  function goStatic(reason?: string) {
+    if (disposed) return;
+    if (reason) console.info('[senal] static:', reason);
+    S.dead = true;
+    root.classList.add('is-static');
+    root.classList.remove('is-loading', 'is-live', 'is-handed');
+    if (tl) tl.kill();
+    if (nameSplit) { gsap.killTweensOf(nameSplit.chars); nameSplit.revert(); nameSplit = null; }
+    if (tagSplit) { gsap.killTweensOf(tagSplit.chars); tagSplit.revert(); tagSplit = null; }
+    gsap.set(root.querySelectorAll('[data-reveal], .channel'), { clearProps: 'all' });
+    syncSeeThrough();
+  }
+  S.goStatic = goStatic;
+
+  /* ---------- conexión con la sección siguiente (About) ----------
+     Con la escena 3D viva y ≥1024 px, el About entra transparente (atributo data-see-through en su TransitionZone;
+     el CSS vive en about-senal.css): la cámara termina su recorrido detrás del About en lugar de quedar tapada.
+     Entonces lo que tapa la escena ya no es el About sino la sección que le sigue (Projects). */
+  const zone = root.closest('.transition-zone');
+  const nextZone = (zone ?? root).nextElementSibling as HTMLElement | null;
+  const afterZone = (nextZone?.nextElementSibling ?? null) as HTMLElement | null;
+  // Projects (afterZone) es la galería espacial: también entra transparente y la escena sigue detrás.
+  // data-gallery (≥1024, con escena posible: no estática) elige su layout de galería; sin él, Projects queda apilado.
+  // Frame by Frame (fbfZone, la sección de Video) es la sala de proyección: también transparente, misma escena detrás.
+  // Stack (stackZone, la que sigue a Video) es la red por capas y Experience (expZone) el electrocardiograma vertical:
+  // las dos también transparentes, misma escena detrás. Contact (ctcZone) es la convergencia: también transparente, la
+  // escena llega al punto que late y es su CTA. Detrás de Contact no hay otra sección: nada tapa la escena (coverZone
+  // queda por si algún día se agrega una).
+  const fbfZone = (afterZone?.nextElementSibling ?? null) as HTMLElement | null;
+  const stackZone = (fbfZone?.nextElementSibling ?? null) as HTMLElement | null;
+  const expZone = (stackZone?.nextElementSibling ?? null) as HTMLElement | null;
+  const ctcZone = (expZone?.nextElementSibling ?? null) as HTMLElement | null;
+  const coverZone = (ctcZone?.nextElementSibling ?? null) as HTMLElement | null;
+  const wide = matchMedia('(min-width: 1024px)');
+  const covered = new Map<Element, boolean>();
+  let applyView: () => void = () => {};
+  function syncSeeThrough() {
+    if (!nextZone) return;
+    const ok = !disposed && !S.dead && wide.matches;
+    const on = ok && root.classList.contains('is-live');
+    nextZone.toggleAttribute('data-see-through', on);
+    [afterZone, fbfZone, stackZone, expZone, ctcZone].forEach((z) => {
+      if (!z) return;
+      z.toggleAttribute('data-see-through', on);
+      z.toggleAttribute('data-gallery', ok);
+    });
+    applyView();
+  }
+  wide.addEventListener('change', syncSeeThrough);
+  cleanups.push(() => {
+    wide.removeEventListener('change', syncSeeThrough);
+    nextZone?.removeAttribute('data-see-through');
+    [afterZone, fbfZone, stackZone, expZone, ctcZone].forEach((z) => { z?.removeAttribute('data-see-through'); z?.removeAttribute('data-gallery'); });
+  });
+
+  if (root.classList.contains('is-static')) {
+    goStatic(matchMedia('(prefers-reduced-motion: reduce)').matches ? 'prefers-reduced-motion' : '?static');
+    return () => { disposed = true; S.goStatic = () => {}; cleanups.forEach((f) => f()); };
+  }
+  syncSeeThrough();   // escena por venir: Projects ya toma el layout de galería (todavía opaco)
+
+  document.fonts.ready.then(() => {
+    if (disposed || S.dead) return;
+    // aria: 'none' (D-04, axe aria-prohibited-attr): SplitText no pone aria-label en <span>/<p>. El nombre accesible
+    // del h1 es su aria-label; el tagline partido es aria-hidden y lo lee su copia .sr-only (Hero.tsx).
+    nameSplit = SplitText.create(root.querySelectorAll('.name [data-split]'), { type: 'chars', mask: 'chars', charsClass: 'char', aria: 'none' });
+    tagSplit = SplitText.create(q('.tagline'), { type: 'words,chars', wordsClass: 'word', charsClass: 'char', aria: 'none' });
+    // Chrome corta antes del espacio que sigue a un inline-block → sangría falsa en la línea 2.
+    const tg = q('.tagline'); const cs = getComputedStyle(tg);
+    const ctx = document.createElement('canvas').getContext('2d');
+    if (ctx) {
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const sp = ctx.measureText(' ').width;
+      tagSplit.words.forEach((w) => { const n = w.nextSibling; if (n && n.nodeType === 3) { n.remove(); (w as HTMLElement).style.marginRight = sp + 'px'; } });
+    }
+    // mismo estado inicial que antes, en una pasada de lectura y otra de escritura (sin recalcular estilo por letra: D-01)
+    setBatch([[nameSplit.chars, { yPercent: 108 }], [tagSplit.chars, { z: -1100, y: 24, rotationX: -38, opacity: 0 }]]);
+    textReady = true;
+    if (revealed) runReveal(S.now() - S.T_R0);
+  });
+
+  function runReveal(late: number) {
+    if (!nameSplit || !tagSplit) return;
+    root.classList.remove('is-loading');
+    tl = gsap.timeline();
+    tl.to(nameSplit.chars, { yPercent: 0, duration: 1.1, ease: 'expo.out', stagger: 0.04 }, 0.12)
+      .to(tagSplit.chars, { z: 0, y: 0, rotationX: 0, opacity: 1, duration: 1.4, ease: 'expo.out', stagger: 0.014 }, 0.38)
+      .fromTo(root.querySelectorAll('[data-reveal]'), { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 1.0, ease: 'expo.out', stagger: 0.08 }, 0.55)
+      .fromTo(q('.channel'), { opacity: 0 }, { opacity: 1, duration: 0.8, ease: 'expo.out' }, 1.1)
+      .call(() => { glowOn = true; }, undefined, 1.0);
+    // El tagline queda partido a propósito: revertirlo crea un bloque de texto "nuevo" y el LCP salta a ~4,4 s.
+    // Los lectores de pantalla leen la frase entera en su copia .sr-only (el <p> partido es aria-hidden).
+    if (late > 0) tl.seek(late, false);
+  }
+
+  let channelIdx = 0;
+  let swapTimer = 0;
+  function nextChannel() {
+    channelIdx = (channelIdx + 1) % CHANNELS.length;
+    channelEl.classList.add('is-swapping');
+    swapTimer = window.setTimeout(() => { channelEl.textContent = CHANNELS[channelIdx]; channelEl.classList.remove('is-swapping'); }, 260);
+  }
+  cleanups.push(() => clearTimeout(swapTimer));
+
+  if (matchMedia('(pointer: fine)').matches) {
+    root.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((el) => {
+      const qx = gsap.quickTo(el, 'x', { duration: 0.5, ease: 'expo.out' });
+      const qy = gsap.quickTo(el, 'y', { duration: 0.5, ease: 'expo.out' });
+      const move = (e: PointerEvent) => {
+        const r = el.getBoundingClientRect();
+        qx((e.clientX - r.left - r.width / 2) * 0.22); qy((e.clientY - r.top - r.height / 2) * 0.3);
+      };
+      const leave = () => { qx(0); qy(0); };
+      el.addEventListener('pointermove', move);
+      el.addEventListener('pointerleave', leave);
+      cleanups.push(() => { el.removeEventListener('pointermove', move); el.removeEventListener('pointerleave', leave); gsap.killTweensOf(el); gsap.set(el, { clearProps: 'transform' }); });
+    });
+  }
+
+  /* ---------- intro 2D de la traza (misma proyección que la cámara 3D en reposo) ---------- */
+  const cv = q<HTMLCanvasElement>('.senal-intro');
+  const cx = cv.getContext('2d')!;
+  let dpr = 1;
+  // viewport en caché (resize): el loop de cada frame no lee innerWidth/innerHeight después de escribir estilos,
+  // que obligaba a recalcular estilo/layout dentro del rAF (forced reflow, delivery-auditor D-01)
+  let vw = innerWidth, vh = innerHeight;
+  function size() { vw = innerWidth; vh = innerHeight; dpr = Math.min(devicePixelRatio || 1, 2); cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr); }
+  size(); addEventListener('resize', size);
+  cleanups.push(() => removeEventListener('resize', size));
+  function draw2D(t: number) {
+    const W = vw, H = vh, G = S.geom(W, H);
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx.clearRect(0, 0, W, H);
+    if (t < S.T_START) return;
+    const y0 = G.horizon * H, ampPx = G.amp * G.pxPerUnit, core = Math.max(1.4, G.coreHalf * 2 * G.pxPerUnit);
+    const X = (i: number) => (0.5 + ((i / (S.N - 1)) * 2 - 1) * G.halfWFrac) * W;
+    const Y = (i: number) => y0 - S.val[i] * ampPx;
+    cx.globalCompositeOperation = 'lighter'; cx.lineCap = 'round'; cx.lineJoin = 'round';
+    const CH = 6;
+    for (let a = 0; a < S.N - 1; a += CH) {
+      const b = Math.min(S.N - 1, a + CH);
+      let br = 0; for (let i = a; i <= b; i++) br += S.bright(i, t); br /= (b - a + 1);
+      if (br < 0.01) continue;
+      cx.beginPath(); cx.moveTo(X(a), Y(a)); for (let i = a + 1; i <= b; i++) cx.lineTo(X(i), Y(i));
+      cx.strokeStyle = `rgba(232,39,42,${(0.09 * br).toFixed(3)})`; cx.lineWidth = core * 9; cx.stroke();
+      cx.strokeStyle = `rgba(232,39,42,${(0.22 * br).toFixed(3)})`; cx.lineWidth = core * 3.2; cx.stroke();
+      cx.strokeStyle = `rgba(255,86,88,${Math.min(1, br * 1.1).toFixed(3)})`; cx.lineWidth = core; cx.stroke();
+    }
+    const hi = Math.min(S.N - 1, Math.floor(S.headS * S.N));
+    const hx = X(hi), hy = Y(hi), r = 0.08 * G.pxPerUnit * 1.6, ha = S.headAlpha(t);
+    const gr = cx.createRadialGradient(hx, hy, 0, hx, hy, r);
+    gr.addColorStop(0, `rgba(255,120,120,${ha})`); gr.addColorStop(0.25, `rgba(232,39,42,${0.55 * ha})`); gr.addColorStop(1, 'rgba(232,39,42,0)');
+    cx.fillStyle = gr; cx.beginPath(); cx.arc(hx, hy, r, 0, Math.PI * 2); cx.fill();
+    cx.globalCompositeOperation = 'source-over';
+  }
+
+  /* ---------- relevo al 3D ---------- */
+  let handTimer = 0;
+  S.onLive = function () {
+    if (S.dead || disposed) return;
+    root.classList.add('is-live');               // el canvas 3D se funde encima (0,6 s)
+    syncSeeThrough();
+    handTimer = window.setTimeout(() => { if (!S.dead) { root.classList.add('is-handed'); S.handoff = true; } }, 700);
+  };
+  cleanups.push(() => clearTimeout(handTimer));
+
+  /* ---------- loop ---------- */
+  const st = S.state;
+  // scroll en caché: lo actualiza el evento scroll (corre antes del rAF del mismo frame), así el loop no lee layout
+  let sy = scrollY;
+  st.lastScroll = sy;
+  const onScroll = () => { sy = scrollY; st.pTarget = Math.min(1, Math.max(0, sy / (vh * 3))); };
+  onScroll();
+  addEventListener('scroll', onScroll, { passive: true });
+  cleanups.push(() => removeEventListener('scroll', onScroll));
+  let last = performance.now();
+  let raf = 0;
+  let running = false;
+  function tick(now: number) {
+    if (S.dead || disposed) { running = false; return; }
+    const dt = Math.min((now - last) / 1000, 1 / 20); last = now;
+    const t = S.now(); st.t = t;
+    st.vel = S.damp(st.vel, Math.abs(sy - st.lastScroll) / Math.max(dt, 1e-3) / vh, 6, dt); st.lastScroll = sy;
+    st.p = S.damp(st.p, st.pTarget, 3.6, dt);
+
+    if (S.write(t, st.vel)) nextChannel();
+    if (!revealed && t >= S.T_R0) {
+      revealed = true; root.classList.add('is-lit');
+      if (textReady) runReveal(t - S.T_R0);
+    }
+    if (glowOn) rojoGlow.style.opacity = (0.08 + S.pulse(t) * 0.6).toFixed(3);
+    const p = st.p;
+    heroInner.style.opacity = (1 - S.smooth(0.01, 0.09, Math.min(1, Math.max(0, sy / (vh * 3))))).toFixed(3);   // fade atado al scroll real (sin damping): el nombre se apaga antes de cruzar el nav
+    heroInner.style.transform = `translate3d(0, ${(-p * 140).toFixed(2)}px, 0)`;
+    if (!S.handoff) draw2D(t);
+    if (running) raf = requestAnimationFrame(tick);
+  }
+  function start() {
+    if (running || disposed || S.dead) return;
+    running = true;
+    sy = scrollY;
+    last = performance.now(); st.lastScroll = sy;   // sin salto de dt ni pico de velocidad al volver
+    raf = requestAnimationFrame(tick);
+  }
+  function stop() { running = false; cancelAnimationFrame(raf); }
+  start();
+  cleanups.push(stop);
+
+  /* ---------- pausa fuera de vista ----------
+     El canvas es fixed y el hero vive en un card sticky: el hero no sale del viewport, lo tapa la sección siguiente.
+     Se observan las dos secciones que siguen contra todo lo que queda por encima del borde superior del viewport
+     (rootMargin: arriba 10000 %, abajo -100 %): si una la toca, cubre el viewport entero. La escena está tapada cuando
+     la cubre una sección después de Contact (hoy no hay), o el About / Projects / Video / Stack / Experience / Contact opacos (sin data-see-through:
+     celular, sin 3D). Con la escena viva, About y Projects son transparentes y la escena sigue corriendo detrás.
+     Tapada → se pausan el loop 2D/HTML, el render 3D (S.onView → scene.js) y las animaciones CSS del hero.
+     Sirve igual en celular, donde los cards no son sticky. */
+  if (nextZone && 'IntersectionObserver' in window) {
+    applyView = () => {
+      if (disposed) return;
+      // Escena todavía sin primer frame (recarga a mitad de página, scroll rápido): el About no cuenta como tapa,
+      // así el loop corre, la escena llega a is-live y el About pasa a transparente (si no, quedaba opaco para siempre).
+      const pending = wide.matches && !S.dead && !root.classList.contains('is-live');
+      const aboutOpaque = !nextZone.hasAttribute('data-see-through') && !pending;
+      const galOpaque = !!afterZone && !afterZone.hasAttribute('data-see-through') && !pending;
+      const fbfOpaque = !!fbfZone && !fbfZone.hasAttribute('data-see-through') && !pending;
+      const stackOpaque = !!stackZone && !stackZone.hasAttribute('data-see-through') && !pending;
+      const expOpaque = !!expZone && !expZone.hasAttribute('data-see-through') && !pending;
+      const ctcOpaque = !!ctcZone && !ctcZone.hasAttribute('data-see-through') && !pending;
+      const hidden = !!(coverZone && covered.get(coverZone))
+        || (!!(ctcZone && covered.get(ctcZone)) && ctcOpaque)
+        || (!!(expZone && covered.get(expZone)) && expOpaque)
+        || (!!(stackZone && covered.get(stackZone)) && stackOpaque)
+        || (!!(fbfZone && covered.get(fbfZone)) && fbfOpaque)
+        || (!!(afterZone && covered.get(afterZone)) && galOpaque)
+        || (!!covered.get(nextZone) && aboutOpaque);
+      const v = !hidden;
+      if (v === S.inView) return;
+      S.inView = v;
+      root.classList.toggle('is-offscreen', !v);
+      if (v) start(); else stop();
+      S.onView(v);
+    };
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => covered.set(e.target, e.isIntersecting));
+      applyView();
+    }, { rootMargin: '10000% 0px -100% 0px', threshold: 0 });
+    io.observe(nextZone);
+    if (afterZone) io.observe(afterZone);
+    if (fbfZone) io.observe(fbfZone);
+    if (stackZone) io.observe(stackZone);
+    if (expZone) io.observe(expZone);
+    if (ctcZone) io.observe(ctcZone);
+    if (coverZone) io.observe(coverZone);
+    cleanups.push(() => io.disconnect());
+  }
+
+  return () => {
+    disposed = true;
+    S.dead = true;
+    S.goStatic = () => {};
+    S.onLive = () => {};
+    S.onView = () => {};
+    cleanups.forEach((f) => f());
+    if (tl) tl.kill();
+    if (nameSplit) nameSplit.revert();
+    if (tagSplit) tagSplit.revert();
+    root.classList.remove('is-lit', 'is-live', 'is-handed', 'is-offscreen');
+    root.classList.add('is-loading');
+    heroInner.style.opacity = ''; heroInner.style.transform = '';
+  };
+}

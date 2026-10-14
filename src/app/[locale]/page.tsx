@@ -1,7 +1,6 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { useLoadingScreen } from '../../hooks/useLoadingScreen';
+import { useTranslations } from 'next-intl';
 import Navbar from '../../components/layout/Navbar';
 import Hero from '../../components/sections/Hero';
 import About from '../../components/sections/About';
@@ -11,38 +10,24 @@ import Skills from '../../components/sections/Skills';
 import Experience from '../../components/sections/Experience';
 import Contact from '../../components/sections/Contact';
 import TransitionZone from '../../components/motion/TransitionZone';
+import SoundToggle from '../../components/ui/SoundToggle';
 
-const LoadingScreen = dynamic(() => import('../../components/loading/LoadingScreen'), {
-  ssr: false,
-});
-const CustomCursor = dynamic(() => import('../../components/ui/CustomCursor'), {
-  ssr: false,
-});
-const ScrollProgressBar = dynamic(() => import('../../components/ui/ScrollProgressBar'), {
-  ssr: false,
-});
-const SectionLabel = dynamic(() => import('../../components/ui/SectionLabel'), {
-  ssr: false,
-});
+// Corre mientras se parsea el HTML, antes del primer pintado: en escritorio con la escena posible (≥1024, sin reduced
+// motion ni ?static) las secciones de la galería ya llevan data-gallery, la misma decisión que toma hero-controller al
+// hidratar (syncSeeThrough). Así el primer layout ya es el de la galería y la hidratación no rehace el de toda la página
+// (delivery-auditor D-01). Si después la escena no puede (sin GPU), hero-controller lo saca como siempre.
+// Contact queda afuera: su capa del punto es fixed y se vería sobre el hero hasta que ContactStage la apaga al hidratar.
+const GALLERY_SCRIPT = `(function(){if(!matchMedia('(min-width: 1024px)').matches||matchMedia('(prefers-reduced-motion: reduce)').matches||/[?&]static\\b/.test(location.search))return;['.transition-zone[data-section="projects"]','.fbf-zone','.stack-zone','.transition-zone[data-section="experience"]'].forEach(function(s){var z=document.querySelector(s);if(z)z.setAttribute('data-gallery','');});})();`;
 
 export default function HomePage() {
-  const { isLoading, onLoadingComplete } = useLoadingScreen();
-
+  const t = useTranslations('nav');
   return (
     <>
-      <CustomCursor />
-      <ScrollProgressBar />
-      <SectionLabel />
-
-      {isLoading && <LoadingScreen onComplete={onLoadingComplete} />}
-
-      <main
-        style={{
-          opacity: isLoading ? 0 : 1,
-          transition: 'opacity 0.5s ease',
-        }}
-      >
-        <Navbar />
+      {/* Saltar al contenido (F-04): primer tabulable, invisible hasta recibir foco (globals.css .skip-link) */}
+      <a href="#content" className="skip-link">{t('skip_to_content')}</a>
+      {/* Sin loading screen: el hero «Señal» es el intro (un latido en la oscuridad) y se ve desde el primer frame. */}
+      <Navbar />
+      <main id="content">
 
         {/* Card stack with cinematic transitions —
             each section sticks, gets a watermark anchor word + connecting line,
@@ -51,7 +36,8 @@ export default function HomePage() {
           <Hero />
         </TransitionZone>
 
-        <TransitionZone sectionId="about" zIndex={20}>
+        {/* About «Señal»: sin decoración del card stack; con la escena viva entra transparente (hero-controller) */}
+        <TransitionZone sectionId="about" zIndex={20} decor={false}>
           <About />
         </TransitionZone>
 
@@ -59,26 +45,36 @@ export default function HomePage() {
           <Projects />
         </TransitionZone>
 
-        {/* Videos — outside the card stack, same pattern as Skills: normal flow over the
-            sticky Projects card, so the horizontal rail and the stack stay untouched. */}
-        <div style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
+        {/* Frame by Frame — fuera del card stack, en flujo normal sobre Projects. Escritorio con la escena «Señal»:
+            hero-controller le pone data-see-through / data-gallery y es la sala de proyección (VideosStage);
+            la escena se pausa cuando la tapa Stack. Sin escena: el layout de tarjetas. */}
+        <div className="fbf-zone" data-section="videos" suppressHydrationWarning style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
           <Videos />
         </div>
 
-        {/* Skills — outside card stack so all content is reachable via normal scroll.
-            Experience (zIndex 50) still slides over it naturally as the user scrolls. */}
-        <div style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
+        {/* Stack — fuera del card stack, en flujo normal. Escritorio con la escena «Señal»: hero-controller le pone
+            data-see-through / data-gallery y es la red por capas (StackStage); la escena se pausa cuando la tapa
+            Experience (zIndex 50). Sin escena: la grilla de grupos. */}
+        <div className="stack-zone" suppressHydrationWarning style={{ position: 'relative', zIndex: 40, overflow: 'visible' }}>
           <Skills />
         </div>
 
-        <TransitionZone sectionId="experience" zIndex={50}>
+        {/* Experience «Señal»: con la escena viva entra transparente (hero-controller) y es el electrocardiograma vertical
+            (ExperienceStage); overflow clip para que su escenario sticky funcione. Sin escena: el layout de columnas. */}
+        <TransitionZone sectionId="experience" zIndex={50} overflowClip>
           <Experience />
         </TransitionZone>
 
-        <TransitionZone sectionId="contact" zIndex={60}>
+        {/* Contact «Señal»: con la escena viva entra transparente (hero-controller) y es la convergencia (ContactStage):
+            todas las líneas llegan al punto que late, que es el CTA. overflow clip para que su escenario sticky funcione.
+            Sin escena: el layout anterior, opaco. */}
+        <TransitionZone sectionId="contact" zIndex={60} overflowClip>
           <Contact />
         </TransitionZone>
       </main>
+      <script dangerouslySetInnerHTML={{ __html: GALLERY_SCRIPT }} />
+      {/* Sonido del sitio (apagado por defecto): un solo interruptor para todas las secciones */}
+      <SoundToggle />
     </>
   );
 }

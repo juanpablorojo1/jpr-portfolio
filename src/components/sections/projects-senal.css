@@ -1,0 +1,214 @@
+/* Projects «Señal» — la vitrina en el vacío (escritorio ≥1024 con la escena viva o por venir: data-gallery en la zona,
+   lo pone hero-controller). Sin data-gallery (reduced motion, ?static, sin GPU, <1024) queda el layout apilado.
+   El bloque de cada proyecto (.pj-tag) va del lado opuesto a su laptop; la escena le escribe el transform (parallax
+   opuesto a la órbita) en el frame del render (.pj-stage.is-anchored). Sin escena viva queda en su posición de
+   respaldo, abajo a la izquierda. El caso completo (.pj-panel) es un diálogo del lado del texto. CSS propio con prefijo .pj.
+   Tokens y su fuente:
+   - 02-brand.md: negro #080808 del sitio, rojo #E8272A (acento; en texto, sólo grande), off-white #E8E4DE, radios 0,
+     Bebas Neue (display), Barlow Condensed 400/700 (los pesos que carga layout.tsx), JetBrains Mono (métricas).
+   - brief 2026-10-12 «Vitrina» §3 (y la maqueta A): fondo #050505 de la vitrina, rojo sólo en la señal, el índice y el
+     «%», Bebas para el nombre, línea técnica en Barlow, cifras y metadatos en Mono, botón de doble marco (receta de
+     .fv-btn, Video). El brief pedía Barlow 500 para la línea técnica: el sitio no carga 500, se dibuja en 400. */
+
+.pj-gal { display: none; }
+
+@media (min-width: 1024px) {
+  .transition-zone[data-gallery] .pj-stack { display: none; }
+  .transition-zone[data-gallery] .pj-gal { display: block; position: relative; background: #080808; }
+  /* escena viva detrás: la galería es transparente y sin la decoración del card stack (palabra de fondo y línea
+     vertical: sobre la escena serían una costura, y el mix-blend-mode cuesta fps) */
+  .transition-zone[data-see-through] .pj-gal { background: transparent; }
+  .transition-zone[data-see-through] > [aria-hidden='true'] { display: none !important; }
+
+  .pj-stage {
+    --pad: 5.5vw;            /* el margen del hero y del About */
+    --dim: rgba(232, 228, 222, .62);
+    /* texto chico sobre la escena: el fondo es el vacío (#050505 con el pozo de luz, L ≤ 0,01) */
+    --dim-scene: rgba(232, 228, 222, .66);   /* metadatos un punto más tenues (≥ 6:1 sobre el peor fondo: el nombre gigante, ~#1A) */
+    --line: rgba(232, 228, 222, .16);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+    /* sticky dentro de la sección (la zona sola se despega: lo que queda debajo es más corto que la galería) */
+    position: sticky; top: 0; height: 100vh; overflow: hidden;
+    pointer-events: none;
+    color: #e8e4de; font-family: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
+  }
+  @supports (height: 100svh) { .pj-stage { height: 100svh; } }
+
+  .pj-label, .pj-count {
+    position: absolute; top: clamp(84px, 11vh, 110px); margin: 0;
+    font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: #e8e4de;
+  }
+  .pj-label { left: var(--pad); display: flex; align-items: center; gap: 10px; }
+  .pj-count { right: var(--pad); color: var(--dim-scene); }
+  /* D-03: el rojo en texto chico no llega a contraste (y la marca lo reserva para texto grande): el índice va en
+     off-white pleno y el rojo queda en el cuadrado que lo acompaña (el mismo marcador en contador y caso) */
+  .pj-count b, .pj-k b { color: #e8e4de; font-weight: 400; }
+  .pj-count b::before, .pj-k b::before, .pj-panel .pj-eyebrow b::before {
+    content: ''; display: inline-block; width: 5px; height: 5px; margin: 0 .75em 0 0; vertical-align: .2em;
+    background: #e8272a; box-shadow: 0 0 8px rgba(232, 39, 42, .6);
+  }
+  .pj-panel .pj-eyebrow b { color: #e8e4de; font-weight: 400; }
+  .pj-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
+
+  /* ---------- el bloque de cada proyecto (capa cercana, del lado opuesto a la laptop) ---------- */
+  .pj-tag {
+    position: absolute; left: 0; top: 0; width: clamp(440px, 34vw, 560px);
+    will-change: transform;
+  }
+  /* texto a la derecha (KIBBO, LEEX): 18 px más angosto, con el borde derecho en la grilla. El borde izquierdo se corre
+     18 px hacia la derecha y el hueco con la notebook pasa de ~56 a ~74 px (≥ 64) sin mover la cámara aprobada.
+     «LICITACIONES», la palabra más larga, mide ~430 px a 1440: entra. */
+  .pj-tag[data-side='r'] { text-align: left; width: clamp(430px, calc(34vw - 18px), 542px); }
+  /* D-01: --fit (ProjectsGallery.tsx) < 1 sólo si el bloque no entra en la altura del viewport (p. ej. LEEX en ES a
+     1536×730): escala el título, la línea, la cifra y los aires verticales en proporción. Por defecto 1: sin cambio. */
+  /* respaldo sin escena viva: abajo a la izquierda, sin transform */
+  .pj-stage:not(.is-anchored) .pj-tag { left: var(--pad); top: auto; bottom: 10vh; transform: none !important; }
+
+  /* cabecera editorial (maqueta C): filete rojo + folio */
+  .pj-folio {
+    display: flex; align-items: center; gap: 14px; margin: 0 0 calc(16px * var(--fit, 1));
+    font: 12px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--dim-scene);
+  }
+  .pj-rule { display: inline-block; width: 44px; height: 1px; background: #e8272a; box-shadow: 0 0 6px rgba(232, 39, 42, .7); }
+  .pj-eyebrow {
+    margin: 0; font: 12px/1.6 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim-scene);
+    text-wrap: balance;
+  }
+  .pj-badge {
+    display: inline-flex; align-items: center; gap: 10px; margin: 12px 0 0; padding: 7px 10px 6px;
+    border: 1px solid rgba(232, 39, 42, .55); background: rgba(8, 8, 8, .5); color: #e8e4de;
+    font: 12px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase;
+  }
+  .pj-title {
+    /* blanco hueso, un punto más bajo que el blanco de la UI que muestra la pantalla */
+    margin: calc(14px * var(--fit, 1)) 0 0 -.04em; font-weight: 400; text-transform: uppercase; color: #e8e4de;
+    font-size: calc(clamp(64px, 6.6vw, 116px) * var(--fit, 1)); line-height: .86; letter-spacing: .005em; text-wrap: balance;
+    perspective: 900px;
+  }
+  .pj-title .word { display: inline-block; white-space: nowrap; transform-style: preserve-3d; }
+  .pj-title .char { display: inline-block; will-change: transform, opacity; }
+  .pj-line {
+    margin: calc(18px * var(--fit, 1)) 0 0; max-width: 30ch;
+    /* B-02: 400, el peso que carga layout.tsx (el 500 caía en 400: sin cambio visual). R56-04: sin palabra huérfana */
+    font: 400 max(18px, calc(clamp(21px, 1.7vw, 27px) * var(--fit, 1)))/1.18 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; color: rgba(232, 228, 222, .9);
+    text-wrap: pretty;
+  }
+  .pj-fig {
+    display: flex; align-items: flex-end; gap: 22px; margin-top: calc(30px * var(--fit, 1)); padding-top: calc(20px * var(--fit, 1));
+    border-top: 1px solid rgba(255, 255, 255, .12);
+  }
+  .pj-num { margin: 0; font: 400 calc(clamp(44px, 3.9vw, 58px) * var(--fit, 1))/.9 var(--mono); letter-spacing: -.03em; color: #fff; white-space: nowrap; }
+  .pj-num small { font-size: .5em; margin-left: .06em; color: #e8272a; }
+  .pj-lab { margin: 0; padding-bottom: 4px; font: 11px/1.55 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim-scene); }
+  .pj-lab strong { display: block; color: #e8e4de; font-weight: 400; }
+  .pj-lab span { display: block; }
+
+  /* «Ver proyecto»: marco doble en ángulo recto; la flecha en su propia celda; el rojo barre la etiqueta al pasar */
+  /* B-04: la misma receta de doble marco que .fv-btn (Video): fondo #050505 al 55 %, marco exterior hueso al 16 %,
+     celdas con marco interior hueso al 10 %, anillo de foco de 1 px. B-02: 700, el peso cargado (el 600 caía en 700). */
+  .pj-view {
+    margin-top: calc(28px * var(--fit, 1)); display: inline-flex; align-items: stretch; padding: 4px; cursor: pointer;
+    border: 1px solid rgba(232, 228, 222, .16); background: rgba(5, 5, 5, .55); color: #fff;
+    font: 700 15px/1 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; letter-spacing: .16em; text-transform: uppercase;
+    transition: border-color .3s var(--ease-out), transform .2s var(--ease-out);
+  }
+  .pj-tag[data-on] .pj-view { pointer-events: auto; }
+  .pj-view .pj-lbl {
+    position: relative; z-index: 0; display: flex; align-items: center; height: 46px; padding: 0 22px 0 18px; overflow: hidden;
+    border: 1px solid rgba(232, 228, 222, .1); transition: color .3s var(--ease-out);
+  }
+  .pj-view .pj-lbl::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; background: #e8272a;
+    transform: scaleX(0); transform-origin: 0 50%; transition: transform .5s var(--ease-out);
+  }
+  .pj-view .pj-arr {
+    width: 46px; height: 46px; display: grid; place-items: center; border: 1px solid rgba(232, 228, 222, .1); border-left: 0;
+    font: 400 18px/1 var(--mono); transition: transform .45s var(--ease-out), color .3s;
+  }
+  .pj-view:hover, .pj-view:focus-visible { border-color: rgba(232, 39, 42, .75); outline: none; }
+  .pj-view:hover .pj-lbl::before, .pj-view:focus-visible .pj-lbl::before { transform: scaleX(1); }
+  /* B-03: sobre el rojo, texto #080808 (4,53:1; el blanco daba 4,42:1 a 15 px) */
+  .pj-view:hover .pj-lbl, .pj-view:focus-visible .pj-lbl { color: #080808; }
+  .pj-view:hover .pj-arr, .pj-view:focus-visible .pj-arr { transform: translateX(3px); color: #e8272a; }
+  .pj-view:active { transform: scale(.95); }
+  .pj-view:focus-visible { box-shadow: 0 0 0 2px #080808, 0 0 0 3px #e8272a; }
+
+  /* D-06: en la vitrina el negro es de la escena (#020205 con viñeta y grano propio). El grano DOM del hero (fijo,
+     z 30: 3 % de ruido blanco + líneas al 1,2 %) y la barra sólida #080808 del nav lo aplastaban a #080808 plano.
+     Se apagan con un fundido (sin costura al entrar y salir); el nav queda como un degradé al negro de la escena. */
+  .senal .grain { transition: opacity .6s linear; }
+  html.pj-vit .senal .grain { opacity: 0; }
+  html.pj-vit .jnav.is-scrolled {
+    background: linear-gradient(180deg, rgba(2, 2, 5, .92) 0%, rgba(2, 2, 5, .55) 70%, rgba(2, 2, 5, 0) 100%);
+    border-bottom-color: transparent;
+  }
+
+  /* la pantalla bajo el puntero se puede abrir (vitrina.js pone pj-hot en <html>) */
+  html.pj-hot, html.pj-hot body { cursor: pointer; }
+
+  /* ---------- el caso completo ---------- */
+  .pj-panel {
+    position: absolute; top: 0; bottom: 0; width: min(52vw, 820px); padding: 128px 4vw 72px;
+    overflow-y: auto; overscroll-behavior: contain; pointer-events: auto; scrollbar-width: thin; scrollbar-color: #2a2a2a transparent;
+    display: none; z-index: 5;
+  }
+  .pj-panel[data-open] { display: block; }
+  .pj-panel[data-side='l'] { left: 0; background: linear-gradient(90deg, rgba(8, 8, 8, .94) 0%, rgba(8, 8, 8, .88) 70%, rgba(8, 8, 8, 0) 100%); }
+  .pj-panel[data-side='r'] { right: 0; background: linear-gradient(270deg, rgba(8, 8, 8, .94) 0%, rgba(8, 8, 8, .88) 70%, rgba(8, 8, 8, 0) 100%); }
+  .pj-panel .pj-eyebrow { font-size: 10.5px; color: var(--dim); }
+  .pj-panel .pj-badge { font-size: 10.5px; }
+  .pj-close {
+    position: absolute; top: 96px; right: 4vw; min-height: 36px; padding: 0 2px;
+    background: none; border: 0; cursor: pointer;
+    font: 10.5px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+    transition: color .2s;
+  }
+  .pj-close:hover, .pj-close:focus-visible { color: #e8e4de; outline: none; }
+  .pj-close:focus-visible { box-shadow: 0 1px 0 #e8272a; }
+  .pj-c-title { margin: 10px 0 0; font-weight: 400; text-transform: uppercase; color: #fff; font-size: clamp(64px, 6.4vw, 110px); line-height: .86; }
+  .pj-sub { margin: 12px 0 0; line-height: 1.3; color: #e8e4de; }
+  .pj-panel .pj-sub { font-size: 21px; }
+  .pj-c-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px 34px; margin-top: 36px; }
+  .pj-c-block { font-size: 17px; line-height: 1.5; color: rgba(232, 228, 222, .86); }
+  .pj-c-block p { margin: 0; }
+  .pj-c-block p + p { margin-top: 10px; }
+  .pj-c-wide { grid-column: 1 / -1; }
+  .pj-k { margin: 0 0 8px !important; font: 10.5px/1.5 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
+  .pj-c-block .pj-k:not(:first-child) { margin-top: 16px !important; }
+  .pj-mono { font: 12px/1.75 var(--mono); color: var(--dim); letter-spacing: .02em; }
+  .pj-mono i { font-style: normal; color: #e8272a; }
+  .pj-dec { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 18px 30px; margin: 4px 0 0; padding: 0; }
+  .pj-dec li { display: grid; grid-template-columns: 34px 1fr; }
+  .pj-dec span { font: 400 26px/1 var(--font-bebas-neue), sans-serif; color: #e8272a; }
+  .pj-dec strong { color: #fff; font-weight: 700; }
+  .pj-c-stats { display: flex; gap: 28px; flex-wrap: wrap; margin: 16px 0 0; }
+  /* cuatro cifras (TraumaVision) en 2 × 2: en la columna del resultado entraban 3 + 1 suelta */
+  .pj-c-stats:has(> div:nth-child(4):last-child) { display: grid; grid-template-columns: repeat(2, max-content); gap: 18px 40px; }
+  .pj-nb { white-space: nowrap; }
+  .pj-c-stats div { display: flex; flex-direction: column-reverse; gap: 6px; }
+  .pj-c-stats dt { font: 10.5px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); max-width: 15ch; }
+  .pj-c-stats dd { margin: 0; font: 400 36px/1 var(--font-bebas-neue), sans-serif; color: #e8e4de; }
+  /* D-08: Eleven no tiene cifras sino datos (fundación, clientes, enfoque): ficha vertical rótulo / valor */
+  .pj-c-stats.pj-facts { display: grid; grid-template-columns: max-content max-content; gap: 0 22px; }
+  .pj-c-stats.pj-facts > div { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: baseline; border-top: 1px solid var(--line); padding: 8px 0 7px; }
+  .pj-c-stats.pj-facts > div:last-child { border-bottom: 1px solid var(--line); }
+  .pj-c-stats.pj-facts dt { max-width: none; margin: 0; }
+  .pj-c-stats.pj-facts dd { order: 0; font: 400 20px/1.1 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; letter-spacing: .02em; color: #e8e4de; }
+  .pj-acts { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+  .pj-btn {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px;
+    border: 1px solid rgba(232, 228, 222, .28); background: transparent; color: #e8e4de; cursor: pointer;
+    font: 10.5px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; text-decoration: none;
+    transition: border-color .2s, background-color .2s, color .2s;
+  }
+  .pj-btn span { color: var(--dim); }   /* D-03: el número no va en rojo (texto chico) */
+  .pj-btn:hover, .pj-btn:focus-visible { border-color: #e8272a; outline: none; }
+  .pj-btn:active { background: rgba(232, 39, 42, .12); }
+  .pj-cta { border-color: #e8272a; }
+  .pj-cta:hover, .pj-cta:focus-visible { background: #e62529; color: #fff; }
+  .pj-note { margin-top: 12px !important; font: 10.5px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+  html.pj-case-open .pj-label, html.pj-case-open .pj-count { opacity: 0 !important; }
+  /* el caso: el demo entre la cabecera y la grilla */
+  .pj-c-demo { margin-top: 30px; }
+}

@@ -1,0 +1,141 @@
+/* Frame by Frame «Señal» — el Tambor 360 (escritorio ≥1024 con la escena viva o por venir: data-gallery en .fbf-zone,
+   lo pone hero-controller). U3 2026-10-12, port de la maqueta A de videos. Sin data-gallery (reduced motion, ?static,
+   sin GPU, <1024): las tarjetas (.fv-stack). Con la escena viva (.fv-stage.is-live) la sección es transparente y el
+   tambor está en el 3D; acá sólo van los controles (flechas, posición, pausa, sonido), la capa de arrastre y el
+   crédito CC BY del video de frente. Sin escena (cargando): el póster de la cara de frente, con fundido al cambiar.
+   Tokens de 02-brand: rojo #E8272A sólo como acento, radios 0, botón de doble marco, JetBrains Mono para metadatos. */
+
+.fv-gal { display: none; }
+
+@media (min-width: 1024px) {
+  .fbf-zone[data-gallery] .fv-stack { display: none; }
+  .fbf-zone[data-gallery] .fv-gal { display: block; position: relative; background: #080808; }
+  .fbf-zone[data-see-through] .fv-gal { background: transparent; }
+
+  .fv-stage {
+    --pad: 5.5vw;
+    --line: rgba(232, 228, 222, .2);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+    position: sticky; top: 0; height: 100vh; overflow: hidden;
+    pointer-events: none;
+    color: #e8e4de; font-family: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
+  }
+  @supports (height: 100svh) { .fv-stage { height: 100svh; } }
+
+  /* Video hereda el negro de la vitrina: sin el grano DOM del hero ni la barra sólida del nav (VideosStage pone fv-vit
+     en <html> desde la salida de Projects hasta el apagado del tambor; el fundido de .grain vive en projects-senal.css) */
+  html.fv-vit .senal .grain { opacity: 0; }
+  html.fv-vit .jnav.is-scrolled {
+    background: linear-gradient(180deg, rgba(2, 2, 5, .92) 0%, rgba(2, 2, 5, .55) 70%, rgba(2, 2, 5, 0) 100%);
+    border-bottom-color: transparent;
+  }
+
+  /* rótulo de sección: el mismo sistema que Projects */
+  .fv-label {
+    position: absolute; top: clamp(84px, 11vh, 110px); left: var(--pad); margin: 0;
+    display: flex; align-items: center; gap: 10px;
+    font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: #e8e4de;
+    text-shadow: 0 0 2px rgba(0, 0, 0, .95), 0 0 6px rgba(0, 0, 0, .9), 0 1px 14px rgba(0, 0, 0, .85);
+  }
+  .fv-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
+
+  /* ---------- la galería: región con foco, arrastre, controles ---------- */
+  .fv-ring { position: absolute; inset: 0; outline: none; }
+  .fv-ring:focus-visible::after {
+    content: ''; position: absolute; inset: 14px; border: 1px solid rgba(232, 39, 42, .5); pointer-events: none;
+  }
+  /* arrastre: el centro del cuadro, donde está el tambor (no tapa el menú ni los controles) */
+  .fv-drag {
+    position: absolute; left: var(--pad); right: var(--pad); top: 120px; bottom: 132px;
+    cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  }
+  .fv-ring[data-on] .fv-drag { pointer-events: auto; }
+  .fv-drag.is-drag { cursor: grabbing; }
+  /* la cara de frente bajo el puntero: el clic pausa o reanuda (scene.js pone fv-hot en <html>) */
+  html.fv-hot .fv-ring[data-on] .fv-drag:not(.is-drag) { cursor: pointer; }
+
+  .fv-ctrl, .fv-acts, .fv-credit {
+    position: absolute; bottom: max(4.2vh, 30px);
+    opacity: 0; transform: translateY(12px);
+    transition: opacity .5s var(--ease-out), transform .9s var(--ease-out);
+  }
+  .fv-ring[data-on] .fv-ctrl, .fv-ring[data-on] .fv-acts, .fv-ring[data-on] .fv-credit { opacity: 1; transform: none; }
+  .fv-ctrl { left: 50%; translate: -50% 0; display: flex; align-items: center; gap: 16px; }
+  .fv-acts { right: var(--pad); display: flex; align-items: center; gap: 6px; }
+  .fv-pos {
+    margin: 0; min-width: 5.2em; text-align: center;
+    font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: rgba(232, 228, 222, .62);
+    text-shadow: 0 0 2px rgba(0, 0, 0, .95), 0 1px 14px rgba(0, 0, 0, .85);
+  }
+  /* índice en tono pleno con el cuadrado rojo, como Projects / Stack / Experience */
+  .fv-pos b { color: #e8e4de; font-weight: 400; }
+  .fv-pos b::before {
+    content: ''; display: inline-block; width: 5px; height: 5px; margin: 0 .75em 0 0; vertical-align: .2em;
+    background: #e8272a; box-shadow: 0 0 8px rgba(232, 39, 42, .6);
+  }
+
+  /* botón de doble marco en ángulo recto: marco exterior + celda interior; el rojo entra desde el borde al hover */
+  .fv-btn {
+    display: inline-flex; padding: 4px; border: 1px solid rgba(232, 228, 222, .16); background: rgba(5, 5, 5, .55);
+    color: #fff; cursor: pointer; pointer-events: none;
+    transition: border-color .3s var(--ease-out), transform .18s var(--ease-out);
+  }
+  .fv-ring[data-on] .fv-btn, .fv-ring[data-on] .fv-tgl, .fv-ring[data-on] .fv-credit a { pointer-events: auto; }
+  .fv-btn > span {
+    position: relative; z-index: 0; width: 46px; height: 46px; display: grid; place-items: center; overflow: hidden;
+    border: 1px solid rgba(232, 228, 222, .1); font: 400 17px/1 var(--mono);
+  }
+  .fv-btn > span::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; background: #e8272a;
+    transform: scaleX(0); transform-origin: 0 50%; transition: transform .5s var(--ease-out);
+  }
+  .fv-ctrl .fv-btn:first-child > span::before { transform-origin: 100% 50%; }
+  .fv-btn:hover, .fv-btn:focus-visible { border-color: rgba(232, 39, 42, .75); outline: none; }
+  .fv-btn:hover > span::before, .fv-btn:focus-visible > span::before { transform: scaleX(1); }
+  .fv-btn:focus-visible { box-shadow: 0 0 0 2px #080808, 0 0 0 3px #e8272a; }
+  .fv-btn:active { transform: scale(.95); }
+
+  /* pausa y sonido: discretos (mono, sin relleno) */
+  .fv-tgl {
+    display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; pointer-events: none;
+    border: 1px solid transparent; background: none; color: rgba(232, 228, 222, .62); cursor: pointer;
+    font: 10.5px/1 var(--mono); letter-spacing: .18em; text-transform: uppercase;
+    text-shadow: 0 0 2px rgba(0, 0, 0, .95), 0 1px 14px rgba(0, 0, 0, .85);
+    transition: color .25s var(--ease-out), border-color .25s var(--ease-out);
+  }
+  .fv-tgl:hover, .fv-tgl:focus-visible { color: #fff; border-color: rgba(232, 228, 222, .2); outline: none; }
+  .fv-tgl:focus-visible { box-shadow: 0 0 0 1px #e8272a; }
+  .fv-snd[aria-pressed="true"], .fv-pause[data-on] { color: #e8e4de; }
+  .fv-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+  .fv-bars i { display: block; width: 2px; height: 3px; background: currentColor; transition: height .3s var(--ease-out); }
+  .fv-snd[aria-pressed="true"] .fv-bars i:nth-child(1) { height: 7px; }
+  .fv-snd[aria-pressed="true"] .fv-bars i:nth-child(2) { height: 12px; }
+  .fv-snd[aria-pressed="true"] .fv-bars i:nth-child(3) { height: 5px; }
+
+  /* crédito CC BY del video de frente (sólo la incubadora lo lleva) */
+  .fv-credit {
+    left: var(--pad); max-width: min(30vw, 420px); margin: 0;
+    font: 10.5px/1.55 var(--mono); letter-spacing: .04em; color: rgba(232, 228, 222, .62);
+    text-shadow: 0 0 2px rgba(0, 0, 0, .95), 0 1px 14px rgba(0, 0, 0, .85);
+  }
+  .fv-credit a { color: #e8e4de; text-decoration: underline; text-decoration-color: rgba(232, 228, 222, .4); text-underline-offset: 3px; }
+  .fv-credit a:hover, .fv-credit a:focus-visible { color: #fff; text-decoration-color: #e8272a; }
+  .fv-credit a:focus-visible { outline: 1px solid #e8272a; outline-offset: 3px; }
+
+  /* ---------- sin escena viva: el póster de la cara de frente (fundido entre pósters) ---------- */
+  .fv-front { position: absolute; inset: 0; pointer-events: none; }
+  .fv-front img {
+    position: absolute; left: 50%; top: 47%; transform: translate(-50%, -50%);
+    height: min(70vh, 700px); width: auto; max-width: none; object-fit: cover;
+    border: 1px solid rgba(232, 228, 222, .16); opacity: 0; transition: opacity .45s var(--ease-out);
+  }
+  .fv-front img[data-land] { height: auto; width: min(66vw, 1100px); }
+  .fv-front img[data-on] { opacity: 1; }
+  .fv-stage.is-live .fv-front { display: none; }
+  .fv-stage:not(.is-live) .fv-acts .fv-tgl:first-child { display: none; }
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .fv-btn, .fv-btn > span::before, .fv-tgl, .fv-ctrl, .fv-acts, .fv-credit, .fv-front img { transition: none; }
+}
