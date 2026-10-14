@@ -44,30 +44,27 @@
     "traumavision": {
       "label": "Tesis de grado · UNC Córdoba · 2026",
       "title": "TraumaVision AI",
-      "subtitle": "Soporte a la decisión clínica: fracturas de muñeca pediátrica en radiografías",
-      "description": "Prototipo académico: detector YOLOv8m dentro de una aplicación web en FastAPI que marca la zona probable de fractura y genera un informe PDF. Test interno de la tesis (3.038 imágenes): sensibilidad 96,7%, especificidad 93,1%. Test externo sin reentrenar (PediURF): 97,4% / 88,3%. En etapa de escalado con Emprende U 2026.",
-      "metric_auc": "AUC-ROC",
-      "metric_map50": "mAP@50",
       "metric_recall": "Sensibilidad",
-      "metric_specificity": "Especificidad",
-      "pipeline_label": "Pipeline",
-      "stack_label": "Stack",
       "shot_labels": ["REVISAR", "VISOR", "SIN HALLAZGOS", "HISTORIAL", "ACIERTO"],
       "eyebrow": "Caso · Tesis · UNC Córdoba · 2026",
       "metrics_note": "Test interno de la tesis · 3.038 imágenes",
       "led_line": "Web app para detección de fracturas de muñeca pediátrica mediante IA",
-      "pipeline": "DICOM → CLAHE → YOLOv8m → Detección → Informe PDF",
-      "problem": "La tesis buscó construir una segunda lectura para radiografías de muñeca pediátrica: un sistema que marca en la imagen la zona probable de fractura mientras la decisión queda en manos del médico. Alcance: solo muñeca pediátrica (pacientes de hasta 19 años), proyección de frente o de perfil, radiografía convencional.",
-      "role": "Autor del Proyecto Integrador (UNC), con dos asesoras de la UNC. Armé el pipeline de datos, entrené y evalué el modelo, desarrollé la aplicación web y escribí el análisis regulatorio.",
-      "decisions": [
-        { "title": "Partir por paciente.", "body": "GRAZPEDWRI-DX (20.327 imágenes de 6.091 pacientes) se dividió 70/15/15 por paciente, así ningún paciente aparece a la vez en entrenamiento y en test." },
-        { "title": "Fijar el umbral antes del test.", "body": "El umbral de decisión (0,22) se fijó en validación, como el valor más alto que mantenía la sensibilidad por imagen en 96% o más, sin usar el test para ajustarlo." },
-        { "title": "Probar con datos de otro país.", "body": "El modelo corrió sin reentrenar sobre PediURF, un dataset pediátrico de Shenzhen, China (1.000 casos, 1.790 imágenes)." }
+      "parts": [
+        "Modelo YOLOv8m entrenado y evaluado con más de 20.000 radiografías de muñeca pediátrica",
+        "Aplicación web: carga de estudios (imagen individual o ZIP de DICOM), visor con la zona marcada, revisión del médico e informe PDF",
+        "Historial de análisis y panel de desempeño del modelo",
+        "Cuentas por usuario con protección CSRF"
       ],
-      "result": "Test interno (3.038 imágenes, 914 pacientes no vistos): sensibilidad 96,7%, especificidad 93,1% y AUC-ROC 0,987 por imagen; mAP@50 de caja 0,944. Test externo (PediURF): sensibilidad 97,4% y especificidad 88,3% por imagen. Evaluado con datos retrospectivos; no está registrado ante la ANMAT ni autorizado para uso clínico. Código público bajo AGPL-3.0. En etapa de escalado con Emprende U 2026.",
+      "stats": [
+        { "value": "96,7% · 93,1%", "label": "Sensibilidad · especificidad, test interno de 3.038 imágenes" },
+        { "value": "0,987", "label": "AUC-ROC, test interno" },
+        { "value": "97,4% · 88,3%", "label": "Sensibilidad · especificidad con radiografías de otro país, sin reentrenar" },
+        { "value": "Emprende U 2026", "label": "En etapa de escalado" }
+      ],
+      "scope_note": "Prototipo académico (tesis entregada) evaluado con datos retrospectivos. No registrado ante la ANMAT ni autorizado para uso clínico.",
       "demo_alt": "Video demo de TraumaVision, sin sonido, 36 s: ingreso, carga del estudio (imagen individual o ZIP de DICOM), un resultado REVISAR con la zona marcada por YOLOv8m, el visor invertido con el puntaje por zona, la revisión del médico, el informe PDF, un caso negativo, el historial, el desempeño del modelo y el alcance y las limitaciones.",
       "shots_alt": [
-        "TraumaVision: resultado REVISAR, una zona marcada sobre el radio distal con un puntaje del detector de 0,83, por encima del corte de aviso de 0,22, y el aviso de confirmar con lectura médica",
+        "TraumaVision: resultado REVISAR, una zona marcada sobre el radio distal con un puntaje del detector de 0,83 y el aviso de confirmar con lectura médica",
         "TraumaVision: visor con contraste invertido y realce, la barra de puntaje por detección y los atajos de teclado",
         "TraumaVision: resultado SIN HALLAZGOS, con el aviso de que no descarta fractura",
         "TraumaVision: historial de análisis, filtrable por resultado y modelo (164 análisis: 102 con hallazgos, 62 sin)",
@@ -77,29 +74,25 @@
     "eleven": {
       "led_line": "Agencia web y de IA sobre un pipeline de agentes con Claude API",
       "title": "Eleven Estudio Digital",
-      "subtitle": "Agencia web e IA · Argentina",
-      "description": "Agencia que fundé en 2026. Desarrolla productos web y agentes de IA para pymes, sobre Next.js, Supabase y Claude API.",
-      "description_expanded": "Fundé Eleven en 2026 y construí su pipeline de producción: agentes especializados sobre Claude API para discovery, estrategia, marca, desarrollo y QA, con prompt caching, extended thinking, tool use e integraciones MCP (Playwright, Google Drive, Gmail, Calendar, Canva, Vercel). Los agentes preparan el trabajo; yo reviso y apruebo en cada punto de control, como en el desarrollo de KIBBO.",
-      "role": "Fundador",
-      "role_label": "Rol",
       "stat_founded": "2026",
       "stat_sites": "PYMES",
       "stat_approach": "AGENTES",
       "stat_founded_label": "Fundación",
       "stat_sites_label": "Clientes",
       "stat_approach_label": "Enfoque",
-      "services_label": "Servicios",
-      "services_list": "Productos web · Agentes de IA · Contenido",
       "shot_labels": ["PISO 01", "MANIFIESTO", "SERVICIOS", "MURO", "PORTAFOLIO", "TERRAZA"],
       "cta": "Ver sitio",
       "eyebrow": "Caso · Agencia propia · Argentina · 2026",
-      "problem": "Un proyecto para una pyme pasa por discovery, estrategia, marca, desarrollo y QA, y lo que sale de cada etapa tiene que revisarse antes de que lo use la siguiente.",
-      "role_text": "Fundador. Diseñé el pipeline de agentes de la agencia y lo opero.",
-      "decisions": [
-        { "title": "Un agente por etapa.", "body": "El pipeline reparte el trabajo entre agentes especializados sobre Claude API, uno por etapa, para que cada resultado se pueda revisar por separado antes de avanzar." },
-        { "title": "Cada punto de control lo aprueba una persona.", "body": "Los agentes preparan cada entrega; yo la reviso y la apruebo en cada punto de control, como en el desarrollo de KIBBO." }
+      "parts": [
+        "Servicios: productos web, agentes de IA y contenido para pymes",
+        "Agentes especializados por etapa: discovery, estrategia, marca, desarrollo y QA",
+        "Revisión y aprobación humana en cada punto de control",
+        "Sitio de la agencia: un recorrido en ascensor por pisos, con servicios, portafolio y contacto"
       ],
-      "result": "En funcionamiento desde 2026. Entre los trabajos entregados está kibbo.io en español e inglés (ver el caso KIBBO).",
+      "stats": [
+        { "value": "2026", "label": "Fundación" },
+        { "value": "kibbo.io", "label": "Sitio entregado en español e inglés" }
+      ],
       "demo_alt": "Video demo de Eleven, sin sonido, 30 s: el sitio ascensor desde el loader y las puertas que se abren, el piso 01 y el manifiesto, el piso de servicios, el viaje entre pisos, el muro de movimiento, la pila del portafolio y la terraza de contacto.",
       "shots_alt": [
         "Eleven: piso 01 del sitio ascensor, el wordmark «eleven» y «Tu negocio, elevado.», con el HUD de piso y el riel",
@@ -132,10 +125,8 @@
       ]
     },
     "case": {
-      "problem": "Problema",
-      "role": "Mi rol",
-      "decisions": "Decisiones clave",
-      "result": "Resultado",
+      "parts": "Componentes",
+      "achievements": "Logros",
       "stack": "Stack",
       "screens": "Pantallas",
       "view_shot": "Ver captura",
@@ -163,28 +154,18 @@
       "led_line": "Sitio bilingüe y SEO/GEO para una plataforma de mantenimiento de equipos hospitalarios",
       "eyebrow": "Caso · SaaS B2B · Vía Eleven · 2026",
       "title": "KIBBO",
-      "subtitle": "Sitio bilingüe y SEO/GEO para un CMMS de equipamiento hospitalario.",
-      "problem": "KIBBO es un CMMS (sistema de gestión de mantenimiento) de equipamiento médico hospitalario. El producto funcionaba, pero kibbo.io seguía en un WordPress desactualizado que no lo explicaba y le frenaba el paso a los buscadores. Un bioingeniero que evaluaba KIBBO no podía verlo funcionando ni ver quién ya lo usa.",
-      "role": "Desde Eleven lideré diseño, desarrollo front-end, SEO/GEO y la edición en inglés. El desarrollo corrió sobre nuestro pipeline de agentes de IA, con mi revisión y aprobación en cada punto de control.",
-      "decisions": [
-        { "title": "Hablarle al técnico, no al comprador.", "body": "Tercera persona, sin afirmaciones promocionales y cada afirmación respaldada por una pantalla real del producto, porque quien lee es quien lo va a operar todos los días." },
-        { "title": "Separar KIBBO de LEEX.", "body": "Las cifras del fabricante de hardware se atribuyen a LEEX, así el sitio de KIBBO afirma solo lo que KIBBO puede respaldar." },
-        { "title": "Darle al móvil un sistema propio.", "body": "En el teléfono, cada página se organiza como una ficha, en vez de comprimir el scroll de escritorio." },
-        { "title": "Hacer del inglés una edición completa.", "body": "Slugs propios, hreflang recíproco y el canonical en español intacto; las citas de usuarios quedan textuales en español con traducción rotulada, para no atribuirle a nadie palabras que no dijo." }
+      "parts": [
+        "Recorrido del producto con pantallas reales: inventario, preventivos, órdenes de trabajo y tablero de la flota",
+        "Diseño móvil propio, organizado en fichas",
+        "Datos estructurados JSON-LD, hreflang ES/EN y sitemap para buscadores y asistentes de IA",
+        "Guías de recursos: qué es un CMMS, pliego de licitación y registros por país"
       ],
-      "result": "En vivo en kibbo.io en español e inglés, en reemplazo del WordPress anterior, con GA4 midiendo desde el lanzamiento.",
       "stats": [
         { "value": "ES · EN", "label": "En vivo en kibbo.io" },
         { "value": "11", "label": "Páginas en inglés" },
         { "value": "23", "label": "URLs en el sitemap" }
       ],
       "seo_label": "SEO / GEO",
-      "seo_items": [
-        "JSON-LD: Organization, SoftwareApplication, FAQPage; puntajes solo donde se ven.",
-        "Hreflang ES/EN recíproco, x-default y canonical por idioma.",
-        "Sitemap desde un único registro de rutas, fechado por ediciones reales.",
-        "Guías citables: qué es un CMMS, pliego de licitación, registros por país."
-      ],
       "cta": "Ver sitio →",
       "demo_alt": "Video demo de KIBBO, sin sonido, 33 s: la home de kibbo.io, la ficha del equipo abierta en el teléfono desde su QR, el inventario de la flota, la hoja de vida del equipo, el preventivo con la marca de vencido, las órdenes de trabajo, los proveedores de servicio, el tablero de la flota y la comunidad de consultas.",
       "shots": [
@@ -207,16 +188,12 @@
       "badge": "En desarrollo — lanzamiento próximo",
       "eyebrow": "Caso · Sistema interno B2B · LEEX · 2026",
       "title": "Sistema de Licitaciones LEEX",
-      "subtitle": "Detecta licitaciones públicas en 33 fuentes y prepara veredictos de oferta para Ventas.",
-      "problem": "LEEX, empresa argentina de equipamiento médico, vende sobre todo por licitación pública. Las licitaciones se publican en decenas de portales del Estado, cada uno con su formato y sus plazos. Una licitación detectada tarde ya no se puede ofertar, y para ofertar hay que contrastar cada requisito con la ficha técnica. La herramienta anterior era un script de un solo usuario que alimentaba una planilla.",
-      "role": "Lo lideré de punta a punta: definí el alcance con Ventas y la gerencia, diseñé la arquitectura y construí el motor y la aplicación web con un pipeline de agentes de IA de programación bajo mi dirección.",
-      "decisions": [
-        { "title": "Código antes que IA.", "body": "Un match determinístico por diccionario y vectores filtra primero y un LLM evalúa solo lo que pasa ese filtro, lo que mantiene el sistema barato, testeable y explicable." },
-        { "title": "Cada veredicto lo firma una persona.", "body": "El modelo arma un borrador requisito por requisito citando el pliego y la ficha técnica, y decide Ventas, porque perder una licitación cuesta más que revisarla." },
-        { "title": "Tres estados de barrido, no dos.", "body": "«No hay nada», «no pude ver» y «vi mucho menos que siempre», porque si no, un portal que falló en silencio se vería igual que uno sin licitaciones." },
-        { "title": "Lo público primero.", "body": "El motor lee la vista pública de cada portal y entra con login solo como último recurso documentado, lo que redujo la exposición de credenciales y permitió arrancar sin esperar accesos." }
+      "parts": [
+        "Motor de barrido de portales de compras públicas, con aviso cuando un barrido vuelve incompleto",
+        "Clasificación de cada licitación por categoría de producto",
+        "Borrador de veredicto con IA, requisito por requisito y con evidencia citada; lo firma una persona de Ventas",
+        "Aplicación web: tablero, cola de revisión, vista «Mi trabajo» y salud de las fuentes"
       ],
-      "result": "En desarrollo, lanzamiento próximo. Funciona internamente sobre datos reales: la primera pasada completa fue del barrido al triaje y a veredictos firmados por una persona. Próximo paso: incorporar al equipo de Ventas.",
       "stats": [
         { "value": "33", "label": "Fuentes de compras barridas" },
         { "value": "19", "label": "Fuentes que antes no se veían" },

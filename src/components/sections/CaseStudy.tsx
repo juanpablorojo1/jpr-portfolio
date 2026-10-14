@@ -9,17 +9,13 @@ import ProjectDemo from '../ui/ProjectDemo';
 import DeskOnlyImage from '../ui/DeskOnlyImage';
 import type { ProjectDemo as DemoSrc } from '../../lib/content';
 
-// Case-study format fixed by Juan: problem → my role → key decisions → result.
-// Desktop: one rail panel of 200vw = two spreads (A: problem + role + screens,
-// B: decisions + result). Mobile: same content stacked.
+// Ficha técnica (pedido de Juan, 2026-10-14; reemplaza problema → mi rol → decisiones clave → resultado): una línea de
+// qué es (led_line) bajo el título → medios → 01 Componentes → 02 Stack → 03 Logros → nota de alcance → acciones.
+// Celular y escritorio sin escena: CaseStudyMobile (abajo). Escritorio con escena: el panel «Ver proyecto»
+// (ProjectsGallery, caseBody), con los mismos datos.
 // Phone (< 1024, 2026-10-14, mobile-senal): CaseStudyMobile carries the phone design through classes (pjm-*,
 // projects-senal.css) and data-pm (phoneMotion). The visual piece goes first and edge to edge (PhoneMedia, only
 // shown below 1024); the desktop-static demo + strip stays as it was (hidden on phones).
-
-export interface CaseDecision {
-  title: string;
-  body: string;
-}
 
 export interface CaseStat {
   value: string;
@@ -30,31 +26,27 @@ export interface CaseStudyData {
   number: string;
   eyebrow: string;
   title: string;
-  subtitle: string;
+  /** qué es, en una línea: projects.<id>.led_line (la misma de la vitrina) */
+  line: string;
   badge?: string;
-  problem: string;
-  role: string;
-  decisions: CaseDecision[];
-  result: string;
+  /** Componentes: una pieza por línea */
+  parts: string[];
+  /** Logros: 2-4 {valor, rótulo} */
   stats: CaseStat[];
+  /** nota chica bajo Logros (TraumaVision: alcance regulatorio) */
+  note?: string;
   stack: readonly string[];
-  /** Where the stack chips sit on desktop: spread A (left, under role) or B (under stats). */
-  stackSpread: 'a' | 'b';
   shots: CaseShot[];
   shotsNote?: string;
-  seo?: { label: string; items: string[]; shots: CaseShot[] };
+  seo?: { label: string; shots: CaseShot[] };
   cta?: { href: string; label: string };
   /** video demo (Track C): PROJECT_DEMOS + alt de messages projects.<id>.demo_alt */
   demo?: { src: DemoSrc; alt: string };
 }
 
-interface PanelProps {
-  data: CaseStudyData;
-  /** Opens the lightbox at an index of [...shots, ...seo.shots]. */
-  onOpen: (index: number) => void;
-  onMouseMove?: (e: React.MouseEvent<HTMLDivElement>) => void;
-  onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void;
-}
+/** Un valor que no entra en media columna del celular («96,7% · 93,1%», «Emprende U 2026»): los logros van uno por
+ *  fila, con la misma letra (Juan: no achicar). El panel de escritorio usa la misma regla (pj-long). */
+export const hasLongStat = (stats: CaseStat[]) => stats.some((s) => s.value.length > 8);
 
 function BlockLabel({ n, children }: { n: string; children: React.ReactNode }) {
   return (
@@ -118,53 +110,6 @@ function ShotButton({
   );
 }
 
-function Gallery({
-  data,
-  onOpen,
-  viewLabel,
-  screensLabel,
-  cols,
-  sizesFeatured,
-  sizesThumb,
-}: {
-  data: CaseStudyData;
-  onOpen: (i: number) => void;
-  viewLabel: string;
-  screensLabel: string;
-  cols: 2 | 4;
-  sizesFeatured: string;
-  sizesThumb: string;
-}) {
-  const [featured, ...thumbs] = data.shots;
-  const filler = (cols - (thumbs.length % cols)) % cols;
-  return (
-    <div className={`grid gap-2 ${cols === 4 ? 'grid-cols-4' : 'grid-cols-2'}`}>
-      <ShotButton
-        shot={featured}
-        index={0}
-        onOpen={onOpen}
-        sizes={sizesFeatured}
-        viewLabel={viewLabel}
-        className={cols === 4 ? 'col-span-4' : 'col-span-2'}
-      />
-      {thumbs.map((shot, i) => (
-        <ShotButton key={shot.src} shot={shot} index={i + 1} onOpen={onOpen} sizes={sizesThumb} viewLabel={viewLabel} />
-      ))}
-      {filler > 0 && (
-        <div
-          className="border border-border flex items-end p-2"
-          style={{ gridColumn: `span ${filler} / span ${filler}` }}
-          aria-hidden="true"
-        >
-          <span className="font-mono text-[10px] text-muted uppercase tracking-widest leading-tight">
-            <span className="text-accent">{String(data.shots.length).padStart(2, '0')}</span> {screensLabel}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // Mobile: featured shot + thumbnails in a horizontal snap strip (same pattern as the
 // video strip). No filler tile.
 function StripGallery({ data, onOpen, viewLabel }: { data: CaseStudyData; onOpen: (i: number) => void; viewLabel: string }) {
@@ -186,10 +131,11 @@ function StripGallery({ data, onOpen, viewLabel }: { data: CaseStudyData; onOpen
 }
 
 function Stats({ stats, size }: { stats: CaseStat[]; size: 'lg' | 'sm' }) {
-  // 4 stats read as a 2×2 (long labels stay at ≤ 2 lines); 3 stay in one row.
+  // 4 stats read as a 2×2 (long labels stay at ≤ 2 lines); 3 stay in one row. Long values (pjm-long): one per row
+  // on the phone (projects-senal.css), same type size.
   const cols = stats.length >= 4 ? 'grid-cols-2' : 'grid-cols-3';
   return (
-    <div className={`grid ${cols} gap-x-6 gap-y-4 border-l-2 border-accent ${size === 'lg' ? 'pl-6' : 'pl-4'}`}>
+    <div className={`grid ${cols}${hasLongStat(stats) ? ' pjm-long' : ''} gap-x-6 gap-y-4 border-l-2 border-accent ${size === 'lg' ? 'pl-6' : 'pl-4'}`}>
       {stats.map((s) => (
         <div key={s.label} data-pm-i>
           <p className={`font-mono text-white tracking-tight mb-1 ${size === 'lg' ? 'text-2xl' : 'text-lg'}`}>{s.value}</p>
@@ -200,21 +146,17 @@ function Stats({ stats, size }: { stats: CaseStat[]; size: 'lg' | 'sm' }) {
   );
 }
 
-function Decisions({ decisions, compact }: { decisions: CaseDecision[]; compact?: boolean }) {
+// Componentes: una pieza por línea, con el guion rojo de las listas del sitio (un glifo, no texto chico en rojo)
+function Parts({ parts }: { parts: string[] }) {
   return (
-    <ol className={compact ? 'space-y-5' : 'space-y-6'}>
-      {decisions.map((d, i) => (
-        <li key={d.title} data-pm-i className="grid grid-cols-[2.5rem_1fr] gap-3">
-          <span className="font-display text-accent leading-none" style={{ fontSize: compact ? '1.75rem' : '2.25rem' }} aria-hidden="true">
-            {String(i + 1).padStart(2, '0')}
-          </span>
-          <div>
-            <p className={`font-ui font-bold text-off-white leading-snug mb-1 ${compact ? 'text-base' : 'text-lg'}`}>{d.title}</p>
-            <p className={`font-ui text-muted leading-relaxed ${compact ? 'text-sm' : 'text-[0.95rem]'}`}>{d.body}</p>
-          </div>
+    <ul className="pjm-parts space-y-2">
+      {parts.map((x) => (
+        <li key={x} data-pm-i className="grid grid-cols-[1.25rem_1fr] font-ui text-off-white leading-relaxed">
+          <span className="text-accent" aria-hidden="true">—</span>
+          <span>{x}</span>
         </li>
       ))}
-    </ol>
+    </ul>
   );
 }
 
@@ -224,14 +166,6 @@ function SeoBlock({ data, onOpen, viewLabel, sizes }: { data: CaseStudyData; onO
   return (
     <div className="border-t border-border pt-5">
       <p className="font-mono text-xs text-accent uppercase tracking-widest mb-3">{data.seo.label}</p>
-      <ul className="space-y-1.5 mb-4">
-        {data.seo.items.map((item) => (
-          <li key={item} className="grid grid-cols-[1rem_1fr] font-mono text-xs text-off-white leading-relaxed">
-            <span className="text-accent" aria-hidden="true">—</span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
       <div className="grid grid-cols-2 gap-2">
         {data.seo.shots.map((shot, i) => (
           <ShotButton key={shot.src} shot={shot} index={offset + i} onOpen={onOpen} sizes={sizes} viewLabel={viewLabel} />
@@ -259,114 +193,6 @@ function Stack({ stack }: { stack: readonly string[] }) {
   return (
     <div className="flex flex-wrap gap-2">
       {stack.map((tech) => <StackBadge key={tech} label={tech} />)}
-    </div>
-  );
-}
-
-// ── Desktop: 200vw rail panel ──────────────────────────────────────────────
-export function CaseStudyPanel({ data, onOpen, onMouseMove, onMouseLeave }: PanelProps) {
-  const t = useTranslations('projects.case');
-  const spread = 'relative flex flex-col justify-center';
-  // Header line is pinned at the same height in both spreads (no step while the rail
-  // moves); content centres in the space below it and keeps clear of the dots.
-  const spreadStyle = { width: '100vw', height: '100vh', padding: '8.25rem 3rem 4.5rem' } as const;
-  const headerClass = 'absolute left-12 right-12 flex items-baseline gap-4';
-  const headerStyle = { top: '6rem' } as const;
-
-  return (
-    <div className="relative flex" style={{ width: '200vw', height: '100vh' }}>
-      {/* Spread A — problem + role + screens */}
-      <div className={spread} style={spreadStyle}>
-        <div className={headerClass} style={headerStyle}>
-          <span className="font-mono text-xs text-accent tracking-widest">{data.number}</span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto w-full">
-          <div>
-            <div className="flex flex-wrap items-center gap-3 mb-2">
-              <p className="font-mono text-xs text-accent tracking-widest uppercase">{data.eyebrow}</p>
-              {data.badge && <StatusBadge label={data.badge} />}
-            </div>
-            <h2
-              className="font-display text-white uppercase leading-none mb-3"
-              style={{ fontSize: 'clamp(2.5rem, 4.6vw, 5rem)' }}
-            >
-              {data.title}
-            </h2>
-            <p className="font-ui text-off-white text-lg leading-snug mb-6 max-w-xl">{data.subtitle}</p>
-
-            <div className="mb-5 max-w-xl">
-              <BlockLabel n="01">{t('problem')}</BlockLabel>
-              <p className="font-ui text-muted text-[0.95rem] leading-relaxed">{data.problem}</p>
-            </div>
-            <div className="mb-6 max-w-xl">
-              <BlockLabel n="02">{t('role')}</BlockLabel>
-              <p className="font-ui text-off-white text-[0.95rem] leading-relaxed">{data.role}</p>
-            </div>
-
-            {data.stackSpread === 'a' && <Stack stack={data.stack} />}
-          </div>
-
-          <div
-            style={{ transformStyle: 'preserve-3d' }}
-            onMouseMove={onMouseMove}
-            onMouseLeave={onMouseLeave}
-          >
-            <Gallery
-              data={data}
-              onOpen={onOpen}
-              viewLabel={t('view_shot')}
-              screensLabel={t('screens')}
-              cols={4}
-              sizesFeatured="45vw"
-              sizesThumb="12vw"
-            />
-            {data.shotsNote && (
-              <p className="font-mono text-[10px] text-muted uppercase tracking-widest mt-3">* {data.shotsNote}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Spread B — key decisions + result */}
-      <div className={spread} style={spreadStyle}>
-        <div className={headerClass} style={headerStyle}>
-          <span className="font-mono text-xs text-muted tracking-widest uppercase">
-            <span className="text-accent">{data.number}</span> · {data.title}
-          </span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto w-full">
-          <div>
-            <BlockLabel n="03">{t('decisions')}</BlockLabel>
-            <div className="mt-4">
-              <Decisions decisions={data.decisions} />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-6">
-            <div>
-              <div className="flex items-start justify-between gap-6">
-                <BlockLabel n="04">{t('result')}</BlockLabel>
-                {data.cta && <Cta cta={data.cta} />}
-              </div>
-              <p className="font-ui text-off-white text-lg leading-snug mb-5">{data.result}</p>
-              <Stats stats={data.stats} size="lg" />
-            </div>
-
-            {data.stackSpread === 'b' && (
-              <div>
-                <p className="font-mono text-xs text-muted uppercase tracking-widest mb-3">{t('stack')}</p>
-                <Stack stack={data.stack} />
-              </div>
-            )}
-
-            <SeoBlock data={data} onOpen={onOpen} viewLabel={t('view_shot')} sizes="22vw" />
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -441,22 +267,10 @@ export function CaseStudyMobile({ data, onOpen, isLast }: { data: CaseStudyData;
         )}
         <p className="pjm-eyebrow font-mono text-xs text-accent tracking-widest uppercase mb-2">{data.eyebrow}</p>
         <h2 className="pjm-title font-display text-white uppercase leading-none mb-4" style={{ fontSize: 'clamp(2rem, 8vw, 4rem)' }}>{data.title}</h2>
-        <p className="pjm-sub font-ui text-off-white text-lg leading-snug mb-6">{data.subtitle}</p>
+        <p className="pjm-sub font-ui text-off-white text-lg leading-snug mb-6">{data.line}</p>
       </div>
 
       <PhoneMedia data={data} onOpen={onOpen} />
-
-      {/* Story first: problem + role, then the screens, then decisions */}
-      <div className="pjm-story md:grid md:grid-cols-2 md:gap-10">
-        <div className="pjm-step mb-6" data-pm="rise">
-          <BlockLabel n="01">{t('problem')}</BlockLabel>
-          <p className="font-ui text-muted leading-relaxed">{data.problem}</p>
-        </div>
-        <div className="pjm-step mb-8" data-pm="rise">
-          <BlockLabel n="02">{t('role')}</BlockLabel>
-          <p className="font-ui text-off-white leading-relaxed">{data.role}</p>
-        </div>
-      </div>
 
       <div className="pjm-desk mb-10">
         {data.demo && (
@@ -470,30 +284,32 @@ export function CaseStudyMobile({ data, onOpen, isLast }: { data: CaseStudyData;
         )}
       </div>
 
-      <div className="pjm-step pjm-dec mb-8">
-        <div data-pm="rise"><BlockLabel n="03">{t('decisions')}</BlockLabel></div>
-        <div data-pm="group" className="mt-4 md:[&_ol]:grid md:[&_ol]:grid-cols-2 md:[&_ol]:gap-x-10 md:[&_ol]:gap-y-6 md:[&_ol>li]:!mt-0">
-          <Decisions decisions={data.decisions} compact />
+      {/* Ficha: 01 Componentes · 02 Stack (de a dos columnas desde 768) → 03 Logros + nota */}
+      <div className="pjm-story md:grid md:grid-cols-2 md:gap-10">
+        <div className="pjm-step mb-8">
+          <div data-pm="rise"><BlockLabel n="01">{t('parts')}</BlockLabel></div>
+          <div data-pm="group"><Parts parts={data.parts} /></div>
+        </div>
+        <div className="pjm-step mb-8" data-pm="rise">
+          <BlockLabel n="02">{t('stack')}</BlockLabel>
+          <Stack stack={data.stack} />
         </div>
       </div>
 
-      <div className="pjm-step pjm-result mb-8">
-        <div data-pm="rise">
-          <BlockLabel n="04">{t('result')}</BlockLabel>
-          <p className="font-ui text-off-white text-lg leading-snug mb-5">{data.result}</p>
-        </div>
+      <div className={`pjm-step pjm-result${data.seo || data.cta ? ' mb-8' : ''}`}>
+        <div data-pm="rise"><BlockLabel n="03">{t('achievements')}</BlockLabel></div>
         <div data-pm="group"><Stats stats={data.stats} size="sm" /></div>
+        {data.note && (
+          <p className="pjm-scope font-mono text-[10px] text-muted uppercase tracking-widest leading-relaxed mt-4" data-pm="rise">{data.note}</p>
+        )}
       </div>
 
       {data.seo && (
-        <div className="pjm-seo mb-8" data-pm="rise">
+        <div className="pjm-seo mb-6" data-pm="rise">
           <SeoBlock data={data} onOpen={onOpen} viewLabel={t('view_shot')} sizes="50vw" />
         </div>
       )}
 
-      <div className={`pjm-chips${data.cta ? ' mb-6' : ''}`} data-pm="rise">
-        <Stack stack={data.stack} />
-      </div>
       <Cta cta={data.cta} />
     </div>
   );

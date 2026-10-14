@@ -44,30 +44,27 @@
     "traumavision": {
       "label": "Thesis · UNC Córdoba · 2026",
       "title": "TraumaVision AI",
-      "subtitle": "Clinical Decision Support for Pediatric Wrist Fractures on X-Rays",
-      "description": "Academic prototype: a YOLOv8m detector inside a FastAPI web app that marks the likely fracture site and issues a PDF report. Thesis internal test set (3,038 images): 96.7% sensitivity, 93.1% specificity. External test without retraining (PediURF): 97.4% / 88.3%. Now scaling through Emprende U 2026.",
-      "metric_auc": "AUC-ROC",
-      "metric_map50": "mAP@50",
       "metric_recall": "Sensitivity",
-      "metric_specificity": "Specificity",
-      "pipeline_label": "Pipeline",
-      "stack_label": "Stack",
       "shot_labels": ["REVIEW", "VIEWER", "NO FINDINGS", "HISTORY", "ACCURACY"],
       "eyebrow": "Case Study · Thesis · UNC Córdoba · 2026",
       "metrics_note": "Thesis internal test set · 3,038 images",
       "led_line": "Web app for AI-based pediatric wrist fracture detection",
-      "pipeline": "DICOM → CLAHE → YOLOv8m → Detection → PDF report",
-      "problem": "The thesis set out to build a second reader for pediatric wrist X-rays: a system that marks the likely fracture site on the image while the physician keeps the decision. Scope: pediatric wrist only (patients up to 19), frontal or lateral view, conventional radiography.",
-      "role": "Author of the capstone project (Proyecto Integrador, UNC), with two UNC advisors. I built the data pipeline, trained and evaluated the model, developed the web app and wrote the regulatory analysis.",
-      "decisions": [
-        { "title": "Split by patient.", "body": "GRAZPEDWRI-DX (20,327 images from 6,091 patients) was split 70/15/15 by patient, so no patient appears in both training and test." },
-        { "title": "Fix the threshold before the test.", "body": "The decision threshold (0.22) was set on the validation set, as the highest value that kept image-level sensitivity at 96% or more; test data never tuned it." },
-        { "title": "Test on data from another country.", "body": "The model ran without retraining on PediURF, a pediatric dataset from Shenzhen, China (1,000 cases, 1,790 images)." }
+      "parts": [
+        "YOLOv8m model trained and evaluated on 20,000+ pediatric wrist X-rays",
+        "Web app: study upload (single image or DICOM ZIP), viewer with the flagged area, physician review and PDF report",
+        "Analysis history and model performance panel",
+        "Per-user accounts with CSRF protection"
       ],
-      "result": "Internal test set (3,038 images, 914 unseen patients): 96.7% sensitivity, 93.1% specificity and AUC-ROC 0.987 per image; box mAP@50 0.944. External test (PediURF): 97.4% sensitivity and 88.3% specificity per image. Evaluated on retrospective data; not registered with ANMAT or authorized for clinical use. Code public under AGPL-3.0. Now scaling through Emprende U 2026.",
+      "stats": [
+        { "value": "96.7% · 93.1%", "label": "Sensitivity · specificity, internal test set of 3,038 images" },
+        { "value": "0.987", "label": "AUC-ROC, internal test set" },
+        { "value": "97.4% · 88.3%", "label": "Sensitivity · specificity on X-rays from another country, no retraining" },
+        { "value": "Emprende U 2026", "label": "Now scaling" }
+      ],
+      "scope_note": "Academic prototype (thesis submitted) evaluated on retrospective data. Not registered with ANMAT or authorized for clinical use.",
       "demo_alt": "TraumaVision demo video, silent, 36 s: sign-in, study upload (single image or a DICOM ZIP), a REVIEW result with the zone marked by YOLOv8m, the inverted viewer with the score per zone, the physician review, the PDF report, a negative case, the history, model performance, and scope and limitations.",
       "shots_alt": [
-        "TraumaVision: REVIEW result, a zone marked over the distal radius with a 0.83 detector score, above the 0.22 alert cut-off, and the notice to confirm with a medical reading",
+        "TraumaVision: REVIEW result, a zone marked over the distal radius with a 0.83 detector score and the notice to confirm with a medical reading",
         "TraumaVision: viewer with inverted contrast and enhancement, the score bar per detection and the keyboard shortcuts",
         "TraumaVision: NO FINDINGS result, with the notice that it does not rule out a fracture",
         "TraumaVision: analysis history, filterable by result and model (164 analyses: 102 with findings, 62 without)",
@@ -77,29 +74,25 @@
     "eleven": {
       "led_line": "Web and AI agency running on a Claude API agent pipeline",
       "title": "Eleven Estudio Digital",
-      "subtitle": "Web and AI Agency · Argentina",
-      "description": "Agency I founded in 2026. It builds web products and AI agents for SMBs on Next.js, Supabase and the Claude API.",
-      "description_expanded": "I founded Eleven in 2026 and built its production pipeline: specialized agents on the Claude API for discovery, strategy, brand, development and QA, with prompt caching, extended thinking, tool use and MCP integrations (Playwright, Google Drive, Gmail, Calendar, Canva, Vercel). Agents prepare the work; I review and sign off at each checkpoint, as on the KIBBO build.",
-      "role": "Founder",
-      "role_label": "Role",
       "stat_founded": "2026",
       "stat_sites": "SMBs",
       "stat_approach": "AI AGENTS",
       "stat_founded_label": "Founded",
       "stat_sites_label": "Clients",
       "stat_approach_label": "Pipeline",
-      "services_label": "Services",
-      "services_list": "Web Products · AI Agents · Digital Content",
       "shot_labels": ["FLOOR 01", "MANIFESTO", "SERVICES", "MOTION WALL", "PORTFOLIO", "TERRACE"],
       "cta": "View Site",
       "eyebrow": "Case Study · Own agency · Argentina · 2026",
-      "problem": "An SMB project runs through discovery, strategy, brand, development and QA, and each stage's output has to be checked before the next one uses it.",
-      "role_text": "Founder. I designed the agency's agent pipeline and run it.",
-      "decisions": [
-        { "title": "One agent per stage.", "body": "The pipeline splits the work across specialized agents on the Claude API, one per stage, so each output can be checked on its own before it moves on." },
-        { "title": "A person signs off every checkpoint.", "body": "Agents prepare each deliverable; I review and approve it at every checkpoint, as on the KIBBO build." }
+      "parts": [
+        "Services: web products, AI agents and content for SMBs",
+        "Specialized agents per stage: discovery, strategy, brand, development and QA",
+        "Human review and sign-off at every checkpoint",
+        "Agency website: an elevator ride through floors, with services, portfolio and contact"
       ],
-      "result": "In operation since 2026. Delivered work includes kibbo.io in Spanish and English (see the KIBBO case).",
+      "stats": [
+        { "value": "2026", "label": "Founded" },
+        { "value": "kibbo.io", "label": "Site delivered in Spanish and English" }
+      ],
       "demo_alt": "Eleven demo video, silent, 30 s: the elevator site from the loader and the doors opening, floor 01 and the manifesto, the services floor, the transit between floors, the motion wall, the portfolio stack and the contact terrace.",
       "shots_alt": [
         "Eleven: floor 01 of the elevator site, the «eleven» wordmark and «Tu negocio, elevado.», with the floor HUD and rail",
@@ -132,10 +125,8 @@
       ]
     },
     "case": {
-      "problem": "Problem",
-      "role": "My role",
-      "decisions": "Key decisions",
-      "result": "Result",
+      "parts": "Components",
+      "achievements": "Achievements",
       "stack": "Stack",
       "screens": "Screens",
       "view_shot": "View screenshot",
@@ -163,28 +154,18 @@
       "led_line": "Bilingual website and SEO/GEO for a hospital-equipment maintenance platform",
       "eyebrow": "Case Study · B2B SaaS · Built via Eleven · 2026",
       "title": "KIBBO",
-      "subtitle": "Bilingual website and SEO/GEO for a hospital-equipment CMMS.",
-      "problem": "KIBBO is a CMMS (computerized maintenance management system) for hospital medical equipment. The product worked, but kibbo.io ran an outdated WordPress site that did not explain it and throttled search crawlers. A biomedical engineer evaluating KIBBO could not see the product running or check who already uses it.",
-      "role": "Through Eleven, I led design, front-end development, SEO/GEO and the English edition. The build ran on our AI-agent pipeline, with my review and sign-off at every checkpoint.",
-      "decisions": [
-        { "title": "Write to the technician, not the buyer.", "body": "Third person, no promotional claims, and every statement backed by a real product screen, because the reader is the person who will operate it every day." },
-        { "title": "Keep KIBBO and LEEX apart.", "body": "Figures from the hardware manufacturer are credited to LEEX, so the KIBBO site claims only what KIBBO can back." },
-        { "title": "Give mobile its own system.", "body": "On phones, each page is laid out as a record instead of the desktop scroll compressed onto a small screen." },
-        { "title": "Make English a full edition.", "body": "Own slugs, reciprocal hreflang and the Spanish canonical kept intact; user quotes stay verbatim in Spanish with a labeled translation, so no one is misquoted." }
+      "parts": [
+        "Product walkthrough on real screens: inventory, preventive maintenance, work orders and fleet dashboard",
+        "Separate mobile design with a record-style layout",
+        "JSON-LD structured data, ES/EN hreflang and a sitemap for search engines and AI assistants",
+        "Resource guides: CMMS explainer, tender checklist and country records (ES)"
       ],
-      "result": "Live on kibbo.io in Spanish and English, replacing the legacy WordPress site, with GA4 measuring from launch.",
       "stats": [
         { "value": "ES · EN", "label": "Live on kibbo.io" },
         { "value": "11", "label": "Pages in English" },
         { "value": "23", "label": "URLs in the sitemap" }
       ],
       "seo_label": "SEO / GEO",
-      "seo_items": [
-        "JSON-LD: Organization, SoftwareApplication, FAQPage; ratings only where visible.",
-        "Reciprocal ES/EN hreflang, x-default and a canonical per language.",
-        "Sitemap built from one route registry, dated by real edits.",
-        "Citable guides: CMMS explainer, tender checklist, country records (ES)."
-      ],
       "cta": "View site →",
       "demo_alt": "KIBBO demo video, silent, 33 s: the kibbo.io home, the device profile opened on the phone from its QR, fleet inventory, the equipment history file, preventive maintenance with the overdue flag, work orders, service providers, the fleet dashboard and the community Q&A.",
       "shots": [
@@ -207,16 +188,12 @@
       "badge": "In development — launching soon",
       "eyebrow": "Case Study · Internal B2B System · LEEX · 2026",
       "title": "LEEX Tender System",
-      "subtitle": "Detects public tenders across 33 sources and drafts bid verdicts for sales.",
-      "problem": "LEEX, an Argentine medical equipment company, sells mainly through public tenders. Tenders are published across dozens of government portals, each with its own format and deadlines. A tender detected late cannot be bid on, and bidding requires checking each requirement against the product sheet. The previous tool was a single-user script feeding a spreadsheet.",
-      "role": "I led it end to end: scoped it with sales and management, designed the architecture, and built the engine and the web app with a pipeline of AI coding agents under my direction.",
-      "decisions": [
-        { "title": "Code before AI.", "body": "A deterministic dictionary-plus-vector match filters first, and an LLM evaluates only what passes, which keeps the system cheap, testable and explainable." },
-        { "title": "A person signs every verdict.", "body": "The model drafts a requirement-by-requirement case citing the tender and the product sheet, and sales decides, because a missed tender costs more than a review." },
-        { "title": "Three sweep states, not two.", "body": "\"Nothing there\", \"couldn't see\" and \"saw far less than usual\", because a portal that failed silently would otherwise look the same as one with no tenders." },
-        { "title": "Public first.", "body": "The engine reads each portal's public view and logs in only as a documented last resort, which reduced credential exposure and let the build start without waiting on access." }
+      "parts": [
+        "Sweep engine for public procurement portals that flags incomplete sweeps",
+        "Classification of each tender by product category",
+        "AI-drafted verdict per requirement, with cited evidence; a sales team member signs off on it",
+        "Web app: board, review queue, “My work” view and source health"
       ],
-      "result": "In development, launch pending. It runs internally on real data: the first full pass went from sweep to triage to human-signed verdicts. Next step: rollout to the sales team.",
       "stats": [
         { "value": "33", "label": "Procurement sources swept" },
         { "value": "19", "label": "Sources the old tool never reached" },
