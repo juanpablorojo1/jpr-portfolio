@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
@@ -34,6 +34,15 @@ const jetBrainsMono = localFont({
 type Props = {
   children: React.ReactNode;
   params: { locale: string };
+};
+
+// Celular: el contenido llega hasta los bordes (notch, indicador de inicio) y cada capa usa env(safe-area-inset-*).
+// themeColor pinta la barra del navegador del mismo negro del sitio. Escritorio no usa ninguno de los dos.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#080808',
 };
 
 export async function generateMetadata({ params: { locale } }: Props): Promise<Metadata> {
