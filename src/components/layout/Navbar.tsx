@@ -83,9 +83,12 @@ export default function Navbar() {
       const name = window.innerWidth < 1024 ? document.querySelector('.senal .name') : null;
       if (name) {
         const band = restBarHeight() + 40;
+        // La franja se extiende hacia arriba sin tope (margen superior enorme): «el nombre ya pasó» también cuenta como
+        // adentro. Sin eso un salto (link a sección, scroll rápido de más de 104 px por frame) llevaba el nombre de
+        // abajo de la franja a arriba sin cruzarla, el IO no avisaba y la barra no se iba ni aparecía el dock (U2).
         io = new IntersectionObserver(
           ([e]) => setScrolled(e.isIntersecting || e.boundingClientRect.top < 0),
-          { root: document, rootMargin: `0px 0px -${Math.max(0, window.innerHeight - band)}px 0px` },
+          { root: document, rootMargin: `100000px 0px -${Math.max(0, window.innerHeight - band)}px 0px` },
         );
         io.observe(name);
         return;
