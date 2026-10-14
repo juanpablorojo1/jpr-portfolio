@@ -5,10 +5,15 @@ import { useTranslations } from 'next-intl';
 import StackBadge from '../ui/StackBadge';
 import StackStage from './StackStage';
 import { whenNoGallery } from '../../lib/idle';
+import { phoneReveal } from '../../lib/phoneMotion';
+import './stack-phone.css';
 
 // Stack — data-driven from messages skills.*. Two layouts in the same #skills block:
 // - .sk-classic (this grid): phones/tablets (<1024) and desktop without the 3D scene (reduced motion, ?static, no GPU).
 // - StackStage: desktop ≥1024 with the «Señal» scene — the layered network (network.js + stack-senal.css).
+// Below 1024 (2026-10-14, mobile-senal): phone design in stack-phone.css (.skm-*): the layers as a vertical list, one
+// per group, threaded by the red line (SVG) with a node at each layer; staggered entrance (phoneMotion).
+// Phone-only pieces are display:none outside the < 1024 block.
 
 export default function Skills() {
   const t = useTranslations('skills');
@@ -76,7 +81,10 @@ export default function Skills() {
     return () => { cleanup = true; stopWait(); };
   }, []);
 
+  useEffect(() => (sectionRef.current ? phoneReveal(sectionRef.current) : undefined), []);
+
   const clusterKeys = ['cluster_ai', 'cluster_web', 'cluster_tools', 'cluster_bio'] as const;
+  const headline = t('headline');
 
   const MARQUEE_ITEMS = [
     'PyTorch', 'YOLOv8m', 'Claude API', 'Next.js', 'FastAPI', 'Supabase', 'GSAP',
@@ -92,15 +100,16 @@ export default function Skills() {
       className="sk-classic py-10 lg:py-24 lg:pb-32 bg-bg"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <p className="font-mono text-xs text-accent tracking-widest uppercase mb-3 lg:mb-6">
-          {t('label')}
+        <p data-pm="rise" className="skm-label font-mono text-xs text-accent tracking-widest uppercase mb-3 lg:mb-6">
+          <span className="skm-sq" aria-hidden="true" />{t('label')}
         </p>
 
         <h2
-          className="font-display text-white uppercase leading-none mb-4 lg:mb-8"
+          data-pm="lines" data-pm-d="0.1" aria-label={headline}
+          className="skm-title font-display text-white uppercase leading-none mb-4 lg:mb-8"
           style={{ fontSize: 'clamp(2.5rem, 7vw, 6rem)' }}
         >
-          {t('headline')}
+          <span data-pm-lines>{headline}</span>
         </h2>
 
         {/* Marquee */}
@@ -120,7 +129,7 @@ export default function Skills() {
         {/* 4-cluster grid — 2 cols mobile, 2 cols md+, 4 cols xl */}
         <div
           ref={clustersRef}
-          className="grid grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-8"
+          className="skm-layers grid grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-8"
         >
           {clusterKeys.map((key, i) => {
             const items = t.raw(`${key}.items`) as string[];
@@ -131,13 +140,20 @@ export default function Skills() {
                 key={key}
                 className="skill-cluster relative overflow-visible lg:overflow-hidden pt-4 lg:pt-8 border-t border-border"
               >
-                <div className="mb-3 lg:mb-5 pb-3 lg:pb-4 border-b border-border">
-                  <h3 className="font-ui font-bold text-white text-base lg:text-xl tracking-wide uppercase">
+                {/* phone only: the red thread of this layer (drawn when the layer arrives) and its node */}
+                <svg className="skm-thread" data-pm="draw" viewBox="0 0 2 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                  <path className="pm-trace" pathLength={1} d="M1 0 V100" />
+                  <path className="pm-head" pathLength={1} d="M1 0 V100" />
+                </svg>
+                <div className="skm-lhead mb-3 lg:mb-5 pb-3 lg:pb-4 border-b border-border" data-pm="rise">
+                  <span className="skm-node" aria-hidden="true" />
+                  <span className="skm-idx" aria-hidden="true">{String(i + 1).padStart(2, '0')}<i> / {String(clusterKeys.length).padStart(2, '0')}</i></span>
+                  <h3 className="skm-ltitle font-ui font-bold text-white text-base lg:text-xl tracking-wide uppercase">
                     {title}
                   </h3>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 lg:gap-2">
+                <div className="skm-items flex flex-wrap gap-1.5 lg:gap-2" data-pm="rise" data-pm-d="0.12">
                   {items.map((item) => (
                     <span key={item} className="badge-item">
                       <StackBadge label={item} className="text-[10px] lg:text-xs px-1.5 lg:px-2 py-0.5 tracking-normal lg:tracking-widest" />
@@ -146,7 +162,7 @@ export default function Skills() {
                 </div>
 
                 {i === 0 && (
-                  <p className="mt-4 pt-3 border-t border-border font-mono text-xs text-off-white tracking-wide">
+                  <p className="skm-metric mt-4 pt-3 border-t border-border font-mono text-xs text-off-white tracking-wide" data-pm="rise">
                     {t('ai_metrics')}
                   </p>
                 )}
@@ -156,13 +172,13 @@ export default function Skills() {
         </div>
 
         {/* Languages row */}
-        <div className="mt-8 lg:mt-16 pt-6 lg:pt-8 border-t border-border flex flex-wrap gap-6 lg:gap-8">
-          <div>
+        <div className="skm-langs mt-8 lg:mt-16 pt-6 lg:pt-8 border-t border-border flex flex-wrap gap-6 lg:gap-8" data-pm="group">
+          <div data-pm-i>
             <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">{t('lang_en_label')}</p>
             <p className="font-ui font-bold text-white text-base">{t('lang_en_value')}</p>
           </div>
           <div className="w-px bg-border" />
-          <div>
+          <div data-pm-i>
             <p className="font-mono text-xs text-muted uppercase tracking-widest mb-1">{t('lang_es_label')}</p>
             <p className="font-ui font-bold text-white text-base">{t('lang_es_value')}</p>
           </div>

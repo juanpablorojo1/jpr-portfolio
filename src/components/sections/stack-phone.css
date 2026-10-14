@@ -1,0 +1,106 @@
+/* Stack en el teléfono (< 1024, 2026-10-14, rama mobile-senal). Mismo DOM que .sk-classic (la grilla de grupos del
+   escritorio sin escena); el diseño de teléfono va por clases .skm-* y todo vive en el bloque < 1024.
+   Las capas como lista vertical, una por grupo, enhebradas por la línea roja (un SVG por capa, se dibuja cuando la
+   capa llega: phoneMotion «draw») con un nodo en cada cabecera. Los nombres corren como una hoja de datos (separados
+   por un filete, sin pastillas). Lo que sólo existe en el teléfono está en display: none afuera. */
+
+.skm-sq, .skm-thread, .skm-node, .skm-idx { display: none; }
+
+@media (max-width: 1023px) {
+  .sk-classic {
+    --pad: max(22px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --off: #e8e4de;
+    --dim: rgba(232, 228, 222, .62);
+    --line: #2a2a2a;
+    --red: #e8272a;
+    --gut: 34px;            /* canal de la línea roja */
+    padding: clamp(84px, 23vw, 120px) 0 clamp(88px, 24vw, 124px) !important;
+  }
+  .sk-classic > div { padding-left: var(--pad); padding-right: var(--pad); }
+
+  .sk-classic .skm-label {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 20px;
+    font-size: 10.5px; line-height: 1; letter-spacing: .2em; color: var(--dim);
+  }
+  .sk-classic .skm-sq { display: inline-block; flex: none; width: 6px; height: 6px; background: var(--red); box-shadow: 0 0 10px var(--red); }
+  .sk-classic .skm-title {
+    margin: 0 0 30px !important; font-size: clamp(56px, 18vw, 104px) !important; line-height: .9 !important;
+    letter-spacing: .005em; text-wrap: balance;
+  }
+  .sk-classic .skm-title > span { display: block; }
+  .sk-classic .skm-title .pm-line-mask { padding: .18em 0 .08em; margin: -.18em 0 -.08em; }
+
+  /* la cinta corrida no va en el teléfono: la lista dice lo mismo, quieta y legible */
+  .sk-classic .marquee-container { display: none; }
+
+  /* ---------- las capas ---------- */
+  .sk-classic .skm-layers { display: flex !important; flex-direction: column; gap: 0 !important; }
+  .sk-classic .skill-cluster {
+    position: relative; margin: 0; padding: 0 0 0 var(--gut) !important; border-top: 0 !important;
+  }
+  .sk-classic .skill-cluster + .skill-cluster { margin-top: 58px; }
+
+  /* el hilo: del nodo de esta capa hasta el de la siguiente (cruza el aire entre capas); la última termina en su lista */
+  .sk-classic .skm-thread {
+    display: block; position: absolute; left: 3px; top: 34px; width: 2px; height: calc(100% - 34px + 58px + 34px);
+    overflow: visible; pointer-events: none;
+  }
+  .sk-classic .skill-cluster:last-child .skm-thread { height: calc(100% - 34px - 6px); }
+  .sk-classic .skm-thread path { fill: none; stroke-linecap: round; stroke-dasharray: 1 1; }
+  .sk-classic .skm-thread .pm-trace { stroke: rgba(232, 39, 42, .7); stroke-width: 1.25; }
+  .sk-classic .skm-thread .pm-head { stroke: #ff4d50; stroke-width: 2.4; stroke-dasharray: .05 1.2; opacity: 0; }
+
+  .sk-classic .skm-lhead {
+    position: relative; display: grid; grid-template-columns: 1fr; margin: 0 0 16px !important; padding: 0 !important;
+    border-bottom: 0 !important;
+  }
+  /* el nodo: el cuadrado rojo del sistema, sobre el hilo, a la altura del titular de la capa */
+  .sk-classic .skm-node {
+    display: block; position: absolute; left: calc(-1 * var(--gut) + 4px - 4px); top: 30px; width: 8px; height: 8px;
+    background: var(--red); box-shadow: 0 0 12px rgba(232, 39, 42, .8);
+  }
+  .sk-classic .skm-idx {
+    display: block; margin: 0 0 8px;
+    font: 10.5px/1 var(--font-jetbrains-mono), ui-monospace, monospace; letter-spacing: .16em; color: var(--off);
+  }
+  .sk-classic .skm-idx i { font-style: normal; color: var(--dim); }
+  .sk-classic .skm-ltitle {
+    margin: 0; font-family: var(--font-bebas-neue), 'Arial Narrow', sans-serif !important; font-weight: 400 !important;
+    font-size: clamp(38px, 11.4vw, 56px) !important; line-height: .92 !important; letter-spacing: .005em !important;
+    text-wrap: balance;
+  }
+
+  /* los nombres: hoja de datos. Filete entre nombres; el del comienzo de cada renglón queda fuera: la lista empieza
+     21 px antes (margen negativo) y esa franja se recorta (clip-path), justo donde cae el filete de cada renglón */
+  .sk-classic .skm-items { gap: 0 !important; margin-left: -21px; clip-path: inset(-6px -6px -6px 21px); }
+  .sk-classic .skm-items .badge-item { display: inline-flex; align-items: center; }
+  .sk-classic .skm-items .badge-item::before {
+    content: ''; flex: none; width: 1px; height: 13px; margin: 0 10px; background: #3a3a3a;
+  }
+  .sk-classic .skm-items .badge-item > span {
+    padding: 0 !important; border: 0 !important; background: none !important; border-radius: 0 !important;
+    font-family: var(--font-barlow-condensed), 'Arial Narrow', sans-serif !important; font-size: 17px !important;
+    line-height: 31px !important; letter-spacing: .01em !important; text-transform: none !important;
+    color: rgba(232, 228, 222, .82) !important;
+  }
+  /* los tres primeros de cada capa (las listas vienen en orden de peso): en blanco y bold */
+  .sk-classic .skm-items .badge-item:nth-child(-n+3) > span { color: #fff !important; font-weight: 700; }
+
+  /* la cifra de la capa de IA: una lectura de monitor */
+  .sk-classic .skm-metric {
+    display: flex; gap: 10px; align-items: baseline; margin: 18px 0 0 !important; padding: 14px 0 0 !important;
+    border-top: 1px solid var(--line) !important;
+    font-size: 12px !important; line-height: 1.6 !important; letter-spacing: .04em !important; color: var(--off) !important;
+  }
+  .sk-classic .skm-metric::before { content: ''; flex: none; width: 5px; height: 5px; background: var(--red); transform: translateY(-1px); }
+
+  /* idiomas: cierre en dos canales */
+  .sk-classic .skm-langs {
+    display: grid !important; grid-template-columns: 1fr 1fr; gap: 0 20px !important;
+    margin: 64px 0 0 !important; padding: 16px 0 15px !important;
+    border-top: 1px solid var(--line) !important; border-bottom: 1px solid var(--line);
+  }
+  .sk-classic .skm-langs > .w-px { display: none; }
+  .sk-classic .skm-langs p:first-child { margin: 0 0 9px !important; font-size: 10px !important; line-height: 1 !important; letter-spacing: .18em !important; color: #8c8c8c !important; }
+  .sk-classic .skm-langs p:last-child { font-size: 17px !important; line-height: 1.3 !important; color: var(--off) !important; }
+}
