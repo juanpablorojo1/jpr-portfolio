@@ -17,6 +17,7 @@
 .ab .ab-img { filter: grayscale(85%) contrast(1.05); }
 .ab .ab-light, .ab .ab-matte { display: none; }
 .ab .ab-fg { display: none; }
+.ab .ab-hz { display: none; }   /* horizonte: sólo celular (bloque al final) */
 
 /* Escena viva detrás (hero-controller pone data-see-through): el About entra transparente y la cámara
    termina su recorrido detrás del texto. Sin sombra: sobre un card transparente la sombra dibuja una costura. */
@@ -159,4 +160,77 @@
 }
 @media (min-width: 1024px) and (max-width: 1199px) {
   .ab .ab-body { width: calc(100vw - 2 * var(--pad) - var(--ph) * .8 - 3.5vw); column-gap: 24px; }
+}
+
+
+/* =====================================================================================================================
+   Celular y tablet (< 1024, 2026-10-14, rama mobile-senal). Escritorio no lee este bloque.
+   Misma gramática que el hero del teléfono: titular sobre la línea, datos debajo. La recta de la señal sigue como
+   horizonte del titular (SVG con un latido, se dibuja al entrar: phoneMotion «draw»). El cuerpo a 17 px (el primer
+   párrafo, a 21, abre la lectura). La ficha es una lectura de monitor de tres canales. Sin foto: es la misma toma que la
+   figura del hero (que ya está a pantalla completa arriba) y su descarga competía con el LCP; con display: none la
+   imagen lazy no se pide.
+   ===================================================================================================================== */
+@media (max-width: 1023px) {
+  .ab {
+    --pad: max(22px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --off: #e8e4de;
+    padding: clamp(76px, 21vw, 112px) 0 clamp(84px, 23vw, 120px);
+  }
+  .ab .ab-wrap { padding-left: var(--pad); padding-right: var(--pad); }
+
+  .ab .ab-label {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 22px;
+    font-size: 10.5px; letter-spacing: .2em; color: rgba(232, 228, 222, .62);
+  }
+  .ab .ab-dot { display: inline-block; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
+  .ab .ab-title {
+    margin: 0; font-size: clamp(48px, 16vw, 92px); line-height: .9; letter-spacing: .005em;
+    text-wrap: balance;
+  }
+  /* la máscara de cada línea (SplitText mask) se agranda sin mover nada: arriba para los acentos de las mayúsculas
+     (Í, Ó en ES; con interlineado .9 quedaban cortados) y abajo para la coma */
+  .ab .ab-title .pm-line-mask { padding: .18em 0 .08em; margin: -.18em 0 -.08em; }
+
+  /* el horizonte: de borde a borde, la recta a 30 de 44 y un latido pasada la mitad */
+  .ab .ab-hz {
+    display: block; width: calc(100% + 2 * var(--pad)); height: 44px; margin: 6px calc(-1 * var(--pad)) 0;
+    overflow: visible;
+  }
+  .ab .ab-hz path { fill: none; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1 1; }
+  .ab .ab-hz .pm-trace { stroke: rgba(232, 39, 42, .78); stroke-width: 1.25; }
+  /* cabezal: un tramo corto y brillante (sólo mientras corre; quieto queda apagado) */
+  .ab .ab-hz .pm-head { stroke: #ff4d50; stroke-width: 2.4; stroke-dasharray: .07 1.2; opacity: 0; }
+
+  .ab .ab-body { display: flex; flex-direction: column; margin-top: 18px; }
+  /* la leyenda del canal, debajo de la traza. 700 a 19 px: texto grande, el rojo de marca pasa (4,53:1) */
+  .ab .ab-body .ab-sub {
+    order: -1; margin: 0 0 34px; font-style: normal; font-weight: 700; font-size: 19px; line-height: 1.25;
+    letter-spacing: .07em; text-transform: uppercase;
+  }
+  .ab .ab-paras { gap: 0; }
+  .ab .ab-paras p { margin: 0 0 1.05em; font-size: 17px; line-height: 1.55; color: rgba(232, 228, 222, .84); max-width: 36em; }
+  .ab .ab-paras p:first-child { margin-bottom: 1em; font-size: 21px; line-height: 1.36; color: #fff; }
+  .ab .ab-paras p:last-child { margin-bottom: 0; }
+
+  .ab .ab-photo { margin-top: 40px; }
+  .ab .ab-frame { display: none; }
+
+  /* ficha: tres canales de monitor, rótulo arriba y lectura abajo */
+  .ab .ab-meta {
+    display: grid; grid-template-columns: auto auto auto; justify-content: space-between; align-items: start; gap: 0 14px;
+    margin: 0; padding: 16px 0 15px; border-top: 1px solid #2a2a2a; border-bottom: 1px solid #2a2a2a;
+  }
+  .ab .ab-meta .ab-sep { display: none; }
+  .ab .ab-meta > div > span:first-child { display: block; margin-bottom: 9px; font-size: 10px; letter-spacing: .18em; color: #8c8c8c; }
+  .ab .ab-meta > div > span:last-child { font-size: 18px; line-height: 1; color: var(--off); }
+  .ab .ab-status-dot { animation: ab-beat 1.6s .35s infinite; }
+}
+@keyframes ab-beat {
+  0%, 100% { opacity: 1; }
+  8% { opacity: .25; }
+  16% { opacity: 1; }
+}
+@media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+  .ab .ab-status-dot { animation: none; }
 }
