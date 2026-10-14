@@ -101,3 +101,25 @@ body:has(> .nf) { margin: 0; background: #080808; }
 @media (prefers-reduced-motion: reduce) {
   .nf-btn, .nf-btn::before, .nf-title { transition: none; }
 }
+
+/* Teléfono (2026-10-14, mobile-senal; todo debajo de 900, el escritorio no cambia): safe areas (viewport-fit=cover del
+   layout), titular más grande apoyado en la traza y el botón a lo ancho, abajo, en la zona del pulgar (56 px). Con poco
+   alto (horizontal) el botón vuelve al flujo debajo del texto. */
+@media (max-width: 899px) {
+  .nf { --pad: max(22px, env(safe-area-inset-left), env(safe-area-inset-right)); }
+  .nf-bar { top: env(safe-area-inset-top); }
+  .nf-title { font-size: clamp(64px, min(22vw, 22vh), 120px); }
+  .nf-body { font-size: 17px; line-height: 1.5; color: rgba(232, 228, 222, .86); }
+  .nf-btn { height: 56px; -webkit-tap-highlight-color: transparent; }
+  .nf-btn:active::before { transform: scaleY(1); filter: brightness(.86); }
+}
+@media (max-width: 899px) and (min-height: 600px) {
+  .nf-btn {
+    position: absolute; z-index: 2; left: var(--pad); right: var(--pad);
+    bottom: max(28px, calc(env(safe-area-inset-bottom) + 16px)); margin-top: 0;
+    letter-spacing: .18em;
+  }
+  /* el botón ya no está en el flujo de .nf-bottom: se ancla al monitor entero */
+  .nf-bottom { position: static; }
+  .nf-body { position: absolute; z-index: 2; left: var(--pad); right: var(--pad); top: calc(var(--horizon) + clamp(28px, 4.4vh, 48px)); }
+}
