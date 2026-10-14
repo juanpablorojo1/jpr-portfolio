@@ -105,8 +105,34 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
   }
   syncSeeThrough();   // escena por venir: Projects ya toma el layout de galería (todavía opaco)
 
+  /* ---------- celular (< 1024): hero 2D propio ----------
+     La entrada (cara que se enciende, nombre que sube, texto, CTAs) es CSS desde el primer pintado (senal.css, bloque
+     de celular): no se parte el texto ni se espera a la hidratación (LCP). Este controlador pone lo vivo: la traza en
+     canvas 2D sobre la línea del flujo (.m-horizon), el borde rojo que late tenue con cada pico R, el resplandor de
+     «ROJO» y la figura que se apaga mientras el About la tapa. Se decide una vez al montar. */
+  const phone = matchMedia('(max-width: 1023px)').matches;
+  const heroEl = q('.hero');
+  const horizonEl = q('.m-horizon');
+  const stageEl = q('.static-stage');
+  let rimEl: HTMLImageElement | null = null;
+  if (phone) {
+    root.classList.add('is-phone');
+    // la capa del borde rojo: solo celular, pedida con la página ya cargada (no compite con el LCP)
+    const addRim = () => {
+      if (disposed || rimEl) return;
+      const img = new Image();
+      img.className = 'm-rim'; img.alt = ''; img.decoding = 'async';
+      img.src = '/senal/juan-2d-rim-m.webp';
+      q('.static-fig').appendChild(img);
+      rimEl = img;
+    };
+    if (document.readyState === 'complete') addRim(); else addEventListener('load', addRim, { once: true });
+    cleanups.push(() => { removeEventListener('load', addRim); rimEl?.remove(); rimEl = null; stageEl.style.opacity = ''; });
+  }
+
   document.fonts.ready.then(() => {
     if (disposed || S.dead) return;
+    if (phone) { size(); return; }   // celular: sin SplitText (la entrada es CSS); la fuente final cambia la altura del nombre
     // aria: 'none' (D-04, axe aria-prohibited-attr): SplitText no pone aria-label en <span>/<p>. El nombre accesible
     // del h1 es su aria-label; el tagline partido es aria-hidden y lo lee su copia .sr-only (Hero.tsx).
     nameSplit = SplitText.create(root.querySelectorAll('.name [data-split]'), { type: 'chars', mask: 'chars', charsClass: 'char', aria: 'none' });
@@ -167,10 +193,20 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
   const cv = q<HTMLCanvasElement>('.senal-intro');
   const cx = cv.getContext('2d')!;
   let dpr = 1;
+  let horizonPx = -1;   // celular: altura de la línea dentro del hero (px desde su borde superior); −1 = la de S.geom
   // viewport en caché (resize): el loop de cada frame no lee innerWidth/innerHeight después de escribir estilos,
   // que obligaba a recalcular estilo/layout dentro del rAF (forced reflow, delivery-auditor D-01)
   let vw = innerWidth, vh = innerHeight;
-  function size() { vw = innerWidth; vh = innerHeight; dpr = Math.min(devicePixelRatio || 1, 2); cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr); }
+  function size() {
+    vw = innerWidth; vh = innerHeight; dpr = Math.min(devicePixelRatio || 1, 2);
+    if (phone) {
+      // celular: el canvas va dentro del hero y scrollea con él (senal.css); mide lo mismo que el hero
+      vw = heroEl.clientWidth; vh = heroEl.clientHeight;
+      cv.style.width = vw + 'px'; cv.style.height = vh + 'px';
+      horizonPx = horizonEl.getBoundingClientRect().top - heroEl.getBoundingClientRect().top + 12;
+    }
+    cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr);
+  }
   size(); addEventListener('resize', size);
   cleanups.push(() => removeEventListener('resize', size));
   function draw2D(t: number) {
@@ -178,7 +214,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
     cx.setTransform(dpr, 0, 0, dpr, 0, 0);
     cx.clearRect(0, 0, W, H);
     if (t < S.T_START) return;
-    const y0 = G.horizon * H, ampPx = G.amp * G.pxPerUnit, core = Math.max(1.4, G.coreHalf * 2 * G.pxPerUnit);
+    const y0 = horizonPx >= 0 ? horizonPx : G.horizon * H, ampPx = G.amp * G.pxPerUnit, core = Math.max(1.4, G.coreHalf * 2 * G.pxPerUnit);
     const X = (i: number) => (0.5 + ((i / (S.N - 1)) * 2 - 1) * G.halfWFrac) * W;
     const Y = (i: number) => y0 - S.val[i] * ampPx;
     cx.globalCompositeOperation = 'lighter'; cx.lineCap = 'round'; cx.lineJoin = 'round';
@@ -232,9 +268,19 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
     if (S.write(t, st.vel)) nextChannel();
     if (!revealed && t >= S.T_R0) {
       revealed = true; root.classList.add('is-lit');
-      if (textReady) runReveal(t - S.T_R0);
+      if (phone) glowOn = true;
+      else if (textReady) runReveal(t - S.T_R0);
     }
     if (glowOn) rojoGlow.style.opacity = (0.08 + S.pulse(t) * 0.6).toFixed(3);
+    if (phone) {
+      // borde rojo tenue: late con el pico R (S.pulse) y se enciende con el primer latido (S.ign)
+      if (rimEl) rimEl.style.opacity = (S.ign(t) * (0.12 + S.pulse(t) * 0.42)).toFixed(3);
+      // la figura (capa fija) se apaga apenas el hero empieza a irse: el nombre sube y no debe cruzar la cara encendida
+      stageEl.style.opacity = (1 - 0.88 * S.smooth(0.02, 0.34, sy / Math.max(1, vh))).toFixed(3);
+      draw2D(t);
+      if (running) raf = requestAnimationFrame(tick);
+      return;
+    }
     const p = st.p;
     heroInner.style.opacity = (1 - S.smooth(0.01, 0.09, Math.min(1, Math.max(0, sy / (vh * 3))))).toFixed(3);   // fade atado al scroll real (sin damping): el nombre se apaga antes de cruzar el nav
     heroInner.style.transform = `translate3d(0, ${(-p * 140).toFixed(2)}px, 0)`;
@@ -310,7 +356,7 @@ export function initHero(root: HTMLElement, S: Senal, { channels }: Opts): () =>
     if (tl) tl.kill();
     if (nameSplit) nameSplit.revert();
     if (tagSplit) tagSplit.revert();
-    root.classList.remove('is-lit', 'is-live', 'is-handed', 'is-offscreen');
+    root.classList.remove('is-lit', 'is-live', 'is-handed', 'is-offscreen', 'is-phone');
     root.classList.add('is-loading');
     heroInner.style.opacity = ''; heroInner.style.transform = '';
   };

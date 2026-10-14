@@ -56,6 +56,9 @@
   opacity: 0; transition: opacity 1.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .senal .static-fig img { display: block; width: 100%; height: 100%; max-width: none; }
+/* <picture> (fuente de celular, Hero.tsx) sin caja propia: el <img> se mide contra .static-fig como siempre */
+.senal .static-fig picture { display: contents; }
+.senal .m-horizon { display: none; }
 .senal.is-lit .static-fig, .senal.is-static .static-fig { opacity: 1; }
 .senal.is-static .static-fig { transition: none; }
 
@@ -203,3 +206,118 @@
   position: fixed; left: 10px; bottom: 10px; z-index: 50; font: 10px/1.4 var(--f-mono);
   color: #8f8; background: rgba(0,0,0,.6); padding: 6px 8px; white-space: pre; pointer-events: none;
 }
+
+
+/* =====================================================================================================================
+   Celular y tablet (< 1024): hero propio, diseñado para el pulgar (2026-10-14, rama mobile-senal).
+   Escritorio (>= 1024) no lee nada de este bloque.
+   - Sin escena 3D: figura 2D plana (la misma foto) en una capa fija; la cara arriba, el pecho se disuelve antes del
+     nombre. El borde rojo late tenue con la señal (.m-rim, hero-controller).
+   - Texto anclado abajo, en el flujo: nombre → línea de la señal (.m-horizon; la traza viva la dibuja el canvas 2D a
+     esa altura) → canal → tagline → rol → CTAs al alcance del pulgar. Safe areas y svh.
+   - Entrada por CSS desde el primer pintado (no espera la hidratación): la cara se enciende (brightness, la figura se
+     pinta desde el primer frame: LCP), el nombre sube por máscara línea por línea (expo.out), el resto sube y aparece.
+   - Sin «transit»: el About tapa el hero como una tarjeta; la figura se apaga mientras tanto (hero-controller).
+   ===================================================================================================================== */
+@media (max-width: 1023px) {
+  .senal {
+    --pad: max(22px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --nav-h: calc(64px + env(safe-area-inset-top));
+    --fig-h: clamp(420px, 79svh, 820px);
+  }
+  .senal .transit { height: 0; }
+
+  /* ---- capas: la traza va dentro del hero (scrollea con el texto); la figura queda fija y se apaga ---- */
+  .senal .senal-intro { position: absolute; top: 0; left: 0; right: auto; bottom: auto; width: 100%; height: 100svh; }
+  .senal .static-stage { overflow: hidden; }
+  .senal .static-trace { display: none !important; }
+  .senal .static-fig {
+    left: 50%; height: var(--fig-h); top: calc(var(--nav-h) + 4px - var(--fig-h) * .08);
+    opacity: 1; transition: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0 33%, rgba(0,0,0,.4) 42%, transparent 51%);
+            mask-image: linear-gradient(to bottom, #000 0 33%, rgba(0,0,0,.4) 42%, transparent 51%);
+    animation: senal-m-lit 2.2s cubic-bezier(0.16, 1, 0.3, 1) .12s both;
+    transform-origin: 50% 22%;
+  }
+  .senal .static-fig .m-rim {
+    position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; display: block;
+    opacity: 0; pointer-events: none; will-change: opacity;
+  }
+  /* apaisado (tablet acostada, ventana baja): la figura vuelve a su columna de la derecha */
+  @media (min-aspect-ratio: 5/4) {
+    .senal .static-fig { left: 72%; }
+  }
+
+  /* ---- texto: columna anclada abajo ---- */
+  .senal .hero { height: 100svh; min-height: 540px; }
+  .senal .hero-inner {
+    display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch;
+    padding: var(--nav-h) var(--pad) calc(20px + env(safe-area-inset-bottom));
+    will-change: auto;
+  }
+  .senal .name {
+    position: relative; left: auto; bottom: auto; align-self: flex-start;
+    font-size: clamp(64px, 22.4vw, 108px); line-height: .84; letter-spacing: .012em;
+  }
+  .senal .name-line { animation: senal-m-rise 1.15s cubic-bezier(0.16, 1, 0.3, 1) .3s backwards; }
+  .senal .name-red { animation-delay: .42s; }
+  .senal.is-loading:not(.is-static) .name,
+  .senal.is-loading:not(.is-static) .tagline { visibility: visible; }
+
+  .senal .m-horizon { display: block; position: relative; height: 26px; flex: none; }
+  .senal .m-horizon svg {
+    position: absolute; left: calc(-1 * var(--pad)); width: 100vw; top: -30px; height: 56px; overflow: visible; display: none;
+  }
+  .senal.is-static .m-horizon svg { display: block; }
+  .senal .m-horizon path {
+    fill: none; stroke: var(--red); stroke-width: 2; vector-effect: non-scaling-stroke;
+    filter: drop-shadow(0 0 6px rgba(232, 39, 42, .75));
+  }
+
+  .senal .channel {
+    position: relative; right: auto; top: auto; align-self: flex-end;
+    font-size: 9.5px; letter-spacing: .16em;
+    animation: senal-m-fade 1s cubic-bezier(0.16, 1, 0.3, 1) 1.05s both;
+  }
+  .senal .below { position: relative; left: auto; right: auto; top: auto; margin-top: 14px; }
+  .senal .tagline {
+    font-size: clamp(22px, 6.3vw, 30px); line-height: 1.1; max-width: 19em;
+    animation: senal-m-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) .55s both;
+  }
+  .senal .role {
+    margin-top: 12px; font-size: 11.5px; line-height: 1.55; max-width: 42ch;
+    animation: senal-m-up 1.1s cubic-bezier(0.16, 1, 0.3, 1) .68s both;
+  }
+  .senal .ctas {
+    gap: 10px; margin-top: 22px;
+    animation: senal-m-up 1.1s cubic-bezier(0.16, 1, 0.3, 1) .78s both;
+  }
+  .senal .btn { flex: 1 1 0; height: 52px; padding: 0 12px; font-size: 13px; letter-spacing: .12em; }
+  /* táctil: el relleno sube con el dedo (sin hover) y el botón se hunde 1 px */
+  .senal .btn { transition: box-shadow .2s ease, border-color .2s ease, transform .12s ease; -webkit-tap-highlight-color: transparent; }
+  .senal .btn:active { transform: translateY(1px); }
+  .senal .btn-ghost:active { border-color: var(--red); color: var(--white); }
+  .senal .btn-ghost:active::before { transform: scaleY(1); background: var(--red-cta); transition-duration: .25s; }
+  .senal .scroll-cue { display: none; }
+
+  /* tablet: el texto no se estira de borde a borde */
+  @media (min-width: 640px) {
+    .senal .below { max-width: 560px; }
+  }
+  /* pantallas bajas (barras del navegador abiertas en un 375): el rol se va antes que nada se pise */
+  @media (max-height: 620px) {
+    .senal .role { display: none; }
+  }
+}
+@keyframes senal-m-lit {
+  0%   { filter: brightness(0); transform: translateX(-50%) scale(1.045); }
+  35%  { filter: brightness(.3); }
+  100% { filter: brightness(1); transform: translateX(-50%) scale(1); }
+}
+/* máscara de línea: el texto sube desde su propio borde inferior (transform y clip con la misma curva) */
+@keyframes senal-m-rise {
+  from { transform: translateY(100%); clip-path: inset(0 0 100% 0); }
+  to   { transform: translateY(0); clip-path: inset(0 0 0 0); }
+}
+@keyframes senal-m-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes senal-m-fade { from { opacity: 0; } to { opacity: 1; } }
