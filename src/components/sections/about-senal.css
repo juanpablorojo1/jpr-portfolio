@@ -178,6 +178,11 @@
     padding: clamp(76px, 21vw, 112px) 0 clamp(84px, 23vw, 120px);
   }
   .ab .ab-wrap { padding-left: var(--pad); padding-right: var(--pad); }
+  /* el About tapa el hero como una tarjeta (U1): que se lea como tal y no como una costura recta entre dos fondos.
+     Filo de luz fría arriba y la sombra hacia el hero (la del card stack apuntaba hacia abajo, contra Projects). */
+  .transition-zone[data-section='about'] {
+    box-shadow: 0 -1px 0 rgba(232, 228, 222, .09), 0 -26px 52px rgba(0, 0, 0, .62) !important;
+  }
 
   .ab .ab-label {
     display: flex; align-items: center; gap: 10px; margin: 0 0 22px;
@@ -209,8 +214,8 @@
     letter-spacing: .07em; text-transform: uppercase;
   }
   .ab .ab-paras { gap: 0; }
-  .ab .ab-paras p { margin: 0 0 1.05em; font-size: 17px; line-height: 1.55; color: rgba(232, 228, 222, .84); max-width: 36em; }
-  .ab .ab-paras p:first-child { margin-bottom: 1em; font-size: 21px; line-height: 1.36; color: #fff; }
+  .ab .ab-paras p { margin: 0 0 1.05em; font-size: 17px; line-height: 1.55; color: rgba(232, 228, 222, .84); max-width: 34em; }
+  .ab .ab-paras p:first-child { margin-bottom: 1em; max-width: 28em; font-size: 21px; line-height: 1.36; color: #fff; }
   .ab .ab-paras p:last-child { margin-bottom: 0; }
 
   .ab .ab-photo { margin-top: 40px; }
@@ -223,7 +228,7 @@
   }
   .ab .ab-meta .ab-sep { display: none; }
   .ab .ab-meta > div > span:first-child { display: block; margin-bottom: 9px; font-size: 10px; letter-spacing: .18em; color: #8c8c8c; }
-  .ab .ab-meta > div > span:last-child { font-size: 18px; line-height: 1; color: var(--off); }
+  .ab .ab-meta > div > span:last-child { display: flex; align-items: center; gap: 8px; height: 20px; font-size: 18px; line-height: 1; color: var(--off); }
   .ab .ab-status-dot { animation: ab-beat 1.6s .35s infinite; }
 }
 @keyframes ab-beat {
