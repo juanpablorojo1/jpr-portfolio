@@ -389,11 +389,12 @@ export function PhoneMedia({ data, onOpen }: { data: CaseStudyData; onOpen: (ind
       <ul className="pjm-strip" aria-label={`${t('screens')}: ${data.title}`}>
         {data.shots.map((shot, i) => (
           <li key={shot.src}>
-            <button type="button" className="pjm-shot" onClick={() => onOpen(i)} aria-label={`${t('view_shot')}: ${shot.label}`}>
+            {/* nombre accesible = el rótulo visible con «Ver captura» delante (label-content-name-mismatch) */}
+            <button type="button" className="pjm-shot" onClick={() => onOpen(i)}>
               <span className="pjm-shot-img">
                 {near && <Image src={shot.src} alt="" fill className="object-cover" sizes="(max-width: 767px) 80vw, 46vw" />}
               </span>
-              <span className="pjm-shot-lbl" aria-hidden="true"><b>{String(i + 1).padStart(2, '0')}</b>{shot.label}</span>
+              <span className="pjm-shot-lbl"><span className="sr-only">{t('view_shot')}: </span><b>{String(i + 1).padStart(2, '0')}</b> {shot.label}</span>
             </button>
           </li>
         ))}
