@@ -37,6 +37,8 @@
 .jnav-left { gap: 28px; }
 .jnav-right { gap: 32px; }
 .jnav-lang-compact { display: none; }
+/* piezas solo de celular (< 1024, bloque al final): fuera en cualquier otro ancho */
+.jnav-dock, .jnav .jnav-close-dock { display: none; }
 
 /* ---------- slot del logo ---------- */
 /* .jnav .jnav-logo: tiene que ganarle a «.jnav a { color: inherit }», si no las letras quedan en --dim (62 %). */
@@ -244,4 +246,111 @@ html { scroll-padding-top: 65px; }
 
 @media (prefers-reduced-motion: reduce) {
   .jnav, .jnav *, .jnav *::before, .jnav *::after { transition: none !important; animation: none !important; }
+}
+
+
+/* =====================================================================================================================
+   Celular y tablet (< 1024): navegación para el pulgar (2026-10-14, rama mobile-senal). Escritorio no lee este bloque
+   (el menú compacto de 1024-1199 queda como estaba).
+   - Arriba, solo sobre el hero: logo + EN/ES + menú, transparente, con el safe area del notch.
+   - Pasado el hero (mismo estado is-scrolled de siempre) la barra de arriba sube y se va, y aparece el dock abajo:
+     el canal en pantalla (punto que late + índice + sección), el CV y el menú, todo al alcance del pulgar.
+   - El menú (dialog) barre desde el borde del botón que lo abrió y el cerrar queda en ese mismo lugar.
+   ===================================================================================================================== */
+@media (max-width: 1023px) {
+  .jnav {
+    --pad: max(22px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --logo-h: 24px;
+    --dock-h: 56px;
+    pointer-events: none;                 /* la cabecera fija no tapa toques: solo sus piezas visibles los reciben */
+    background: transparent !important; border-bottom-color: transparent !important;
+  }
+  .jnav-bar {
+    height: calc(64px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top);
+    pointer-events: auto;
+    transition: transform .5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0s;
+  }
+  .jnav.is-scrolled > .jnav-bar {
+    transform: translateY(-100%); visibility: hidden;
+    transition: transform .32s cubic-bezier(0.7, 0, 0.84, 0), visibility 0s linear .32s;
+  }
+  .jnav-right { gap: 14px; }
+  .jnav-menu { width: 48px; height: 48px; margin-right: -14px; -webkit-tap-highlight-color: transparent; }
+  .jnav-menu i { right: 14px; }
+  .jnav-menu i:first-child { top: 20px; }
+  .jnav-menu i:last-child { top: 27px; }
+  .jnav-menu:active i:last-child { width: 20px; }
+  .jnav a, .jnav button { -webkit-tap-highlight-color: transparent; }
+
+  /* ---- dock ---- */
+  .jnav-dock {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    display: flex; align-items: center; gap: 4px;
+    height: calc(var(--dock-h) + env(safe-area-inset-bottom));
+    padding: 0 var(--pad) env(safe-area-inset-bottom);
+    background: var(--bg); border-top: 1px solid var(--line);
+    pointer-events: auto;
+    transform: translateY(100%); visibility: hidden;
+    transition: transform .3s cubic-bezier(0.7, 0, 0.84, 0), visibility 0s linear .3s;
+  }
+  .jnav-dock[data-shown] {
+    transform: none; visibility: visible;
+    transition: transform .6s cubic-bezier(0.16, 1, 0.3, 1) .08s, visibility 0s linear 0s;
+  }
+  /* la lectura del canal: como el rótulo de un monitor */
+  .jnav-dock-ch {
+    flex: 1 1 auto; min-width: 0; margin: 0; display: flex; align-items: center; gap: 10px;
+    font-size: 10.5px; letter-spacing: .16em; color: var(--dim);
+  }
+  .jnav-dock-dot {
+    flex: none; width: 6px; height: 6px; background: var(--red); box-shadow: 0 0 8px rgba(232, 39, 42, .7);
+    animation: jnav-beat 1.6s .35s infinite;
+  }
+  .jnav-dock-num { flex: none; color: var(--dim); }
+  .jnav-dock-label {
+    min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--off);
+    animation: jnav-dock-in .5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes jnav-dock-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .jnav-dock-cv {
+    flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-width: 64px; height: 44px; padding: 0 14px;
+    border: 1px solid var(--line-strong); color: var(--off);
+    transition: border-color .2s ease, color .2s ease, transform .12s ease;
+  }
+  .jnav-dock-cv svg { width: 9px; height: 11px; }
+  .jnav-dock-cv:active { border-color: var(--red); color: var(--white); transform: translateY(1px); }
+  .jnav .jnav-dock-menu { display: block; flex: none; width: 52px; height: var(--dock-h); margin: 0 -14px 0 4px; }
+  .jnav-dock-menu i:first-child { top: 24px; }
+  .jnav-dock-menu i:last-child { top: 31px; }
+
+  /* ---- menú a pantalla completa ---- */
+  .jnav-sheet { pointer-events: auto; }   /* hereda el none de .jnav */
+  .jnav-sheet-bar { height: calc(64px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); }
+  .jnav-sheet-label { font-size: min(13vw, 8svh, 72px); }
+  .jnav-sheet-link { min-height: 56px; padding: 12px 0 10px; }
+  .jnav-sheet-foot { min-height: calc(var(--dock-h) + env(safe-area-inset-bottom)); padding: 16px var(--pad) max(16px, env(safe-area-inset-bottom)); }
+  /* abierto desde el dock: barre de abajo hacia arriba, cerrar abajo a la derecha (donde estaba el botón del dock) */
+  .jnav-sheet[data-from='dock'] { clip-path: inset(100% 0 0 0); }
+  .jnav-sheet[data-from='dock'][open] { clip-path: inset(0 0 0 0); }
+  @starting-style { .jnav-sheet[data-from='dock'][open] { clip-path: inset(100% 0 0 0); } }
+  .jnav-sheet[data-from='dock'] .jnav-sheet-bar .jnav-close { display: none; }
+  .jnav-sheet[data-from='dock'] .jnav-sheet-foot { padding-top: 0; padding-bottom: env(safe-area-inset-bottom); border-top: 0; }
+  .jnav .jnav-sheet[data-from='dock'] .jnav-close-dock { display: block; width: 52px; height: var(--dock-h); margin-right: -14px; }
+  .jnav-sheet[data-from='dock'] .jnav-close-dock i:first-child { top: 24px; }
+  .jnav-sheet[data-from='dock'] .jnav-close-dock i:last-child { top: 31px; }
+  .jnav-sheet[data-from='dock'] .jnav-sheet-links li {
+    transition-delay: calc(0.14s + (4 - var(--i)) * 0.045s);   /* la escalera sube desde el pulgar */
+  }
+  @starting-style { .jnav-sheet[data-from='dock'][open] .jnav-sheet-links li { opacity: 0; transform: translateY(-20px); } }
+}
+/* Saltos a sección en celular: arriba no queda barra (se va pasado el hero); abajo, el dock. */
+@media (max-width: 1023px) {
+  html { scroll-padding-top: 0; scroll-padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+  /* el final de la página no queda debajo del dock */
+  body { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+}
+/* C-06: la sección que recibe el foco al navegar desde el menú (teléfono) no dibuja un anillo alrededor de toda la sección */
+@media (max-width: 1023px) {
+  [data-nav-focus]:focus { outline: none; }
 }

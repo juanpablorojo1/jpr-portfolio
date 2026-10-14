@@ -22,11 +22,17 @@ interface Props {
 // the image, i18n labels. Accessibility: focus goes to Close on open, Tab/Shift+Tab stay
 // inside the dialog, the page behind can't scroll (wheel/touch included) and focus
 // returns to the thumbnail that opened it.
+// Phone (< 1024, 2026-10-14, mobile-senal): its own layout, decided when it opens (client state, no SSR). Full screen
+// above the top bar and the dock (portal + z 300), the shot at a readable size that pans sideways (a landscape screen
+// in a portrait phone is unreadable at fit-width), a pan gauge under it, and prev / next / close at the bottom, in
+// thumb reach, close in the dock's menu spot. The new shot comes in with the signal cut (projects-senal.css).
+// >= 1024 renders exactly as before.
 export default function CaseLightbox({ shots, index, onChange }: Props) {
   const t = useTranslations('projects.case.lightbox');
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
+  const gaugeRef = useRef<HTMLElement>(null);
   const total = shots.length;
   const isOpen = index !== null;
 
@@ -69,7 +75,11 @@ export default function CaseLightbox({ shots, index, onChange }: Props) {
     document.body.style.overflow = 'hidden';
     html.style.overflow = 'hidden';
     // Belt and braces: swallow wheel/touch scroll that would reach the page (and the GSAP rail)
-    const block = (e: Event) => e.preventDefault();
+    // (on phones the shot pans sideways inside [data-lb-pan]: that one gesture is let through)
+    const block = (e: Event) => {
+      if (e.type === 'touchmove' && (e.target as Element | null)?.closest?.('[data-lb-pan]')) return;
+      e.preventDefault();
+    };
     window.addEventListener('wheel', block, { passive: false });
     window.addEventListener('touchmove', block, { passive: false });
     return () => {
@@ -90,6 +100,46 @@ export default function CaseLightbox({ shots, index, onChange }: Props) {
   const shot = shots[index];
   const prev = () => onChange((index - 1 + total) % total);
   const next = () => onChange((index + 1) % total);
+
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  const phone = window.matchMedia('(max-width: 1023px)').matches;
+  if (phone) {
+    // pan gauge: the visible part of the shot, as a red segment on a hairline (written straight to the DOM, no re-render)
+    const onPan = (e: React.UIEvent<HTMLDivElement>) => {
+      const el = e.currentTarget, g = gaugeRef.current;
+      if (!g || el.scrollWidth <= 0) return;
+      g.style.setProperty('--x', String(el.scrollLeft / el.scrollWidth));
+      g.style.setProperty('--w', String(el.clientWidth / el.scrollWidth));
+    };
+    const onImg = (e: React.SyntheticEvent<HTMLImageElement>) => {
+      const pan = (e.currentTarget as HTMLElement).closest<HTMLDivElement>('[data-lb-pan]'), g = gaugeRef.current;
+      if (!pan || !g) return;
+      g.style.setProperty('--x', '0');
+      g.style.setProperty('--w', String(Math.min(1, pan.clientWidth / Math.max(1, pan.scrollWidth))));
+    };
+    return createPortal(
+      <div ref={dialogRef} className="lbm" role="dialog" aria-modal="true" aria-label={t('viewer')}>
+        <div className="lbm-top">
+          <p className="lbm-count"><b>{pad2(index + 1)}</b> / {pad2(total)}</p>
+          <a href={shot.src} target="_blank" rel="noopener noreferrer" className="lbm-full">{t('full_size')}</a>
+        </div>
+        <div className="lbm-stage">
+          <div key={index} className="lbm-pan" data-lb-pan onScroll={onPan} tabIndex={0} aria-label={shot.label}>
+            <Image src={shot.src} alt={shot.caption} width={1600} height={756} sizes="200vw" priority onLoad={onImg} />
+          </div>
+          <span key={`s${index}`} className="lbm-scan" aria-hidden="true" />
+        </div>
+        <span ref={gaugeRef} className="lbm-gauge" aria-hidden="true"><i /></span>
+        <p className="lbm-cap"><span>{shot.label}</span>{shot.caption}</p>
+        <div className="lbm-bar">
+          <button type="button" className="lbm-btn" onClick={prev} aria-label={t('prev')}>←</button>
+          <button type="button" className="lbm-btn" onClick={next} aria-label={t('next')}>→</button>
+          <button type="button" ref={closeRef} className="lbm-btn lbm-close" onClick={() => onChange(null)} aria-label={t('close_aria')}><i /><i /></button>
+        </div>
+      </div>,
+      document.body
+    );
+  }
 
   const arrowBase =
     'font-mono text-2xl text-off-white hover:text-accent focus-visible:text-accent focus:outline-none transition-colors duration-150 px-3 py-2';

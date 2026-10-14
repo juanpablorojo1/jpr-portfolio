@@ -1,16 +1,34 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 import Navbar from '../../components/layout/Navbar';
 import Hero from '../../components/sections/Hero';
-import About from '../../components/sections/About';
-import Projects from '../../components/sections/Projects';
-import Videos from '../../components/sections/Videos';
-import Skills from '../../components/sections/Skills';
-import Experience from '../../components/sections/Experience';
-import Contact from '../../components/sections/Contact';
 import TransitionZone from '../../components/motion/TransitionZone';
+// El CSS de las secciones diferidas va estático, en el orden de siempre: queda en las hojas de la página (como antes) y
+// no en una hoja por chunk dinámico (cada una era un pedido más que bloqueaba el primer pintado).
+import '../../components/sections/about-senal.css';
+import '../../components/sections/projects-senal.css';
+import '../../components/ui/project-demo.css';
+import '../../components/sections/videos-senal.css';
+import '../../components/sections/videos-phone.css';
+import '../../components/sections/stack-senal.css';
+import '../../components/sections/stack-phone.css';
+import '../../components/sections/experience-senal.css';
+import '../../components/sections/experience-phone.css';
+import '../../components/sections/contact-senal.css';
+import '../../components/sections/contact-phone.css';
 import SoundToggle from '../../components/ui/SoundToggle';
+import { phoneGate } from '../../lib/phoneGate';
+
+// Bajo el pliegue: HTML del servidor siempre; el JS de cada sección en su chunk, que en el teléfono se pide recién con la
+// página cargada (phoneGate, U6b: el LCP del hero ya no espera la evaluación de todo el sitio). En escritorio, en el acto.
+const About = dynamic(() => phoneGate().then(() => import('../../components/sections/About')));
+const Projects = dynamic(() => phoneGate().then(() => import('../../components/sections/Projects')));
+const Videos = dynamic(() => phoneGate().then(() => import('../../components/sections/Videos')));
+const Skills = dynamic(() => phoneGate().then(() => import('../../components/sections/Skills')));
+const Experience = dynamic(() => phoneGate().then(() => import('../../components/sections/Experience')));
+const Contact = dynamic(() => phoneGate().then(() => import('../../components/sections/Contact')));
 
 // Corre mientras se parsea el HTML, antes del primer pintado: en escritorio con la escena posible (≥1024, sin reduced
 // motion ni ?static) las secciones de la galería ya llevan data-gallery, la misma decisión que toma hero-controller al

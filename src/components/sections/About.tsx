@@ -6,23 +6,32 @@
    (data-see-through en su TransitionZone, lo pone hero-controller) y la cámara termina detrás del texto.
    Titular: se ensambla desde la profundidad (el mismo gesto que el tagline del hero) cuando el riel llega;
    sin máscaras ni scrub, así no puede quedar cortado arriba. La foto real va en 2D plana, con la cara visible.
-   Debajo de 1024 queda el layout de siempre, visible sin animación (el celular tendrá diseño propio). */
+   Debajo de 1024 (2026-10-14, mobile-senal): diseño de teléfono en about-senal.css. La recta de la señal del hero sigue
+   como horizonte del titular (SVG que se dibuja al entrar), cuerpo legible y la ficha como lectura de monitor; sin foto
+   (es la misma toma que la figura del hero y competía con su LCP). Entradas por IntersectionObserver (phoneMotion). */
 
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import Image from 'next/image';
+import DeskOnlyImage from '../ui/DeskOnlyImage';
 import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 import { onSignal, type Senal } from '../hero/senal/signal';
 import { GAL_ABOUT_OUT } from '../hero/senal/gallery';
 import { setBatch } from '../../lib/idle';
+import { phoneReveal } from '../../lib/phoneMotion';
 import './about-senal.css';
 
 gsap.registerPlugin(SplitText);
 
+// Horizonte del celular: la recta a 30 de 44 y un solo latido (P, QRS, T) pasada la mitad, donde el pulgar no tapa.
+const AB_HZ = 'M0 30 H232 q6 -6 12 0 h9 l3 4 l6 -27 l6 33 l4 -10 h13 q9 -10 18 0 H400';
+
 export default function About() {
   const t = useTranslations('about');
   const sectionRef = useRef<HTMLElement>(null);
+
+  // Celular (< 1024, sin reduced motion): entradas al llegar a la vista
+  useEffect(() => (sectionRef.current ? phoneReveal(sectionRef.current) : undefined), []);
 
   // Llegada al riel (≥1024, sin reduced motion): titular desde la profundidad, después los datos y la foto.
   useEffect(() => {
@@ -144,16 +153,23 @@ export default function About() {
       <div className="ab-wrap max-w-7xl mx-auto px-6">
         <div className="ab-top">
           {/* Section label */}
-          <p className="ab-label font-mono text-xs text-accent tracking-widest uppercase mb-4">
+          <p data-pm="rise" className="ab-label font-mono text-xs text-accent tracking-widest uppercase mb-4">
             <span className="ab-dot" aria-hidden="true" />
             {t('label')}
           </p>
 
           {/* aria-label en el h2: SplitText parte las líneas sin tocar ARIA (aria: 'none') y el nombre accesible queda entero */}
-          <h2 className="ab-title font-display uppercase mb-4" aria-label={`${t('headline_1')} ${t('headline_2')}`}>
-            <span className="ab-line text-white">{t('headline_1')}</span>
-            <span className="ab-line" style={{ color: '#E8272A' }}>{t('headline_2')}</span>
+          <h2 data-pm="lines" data-pm-d="0.15" className="ab-title font-display uppercase mb-4" aria-label={`${t('headline_1')} ${t('headline_2')}`}>
+            <span data-pm-lines className="ab-line text-white">{t('headline_1')}</span>
+            <span data-pm-lines className="ab-line" style={{ color: '#E8272A' }}>{t('headline_2')}</span>
           </h2>
+
+          {/* Celular: la recta de la señal del hero sigue como horizonte del titular, con un latido. pathLength 1: la
+              traza se dibuja con dashoffset y el cabezal es un tramo corto que la recorre (phoneMotion «draw»). */}
+          <svg className="ab-hz" data-pm="draw" data-pm-d="0.05" viewBox="0 0 400 44" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <path className="pm-trace" pathLength={1} d={AB_HZ} />
+            <path className="pm-head" pathLength={1} d={AB_HZ} />
+          </svg>
         </div>
 
         {/* Ancla del riel: la recta de la traza 3D aterriza acá (scene.js) */}
@@ -161,14 +177,14 @@ export default function About() {
 
         <div className="ab-body">
           <div className="ab-paras flex flex-col gap-3">
-            <p className="font-ui text-off-white text-body-lg leading-relaxed">{t('p1')}</p>
-            <p className="font-ui text-off-white text-body-lg leading-relaxed">{t('p2')}</p>
-            <p className="font-ui text-off-white text-body-lg leading-relaxed">{t('p3')}</p>
-            <p className="font-ui text-off-white text-body-lg leading-relaxed">{t('p4')}</p>
+            <p data-pm="rise" className="font-ui text-off-white text-body-lg leading-relaxed">{t('p1')}</p>
+            <p data-pm="rise" className="font-ui text-off-white text-body-lg leading-relaxed">{t('p2')}</p>
+            <p data-pm="rise" className="font-ui text-off-white text-body-lg leading-relaxed">{t('p3')}</p>
+            <p data-pm="rise" className="font-ui text-off-white text-body-lg leading-relaxed">{t('p4')}</p>
           </div>
 
           {/* Sub-tagline */}
-          <p className="ab-sub mt-4 font-ui text-base text-accent italic">
+          <p data-pm="rise" data-pm-d="0.1" className="ab-sub mt-4 font-ui text-base text-accent italic">
             {t('sub_tagline')}
           </p>
         </div>
@@ -176,10 +192,10 @@ export default function About() {
         {/* Foto real, 2D plana, cara visible */}
         <div className="ab-photo relative mt-8">
           <div className="ab-frame relative aspect-[4/5] max-w-md mx-auto">
-            <Image
+            {/* < 1024 la foto no se muestra: DeskOnlyImage no la pide en el teléfono (competía con el LCP del hero) */}
+            <DeskOnlyImage
               src="/images/portrait.jpg"
               alt={t('photo_alt')}
-              fill
               className="ab-img object-cover object-top"
               sizes="(max-width: 1023px) 80vw, 30vw"
             />
@@ -191,21 +207,21 @@ export default function About() {
           </div>
 
           {/* Metadata bar */}
-          <div className="ab-meta mt-6 flex items-center gap-6 border-t border-border pt-4">
-            <div>
+          <div data-pm="group" className="ab-meta mt-6 flex items-center gap-6 border-t border-border pt-4">
+            <div data-pm-i>
               <span className="font-mono text-xs text-muted uppercase tracking-widest">{t('meta_location')} </span>
               <span className="font-ui text-sm text-off-white">{t('meta_location_value')}</span>
             </div>
-            <div className="w-px h-4 bg-border" />
-            <div>
+            <div className="ab-sep w-px h-4 bg-border" />
+            <div data-pm-i>
               <span className="font-mono text-xs text-muted uppercase tracking-widest">{t('meta_status')} </span>
               <span className="font-ui text-sm text-accent flex items-center gap-2">
                 <span className="ab-status-dot" aria-hidden="true" />
                 {t('meta_status_value')}
               </span>
             </div>
-            <div className="w-px h-4 bg-border" />
-            <div>
+            <div className="ab-sep w-px h-4 bg-border" />
+            <div data-pm-i>
               <span className="font-mono text-xs text-muted uppercase tracking-widest">{t('meta_age')} </span>
               <span className="font-ui text-sm text-off-white">24</span>
             </div>

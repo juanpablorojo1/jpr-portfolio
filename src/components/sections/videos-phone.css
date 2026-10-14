@@ -1,0 +1,184 @@
+/* Frame by Frame «Tambor 360» en el teléfono (< 1024, U4 2026-10-14). Ver VideosPhone.tsx.
+   Fuera de < 1024 el bloque no existe (display: none) y el escritorio sigue con VideosStage / .fv-stack sin cambios.
+   Tamaños: la cara de frente es 9:16 y llena lo que deja el viewport chico (svh) menos el dock, el piso, el rótulo y
+   los controles: --fh. --fa es la apotema del prisma de 5 caras (w / (2·tan 36°) = 0,6882·w). */
+
+.fvm { display: none; }
+
+@media (max-width: 1023px) {
+  /* el apilado de tarjetas queda para el escritorio sin escena */
+  #videos .fv-stack { display: none; }
+
+  .fvm {
+    --pad: max(22px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --off: #e8e4de;
+    --dim: rgba(232, 228, 222, .64);
+    --line: rgba(232, 228, 222, .14);
+    --mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --dock: calc(56px + env(safe-area-inset-bottom));
+    --vh: 100vh;
+    --fh: clamp(300px, calc(var(--vh) - var(--dock) - 166px), min(152vw, 720px));
+    --fw: calc(var(--fh) * .5625);
+    --fa: calc(var(--fw) * .6882);
+    display: block; position: relative; overflow-x: clip;
+    padding: clamp(80px, 22vw, 112px) 0 clamp(72px, 20vw, 104px);
+    background: #080808; border-top: 1px solid var(--line); color: var(--off);
+  }
+  @supports (height: 100svh) { .fvm { --vh: 100svh; } }
+
+  /* ---------- rótulo y titular ---------- */
+  .fvm-head { padding: 0 var(--pad); margin-bottom: 22px; }
+  .fvm-label {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 22px;
+    font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
+  }
+  .fvm-dot { display: inline-block; flex: none; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
+  .fvm-title {
+    margin: 0; font: 400 clamp(52px, 16.4vw, 96px)/.88 var(--font-bebas-neue), sans-serif; letter-spacing: .005em;
+    text-transform: uppercase; color: #fff; text-wrap: balance;
+  }
+  .fvm-line { display: block; }
+  .fvm-title .pm-line-mask { padding: .18em 0 .08em; margin: -.18em 0 -.08em; }
+
+  /* ---------- el escenario: el tambor y su piso ---------- */
+  .fvm-stage { position: relative; outline: none; }
+  .fvm-stage:focus-visible::after {
+    content: ''; position: absolute; inset: 4px 10px; border: 1px solid rgba(232, 39, 42, .55); pointer-events: none;
+  }
+  .fvm-scene {
+    position: relative; height: calc(var(--fh) + 52px);
+    perspective: calc(var(--fw) * 3.4); perspective-origin: 50% 42%;
+    touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent; cursor: grab;
+  }
+  .fvm-scene.is-drag { cursor: grabbing; }
+  .fvm-drum {
+    position: absolute; top: 12px; left: 50%; width: var(--fw); height: var(--fh); margin-left: calc(var(--fw) / -2);
+    transform-style: preserve-3d; transform: translateZ(calc(var(--fa) * -1)); will-change: transform;
+  }
+  .fvm-face {
+    position: absolute; inset: 0; overflow: hidden;
+    transform: rotateY(var(--a)) translateZ(var(--fa));
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    background: #0b0b0b; outline: 1px solid rgba(232, 228, 222, .14); outline-offset: -1px;
+  }
+  .fvm-face picture { display: contents; }
+  .fvm-poster, .fvm-video {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none;
+  }
+  .fvm-face[data-land] .fvm-poster, .fvm-face[data-land] .fvm-video { object-fit: contain; }
+  .fvm-video { opacity: 0; transition: opacity .45s var(--ease-out); }
+  .fvm-video[data-on] { opacity: 1; }
+  /* sombra por ángulo (la escribe el giro) y el borde que enciende el latido */
+  .fvm-shade { position: absolute; inset: 0; background: #030303; opacity: 0; pointer-events: none; }
+  .fvm-rim {
+    position: absolute; inset: 0; opacity: 0; pointer-events: none;
+    box-shadow: inset 0 0 0 1px #e8272a, inset 0 0 28px rgba(232, 39, 42, .32);
+  }
+  /* pausada (o sin autoplay con reduced motion): el botón de reproducir en el centro de la cara */
+  .fvm-play {
+    position: absolute; left: 50%; top: 50%; translate: -50% -50%; display: inline-flex; padding: 5px;
+    border: 1px solid rgba(232, 228, 222, .22); background: rgba(5, 5, 5, .62); color: #fff;
+    opacity: 0; scale: .92; pointer-events: none; transition: opacity .3s var(--ease-out), scale .5s var(--ease-out);
+  }
+  .fvm-play > span { display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid #e8272a; }
+  .fvm-play svg { translate: 2px 0; }
+  .fvm-play[data-on] { opacity: 1; scale: 1; }
+
+  /* el piso: la recta de la señal de borde a borde, con el complejo bajo la cara de frente */
+  .fvm-floor {
+    position: absolute; left: 0; right: 0; top: calc(var(--fh) + 12px); height: 36px;
+    display: flex; pointer-events: none;
+  }
+  .fvm-floor-l { flex: 1; height: 1px; margin-top: 26px; opacity: .42; }
+  .fvm-floor-ll { background: linear-gradient(90deg, rgba(232, 39, 42, 0), rgba(232, 39, 42, .8)); transform-origin: 100% 50%; }
+  .fvm-floor-lr { background: linear-gradient(90deg, rgba(232, 39, 42, .8), rgba(232, 39, 42, 0)); transform-origin: 0 50%; }
+  .fvm-floor svg { flex: none; display: block; overflow: visible; }
+  .fvm-blip { fill: none; stroke: rgba(232, 39, 42, .5); stroke-width: 1.2; stroke-linejoin: round; }
+  .fvm-pulse {
+    fill: none; stroke: var(--red-core); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: .24 1.2; stroke-dashoffset: .24; filter: drop-shadow(0 0 4px rgba(232, 39, 42, .9));
+  }
+
+  /* ---------- lectura: posición y nombre del video de frente ---------- */
+  .fvm-meta {
+    display: flex; align-items: baseline; gap: 14px; height: 34px; margin: 0; padding: 6px var(--pad) 0;
+    font: 11px/1.3 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+  }
+  .fvm-pos { flex: none; }
+  .fvm-pos b { font-weight: 400; color: var(--off); }
+  .fvm-pos b::before {
+    content: ''; display: inline-block; width: 5px; height: 5px; margin-right: .7em; vertical-align: .2em;
+    background: #e8272a; box-shadow: 0 0 8px rgba(232, 39, 42, .6);
+  }
+  .fvm-name {
+    flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    font: 700 16px/1.3 var(--font-ui); letter-spacing: .01em; text-transform: none; color: var(--off);
+    animation: fvm-in .55s var(--ease-out);
+  }
+  @keyframes fvm-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- controles: flechas a la izquierda, pausa y sonido bajo el pulgar derecho ---------- */
+  .fvm-ctrl { display: flex; align-items: center; gap: 8px; padding: 6px var(--pad) 14px; }
+  .fvm-sp { flex: 1; }
+  .fvm-btn {
+    display: inline-flex; flex: none; padding: 4px; border: 1px solid rgba(232, 228, 222, .2); background: rgba(5, 5, 5, .55);
+    color: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: border-color .3s var(--ease-out), transform .16s var(--ease-out);
+  }
+  .fvm-btn > span {
+    position: relative; z-index: 0; width: 42px; height: 42px; display: grid; place-items: center; overflow: hidden;
+    border: 1px solid rgba(232, 228, 222, .1); font: 400 17px/1 var(--mono);
+  }
+  .fvm-btn > span::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; background: #e8272a;
+    transform: scaleX(0); transform-origin: 0 50%; transition: transform .45s var(--ease-out);
+  }
+  .fvm-ctrl .fvm-btn:first-child > span::before { transform-origin: 100% 50%; }
+  .fvm-btn:active { transform: scale(.94); border-color: rgba(232, 39, 42, .75); }
+  .fvm-btn:active > span::before { transform: scaleX(1); transition-duration: .18s; }
+  .fvm-btn:focus-visible { outline: none; border-color: rgba(232, 39, 42, .75); box-shadow: 0 0 0 2px #080808, 0 0 0 3px #e8272a; }
+
+  .fvm-snd {
+    display: inline-flex; flex: none; align-items: center; gap: 10px; height: 52px; padding: 0 16px;
+    border: 1px solid rgba(232, 228, 222, .2); background: rgba(5, 5, 5, .55); color: var(--off); cursor: pointer;
+    font: 11px/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; -webkit-tap-highlight-color: transparent;
+    transition: border-color .3s var(--ease-out), color .3s var(--ease-out), transform .16s var(--ease-out);
+  }
+  .fvm-snd:active { transform: scale(.96); }
+  .fvm-snd:focus-visible { outline: none; box-shadow: 0 0 0 2px #080808, 0 0 0 3px #e8272a; }
+  .fvm-snd[aria-pressed="true"] { border-color: rgba(232, 39, 42, .75); color: #fff; }
+  .fvm-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+  .fvm-bars i { display: block; width: 2px; height: 3px; background: currentColor; transform-origin: 50% 100%; }
+  .fvm-snd[aria-pressed="true"] .fvm-bars i { height: 12px; background: #e8272a; animation: fvm-eq .9s var(--ease-out) infinite alternate; }
+  .fvm-snd[aria-pressed="true"] .fvm-bars i:nth-child(2) { animation-delay: -.35s; }
+  .fvm-snd[aria-pressed="true"] .fvm-bars i:nth-child(3) { animation-delay: -.6s; }
+  @keyframes fvm-eq { from { transform: scaleY(.25); } to { transform: scaleY(1); } }
+
+  /* ---------- cómo se hizo / crédito CC BY del video de frente (3 líneas reservadas) y colofón ---------- */
+  .fvm-credit {
+    min-height: calc(11px * 1.55 * 3); margin: 0; padding: 0 var(--pad);
+    font: 11px/1.55 var(--mono); letter-spacing: .02em; color: rgba(232, 228, 222, .66);
+    animation: fvm-fade .5s var(--ease-out);
+  }
+  @keyframes fvm-fade { from { opacity: 0; } to { opacity: 1; } }
+  .fvm-credit a {
+    position: relative;
+    color: var(--off); text-decoration: underline; text-decoration-color: rgba(232, 228, 222, .4); text-underline-offset: 3px;
+  }
+  /* F-03: área táctil de 44 px de alto (y 6 px más a cada lado) sin mover el renglón */
+  .fvm-credit a::after { content: ''; position: absolute; left: -6px; right: -6px; top: 50%; height: 44px; transform: translateY(-50%); }
+  .fvm-credit a:active, .fvm-credit a:focus-visible { color: #fff; text-decoration-color: #e8272a; outline: none; }
+  .fvm-colophon { padding: 34px var(--pad) 0; max-width: 40rem; }
+  .fvm-note { margin: 0; font: 400 17px/1.55 var(--font-ui); color: rgba(232, 228, 222, .8); text-wrap: pretty; }
+  .fvm-stack-l { margin: 28px 0 10px; font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--dim); }
+  .fvm-stack { display: flex; flex-wrap: wrap; gap: 8px; }
+}
+
+@media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+  .fvm-video, .fvm-play, .fvm-btn, .fvm-btn > span::before, .fvm-snd { transition: none; }
+  .fvm-name, .fvm-credit { animation: none; }
+  .fvm-snd[aria-pressed="true"] .fvm-bars i { animation: none; }
+  .fvm-snd[aria-pressed="true"] .fvm-bars i:nth-child(2) { transform: scaleY(.6); }
+}

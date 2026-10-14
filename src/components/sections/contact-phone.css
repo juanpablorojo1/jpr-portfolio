@@ -1,0 +1,167 @@
+/* Contact en el teléfono (< 1024, 2026-10-14, rama mobile-senal): el cierre de la página. Mismo bloque que .ct-classic
+   (el layout del escritorio sin escena); lo del teléfono va en .ctm (display: none afuera) y lo del escritorio que
+   reemplaza (.ctm-desk) se oculta en < 1024.
+   Orden: rótulo → titular por líneas → bajada → la señal que corre hasta el punto que late (el CTA del email, como la
+   convergencia del escritorio) + copiar → LinkedIn / GitHub / WhatsApp en filas de 60 px → el CV: el del idioma de la
+   página como botón sólido (entra con el corte de señal) y el otro idioma debajo. Rojo sólido = el del CTA del hero
+   (#E62529): blanco encima 4,51:1, y el texto del botón es Bebas de 34 px (texto grande). */
+
+.ctm, .ctm-sq { display: none; }
+
+@media (max-width: 1023px) {
+  .ct-classic {
+    --pad: max(22px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --off: #e8e4de;
+    --dim: rgba(232, 228, 222, .62);
+    --line: #2a2a2a;
+    --red: #e8272a;
+    --red-cta: #e62529;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+    padding: clamp(84px, 23vw, 120px) 0 22px !important;
+  }
+  .ct-classic > div { padding-left: var(--pad) !important; padding-right: var(--pad) !important; margin-bottom: 0 !important; }
+  .ct-classic .ctm-desk { display: none !important; }
+  .ct-classic a { -webkit-tap-highlight-color: transparent; }
+  .ct-classic :focus-visible { outline: 1px solid var(--red); outline-offset: 3px; }
+
+  .ct-classic .ctm-label {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 20px !important;
+    font-size: 10.5px; line-height: 1; letter-spacing: .2em; color: var(--dim);
+  }
+  .ct-classic .ctm-sq { display: inline-block; flex: none; width: 6px; height: 6px; background: var(--red); box-shadow: 0 0 10px var(--red); }
+  .ct-classic .ctm-head { margin: 0; overflow: visible; }
+  .ct-classic .ctm-head > span { overflow: visible; }
+  .ct-classic .ctm-head .headline-line { font-size: clamp(58px, 19.5vw, 112px) !important; line-height: .88 !important; letter-spacing: .005em; }
+  .ct-classic .ctm-head .pm-line-mask { padding: .14em 0 .06em; margin: -.14em 0 -.06em; }
+  .ct-classic .ctm-sub {
+    margin: 24px 0 0 !important; max-width: 30em; font-size: 17px !important; line-height: 1.5 !important;
+    color: rgba(232, 228, 222, .84);
+  }
+
+  .ct-classic .ctm { display: block; margin-top: 50px; }
+
+  /* ---------- el punto que late: el CTA del email ---------- */
+  .ct-classic .ctm-mail { position: relative; }
+  .ct-classic .ctm-mail-a { display: flex; flex-direction: column; color: #fff; text-decoration: none; outline: none; }
+  .ct-classic .ctm-mail-a:focus-visible .ctm-cta { outline: 1px solid var(--red); outline-offset: 4px; }
+  .ct-classic .ctm-sig {
+    position: relative; display: block; height: 64px;
+    margin: 0 calc(-1 * var(--pad));
+  }
+  /* la señal: del borde izquierdo hasta el centro del punto (la línea queda a 32 px, la altura del centro) */
+  .ct-classic .ctm-hz {
+    position: absolute; left: 0; top: 0; right: calc(var(--pad) + 32px); width: auto; height: 44px; overflow: visible;
+  }
+  .ct-classic .ctm-hz { width: calc(100% - var(--pad) - 32px); }
+  .ct-classic .ctm-hz path { fill: none; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1 1; }
+  .ct-classic .ctm-hz .pm-trace { stroke: rgba(232, 39, 42, .8); stroke-width: 1.25; }
+  .ct-classic .ctm-hz .pm-head { stroke: var(--red-core); stroke-width: 2.4; stroke-dasharray: .06 1.2; opacity: 0; }
+  .ct-classic .ctm-dot { position: absolute; right: var(--pad); top: 0; width: 64px; height: 64px; }
+  .ct-classic .ctm-dot-css {
+    position: absolute; left: 50%; top: 50%; width: 144px; height: 144px; margin: -72px 0 0 -72px; pointer-events: none;
+    background: radial-gradient(circle, var(--red-core) 0 4px, #e8272a 6px, rgba(232, 39, 42, .45) 11px, rgba(232, 39, 42, .12) 32px, rgba(232, 39, 42, 0) 70px);
+    transform: scale(.82);
+    animation: ctm-beat 1.6s .35s infinite;
+  }
+  .ct-classic .ctm-mail-a:active .ctm-dot-css { animation: none; transform: scale(1.35); transition: transform .15s var(--ease-out); }
+  .ct-classic .ctm-cta {
+    align-self: flex-start; margin-top: 8px;
+    font-size: 22px; font-weight: 700; line-height: 1.1; letter-spacing: .14em; text-transform: uppercase;
+    transition: transform .12s ease;
+  }
+  .ct-classic .ctm-mail-a:active .ctm-cta { transform: translateY(1px); }
+  .ct-classic .ctm-addr {
+    display: block; min-height: 44px; padding: 10px 92px 0 0;
+    font-size: clamp(20px, 6vw, 25px); line-height: 1.2; color: rgba(232, 228, 222, .86); overflow-wrap: anywhere;
+  }
+  .ct-classic .ctm-copy {
+    position: absolute; right: 0; bottom: 0; min-width: 80px; height: 44px; padding: 0 14px;
+    border: 1px solid var(--color-border); background: transparent; color: var(--off); cursor: pointer;
+    font: 10.5px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color .2s ease, color .2s ease, transform .12s ease;
+  }
+  .ct-classic .ctm-copy:active { transform: translateY(1px); border-color: var(--red); }
+  .ct-classic .ctm-copy[data-done] { border-color: var(--red); color: #fff; }
+
+  /* ---------- enlaces: filas de 60 px ---------- */
+  .ct-classic .ctm-links { margin: 44px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+  .ct-classic .ctm-links li { border-bottom: 1px solid var(--line); }
+  .ct-classic .ctm-links a {
+    display: grid; grid-template-columns: 92px minmax(0, 1fr) 20px; align-items: center; gap: 10px; min-height: 60px;
+    color: var(--off); text-decoration: none; transition: background-color .2s ease;
+  }
+  .ct-classic .ctm-links a:active { background: rgba(232, 228, 222, .04); }
+  .ct-classic .ctm-k { font: 10.5px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
+  .ct-classic .ctm-v { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 18px; line-height: 1.2; }
+  .ct-classic .ctm-links i { font-style: normal; text-align: right; color: var(--dim); transition: color .2s ease, transform .2s var(--ease-out); }
+  .ct-classic .ctm-links a:active i { color: var(--red); transform: translate(2px, -2px); }
+
+  /* ---------- el CV: el cierre ---------- */
+  .ct-classic .ctm-cv { margin-top: 64px; }
+  .ct-classic .ctm-cv-k {
+    display: flex; justify-content: space-between; align-items: center; margin: 0 0 16px;
+    font: 10.5px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+  }
+  .ct-classic .ctm-cv-k span:first-child { display: flex; align-items: center; gap: 10px; color: var(--off); }
+  .ct-classic .ctm-cv-k span:first-child::before { content: ''; width: 6px; height: 6px; background: var(--red); box-shadow: 0 0 10px var(--red); }
+  .ct-classic .ctm-cv-wrap { position: relative; }
+  /* el corte de señal (phoneMotion «cut»): la recta roja de borde a borde y el cabezal que viaja con ella */
+  .ct-classic .pm-cut {
+    display: block; position: absolute; top: -1px; left: calc(-1 * var(--pad)); right: calc(-1 * var(--pad)); height: 1px;
+    pointer-events: none;
+  }
+  .ct-classic .pm-cut b {
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(232, 39, 42, .28) 0%, #e8272a 50%, rgba(232, 39, 42, .28) 100%);
+    box-shadow: 0 0 8px rgba(232, 39, 42, .4);
+  }
+  .ct-classic .pm-cut i {
+    position: absolute; top: -3px; left: -18px; width: 36px; height: 7px; opacity: 0;
+    background: radial-gradient(closest-side, #fff 0%, var(--red-core) 32%, rgba(232, 39, 42, 0) 100%);
+  }
+  .ct-classic .ctm-cv-a {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 76px; padding: 4px 0 0 20px;
+    background: var(--red-cta); color: #fff; text-decoration: none;
+    font-family: var(--font-bebas-neue), 'Arial Narrow', sans-serif; font-size: 34px; line-height: 1; letter-spacing: .02em;
+    text-transform: uppercase; box-shadow: 0 10px 34px rgba(232, 39, 42, .22);
+    transition: background-color .15s ease, transform .12s ease, box-shadow .2s ease;
+  }
+  .ct-classic .ctm-cv-a:active { background: #b01e20; transform: translateY(1px); box-shadow: 0 4px 18px rgba(232, 39, 42, .2); }
+  .ct-classic .ctm-cv-a:focus-visible { outline-offset: 4px; }
+  .ct-classic .ctm-cv-l {
+    align-self: stretch; display: flex; align-items: center; justify-content: center; width: 76px; margin-top: -4px;
+    border-left: 1px solid rgba(255, 255, 255, .32);
+  }
+  .ct-classic .ctm-cv-alt {
+    display: grid; grid-template-columns: 44px minmax(0, 1fr) 20px; align-items: center; gap: 12px; min-height: 60px;
+    border-bottom: 1px solid var(--line); color: var(--off); text-decoration: none;
+    font-size: 15px; font-weight: 700; line-height: 1.2; letter-spacing: .1em; text-transform: uppercase;
+    transition: background-color .2s ease;
+  }
+  .ct-classic .ctm-cv-alt:active { background: rgba(232, 228, 222, .04); }
+  .ct-classic .ctm-cv-alt-l {
+    display: flex; align-items: center; justify-content: center; width: 34px; height: 30px;
+    border: 1px solid var(--color-border); font: 11px/1 var(--mono); letter-spacing: .08em; color: var(--off);
+  }
+  .ct-classic .ctm-cv-alt i { font-style: normal; text-align: right; color: var(--dim); }
+  .ct-classic .ctm-cv-alt:active i { color: var(--red); transform: translateY(2px); }
+
+  /* ---------- pie ---------- */
+  .ct-classic .ctm-foot {
+    flex-direction: row !important; align-items: center !important; margin-top: 76px; padding: 22px 0 6px !important;
+    border-top-color: var(--line) !important;
+  }
+  .ct-classic .ctm-foot > span { height: 22px; opacity: .7; }
+  .ct-classic .ctm-foot p { font-size: 10.5px; letter-spacing: .08em; color: var(--dim); }
+}
+@keyframes ctm-beat {
+  0%, 30%, 100% { transform: scale(.82); }
+  7%  { transform: scale(1.22); }
+  14% { transform: scale(.9); }
+  21% { transform: scale(1.06); }
+}
+@media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+  .ct-classic .ctm-dot-css { animation: none; }
+}

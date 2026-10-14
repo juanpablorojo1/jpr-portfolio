@@ -256,6 +256,7 @@
     "pause": "Pausar los videos",
     "resume": "Reanudar los videos",
     "sound": "Sonido del video",
+    "sound_short": "Sonido",
     "items": {
       "b6_story": {
         "eyebrow": "LEEX · Incubadora B6",
@@ -423,7 +424,8 @@
     "copy": "Copiar",
     "copied": "Copiado",
     "copy_aria": "Copiar la dirección de email",
-    "logo_alt": "Logo de Juan Pablo Rojo"
+    "logo_alt": "Logo de Juan Pablo Rojo",
+    "cv_other": "Versión en inglés"
   },
   "sound": {
     "label": "Sonido",

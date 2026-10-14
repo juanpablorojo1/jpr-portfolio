@@ -1,11 +1,12 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import StackBadge from '../ui/StackBadge';
 import { VIDEOS, type VideoItem } from '../../lib/content';
 import VideosStage from './VideosStage';
+import VideosPhone from './VideosPhone';
+import DeskOnlyImage from '../ui/DeskOnlyImage';
 
 // Motion & Video — data-driven from VIDEOS (src/lib/content.ts) + messages videos.items.<id>.
 // Lives OUTSIDE the card stack (like Skills): a normal-flow block that scrolls over the
@@ -14,6 +15,8 @@ import VideosStage from './VideosStage';
 // - .fv-stack (these cards): phones/tablets (<1024) and desktop without the 3D scene (reduced motion, ?static,
 //   no GPU). Videos never autoplay: preload="none", a lazy optimized poster, and playback (with sound and native
 //   controls) starts only on click/tap. Starting one pauses the others.
+// - VideosPhone: phones/tablets (<1024), the drum in CSS 3D turned by swipe (U4 2026-10-14); .fv-stack hides there and
+//   its posters ask for a 1 px GIF (DeskOnlyImage) so the phone never downloads them.
 // - VideosStage: desktop ≥1024 with the «Señal» scene — the 360 drum, «Tambor 360» (projector.js + videos-senal.css, U3).
 
 function VideoCard({ item }: { item: VideoItem }) {
@@ -80,10 +83,9 @@ function VideoCard({ item }: { item: VideoItem }) {
           className="absolute inset-0 w-full h-full text-left focus:outline-none"
           aria-label={t('play_aria', { title })}
         >
-          <Image
+          <DeskOnlyImage
             src={item.poster}
             alt=""
-            fill
             // Landscape posters carry text to the edge: no hover zoom there (it would crop it)
             className={`object-cover ${landscape ? '' : 'motion-safe:transition-transform motion-safe:duration-500 group-hover:scale-[1.03]'}`}
             sizes={landscape ? '(min-width: 1024px) 70vw, 90vw' : '(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 80vw'}
@@ -166,6 +168,7 @@ export default function Videos() {
 
   return (
     <div id="videos">
+      <VideosPhone />
       <section className="fv-stack py-16 lg:py-24 bg-bg border-t border-border">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="lg:grid lg:grid-cols-4 lg:gap-6 mb-8 lg:mb-12">

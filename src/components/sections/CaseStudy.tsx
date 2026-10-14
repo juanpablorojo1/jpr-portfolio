@@ -1,15 +1,20 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import StackBadge from '../ui/StackBadge';
 import type { CaseShot } from '../ui/CaseLightbox';
 import ProjectDemo from '../ui/ProjectDemo';
+import DeskOnlyImage from '../ui/DeskOnlyImage';
 import type { ProjectDemo as DemoSrc } from '../../lib/content';
 
 // Case-study format fixed by Juan: problem → my role → key decisions → result.
 // Desktop: one rail panel of 200vw = two spreads (A: problem + role + screens,
 // B: decisions + result). Mobile: same content stacked.
+// Phone (< 1024, 2026-10-14, mobile-senal): CaseStudyMobile carries the phone design through classes (pjm-*,
+// projects-senal.css) and data-pm (phoneMotion). The visual piece goes first and edge to edge (PhoneMedia, only
+// shown below 1024); the desktop-static demo + strip stays as it was (hidden on phones).
 
 export interface CaseDecision {
   title: string;
@@ -53,7 +58,7 @@ interface PanelProps {
 
 function BlockLabel({ n, children }: { n: string; children: React.ReactNode }) {
   return (
-    <p className="font-mono text-xs text-muted uppercase tracking-widest mb-2">
+    <p className="pjm-blk font-mono text-xs text-muted uppercase tracking-widest mb-2">
       <span className="text-accent">{n}</span>
       <span className="text-border"> / </span>
       {children}
@@ -80,6 +85,7 @@ function ShotButton({
   sizes,
   viewLabel,
   className = '',
+  deskOnly = false,
 }: {
   shot: CaseShot;
   index: number;
@@ -87,7 +93,10 @@ function ShotButton({
   sizes: string;
   viewLabel: string;
   className?: string;
+  /** hidden below 1024 (the desktop-static strip): no request on phones (DeskOnlyImage) */
+  deskOnly?: boolean;
 }) {
+  const imgClass = 'object-cover motion-safe:transition-transform motion-safe:duration-300 group-hover:scale-105';
   return (
     <button
       type="button"
@@ -96,15 +105,11 @@ function ShotButton({
       style={{ aspectRatio: '1600 / 756' }}
       aria-label={`${viewLabel}: ${shot.label}`}
     >
-      <Image
-        src={shot.src}
-        alt={shot.caption}
-        fill
-        className="object-cover motion-safe:transition-transform motion-safe:duration-300 group-hover:scale-105"
-        sizes={sizes}
-      />
+      {deskOnly
+        ? <DeskOnlyImage src={shot.src} alt={shot.caption} sizes={sizes} className={imgClass} />
+        : <Image src={shot.src} alt={shot.caption} fill className={imgClass} sizes={sizes} />}
       <span className="absolute inset-0 bg-bg/0 group-hover:bg-bg/60 transition-colors duration-200 flex items-end p-2">
-        <span className="font-mono text-[10px] leading-tight text-left opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-200">
+        <span className="pjm-shotlbl font-mono text-[10px] leading-tight text-left opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-200">
           <span className="text-accent">{String(index + 1).padStart(2, '0')}</span>
           <span className="text-off-white uppercase"> / {shot.label}</span>
         </span>
@@ -167,12 +172,12 @@ function StripGallery({ data, onOpen, viewLabel }: { data: CaseStudyData; onOpen
   return (
     <div>
       <div className="max-w-4xl lg:max-w-3xl">
-        <ShotButton shot={featured} index={0} onOpen={onOpen} sizes="(min-width: 1024px) 900px, 100vw" viewLabel={viewLabel} />
+        <ShotButton shot={featured} index={0} onOpen={onOpen} sizes="(min-width: 1024px) 900px, 100vw" viewLabel={viewLabel} deskOnly />
       </div>
       <div className="flex gap-2 mt-2 overflow-x-auto snap-x snap-mandatory scroll-px-6 -mx-6 px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {thumbs.map((shot, i) => (
           <div key={shot.src} className="shrink-0 w-[42vw] sm:w-[28vw] lg:w-[14rem] snap-start">
-            <ShotButton shot={shot} index={i + 1} onOpen={onOpen} sizes="42vw" viewLabel={viewLabel} />
+            <ShotButton shot={shot} index={i + 1} onOpen={onOpen} sizes="42vw" viewLabel={viewLabel} deskOnly />
           </div>
         ))}
       </div>
@@ -186,7 +191,7 @@ function Stats({ stats, size }: { stats: CaseStat[]; size: 'lg' | 'sm' }) {
   return (
     <div className={`grid ${cols} gap-x-6 gap-y-4 border-l-2 border-accent ${size === 'lg' ? 'pl-6' : 'pl-4'}`}>
       {stats.map((s) => (
-        <div key={s.label}>
+        <div key={s.label} data-pm-i>
           <p className={`font-mono text-white tracking-tight mb-1 ${size === 'lg' ? 'text-2xl' : 'text-lg'}`}>{s.value}</p>
           <p className="font-mono text-[10px] sm:text-xs text-muted uppercase tracking-widest leading-snug">{s.label}</p>
         </div>
@@ -199,7 +204,7 @@ function Decisions({ decisions, compact }: { decisions: CaseDecision[]; compact?
   return (
     <ol className={compact ? 'space-y-5' : 'space-y-6'}>
       {decisions.map((d, i) => (
-        <li key={d.title} className="grid grid-cols-[2.5rem_1fr] gap-3">
+        <li key={d.title} data-pm-i className="grid grid-cols-[2.5rem_1fr] gap-3">
           <span className="font-display text-accent leading-none" style={{ fontSize: compact ? '1.75rem' : '2.25rem' }} aria-hidden="true">
             {String(i + 1).padStart(2, '0')}
           </span>
@@ -243,7 +248,7 @@ function Cta({ cta }: { cta?: CaseStudyData['cta'] }) {
       href={cta.href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-block font-ui font-bold text-xs text-accent border border-accent px-4 py-2 tracking-widest uppercase transition-all duration-150 hover:bg-accent hover:text-white"
+      className="pjm-cta inline-block font-ui font-bold text-xs text-accent border border-accent px-4 py-2 tracking-widest uppercase transition-all duration-150 hover:bg-accent hover:text-white"
     >
       {cta.label}
     </a>
@@ -366,38 +371,94 @@ export function CaseStudyPanel({ data, onOpen, onMouseMove, onMouseLeave }: Pane
   );
 }
 
+// ── Phone (< 1024): the visual piece, edge to edge ─────────────────────────────
+// Demo first (plays only in view, poster near: ProjectDemo), then every screen in a snap strip with its label always
+// visible (no hover on touch). Images are only requested a viewport before they show (useNear), so nothing here
+// competes with the hero LCP. display: none at >= 1024 (projects-senal.css): there it never intersects, never loads.
+export function PhoneMedia({ data, onOpen }: { data: CaseStudyData; onOpen: (index: number) => void }) {
+  const t = useTranslations('projects.case');
+  const ref = useRef<HTMLDivElement>(null);
+  const near = useNear(ref);
+  return (
+    <div ref={ref} className="pjm-media">
+      {data.demo && (
+        <div className="pjm-demo" data-pm="on">
+          <ProjectDemo demo={data.demo.src} title={data.title} alt={data.demo.alt} />
+        </div>
+      )}
+      <ul className="pjm-strip" aria-label={`${t('screens')}: ${data.title}`}>
+        {data.shots.map((shot, i) => (
+          <li key={shot.src}>
+            {/* nombre accesible = el rótulo visible con «Ver captura» delante (label-content-name-mismatch) */}
+            <button type="button" className="pjm-shot" onClick={() => onOpen(i)}>
+              <span className="pjm-shot-img">
+                {near && <Image src={shot.src} alt="" fill className="object-cover" sizes="(max-width: 767px) 80vw, 46vw" />}
+              </span>
+              <span className="pjm-shot-lbl"><span className="sr-only">{t('view_shot')}: </span><b>{String(i + 1).padStart(2, '0')}</b> {shot.label}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {data.shotsNote && <p className="pjm-note">* {data.shotsNote}</p>}
+    </div>
+  );
+}
+
+/** true from one viewport before the element shows up (and stays true). */
+export function useNear(ref: React.RefObject<HTMLElement>) {
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setNear(true); io.disconnect(); }
+    }, { rootMargin: '0px 0px 100% 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref]);
+  return near;
+}
+
 // ── Mobile / tablet: stacked block ─────────────────────────────────────────
+// >= 1024 this is the desktop layout without the 3D scene (reduced motion, ?static, no GPU): it must not change.
+// The phone design rides on the pjm-* hooks (projects-senal.css) and on data-pm (phoneMotion, < 1024 only).
 export function CaseStudyMobile({ data, onOpen, isLast }: { data: CaseStudyData; onOpen: (index: number) => void; isLast?: boolean }) {
   const t = useTranslations('projects.case');
   return (
-    <div className={`border-t border-border pt-8 ${isLast ? '' : 'mb-20'}`}>
-      <div className="flex items-baseline gap-4 mb-6">
-        <span className="font-mono text-xs text-accent tracking-widest">{data.number}</span>
-        <div className="flex-1 h-px bg-border" />
+    <div id={`pj-${data.number}`} className={`pjm-case border-t border-border pt-8 ${isLast ? '' : 'mb-20'}`}>
+      {/* phone: the signal cut that opens each project (red line + head), in step with the header reveal */}
+      <span className="pjm-cut" aria-hidden="true"><b /><i /></span>
+      <div className="pjm-head" data-pm="cut">
+        <div className="pjm-folio flex items-baseline gap-4 mb-6">
+          <span className="font-mono text-xs text-accent tracking-widest">{data.number}</span>
+          <div className="flex-1 h-px bg-border" />
+        </div>
+
+        {data.badge && (
+          <div className="pjm-badge mb-3">
+            <StatusBadge label={data.badge} />
+          </div>
+        )}
+        <p className="pjm-eyebrow font-mono text-xs text-accent tracking-widest uppercase mb-2">{data.eyebrow}</p>
+        <h2 className="pjm-title font-display text-white uppercase leading-none mb-4" style={{ fontSize: 'clamp(2rem, 8vw, 4rem)' }}>{data.title}</h2>
+        <p className="pjm-sub font-ui text-off-white text-lg leading-snug mb-6">{data.subtitle}</p>
       </div>
 
-      {data.badge && (
-        <div className="mb-3">
-          <StatusBadge label={data.badge} />
-        </div>
-      )}
-      <p className="font-mono text-xs text-accent tracking-widest uppercase mb-2">{data.eyebrow}</p>
-      <h2 className="font-display text-white uppercase leading-none mb-4" style={{ fontSize: 'clamp(2rem, 8vw, 4rem)' }}>{data.title}</h2>
-      <p className="font-ui text-off-white text-lg leading-snug mb-6">{data.subtitle}</p>
+      <PhoneMedia data={data} onOpen={onOpen} />
 
       {/* Story first: problem + role, then the screens, then decisions */}
-      <div className="md:grid md:grid-cols-2 md:gap-10">
-        <div className="mb-6">
+      <div className="pjm-story md:grid md:grid-cols-2 md:gap-10">
+        <div className="pjm-step mb-6" data-pm="rise">
           <BlockLabel n="01">{t('problem')}</BlockLabel>
           <p className="font-ui text-muted leading-relaxed">{data.problem}</p>
         </div>
-        <div className="mb-8">
+        <div className="pjm-step mb-8" data-pm="rise">
           <BlockLabel n="02">{t('role')}</BlockLabel>
           <p className="font-ui text-off-white leading-relaxed">{data.role}</p>
         </div>
       </div>
 
-      <div className="mb-10">
+      <div className="pjm-desk mb-10">
         {data.demo && (
           <div className="max-w-4xl lg:max-w-3xl mb-4">
             <ProjectDemo demo={data.demo.src} title={data.title} alt={data.demo.alt} />
@@ -409,26 +470,28 @@ export function CaseStudyMobile({ data, onOpen, isLast }: { data: CaseStudyData;
         )}
       </div>
 
-      <div className="mb-8">
-        <BlockLabel n="03">{t('decisions')}</BlockLabel>
-        <div className="mt-4 md:[&_ol]:grid md:[&_ol]:grid-cols-2 md:[&_ol]:gap-x-10 md:[&_ol]:gap-y-6 md:[&_ol>li]:!mt-0">
+      <div className="pjm-step pjm-dec mb-8">
+        <div data-pm="rise"><BlockLabel n="03">{t('decisions')}</BlockLabel></div>
+        <div data-pm="group" className="mt-4 md:[&_ol]:grid md:[&_ol]:grid-cols-2 md:[&_ol]:gap-x-10 md:[&_ol]:gap-y-6 md:[&_ol>li]:!mt-0">
           <Decisions decisions={data.decisions} compact />
         </div>
       </div>
 
-      <div className="mb-8">
-        <BlockLabel n="04">{t('result')}</BlockLabel>
-        <p className="font-ui text-off-white text-lg leading-snug mb-5">{data.result}</p>
-        <Stats stats={data.stats} size="sm" />
+      <div className="pjm-step pjm-result mb-8">
+        <div data-pm="rise">
+          <BlockLabel n="04">{t('result')}</BlockLabel>
+          <p className="font-ui text-off-white text-lg leading-snug mb-5">{data.result}</p>
+        </div>
+        <div data-pm="group"><Stats stats={data.stats} size="sm" /></div>
       </div>
 
       {data.seo && (
-        <div className="mb-8">
+        <div className="pjm-seo mb-8" data-pm="rise">
           <SeoBlock data={data} onOpen={onOpen} viewLabel={t('view_shot')} sizes="50vw" />
         </div>
       )}
 
-      <div className={data.cta ? 'mb-6' : ''}>
+      <div className={`pjm-chips${data.cta ? ' mb-6' : ''}`} data-pm="rise">
         <Stack stack={data.stack} />
       </div>
       <Cta cta={data.cta} />

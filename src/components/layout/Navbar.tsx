@@ -26,8 +26,9 @@ const prefersReducedMotion = () =>
 const SECTION_IDS = ['projects', 'videos', 'skills', 'experience', 'contact'] as const;
 type SectionKey = (typeof SECTION_IDS)[number];
 
-/* Alto del menú en reposo (navbar.css: 80 px; 64 px por debajo de 900). */
-const restBarHeight = () => (window.innerWidth < 900 ? 64 : 80);
+/* Alto del menú en reposo (navbar.css: 80 px; 64 px por debajo de 1024, más el safe area de arriba, que en el navegador
+   del teléfono en vertical es 0). */
+const restBarHeight = () => (window.innerWidth < 1024 ? 64 : 80);
 
 /* La misma traza que el hero (static-trace en Hero.tsx), plana y 2D. */
 const TRACE_D = 'M0 90 H340 l10 -6 l8 6 H372 l5 5 l9 -86 l9 96 l6 -15 H470 q22 -18 44 0 H1000';
@@ -52,8 +53,17 @@ export default function Navbar() {
   const [active, setActive] = useState<SectionKey | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const dockBtnRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDialogElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const dockCloseRef = useRef<HTMLButtonElement>(null);
+  /* Celular: el menú se abre desde la barra de arriba (sobre el hero) o desde el dock de abajo (pasado el hero).
+     Barre desde ese borde y el botón de cerrar queda en el mismo lugar que el que lo abrió. */
+  const [openedFrom, setOpenedFrom] = useState<'top' | 'dock'>('top');
+  const openerRef = useRef<HTMLButtonElement | null>(null);
+  // C-06 (teléfono): la sección a la que se navegó desde el menú abierto con la barra de arriba. Esa barra se va al pasar
+  // el hero (visibility: hidden), así que el foco no vuelve a su botón sino a la sección de destino.
+  const navTargetRef = useRef<string | null>(null);
   const panelId = useId();
   const closeLabel = t('close_aria');
 
@@ -70,6 +80,22 @@ export default function Navbar() {
     let io: IntersectionObserver | null = null;
     const build = () => {
       io?.disconnect();
+      // Celular (< 1024): la barra de arriba es transparente y no tiene fondo al scrollear (se va). Se va apenas el
+      // nombre del hero llega a su franja (alto de la barra + 40 px), antes de que el texto pase por debajo; desde
+      // ahí manda el dock de abajo.
+      const name = window.innerWidth < 1024 ? document.querySelector('.senal .name') : null;
+      if (name) {
+        const band = restBarHeight() + 40;
+        // La franja se extiende hacia arriba sin tope (margen superior enorme): «el nombre ya pasó» también cuenta como
+        // adentro. Sin eso un salto (link a sección, scroll rápido de más de 104 px por frame) llevaba el nombre de
+        // abajo de la franja a arriba sin cruzarla, el IO no avisaba y la barra no se iba ni aparecía el dock (U2).
+        io = new IntersectionObserver(
+          ([e]) => setScrolled(e.isIntersecting || e.boundingClientRect.top < 0),
+          { root: document, rootMargin: `100000px 0px -${Math.max(0, window.innerHeight - band)}px 0px` },
+        );
+        io.observe(name);
+        return;
+      }
       const bottom = Math.max(0, window.innerHeight - restBarHeight());
       // root: document = el viewport de ESTE documento (también dentro de un iframe), para que rootMargin
       // se mida contra el mismo innerHeight que lo calcula.
@@ -137,8 +163,8 @@ export default function Navbar() {
     html.style.overflow = 'hidden';
     if (gutter > 0) html.style.paddingRight = `${gutter}px`;
     sheet.showModal();
-    closeBtnRef.current?.focus();
-  }, [menuOpen]);
+    (openedFrom === 'dock' ? dockCloseRef : closeBtnRef).current?.focus();
+  }, [menuOpen, openedFrom]);
 
   useEffect(() => {
     const sheet = sheetRef.current;
@@ -147,7 +173,16 @@ export default function Navbar() {
     const onClose = () => {
       setMenuOpen(false);
       unlockScroll();
-      menuBtnRef.current?.focus({ preventScroll: true });
+      const target = navTargetRef.current ? document.getElementById(navTargetRef.current) : null;
+      navTargetRef.current = null;
+      if (target) {
+        target.setAttribute('tabindex', '-1');
+        target.setAttribute('data-nav-focus', '');
+        target.focus({ preventScroll: true });
+        target.addEventListener('blur', () => { target.removeAttribute('tabindex'); target.removeAttribute('data-nav-focus'); }, { once: true });
+        return;
+      }
+      (openerRef.current ?? menuBtnRef.current)?.focus({ preventScroll: true });
     };
     sheet.addEventListener('close', onClose);
     // Si la ventana pasa a ≥1200 con el menú abierto, el botón desaparece: se cierra.
@@ -181,6 +216,7 @@ export default function Navbar() {
 
   const handleSheetNavClick = (e: MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
+    if (openerRef.current === menuBtnRef.current && window.matchMedia('(max-width: 1023px)').matches) navTargetRef.current = id;
     closeSheet();
     scrollToSection(id);
   };
@@ -192,6 +228,13 @@ export default function Navbar() {
   };
 
   const logoLabel = `${tHero('title')} ${tHero('surname')}`;
+
+  const openMenu = (from: 'top' | 'dock') => {
+    openerRef.current = from === 'dock' ? dockBtnRef.current : menuBtnRef.current;
+    setOpenedFrom(from);
+    setMenuOpen(true);
+  };
+  const activeIdx = active ? navLinks.findIndex((l) => l.id === active) : -1;
 
   return (
     <header className={`jnav${scrolled ? ' is-scrolled' : ''}`}>
@@ -228,17 +271,44 @@ export default function Navbar() {
             type="button"
             className="jnav-menu"
             aria-label={t('menu_aria')}
-            aria-expanded={menuOpen}
+            aria-expanded={menuOpen && openedFrom === 'top'}
             aria-controls={panelId}
-            onClick={() => setMenuOpen(true)}
+            onClick={() => openMenu('top')}
           >
             <i /><i />
           </button>
         </div>
       </div>
 
+      {/* Dock de celular (< 1024, navbar.css): pasado el hero la navegación baja al pulgar. Lectura del canal (la sección
+          en pantalla, con el punto que late), el CV y el menú. Sobre el hero no está: ahí manda la barra de arriba. */}
+      <div className="jnav-dock" data-shown={scrolled ? '' : undefined}>
+        <p className="jnav-dock-ch" aria-hidden="true">
+          <span className="jnav-dock-dot" />
+          <span className="jnav-dock-num">{activeIdx >= 0 ? String(activeIdx + 1).padStart(2, '0') : '00'}</span>
+          <span className="jnav-dock-label" key={active ?? 'none'}>{activeIdx >= 0 ? navLinks[activeIdx].label : logoLabel}</span>
+        </p>
+        <a className="jnav-dock-cv" href={cvHref} target="_blank" rel="noopener noreferrer" aria-label={t('downloadCV')}>
+          <span aria-hidden="true">CV</span>
+          <svg viewBox="0 0 9 11" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true">
+            <path d="M4.5 0v9M1 5.5l3.5 3.5L8 5.5M0 10.5h9" />
+          </svg>
+        </a>
+        <button
+          ref={dockBtnRef}
+          type="button"
+          className="jnav-menu jnav-dock-menu"
+          aria-label={t('menu_aria')}
+          aria-expanded={menuOpen && openedFrom === 'dock'}
+          aria-controls={panelId}
+          onClick={() => openMenu('dock')}
+        >
+          <i /><i />
+        </button>
+      </div>
+
       {/* Menú de celular. Modal: el resto de la página queda inerte mientras está abierto. */}
-      <dialog ref={sheetRef} id={panelId} className="jnav-sheet" aria-label={t('menu_aria')}>
+      <dialog ref={sheetRef} id={panelId} className="jnav-sheet" data-from={openedFrom} aria-label={t('menu_aria')}>
         <div className="jnav-bar jnav-sheet-bar">
           <LogoSlot href={`/${locale}`} label={logoLabel} onClick={handleLogoClick} svg={<LogoMark idSuffix="-menu" />} />
           <div className="jnav-right">
@@ -276,6 +346,10 @@ export default function Navbar() {
 
         <div className="jnav-sheet-foot">
           <CvLink href={cvHref} label={t('downloadCV')} />
+          {/* celular, abierto desde el dock: cerrar abajo, donde estaba el botón que lo abrió */}
+          <button ref={dockCloseRef} type="button" className="jnav-menu jnav-close jnav-close-dock" aria-label={closeLabel} onClick={closeSheet}>
+            <i /><i />
+          </button>
         </div>
       </dialog>
     </header>
