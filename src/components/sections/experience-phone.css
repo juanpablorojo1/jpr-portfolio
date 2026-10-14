@@ -1,0 +1,108 @@
+/* Experience en el teléfono (< 1024, 2026-10-14, rama mobile-senal). Mismo DOM que .ex-classic (el layout de columnas
+   del escritorio sin escena); el diseño de teléfono va por clases .exm-* y todo vive en el bloque < 1024.
+   Lo que sólo existe en el teléfono (titular, cuentas, la traza, el marcador del rótulo) está en display: none afuera.
+   La traza: un ECG vertical en el canal de los roles (SVG, Experience.tsx arma el path con las posiciones medidas),
+   dibujado por el scroll con un scrub corto, sin pin; cada rol tiene su latido (pico R hacia el rol, a la altura del
+   año) y se enciende cuando el frente de la traza lo cruza. */
+
+.exm-sq, .exm-title, .exm-counts, .exm-ecg { display: none; }
+
+@media (max-width: 1023px) {
+  .ex-classic {
+    --pad: max(22px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --off: #e8e4de;
+    --dim: rgba(232, 228, 222, .62);
+    --line: #2a2a2a;
+    --red: #e8272a;
+    padding: clamp(84px, 23vw, 120px) 0 clamp(88px, 24vw, 124px) !important;
+  }
+  .ex-classic > div { padding-left: var(--pad); padding-right: var(--pad); }
+  .ex-classic .exm-desk { display: none; }
+
+  /* rótulo (el sistema de About / Projects / Video) */
+  .ex-classic .exm-label {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 20px;
+    font-size: 10.5px; line-height: 1; letter-spacing: .2em; color: var(--dim);
+  }
+  .ex-classic .exm-sq { display: inline-block; flex: none; width: 6px; height: 6px; background: var(--red); box-shadow: 0 0 10px var(--red); }
+
+  .ex-classic .exm-title {
+    display: block; margin: 0; font-weight: 400; text-transform: uppercase; color: #fff;
+    font-size: clamp(56px, 18vw, 104px); line-height: .9; letter-spacing: .005em;
+  }
+  .ex-classic .exm-title > span { display: block; }
+  .ex-classic .exm-title .pm-line-mask { padding: .18em 0 .08em; margin: -.18em 0 -.08em; }
+
+  /* cuántos hay de cada cosa: una lectura de monitor de tres canales (la ficha del About) */
+  .ex-classic .exm-counts {
+    display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between; gap: 0 12px;
+    margin: 26px 0 0; padding: 15px 0 14px; list-style: none;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    font: 10px/1 var(--font-jetbrains-mono), ui-monospace, monospace; letter-spacing: .16em; text-transform: uppercase; color: #8c8c8c;
+  }
+  .ex-classic .exm-counts b { display: block; margin-bottom: 9px; font-weight: 400; font-size: 20px; letter-spacing: .02em; color: var(--off); }
+
+  .ex-classic .grid { gap: 0 !important; }
+
+  /* cabecera de cada grupo: rótulo + filete */
+  .ex-classic .exm-ghead { gap: 14px; margin: 64px 0 34px !important; align-items: center; }
+  .ex-classic .exm-list { margin-top: -14px; }
+  .ex-classic .exm-ghead > span { font-size: 10.5px; line-height: 1; letter-spacing: .2em; color: var(--dim); }
+  .ex-classic .exm-ghead > div { background: var(--line); }
+
+  /* ---------- los roles y su traza ---------- */
+  .ex-classic .exm-list { position: relative; }
+  .ex-classic .exm-ecg {
+    display: block; position: absolute; left: 0; top: 0; width: 30px; height: 100%; overflow: visible; pointer-events: none;
+  }
+  .ex-classic .exm-ecg path { fill: none; stroke-linejoin: round; stroke-linecap: round; }
+  .ex-classic .exm-ghost { stroke: rgba(232, 228, 222, .13); stroke-width: 1; }
+  .ex-classic .exm-trace {
+    stroke: rgba(232, 39, 42, .92); stroke-width: 1.5; stroke-dasharray: 1 1; stroke-dashoffset: 1;
+    filter: drop-shadow(0 0 3px rgba(232, 39, 42, .55));
+  }
+  .ex-classic .exm-head { fill: #ff5254; opacity: 0; filter: drop-shadow(0 0 6px #e8272a); }
+
+  .ex-classic .exm-roles { gap: 52px !important; padding-top: 30px; padding-left: 42px !important; }
+  .ex-classic .timeline-item { position: relative; }
+  .ex-classic .exm-year {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 12px !important;
+    font-size: 11px; line-height: 16px; letter-spacing: .14em; color: var(--dim);
+    transition: color .6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .ex-classic .exm-co {
+    margin: 0 0 8px !important; font-size: clamp(34px, 10.4vw, 52px) !important; line-height: .92 !important;
+    letter-spacing: .005em; text-wrap: balance;
+  }
+  .ex-classic .exm-rolewrap { overflow: visible; }
+  .ex-classic .exm-role {
+    margin: 0 0 14px !important; font-size: 15px !important; line-height: 1.3 !important; letter-spacing: .07em;
+    color: var(--off);
+  }
+  .ex-classic .exm-desc {
+    margin: 0; max-width: 34em; font-size: 17px !important; line-height: 1.55 !important; color: rgba(232, 228, 222, .84);
+  }
+  /* el marcador del rol: el pico R de la traza apunta a él; con el latido se enciende y el año toma el tono pleno */
+  .ex-classic .exm-year::before {
+    content: ''; flex: none; width: 6px; height: 6px; background: #3a3a3a;
+    transition: background-color .5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .ex-classic .timeline-item[data-beat] .exm-year { color: var(--off); }
+  .ex-classic .timeline-item[data-beat] .exm-year::before { background: var(--red); box-shadow: 0 0 10px var(--red); animation: exm-beat .7s cubic-bezier(0.16, 1, 0.3, 1); }
+
+  /* ---------- formación y reconocimientos ---------- */
+  .ex-classic .exm-side { gap: 0 !important; }
+  .ex-classic .exm-group > div:last-child { gap: 30px !important; }
+  .ex-classic .exm-entry { padding: 2px 0 2px 18px !important; border-left: 1px solid #3a3a3a !important; }
+  .ex-classic .exm-group[data-g='rec'] .exm-entry { border-left-color: var(--red) !important; }
+  .ex-classic .exm-eyear { margin: 0 0 10px !important; font-size: 11px; line-height: 1; letter-spacing: .14em; color: var(--dim); }
+  .ex-classic .exm-inst { margin: 0 0 6px; font-size: 22px !important; line-height: 1.2 !important; color: #fff; }
+  .ex-classic .exm-deg { margin: 0 !important; font-size: 15px !important; line-height: 1.35 !important; letter-spacing: .06em; color: rgba(232, 228, 222, .88); }
+  .ex-classic .exm-detail { margin-top: 10px !important; font-size: 12.5px; line-height: 1.55; color: rgba(232, 228, 222, .7); }
+}
+
+@keyframes exm-beat { 0% { transform: scale(2.2); } 100% { transform: none; } }
+@media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+  .ex-classic .exm-trace { stroke-dashoffset: 0; }
+  .ex-classic .exm-year, .ex-classic .exm-year::before { transition: none; animation: none !important; }
+}
