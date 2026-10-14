@@ -164,8 +164,11 @@
   }
   @keyframes fvm-fade { from { opacity: 0; } to { opacity: 1; } }
   .fvm-credit a {
+    position: relative;
     color: var(--off); text-decoration: underline; text-decoration-color: rgba(232, 228, 222, .4); text-underline-offset: 3px;
   }
+  /* F-03: área táctil de 44 px de alto (y 6 px más a cada lado) sin mover el renglón */
+  .fvm-credit a::after { content: ''; position: absolute; left: -6px; right: -6px; top: 50%; height: 44px; transform: translateY(-50%); }
   .fvm-credit a:active, .fvm-credit a:focus-visible { color: #fff; text-decoration-color: #e8272a; outline: none; }
   .fvm-colophon { padding: 34px var(--pad) 0; max-width: 40rem; }
   .fvm-note { margin: 0; font: 400 17px/1.55 var(--font-ui); color: rgba(232, 228, 222, .8); text-wrap: pretty; }

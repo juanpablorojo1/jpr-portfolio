@@ -460,7 +460,7 @@
 .lbm-cap {
   margin: 14px var(--pad) 0; min-height: 4.65em;
   font: 11px/1.55 var(--mono); color: rgba(232, 228, 222, .74);
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  /* F-01: el pie completo (sin line-clamp: a 375/390 tres capturas pedían una cuarta línea); el alto mínimo de 3 queda */
 }
 .lbm-cap span { margin-right: .9em; color: #e8e4de; letter-spacing: .14em; text-transform: uppercase; }
 .lbm-bar {

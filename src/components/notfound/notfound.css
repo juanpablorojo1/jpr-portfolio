@@ -111,6 +111,10 @@ body:has(> .nf) { margin: 0; background: #080808; }
   .nf-title { font-size: clamp(64px, min(22vw, 22vh), 120px); }
   .nf-body { font-size: 17px; line-height: 1.5; color: rgba(232, 228, 222, .86); }
   .nf-btn { height: 56px; -webkit-tap-highlight-color: transparent; }
+  /* F-02: EN y ES se pisaban 16 px (14 px de relleno a cada lado). El relleno crece hacia afuera y se achica entre los
+     dos: mismas posiciones del texto (relleno − margen = 2 px por lado, como antes), áreas de 45×54 sin solaparse */
+  .nf .jnav-lang a:first-child { padding: 20px 6px 20px 22px; margin: -12px -4px -12px -20px; }
+  .nf .jnav-lang a:last-child { padding: 20px 22px 20px 6px; margin: -12px -20px -12px -4px; }
   .nf-btn:active::before { transform: scaleY(1); filter: brightness(.86); }
 }
 @media (max-width: 899px) and (min-height: 600px) {

@@ -61,6 +61,9 @@ export default function Navbar() {
      Barre desde ese borde y el botón de cerrar queda en el mismo lugar que el que lo abrió. */
   const [openedFrom, setOpenedFrom] = useState<'top' | 'dock'>('top');
   const openerRef = useRef<HTMLButtonElement | null>(null);
+  // C-06 (teléfono): la sección a la que se navegó desde el menú abierto con la barra de arriba. Esa barra se va al pasar
+  // el hero (visibility: hidden), así que el foco no vuelve a su botón sino a la sección de destino.
+  const navTargetRef = useRef<string | null>(null);
   const panelId = useId();
   const closeLabel = t('close_aria');
 
@@ -170,6 +173,15 @@ export default function Navbar() {
     const onClose = () => {
       setMenuOpen(false);
       unlockScroll();
+      const target = navTargetRef.current ? document.getElementById(navTargetRef.current) : null;
+      navTargetRef.current = null;
+      if (target) {
+        target.setAttribute('tabindex', '-1');
+        target.setAttribute('data-nav-focus', '');
+        target.focus({ preventScroll: true });
+        target.addEventListener('blur', () => { target.removeAttribute('tabindex'); target.removeAttribute('data-nav-focus'); }, { once: true });
+        return;
+      }
       (openerRef.current ?? menuBtnRef.current)?.focus({ preventScroll: true });
     };
     sheet.addEventListener('close', onClose);
@@ -204,6 +216,7 @@ export default function Navbar() {
 
   const handleSheetNavClick = (e: MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
+    if (openerRef.current === menuBtnRef.current && window.matchMedia('(max-width: 1023px)').matches) navTargetRef.current = id;
     closeSheet();
     scrollToSection(id);
   };

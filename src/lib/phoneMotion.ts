@@ -47,7 +47,11 @@ export function phoneReveal(root: HTMLElement): () => void {
       io.observe(el);
     };
 
+    // C-02: con la hidratación diferida (phoneGate) la sección puede hidratar cuando ya está en pantalla o ya pasó.
+    // Lo que a esa altura ya se ve (o quedó arriba) se deja como vino del servidor: ni se oculta ni vuelve a entrar.
+    const seen = innerHeight * 0.9;
     root.querySelectorAll<HTMLElement>('[data-pm]').forEach((el) => {
+      if (el.getBoundingClientRect().top < seen) return;
       const d = parseFloat(el.dataset.pmD || '0') || 0;
       switch (el.dataset.pm) {
         case 'rise':

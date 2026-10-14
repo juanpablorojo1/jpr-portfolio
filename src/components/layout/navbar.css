@@ -350,3 +350,7 @@ html { scroll-padding-top: 65px; }
   /* el final de la página no queda debajo del dock */
   body { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
 }
+/* C-06: la sección que recibe el foco al navegar desde el menú (teléfono) no dibuja un anillo alrededor de toda la sección */
+@media (max-width: 1023px) {
+  [data-nav-focus]:focus { outline: none; }
+}
