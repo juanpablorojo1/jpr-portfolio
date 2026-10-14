@@ -424,7 +424,8 @@
     "copy": "Copy",
     "copied": "Copied",
     "copy_aria": "Copy the email address",
-    "logo_alt": "Juan Pablo Rojo logo"
+    "logo_alt": "Juan Pablo Rojo logo",
+    "cv_other": "Spanish version"
   },
   "sound": {
     "label": "Sound",

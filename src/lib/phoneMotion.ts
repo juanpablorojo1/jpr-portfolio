@@ -10,7 +10,7 @@
    - lines  titular por líneas con máscara (el gesto del nombre del hero): cada línea sube desde su propio borde.
             Parte los [data-pm-lines] de adentro cuando la fuente final está lista.
    - draw   la traza SVG se dibuja de izquierda a derecha (.pm-trace) y el cabezal la recorre (.pm-head).
-   - cut    el corte de señal entre proyectos: la recta roja (hermano .pjm-cut > b) barre el ancho y destapa la
+   - cut    el corte de señal entre proyectos: la recta roja (hermano .pjm-cut / .pm-cut > b) barre el ancho y destapa la
             cabecera (clip-path) en el mismo tiempo, 0,55 s; el cabezal (.pjm-cut > i) viaja con el borde y se apaga.
    - on     una pantalla que se enciende: parpadeo de lámpara corto (sólo opacidad), como las notebooks del escritorio. */
 import gsap from 'gsap';
@@ -75,7 +75,7 @@ export function phoneReveal(root: HTMLElement): () => void {
           break;
         }
         case 'cut': {
-          const cut = el.parentElement?.querySelector<HTMLElement>(':scope > .pjm-cut');
+          const cut = el.parentElement?.querySelector<HTMLElement>(':scope > .pjm-cut, :scope > .pm-cut');
           const line = cut?.querySelector<HTMLElement>('b');
           const glow = cut?.querySelector<HTMLElement>('i');
           gsap.set(el, { clipPath: 'inset(0% 100% 0% 0%)' });
