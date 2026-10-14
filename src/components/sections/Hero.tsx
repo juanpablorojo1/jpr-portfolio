@@ -18,10 +18,15 @@ import '../hero/senal/senal.css';
 /* Celular (< 1024): la figura es el LCP. Fuente propia con srcset de next/image (AVIF/WebP al ancho del teléfono) y
    preload solo para ese rango (media). En >= 1024 queda el <img> de siempre, mismo archivo y mismos píxeles. */
 const PHONE_MQ = '(max-width: 1023px)';
-const FIG_SIZES = '(max-width: 1023px) 118vw, 40vw';
+const FIG_SIZES = '(max-width: 1023px) 108vw, 40vw';
 const { props: figPhone } = getImageProps({
   src: '/senal/juan-2d-static.webp', alt: '', width: 1166, height: 1708, sizes: FIG_SIZES, quality: 80,
 });
+
+// Celular: la figura es el LCP y llega antes del primer pintado; con decoding="async" se pintaba un frame tarde, detrás de
+// la evaluación del JS (LCP observado 160 ms después del FCP). En el teléfono se decodifica en el mismo pintado.
+// Escritorio conserva el async (su figura arranca invisible). Corre mientras se parsea, justo después del <img>.
+const FIG_DECODE_SCRIPT = `(function(){if(!matchMedia('${PHONE_MQ}').matches)return;var i=document.querySelector('#senal .static-fig img');if(i)i.decoding='sync';})();`;
 
 const STATIC_SCRIPT = `(function(){var r=document.getElementById('senal');if(!r)return;var rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;if(rm||/[?&]static\\b/.test(location.search))r.classList.add('is-static');})();`;
 
@@ -137,9 +142,11 @@ export default function Hero() {
         <div className="static-fig">
           <picture>
             <source media={PHONE_MQ} srcSet={figPhone.srcSet} sizes={FIG_SIZES} />
+            {/* suppressHydrationWarning: FIG_DECODE_SCRIPT cambia decoding en el teléfono antes de hidratar, a propósito */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/senal/juan-2d-static.webp" alt="" decoding="async" width={1166} height={1708} />
+            <img src="/senal/juan-2d-static.webp" alt="" decoding="async" width={1166} height={1708} suppressHydrationWarning />
           </picture>
+          <script dangerouslySetInnerHTML={{ __html: FIG_DECODE_SCRIPT }} />
         </div>
         <svg className="static-trace" viewBox="0 0 1000 120" preserveAspectRatio="none">
           <path d="M0 90 H340 l10 -6 l8 6 H372 l5 5 l9 -86 l9 96 l6 -15 H470 q22 -18 44 0 H1000" />

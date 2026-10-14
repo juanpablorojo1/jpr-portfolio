@@ -259,7 +259,9 @@
     position: relative; left: auto; bottom: auto; align-self: flex-start;
     font-size: clamp(64px, 22.4vw, 108px); line-height: .84; letter-spacing: .012em;
   }
-  .senal .name-line { animation: senal-m-rise 1.15s cubic-bezier(0.16, 1, 0.3, 1) .3s backwards; }
+  /* nowrap: con la fuente de respaldo (más ancha, antes de que llegue Bebas) «JUAN PABLO» partía en dos y el cambio de
+     fuente movía el bloque (CLS medido 0,04 en h1.name) */
+  .senal .name-line { white-space: nowrap; animation: senal-m-rise 1.15s cubic-bezier(0.16, 1, 0.3, 1) .3s backwards; }
   .senal .name-red { animation-delay: .42s; }
   .senal.is-loading:not(.is-static) .name,
   .senal.is-loading:not(.is-static) .tagline { visibility: visible; }
