@@ -38,7 +38,7 @@
     display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between; gap: 0 12px;
     margin: 26px 0 0; padding: 15px 0 14px; list-style: none;
     border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
-    font: 10px/1 var(--font-jetbrains-mono), ui-monospace, monospace; letter-spacing: .16em; text-transform: uppercase; color: #8c8c8c;
+    font: 10px/1 var(--font-jetbrains-mono), ui-monospace, monospace; letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
   }
   .ex-classic .exm-counts b { display: block; margin-bottom: 9px; font-weight: 400; font-size: 20px; letter-spacing: .02em; color: var(--off); }
 
@@ -61,7 +61,7 @@
     stroke: rgba(232, 39, 42, .92); stroke-width: 1.5; stroke-dasharray: 1 1; stroke-dashoffset: 1;
     filter: drop-shadow(0 0 3px rgba(232, 39, 42, .55));
   }
-  .ex-classic .exm-head { fill: #ff5254; opacity: 0; filter: drop-shadow(0 0 6px #e8272a); }
+  .ex-classic .exm-head { fill: var(--red-core); opacity: 0; filter: drop-shadow(0 0 6px #e8272a); }
 
   .ex-classic .exm-roles { gap: 52px !important; padding-top: 30px; padding-left: 42px !important; }
   .ex-classic .timeline-item { position: relative; }
@@ -84,7 +84,7 @@
   }
   /* el marcador del rol: el pico R de la traza apunta a él; con el latido se enciende y el año toma el tono pleno */
   .ex-classic .exm-year::before {
-    content: ''; flex: none; width: 6px; height: 6px; background: #3a3a3a;
+    content: ''; flex: none; width: 6px; height: 6px; background: var(--color-border);
     transition: background-color .5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .5s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .ex-classic .timeline-item[data-beat] .exm-year { color: var(--off); }
@@ -93,7 +93,7 @@
   /* ---------- formación y reconocimientos ---------- */
   .ex-classic .exm-side { gap: 0 !important; }
   .ex-classic .exm-group > div:last-child { gap: 30px !important; }
-  .ex-classic .exm-entry { padding: 2px 0 2px 18px !important; border-left: 1px solid #3a3a3a !important; }
+  .ex-classic .exm-entry { padding: 2px 0 2px 18px !important; border-left: 1px solid var(--color-border) !important; }
   .ex-classic .exm-group[data-g='rec'] .exm-entry { border-left-color: var(--red) !important; }
   .ex-classic .exm-eyear { margin: 0 0 10px !important; font-size: 11px; line-height: 1; letter-spacing: .14em; color: var(--dim); }
   .ex-classic .exm-inst { margin: 0 0 6px; font-size: 22px !important; line-height: 1.2 !important; color: #fff; }

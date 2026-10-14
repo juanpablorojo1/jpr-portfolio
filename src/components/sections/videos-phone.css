@@ -97,7 +97,7 @@
   .fvm-floor svg { flex: none; display: block; overflow: visible; }
   .fvm-blip { fill: none; stroke: rgba(232, 39, 42, .5); stroke-width: 1.2; stroke-linejoin: round; }
   .fvm-pulse {
-    fill: none; stroke: #ff4d50; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    fill: none; stroke: var(--red-core); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
     stroke-dasharray: .24 1.2; stroke-dashoffset: .24; filter: drop-shadow(0 0 4px rgba(232, 39, 42, .9));
   }
 
@@ -114,7 +114,7 @@
   }
   .fvm-name {
     flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-    font: 600 16px/1.3 var(--font-ui); letter-spacing: .01em; text-transform: none; color: var(--off);
+    font: 700 16px/1.3 var(--font-ui); letter-spacing: .01em; text-transform: none; color: var(--off);
     animation: fvm-in .55s var(--ease-out);
   }
   @keyframes fvm-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

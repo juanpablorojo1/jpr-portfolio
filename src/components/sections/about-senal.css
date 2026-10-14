@@ -175,6 +175,7 @@
   .ab {
     --pad: max(22px, env(safe-area-inset-left), env(safe-area-inset-right));
     --off: #e8e4de;
+    --dim: rgba(232, 228, 222, .62);
     padding: clamp(76px, 21vw, 112px) 0 clamp(84px, 23vw, 120px);
   }
   .ab .ab-wrap { padding-left: var(--pad); padding-right: var(--pad); }
@@ -205,7 +206,7 @@
   .ab .ab-hz path { fill: none; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1 1; }
   .ab .ab-hz .pm-trace { stroke: rgba(232, 39, 42, .78); stroke-width: 1.25; }
   /* cabezal: un tramo corto y brillante (sólo mientras corre; quieto queda apagado) */
-  .ab .ab-hz .pm-head { stroke: #ff4d50; stroke-width: 2.4; stroke-dasharray: .07 1.2; opacity: 0; }
+  .ab .ab-hz .pm-head { stroke: var(--red-core); stroke-width: 2.4; stroke-dasharray: .07 1.2; opacity: 0; }
 
   .ab .ab-body { display: flex; flex-direction: column; margin-top: 18px; }
   /* la leyenda del canal, debajo de la traza. 700 a 19 px: texto grande, el rojo de marca pasa (4,53:1) */
@@ -227,7 +228,7 @@
     margin: 0; padding: 16px 0 15px; border-top: 1px solid #2a2a2a; border-bottom: 1px solid #2a2a2a;
   }
   .ab .ab-meta .ab-sep { display: none; }
-  .ab .ab-meta > div > span:first-child { display: block; margin-bottom: 9px; font-size: 10px; letter-spacing: .18em; color: #8c8c8c; }
+  .ab .ab-meta > div > span:first-child { display: block; margin-bottom: 9px; font-size: 10px; letter-spacing: .18em; color: var(--dim); }
   .ab .ab-meta > div > span:last-child { display: flex; align-items: center; gap: 8px; height: 20px; font-size: 18px; line-height: 1; color: var(--off); }
   .ab .ab-status-dot { animation: ab-beat 1.6s .35s infinite; }
 }

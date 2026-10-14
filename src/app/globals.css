@@ -100,6 +100,9 @@ body {
 
 /* ── MOBILE OVERRIDES (< 1024px) ── */
 @media (max-width: 1023px) {
+  /* el rojo «núcleo» del teléfono: el centro brillante de cabezales, puntos y cortes de señal (uno solo, 2026-10-14) */
+  :root { --red-core: #ff5254; }
+
   /* Disable card stack sticky — show sections normally */
   .transition-zone {
     position: relative !important;
