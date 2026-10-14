@@ -19,3 +19,9 @@
 .pdemo-btn:hover, .pdemo-btn:focus-visible { border-color: #e8272a; outline: none; }
 .pdemo-btn:focus-visible { box-shadow: 0 0 0 1px #e8272a; }
 .pdemo-btn:active { background: rgba(232, 39, 42, .12); }
+
+/* Celular (< 1024, mobile-senal): el botón al tamaño del pulgar (44 px) */
+@media (max-width: 1023px) {
+  .pdemo-btn { min-height: 44px; padding: 0 14px; -webkit-tap-highlight-color: transparent; }
+  .pdemo-btn:active { border-color: #e8272a; }
+}
