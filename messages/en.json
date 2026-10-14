@@ -278,7 +278,7 @@
     "lang_es_value": "Native",
     "cluster_ai": {
       "title": "AI / ML",
-      "items": ["PyTorch · CUDA", "YOLOv8m · Ultralytics", "Claude API · Anthropic SDK", "OpenCV · CLAHE", "PyDICOM · DICOM", "Scikit-learn", "NumPy · Pandas", "Jupyter · Matplotlib", "Prompt Engineering", "Prompt Caching · Extended Thinking", "Tool Use · Function Calling", "Multi-Agent Orchestration", "RAG Systems", "Replicate · Real-ESRGAN"]
+      "items": ["PyTorch · CUDA", "YOLOv8m · Ultralytics", "Claude API · Anthropic SDK", "OpenCV", "PyDICOM · DICOM", "Scikit-learn", "NumPy · Pandas", "Jupyter · Matplotlib", "Prompt Engineering", "Prompt Caching · Extended Thinking", "Tool Use · Function Calling", "Multi-Agent Orchestration", "RAG Systems", "Replicate · Real-ESRGAN"]
     },
     "cluster_web": {
       "title": "Web",
