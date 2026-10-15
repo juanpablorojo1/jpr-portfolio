@@ -14,7 +14,10 @@
      (WCAG 2.2.2), también el botón. Sonido al alcance del pulgar (abajo a la derecha): suena sólo la cara de frente.
    - Reduced motion: sin giro animado (cambio directo de cara), sin entrada, sin latido, sin autoplay (la cara muestra
      el botón de reproducir).
-   En >= 1024 este bloque está en display: none (videos-phone.css) y sus pósters piden un GIF de 1 px. */
+   En >= 1024 este bloque está en display: none (videos-phone.css) y sus pósters piden un GIF de 1 px.
+   10 videos, 5 caras (2026-10-14, opción A de Juan: «Mismo tambor, 10 videos»): el prisma sigue siendo de 5. El giro es
+   un paso lógico: cara de frente = paso mod 5, video = paso mod 10. Cada cara muestra el video del paso más cercano que
+   le toca; cambia sólo cuando la cara cruza los 180° (oculta), y ahí suelta el src del video que sale. */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getImageProps } from 'next/image';
@@ -25,9 +28,17 @@ import { VIDEOS } from '../../lib/content';
 import { phoneReveal } from '../../lib/phoneMotion';
 import './videos-phone.css';
 
-const N = VIDEOS.length;
+const NV = VIDEOS.length;                        // videos que recorre (10)
+const N = 5;                                     // caras del prisma (fijo)
 const STEP = 360 / N;
-const mod = (a: number) => ((a % N) + N) % N;
+const modN = (a: number, n: number) => ((a % n) + n) % n;
+const mod = (a: number) => modN(a, NV);          // paso → video
+const face = (a: number) => modN(a, N);          // paso → cara
+/** pasos de la cara k al frente, en [-2,5, 2,5): ±2,5 = de espaldas */
+const relOf = (k: number, v: number) => modN(k - v + N / 2, N) - N / 2;
+/** el video de la cara k con el tambor en v: el del paso más cercano que cae en esa cara */
+const vidOf = (k: number, v: number) => mod(Math.round(v + relOf(k, v)));
+const FACES = Array.from({ length: N }, (_, k) => k);
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const PHONE_MQ = '(max-width: 1023px)';
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -35,9 +46,12 @@ const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAA
 /** el complejo del latido, en un cuadro de 120 × 36 (la recta sigue por fuera, en CSS) */
 const BEAT = 'M0 26 H40 L45 23 L50 26 H55 L59 29 L64 4 L69 33 L73 26 H80 L86 21 L92 26 H120';
 
+const posterProps = (src: string, w: number, h: number, land: boolean) =>
+  getImageProps({ src, alt: '', width: w, height: h, sizes: land ? '86vw' : '(max-width: 767px) 86vw, 420px' }).props;
+
 /** el póster de la cara: sólo el teléfono lo pide (en >= 1024 la fuente es un GIF de 1 px, como DeskOnlyImage) */
 function Poster({ src, w, h, land }: { src: string; w: number; h: number; land: boolean }) {
-  const { props } = getImageProps({ src, alt: '', width: w, height: h, sizes: land ? '86vw' : '(max-width: 767px) 86vw, 420px' });
+  const props = posterProps(src, w, h, land);
   return (
     <picture>
       <source media="(min-width: 1024px)" srcSet={BLANK} />
@@ -66,14 +80,28 @@ export default function VideosPhone() {
   const [inView, setInView] = useState(false);
   const [pageOn, setPageOn] = useState(true);
   const [phone, setPhone] = useState(false);
-  const [armed, setArmed] = useState<boolean[]>(() => VIDEOS.map(() => false));
-  const [shown, setShown] = useState<boolean[]>(() => VIDEOS.map(() => false));
+  // por cara: qué video muestra, si su <video> tiene src y si ya está corriendo sobre el póster
+  const [faceVid, setFaceVid] = useState<number[]>(() => FACES.map((k) => vidOf(k, 0)));
+  const [armed, setArmed] = useState<boolean[]>(() => FACES.map(() => false));
+  const [shown, setShown] = useState<boolean[]>(() => FACES.map(() => false));
+  const faceVidRef = useRef(faceVid);
+  const armedRef = useRef(armed);
+  armedRef.current = armed;
+
+  /** la cara suelta su video: sin src (el efecto de abajo hace load() y libera el buffer), vuelve el póster */
+  const disarm = useCallback((ks: number[]) => {
+    setArmed((a) => (ks.some((k) => a[k]) ? a.map((x, k) => (ks.includes(k) ? false : x)) : a));
+    setShown((a) => (ks.some((k) => a[k]) ? a.map((x, k) => (ks.includes(k) ? false : x)) : a));
+  }, []);
 
   /* ---------- pintar el tambor: rotación + sombra de cada cara según su ángulo ---------- */
   const paint = useCallback((v: number) => {
     const drum = drumRef.current;
     if (!drum) return;
     drum.style.transform = `translateZ(calc(var(--fa) * -1)) rotateY(${(-v * STEP).toFixed(3)}deg)`;
+    let fv: number[] | null = null;
+    const drop: number[] = [];
+    const tf = face(rot.current.target);
     for (let k = 0; k < N; k++) {
       let d = (k - v) % N;
       if (d > N / 2) d -= N;
@@ -82,9 +110,19 @@ export default function VideosPhone() {
       const sh = shadeRefs.current[k];
       if (sh) sh.style.opacity = Math.min(0.9, (1 - Math.cos((ang * Math.PI) / 180)) * 1.5).toFixed(3);
       const f = faceRefs.current[k];
-      if (f) f.style.visibility = ang > 112 ? 'hidden' : '';
+      const hid = ang > 112;
+      if (f) f.style.visibility = hid ? 'hidden' : '';
+      // reasignación de espaldas (cruza los 180°, oculta): toma el video nuevo y suelta el que sale
+      const j = vidOf(k, v);
+      if (j !== faceVidRef.current[k]) {
+        fv = fv || faceVidRef.current.slice();
+        fv[k] = j;
+        drop.push(k);
+      } else if (hid && k !== tf && armedRef.current[k]) drop.push(k);   // oculta y no es la que llega: suelta el src
     }
-  }, []);
+    if (fv) { faceVidRef.current = fv; setFaceVid(fv); }
+    if (drop.length) disarm(drop);
+  }, [disarm]);
 
   /* ---------- el latido del asentado ---------- */
   const beat = useCallback((fromSwipe: boolean) => {
@@ -92,7 +130,7 @@ export default function VideosPhone() {
     if (!floor || reduced()) return;
     const pulse = floor.querySelector<SVGPathElement>('.fvm-pulse');
     const lines = floor.querySelectorAll<HTMLElement>('.fvm-floor-l');
-    const rim = faceRefs.current[mod(rot.current.target)]?.querySelector<HTMLElement>('.fvm-rim');
+    const rim = faceRefs.current[face(rot.current.target)]?.querySelector<HTMLElement>('.fvm-rim');
     if (pulse) gsap.fromTo(pulse, { strokeDashoffset: 0.24, opacity: 1 }, { strokeDashoffset: -1, duration: 0.62, ease: 'power2.inOut', overwrite: true });
     gsap.fromTo(lines, { opacity: 1 }, { opacity: 0.42, duration: 0.9, ease: 'expo.out', overwrite: 'auto' });
     if (rim) gsap.fromTo(rim, { opacity: 0.95 }, { opacity: 0, duration: 0.85, ease: 'expo.out', delay: 0.08, overwrite: true });
@@ -218,7 +256,7 @@ export default function VideosPhone() {
       if (!moved) {
         if (cancel) return;
         // un toque: sobre la cara de frente pausa o reanuda; sobre una vecina la trae al frente
-        const f = faceRefs.current[mod(rot.current.target)];
+        const f = faceRefs.current[face(rot.current.target)];
         const r = f?.getBoundingClientRect();
         if (r && e.clientX < r.left) go(-1);
         else if (r && e.clientX > r.right) go(1);
@@ -261,16 +299,43 @@ export default function VideosPhone() {
 
   /* ---------- reproducción: sólo la cara de frente, muda salvo que se pida sonido ---------- */
   const live = phone && inView && pageOn;
+  const ff = face(front);                        // la cara de frente (front es el video)
   useEffect(() => {
-    if (live && !armed[front]) setArmed((a) => a.map((x, k) => x || k === front));
-  }, [live, front, armed]);
+    if (live && !armed[ff] && faceVid[ff] === front) setArmed((a) => a.map((x, k) => x || k === ff));
+  }, [live, ff, front, armed, faceVid]);
+
+  // el video que sale ya no tiene src (React lo quitó): load() vacía el elemento y libera lo que había bajado
+  useEffect(() => {
+    videoRefs.current.forEach((v, k) => {
+      if (!v || armed[k] || v.networkState === v.NETWORK_EMPTY) return;
+      v.pause();
+      v.removeAttribute('src');
+      v.load();
+    });
+  }, [armed]);
+
+  // pósters entrantes: con la sección a la vista, los de los videos que todavía no están en ninguna cara (misma
+  // fuente que <Poster>: al reasignar, la cara oculta ya lo tiene en caché)
+  const preloaded = useRef(false);
+  useEffect(() => {
+    if (!live || preloaded.current) return;
+    preloaded.current = true;
+    VIDEOS.forEach((v, j) => {
+      if (faceVidRef.current.includes(j)) return;
+      const p = posterProps(v.poster, v.width, v.height, v.width > v.height);
+      const img = new Image();
+      if (p.sizes) img.sizes = p.sizes;
+      if (p.srcSet) img.srcset = p.srcSet;
+      img.src = p.src;
+    });
+  }, [live]);
 
   useEffect(() => {
     videoRefs.current.forEach((v, k) => {
       if (!v) return;
-      if (k !== front || !live || paused) {
+      if (k !== ff || !live || paused) {
         if (!v.paused) v.pause();
-        if (k !== front) v.muted = true;
+        if (k !== ff) v.muted = true;
         return;
       }
       if (!armed[k]) return;
@@ -282,7 +347,7 @@ export default function VideosPhone() {
         });
       }
     });
-  }, [front, live, paused, sound, armed]);
+  }, [ff, live, paused, sound, armed]);
 
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
@@ -313,18 +378,19 @@ export default function VideosPhone() {
       >
         <div ref={sceneRef} className="fvm-scene">
           <div ref={drumRef} className="fvm-drum">
-            {VIDEOS.map((v, k) => {
+            {FACES.map((k) => {
+              const v = VIDEOS[faceVid[k]];
               const land = v.width > v.height;
               return (
                 <div
-                  key={v.id}
+                  key={k}
                   ref={(n) => { faceRefs.current[k] = n; }}
                   className="fvm-face"
                   data-land={land ? '' : undefined}
                   style={{ '--a': `${k * STEP}deg` } as React.CSSProperties}
                   aria-hidden="true"
                 >
-                  <Poster src={v.poster} w={v.width} h={v.height} land={land} />
+                  <Poster key={v.id} src={v.poster} w={v.width} h={v.height} land={land} />
                   <video
                     ref={(n) => { videoRefs.current[k] = n; }}
                     className="fvm-video"
@@ -340,7 +406,7 @@ export default function VideosPhone() {
                   />
                   <i className="fvm-shade" ref={(n) => { shadeRefs.current[k] = n; }} />
                   <i className="fvm-rim" />
-                  {k === front && (
+                  {k === ff && (
                     <span className="fvm-play" data-on={paused ? '' : undefined}>
                       <span>
                         <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor"><path d="M0 0 L14 8 L0 16 Z" /></svg>
@@ -365,14 +431,14 @@ export default function VideosPhone() {
         <ol className="sr-only">
           {VIDEOS.map((v, k) => (
             <li key={v.id} aria-current={k === front ? 'true' : undefined}>
-              {t('slide_aria', { n: k + 1, total: N, title: t(`items.${v.id}.title`) })}
+              {t('slide_aria', { n: k + 1, total: NV, title: t(`items.${v.id}.title`) })}
             </li>
           ))}
         </ol>
-        <p className="sr-only" aria-live="polite">{t('slide_aria', { n: front + 1, total: N, title })}</p>
+        <p className="sr-only" aria-live="polite">{t('slide_aria', { n: front + 1, total: NV, title })}</p>
 
         <p className="fvm-meta" aria-hidden="true">
-          <span className="fvm-pos"><b>{pad2(front + 1)}</b> / {pad2(N)}</span>
+          <span className="fvm-pos"><b>{pad2(front + 1)}</b> / {pad2(NV)}</span>
           <span className="fvm-name" key={item.id}>{title}</span>
         </p>
 
