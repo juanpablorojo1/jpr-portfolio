@@ -85,8 +85,8 @@
   .ab .ab-photo { display: contents; }
   /* «más grande» (Juan, 2026-10-15): la figura a 1,6× (1,28 ph × 1,6 ph, 4:5 como el recorte), apoyada en el mismo pie
      de antes y creciendo hacia arriba, detrás del titular y del texto (z-index). Pegada al borde derecho: con el margen,
-     a 1440×900 la cara caía detrás de «PRODUCTO». Medido: a 1536×730 el marco va de y 112 a 697 y la cabeza empieza en
-     ~140 (nav hasta 65); a 1440×900, de y 153 a 873, cabeza en ~190. Sin overflow horizontal (right: 0). */
+     a 1440×900 la cara caía detrás de «PRODUCTO». Medido: a 1536×730 (/es) el marco va de y 126 a 711 y la cabeza empieza en
+     ~155 (nav hasta 65); a 1440×900, de y 153 a 873, cabeza en ~190. Sin overflow horizontal (right: 0). */
   .ab .ab-frame {
     position: absolute; right: 0; top: calc(var(--rail) + clamp(10px, 1.4vh, 16px) - var(--ph) * .6); z-index: 0;
     width: calc(var(--ph) * 1.28); height: calc(var(--ph) * 1.6); max-width: none; margin: 0; aspect-ratio: auto; overflow: hidden;
