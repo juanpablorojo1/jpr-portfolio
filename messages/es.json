@@ -301,39 +301,85 @@
   "skills": {
     "label": "Tech Stack",
     "headline": "Stack en capas",
-    "ai_metrics": "TraumaVision · Sensibilidad 96,7% (test de la tesis)",
     "lang_en_label": "Inglés",
     "lang_en_value": "B2 · LTC Eastbourne (UK) + California",
     "lang_es_label": "Español",
     "lang_es_value": "Nativo",
     "cluster_ai": {
       "title": "IA / ML",
-      "items": ["PyTorch · CUDA", "YOLOv8m · Ultralytics", "Claude API · Anthropic SDK", "OpenCV", "PyDICOM · DICOM", "Scikit-learn", "NumPy · Pandas", "Jupyter · Matplotlib", "Prompt engineering", "Prompt caching · Extended thinking", "Tool use · Function calling", "Orquestación multiagente", "Sistemas RAG", "Replicate · Real-ESRGAN"]
+      "items": [
+        "Claude API · Anthropic SDK",
+        "Claude Agent SDK",
+        "Claude Code · Claude Cowork · Claude Desktop · Claude in Chrome",
+        "Subagentes · Hooks · Skills · Plugins de Claude Code",
+        "Flujos agénticos (agentes y subagentes con roles)",
+        "Workflows multiagente (orquestación, revisión y QA entre agentes)",
+        "Servidores MCP a medida",
+        "Tool use · Function calling",
+        "Context engineering (memoria, ventana de contexto, handoffs)",
+        "Sistemas RAG",
+        "Evals de prompts y agentes",
+        "Prompt engineering",
+        "Prompt caching · Extended thinking",
+        "Skills y prompts de sistema reutilizables",
+        "ChatGPT · OpenAI API",
+        "PyTorch · CUDA",
+        "YOLOv8m · Ultralytics",
+        "OpenCV",
+        "pydicom · DICOM",
+        "scikit-learn",
+        "NumPy · Pandas",
+        "Jupyter · Matplotlib",
+        "n8n · Make · Zapier",
+        "Replicate · Real-ESRGAN"
+      ]
     },
     "cluster_web": {
       "title": "Web",
-      "items": ["Next.js · React", "TypeScript · JavaScript", "FastAPI · Uvicorn · Python", "Supabase · PostgreSQL · SQLite", "GSAP · ScrollTrigger", "Tailwind CSS · shadcn/ui", "OGL · WebGL", "Vercel · GitHub · Git", "VS Code · GitHub Copilot", "Protocolo MCP · Claude Code CLI", "next-intl · i18n", "APIs REST · JSON", "Node.js", "Resend · APIs de email", "HTML · CSS · SVG"]
+      "items": [
+        "TypeScript · JavaScript",
+        "Next.js · React",
+        "Node.js",
+        "FastAPI · Uvicorn · Python",
+        "Supabase · PostgreSQL · SQLite",
+        "APIs REST · JSON",
+        "Vercel · GitHub · Git",
+        "Hostinger · VPS",
+        "Tailwind CSS · shadcn/ui",
+        "GSAP · ScrollTrigger",
+        "OGL · WebGL",
+        "next-intl · i18n",
+        "Resend · APIs de email",
+        "VS Code · GitHub Copilot",
+        "HTML · CSS · SVG"
+      ]
     },
     "cluster_tools": {
-      "title": "Automatización y medios",
+      "title": "Creación de contenido y automatización",
       "items": [
-        "HyperFrames · Video desde HTML",
-        "Remotion",
-        "Canva MCP",
+        "Three.js · WebGPU · Shaders TSL",
+        "Motion graphics (Remotion · HyperFrames · GSAP)",
+        "Física 3D (Rapier · cannon-es)",
+        "FFmpeg · Codificación por GPU (NVENC)",
         "Playwright MCP",
         "Meta API · WhatsApp Business",
+        "Automatización de contenido para LinkedIn con IA",
         "Generación de imágenes con IA",
+        "Sincronización con el beat (librosa)",
+        "Diseño sonoro · SFX · Música con Claude Code",
+        "Canva MCP",
+        "Reels para Instagram y LinkedIn",
+        "CapCut · Edición de video",
+        "Presentaciones animadas",
         "Diseño de sistemas de marca",
-        "Copywriting · AIDA · PAS",
-        "Edición de video",
-        "Presentaciones animadas"
+        "Copywriting · AIDA · PAS"
       ]
     },
     "cluster_bio": {
       "title": "Biomédica",
       "items": ["CDSS / SaMD", "Estándares JCI", "ANMAT · ISO 13485 · IEC 62304", "Mantenimiento correctivo y preventivo", "UTI adultos · UCO · Quirófano", "UTI pediátrica · Neonatología", "Endoscopía · Internación · Consultorios", "Desfibriladores · Monitores multiparamétricos", "Bombas de infusión · Balón IABP", "Incubadoras · Servocunas", "Seguridad eléctrica · Fluke", "Neovero CMMS · Trazabilidad", "Instrumentación biomédica", "Normativa sanitaria"]
     },
-    "network_aria": "Red del stack en cuatro capas: ingeniería biomédica, IA, web y automatización."
+    "network_aria": "Red del stack en cuatro capas: ingeniería biomédica, IA, web, y creación de contenido y automatización."
   },
   "experience": {
     "label": "Experiencia",

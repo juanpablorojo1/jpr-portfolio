@@ -69,13 +69,11 @@
     perspective: 900px; text-shadow: 0 2px 30px rgba(0, 0, 0, .65);
     text-wrap: balance;
   }
+  /* una palabra que no entra en el ancho de la cabecera («automatización», 14 letras, 2026-10-14): el título baja de
+     cuerpo para que la palabra quepa (≈ 5,3 em de ancho a 0,255 × viewport) y no se salga del margen derecho */
+  .sk-title[data-long] { font-size: clamp(48px, 4.75vw, 82px); }
   .sk-head .word, .sk-title .word { display: inline-block; white-space: nowrap; transform-style: preserve-3d; }
   .sk-head .char, .sk-title .char { display: inline-block; will-change: transform, opacity; }
-  .sk-metric {
-    margin: 16px 0 0; font: 12px/1.6 var(--mono); letter-spacing: .04em; color: #e8e4de;
-    text-shadow: var(--halo);
-    text-wrap: balance;   /* D-21: sin «set)» solo en la segunda línea */
-  }
   .sk-items { list-style: none; margin: 0; padding: 0; }
 
   /* rótulo de cada nodo: punto 3D = esquina (0,0) del li; filete corto y el nombre a la derecha.

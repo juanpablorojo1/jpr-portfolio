@@ -160,12 +160,6 @@ export default function Skills() {
                     </span>
                   ))}
                 </div>
-
-                {i === 0 && (
-                  <p className="skm-metric mt-4 pt-3 border-t border-border font-mono text-xs text-off-white tracking-wide" data-pm="rise">
-                    {t('ai_metrics')}
-                  </p>
-                )}
               </div>
             );
           })}
