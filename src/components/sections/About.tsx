@@ -194,7 +194,7 @@ export default function About() {
           <div className="ab-frame relative aspect-[4/5] max-w-md mx-auto">
             {/* < 1024 la foto no se muestra: DeskOnlyImage no la pide en el teléfono (competía con el LCP del hero) */}
             <DeskOnlyImage
-              src="/images/portrait.jpg"
+              src="/images/about-rocking-the-industry.jpg"
               alt={t('photo_alt')}
               className="ab-img object-cover object-top"
               sizes="(max-width: 1023px) 80vw, 30vw"
