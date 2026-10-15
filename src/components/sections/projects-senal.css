@@ -175,26 +175,33 @@
   .pj-c-block p + p { margin-top: 10px; }
   .pj-c-wide { grid-column: 1 / -1; }
   .pj-k { margin: 0 0 8px !important; font: 10.5px/1.5 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
-  .pj-c-block .pj-k:not(:first-child) { margin-top: 16px !important; }
   .pj-mono { font: 12px/1.75 var(--mono); color: var(--dim); letter-spacing: .02em; }
   .pj-mono i { font-style: normal; color: #e8272a; }
-  .pj-dec { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 18px 30px; margin: 4px 0 0; padding: 0; }
-  .pj-dec li { display: grid; grid-template-columns: 34px 1fr; }
-  .pj-dec span { font: 400 26px/1 var(--font-bebas-neue), sans-serif; color: #e8272a; }
-  .pj-dec strong { color: #fff; font-weight: 700; }
+  /* la ficha (2026-10-14): componentes, una pieza por línea, con el guion rojo de las listas del sitio */
+  .pj-parts { list-style: none; margin: 0; padding: 0; }
+  .pj-parts li { display: grid; grid-template-columns: 22px 1fr; }
+  .pj-parts li + li { margin-top: 6px; }
+  .pj-parts li::before { content: '—'; color: #e8272a; }
   .pj-c-stats { display: flex; gap: 28px; flex-wrap: wrap; margin: 16px 0 0; }
   /* cuatro cifras (TraumaVision) en 2 × 2: en la columna del resultado entraban 3 + 1 suelta */
   .pj-c-stats:has(> div:nth-child(4):last-child) { display: grid; grid-template-columns: repeat(2, max-content); gap: 18px 40px; }
-  .pj-nb { white-space: nowrap; }
   .pj-c-stats div { display: flex; flex-direction: column-reverse; gap: 6px; }
   .pj-c-stats dt { font: 10.5px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); max-width: 15ch; }
   .pj-c-stats dd { margin: 0; font: 400 36px/1 var(--font-bebas-neue), sans-serif; color: #e8e4de; }
   /* D-08: Eleven no tiene cifras sino datos (fundación, clientes, enfoque): ficha vertical rótulo / valor */
   .pj-c-stats.pj-facts { display: grid; grid-template-columns: max-content max-content; gap: 0 22px; }
   .pj-c-stats.pj-facts > div { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: baseline; border-top: 1px solid var(--line); padding: 8px 0 7px; }
+  .pj-c-stats.pj-facts > div { column-gap: 22px; }   /* D-03: el gap 6px de .pj-c-stats div pisaba el del dl (rótulo largo pegado al valor) */
   .pj-c-stats.pj-facts > div:last-child { border-bottom: 1px solid var(--line); }
   .pj-c-stats.pj-facts dt { max-width: none; margin: 0; }
   .pj-c-stats.pj-facts dd { order: 0; font: 400 20px/1.1 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; letter-spacing: .02em; color: #e8e4de; }
+  /* logros con valores dobles («96,7% · 93,1%», TraumaVision): dos columnas parejas y el rótulo a lo ancho de la suya
+     (a 15ch el rótulo largo se partía en cinco líneas); los valores alineados arriba en cada fila. Misma letra. */
+  /* D-04: cualquier grupo de cuatro (LEEX también) reparte así el ancho del bloque; antes LEEX quedaba en 94 px con rótulos de 3 líneas */
+  .pj-c-stats:not(.pj-facts):has(> div:nth-child(4):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pj-c-stats.pj-long > div, .pj-c-stats:not(.pj-facts):has(> div:nth-child(4):last-child) > div { justify-content: flex-end; }   /* column-reverse: el valor arriba, alineado por fila */
+  .pj-c-stats.pj-long dt, .pj-c-stats:not(.pj-facts):has(> div:nth-child(4):last-child) dt { max-width: none; }
+  .pj-c-block .pj-c-stats + .pj-note { margin-top: 24px !important; }   /* la nota de alcance, separada del último logro */
   .pj-acts { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
   .pj-btn {
     display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px;
@@ -221,7 +228,7 @@
    - Cada proyecto se abre con un corte de señal: la recta roja (.pjm-cut) barre el ancho en 0,55 s y destapa la
      cabecera en el mismo tiempo (phoneMotion «cut»); queda como el filete del canal.
    - La pieza visual va primero y de borde a borde (demo + tira de pantallas con su rótulo siempre visible).
-   - La historia en el orden de Juan: problema → mi rol → decisiones clave → resultado; cuerpo a 17 px.
+   - La ficha técnica (Juan, 2026-10-14): 01 componentes → 02 stack → 03 logros (+ nota); cuerpo a 17 px.
    - El rojo sólo en la señal, los marcadores y el texto grande (números de decisión, titulares): los rótulos chicos van
      en hueso (D-03 del escritorio). El badge del hackathon pasa a marco rojo con texto hueso (A11y: el blanco sobre el
      rojo daba 4,4:1 a 12 px).
@@ -349,7 +356,7 @@
   .pjm-note { margin: 14px var(--pad) 0; font: 10.5px/1.5 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
   .pjm-desk { display: none; }
 
-  /* ---------- la historia ---------- */
+  /* ---------- la ficha ---------- */
   .pj-stack .pjm-step { margin-bottom: 36px; }
   .pj-stack .pjm-blk {
     display: flex; align-items: center; gap: .55em; margin: 0 0 12px;
@@ -358,15 +365,9 @@
   .pj-stack .pjm-blk::before { content: ''; flex: none; width: 5px; height: 5px; background: #e8272a; box-shadow: 0 0 8px rgba(232, 39, 42, .6); }
   .pj-stack .pjm-blk > span:first-child { color: var(--off); }
   .pj-stack .pjm-blk > span:nth-child(2) { color: var(--dim); }
-  .pj-stack .pjm-story p.font-ui { font-size: 17px; line-height: 1.55; }
-  .pj-stack .pjm-story .pjm-step:first-child p.font-ui { color: rgba(232, 228, 222, .76); }
-  .pj-stack .pjm-story .pjm-step:last-child p.font-ui { color: rgba(232, 228, 222, .92); }
-  .pj-stack .pjm-dec ol > li + li { margin-top: 26px; }
-  .pj-stack .pjm-dec li { grid-template-columns: 2.6rem 1fr; }
-  .pj-stack .pjm-dec li > span { font-size: 2rem !important; }
-  .pj-stack .pjm-dec li p:first-child { font-size: 18px; line-height: 1.3; color: #fff; margin-bottom: 6px; }
-  .pj-stack .pjm-dec li p:last-child { font-size: 16px; line-height: 1.55; color: rgba(232, 228, 222, .72); }
-  .pj-stack .pjm-result p.font-ui { margin-bottom: 26px; font-size: 20px; line-height: 1.38; color: #fff; }
+  .pj-stack .pjm-case > .pjm-step:last-child { margin-bottom: 0; }
+  .pj-stack .pjm-parts li { font-size: 17px; line-height: 1.55; color: rgba(232, 228, 222, .92); }
+  .pj-stack .pjm-parts li + li { margin-top: 12px; }
   .pj-stack .pjm-result .grid { column-gap: 18px; row-gap: 20px; }
   .pj-stack .pjm-result .grid p:first-child { font-size: 21px; line-height: 1.1; margin-bottom: 6px; }
   /* cuatro cifras (TraumaVision, LEEX): 2 × 2 y grandes, con el glow-metric de la marca */
@@ -378,12 +379,13 @@
      en el teléfono van en lista, cada dato con su rótulo debajo */
   .pj-stack .pjm-result .grid-cols-3 { grid-template-columns: 1fr; row-gap: 18px; }
   .pj-stack .pjm-result .grid p:last-child { font-size: 10.5px; line-height: 1.45; letter-spacing: .12em; color: var(--dim); }
+  /* valores dobles («96,7% · 93,1%», «Emprende U 2026»): en media columna se partían; uno por fila, misma letra */
+  .pj-stack .pjm-result .pjm-long { grid-template-columns: 1fr; row-gap: 22px; }
+  .pj-stack .pjm-scope { margin: 20px 0 0; font: 10.5px/1.5 var(--mono); letter-spacing: .12em; color: var(--dim); }
   .pj-stack .pjm-seo { margin-bottom: 36px; }
   .pj-stack .pjm-seo .pjm-shotlbl { opacity: 1; padding: 3px 6px 2px; background: rgba(8, 8, 8, .86); }
   /* rótulos chicos en hueso (el rojo queda para el guion de la lista, que es un glifo) */
   .pj-stack .pjm-seo > div > p.text-accent, .pj-stack .pjm-seo .pjm-shotlbl .text-accent { color: var(--off); }
-  .pj-stack .pjm-chips { margin-bottom: 26px; }
-  .pj-stack .pjm-case > .pjm-chips:last-child { margin-bottom: 0; }
 
   /* el link al proyecto: barra completa al alcance del pulgar */
   .pj-stack .pjm-cta {

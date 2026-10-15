@@ -9,10 +9,9 @@ import StackBadge from '../ui/StackBadge';
 import CaseLightbox, { type CaseShot } from '../ui/CaseLightbox';
 import { useDialogFocus } from '../../hooks/useDialogFocus';
 import ProjectsGallery from './ProjectsGallery';
-import { CaseStudyMobile, useNear, type CaseStudyData, type CaseDecision, type CaseStat } from './CaseStudy';
+import { CaseStudyMobile, useNear, type CaseStudyData, type CaseStat } from './CaseStudy';
 import { phoneReveal } from '../../lib/phoneMotion';
 import {
-  TRAUMAVISION_METRICS,
   TRAUMAVISION_STACK,
   TRAUMAVISION_SCREENSHOTS,
   ELEVEN_STACK,
@@ -32,7 +31,7 @@ import {
 /* Celular (< 1024, 2026-10-14, mobile-senal): «Vitrina» vertical. El apilado (.pj-stack) lleva el diseño de teléfono
    por clases pjm-* (projects-senal.css, bloque < 1024) y data-pm (phoneMotion): un índice de los cinco proyectos
    arriba, y cada proyecto se abre con un corte de señal (la recta roja barre el ancho y destapa la cabecera), con la
-   pieza visual primero y de borde a borde, y la historia problema → rol → decisiones → resultado. Los visores de
+   pieza visual primero y de borde a borde, y la ficha técnica (componentes, stack, logros). Los visores de
    capturas son CaseLightbox a pantalla completa, por encima de la barra y el dock, con el cerrar abajo.
    En >= 1024 el apilado es el escritorio sin escena (reduced motion, ?static, sin GPU) y queda como estaba. */
 
@@ -111,16 +110,12 @@ export default function Projects() {
     number: '04',
     eyebrow: t('kibbo.eyebrow'),
     title: t('kibbo.title'),
-    subtitle: t('kibbo.subtitle'),
-    problem: t('kibbo.problem'),
-    role: t('kibbo.role'),
-    decisions: t.raw('kibbo.decisions') as CaseDecision[],
-    result: t('kibbo.result'),
+    line: t('kibbo.led_line'),
+    parts: t.raw('kibbo.parts') as string[],
     stats: t.raw('kibbo.stats') as CaseStat[],
     stack: KIBBO_STACK,
-    stackSpread: 'a',
     shots: kibboShots,
-    seo: { label: t('kibbo.seo_label'), items: t.raw('kibbo.seo_items') as string[], shots: kibboSeoShots },
+    seo: { label: t('kibbo.seo_label'), shots: kibboSeoShots },
     cta: { href: KIBBO_URL, label: t('kibbo.cta') },
     demo: { src: PROJECT_DEMOS.kibbo, alt: t('kibbo.demo_alt') },
   };
@@ -130,25 +125,14 @@ export default function Projects() {
     number: '05',
     eyebrow: t('leex.eyebrow'),
     title: t('leex.title'),
-    subtitle: t('leex.subtitle'),
+    line: t('leex.led_line'),
     badge: t('leex.badge'),
-    problem: t('leex.problem'),
-    role: t('leex.role'),
-    decisions: t.raw('leex.decisions') as CaseDecision[],
-    result: t('leex.result'),
+    parts: t.raw('leex.parts') as string[],
     stats: t.raw('leex.stats') as CaseStat[],
     stack: LEEX_STACK,
-    stackSpread: 'b',
     shots: withSrc(LEEX_SCREENSHOTS, t.raw('leex.shots') as ShotCopy[]),
     shotsNote: t('leex.blur_note'),
     demo: { src: PROJECT_DEMOS.leex, alt: t('leex.demo_alt') },
-  };
-
-  const metricLabels: Record<string, string> = {
-    auc: t('traumavision.metric_auc'),
-    map50: t('traumavision.metric_map50'),
-    recall: t('traumavision.metric_recall'),
-    specificity: t('traumavision.metric_specificity'),
   };
 
   const tvShotLabels = t.raw('traumavision.shot_labels') as string[];
@@ -156,20 +140,17 @@ export default function Projects() {
   const tvShotAlts = t.raw('traumavision.shots_alt') as string[];
   const elevenShotAlts = t.raw('eleven.shots_alt') as string[];
 
-  // TraumaVision y Eleven con el formato de caso de Juan (problema → mi rol → decisiones clave → resultado).
-  // Eleven: eleven.role es el dato «Founder» de la ficha; el párrafo de rol es eleven.role_text.
+  // Ficha técnica (Juan, 2026-10-14): qué es (led_line) · componentes · stack · logros. Los logros de TraumaVision traen
+  // el formato del idioma resuelto en el copy («96,7%» / «96.7%»); la vitrina sigue con TRAUMAVISION_METRICS.
   const traumavision: CaseStudyData = {
     number: '01',
     eyebrow: t('traumavision.eyebrow'),
     title: t('traumavision.title'),
-    subtitle: t('traumavision.subtitle'),
-    problem: t('traumavision.problem'),
-    role: t('traumavision.role'),
-    decisions: t.raw('traumavision.decisions') as CaseDecision[],
-    result: t('traumavision.result'),
-    stats: TRAUMAVISION_METRICS.map((m) => ({ label: metricLabels[m.key], value: `${m.value.toFixed(m.decimals)}${m.suffix}` })),
+    line: t('traumavision.led_line'),
+    parts: t.raw('traumavision.parts') as string[],
+    stats: t.raw('traumavision.stats') as CaseStat[],
+    note: t('traumavision.scope_note'),
     stack: TRAUMAVISION_STACK,
-    stackSpread: 'b',
     shots: TRAUMAVISION_SCREENSHOTS.map((sh, i) => ({ src: sh.src, label: tvShotLabels[i] ?? '', caption: tvShotAlts[i] ?? '' })),
     demo: { src: PROJECT_DEMOS.traumavision, alt: t('traumavision.demo_alt') },
   };
@@ -177,18 +158,10 @@ export default function Projects() {
     number: '02',
     eyebrow: t('eleven.eyebrow'),
     title: t('eleven.title'),
-    subtitle: t('eleven.subtitle'),
-    problem: t('eleven.problem'),
-    role: t('eleven.role_text'),
-    decisions: t.raw('eleven.decisions') as CaseDecision[],
-    result: t('eleven.result'),
-    stats: [
-      { value: t('eleven.stat_founded'), label: t('eleven.stat_founded_label') },
-      { value: t('eleven.stat_sites'), label: t('eleven.stat_sites_label') },
-      { value: t('eleven.stat_approach'), label: t('eleven.stat_approach_label') },
-    ],
+    line: t('eleven.led_line'),
+    parts: t.raw('eleven.parts') as string[],
+    stats: t.raw('eleven.stats') as CaseStat[],
     stack: ELEVEN_STACK,
-    stackSpread: 'b',
     shots: ELEVEN_SCREENSHOTS.map((sh, i) => ({ src: sh.src, label: elevenShotLabels[i] ?? '', caption: elevenShotAlts[i] ?? '' })),
     cta: { href: ELEVEN_URL, label: t('eleven.cta') },
     demo: { src: PROJECT_DEMOS.eleven, alt: t('eleven.demo_alt') },

@@ -8,7 +8,7 @@
      Entrada: el gesto del sitio (titular desde z −1100, expo.out 1,2 s; el resto 14 px, 1,0 s); salida 0,5 s.
      Los bloques apagados siguen en el árbol de accesibilidad (opacidad 0): con Tab, el foco en «Ver proyecto» lleva el
      scroll a su estadía.
-   - El caso completo (problema → mi rol → decisiones clave → resultado): diálogo modal que se abre con «Ver proyecto» o
+   - La ficha técnica (qué es · 01 componentes · 02 stack · 03 logros): diálogo modal que se abre con «Ver proyecto» o
      con clic en la pantalla de la laptop (S.neg.hover), y se cierra con [ESC], el botón o un clic en la escena. Cubre el
      lado del texto; la laptop queda a la vista.
    Sin escena todavía (o sin GPU con data-gallery): los bloques quedan en su posición de respaldo (CSS).
@@ -21,7 +21,7 @@ import { SplitText } from 'gsap/SplitText';
 import { onSignal, type Senal } from '../hero/senal/signal';
 import { GAL_DWELLS, GAL_SECTION_VH, GAL_PROJECTS, GAL_TAG_Y, tagWanted } from '../hero/senal/gallery';
 import { TRAUMAVISION_STACK, ELEVEN_STACK, KIBBO_STACK, LEEX_STACK, TRAUMAVISION_METRICS } from '../../lib/content';
-import type { CaseStudyData } from './CaseStudy';
+import { hasLongStat, type CaseStudyData } from './CaseStudy';
 import ProjectDemo from '../ui/ProjectDemo';
 import { idleTask, lazySet, setBatch } from '../../lib/idle';
 import './projects-senal.css';
@@ -314,7 +314,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
     return () => mm.revert();
   }, []);
 
-  const L = { problem: t('case.problem'), role: t('case.role'), decisions: t('case.decisions'), result: t('case.result'), stack: t('case.stack') };
+  const L = { parts: t('case.parts'), stack: t('case.stack'), achievements: t('case.achievements') };
 
   const screens = (n: number, open: (i: number) => void) => (
     <button type="button" className="pj-btn" onClick={() => open(0)}>{t('case.screens')} <span>{pad2(n)}</span></button>
@@ -322,52 +322,47 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
   const statsDl = (stats: Stat[], cls = 'pj-c-stats') => (
     <dl className={cls}>{stats.map((s) => (<div key={s.label}><dt>{s.label}</dt><dd>{s.value}</dd></div>))}</dl>
   );
-  // problema → mi rol → decisiones clave → resultado (los cuatro casos tienen el formato completo en el copy)
-  const caseBody = (d: CaseStudyData, stack: readonly string[], actions: ReactNode, note?: string, pre?: ReactNode, facts = false) => (
+  // la ficha (Juan, 2026-10-14): 01 componentes → 02 stack → 03 logros → nota → acciones; cada bloque a lo ancho
+  // (los logros dobles, «96,7% · 93,1%», no entran de a dos en media columna). Valores largos: pj-long (2 columnas
+  // parejas, el rótulo a lo ancho de su columna), a la misma letra.
+  const caseBody = (d: CaseStudyData, stack: readonly string[], actions: ReactNode, note?: string, facts = false) => (
     <>
-      <div className="pj-c-block"><p className="pj-k"><b>01</b> / {L.problem}</p><p>{d.problem}</p></div>
-      <div className="pj-c-block"><p className="pj-k"><b>02</b> / {L.role}</p><p>{d.role}</p></div>
       <div className="pj-c-block pj-c-wide">
-        <p className="pj-k"><b>03</b> / {L.decisions}</p>
-        <ol className="pj-dec">
-          {d.decisions.map((x, i) => (
-            <li key={x.title}><span aria-hidden="true">{pad2(i + 1)}</span><p><strong>{x.title}</strong> {x.body}</p></li>
-          ))}
-        </ol>
+        <p className="pj-k"><b>01</b> / {L.parts}</p>
+        <ul className="pj-parts">{d.parts.map((x) => <li key={x}>{x}</li>)}</ul>
       </div>
-      <div className="pj-c-block"><p className="pj-k"><b>04</b> / {L.result}</p><p>{d.result}</p>{statsDl(d.stats, facts ? 'pj-c-stats pj-facts' : 'pj-c-stats')}</div>
-      <div className="pj-c-block">
-        {pre}
-        <p className="pj-k">{L.stack}</p><p className="pj-mono">{stack.join(' · ')}</p>
+      <div className="pj-c-block pj-c-wide"><p className="pj-k"><b>02</b> / {L.stack}</p><p className="pj-mono">{stack.join(' · ')}</p></div>
+      <div className="pj-c-block pj-c-wide">
+        <p className="pj-k"><b>03</b> / {L.achievements}</p>
+        {statsDl(d.stats, `pj-c-stats${facts ? ' pj-facts' : ''}${hasLongStat(d.stats) ? ' pj-long' : ''}`)}
+        {d.note && <p className="pj-note">{d.note}</p>}
         <div className="pj-acts">{actions}</div>
         {note && <p className="pj-note">{note}</p>}
       </div>
     </>
   );
 
-  // el pipeline de TraumaVision, con las flechas en rojo (la clave trae «→» como separador). Cada etapa lleva su
-  // flecha al final y no se parte: si la línea corta, corta después de una flecha (nunca empieza con «→»)
-  const tvSteps = t('traumavision.pipeline').split(' → ');
-  const tvPipeline = tvSteps.map((x, i) => (
-    <span key={x}><span className="pj-nb">{x}{i < tvSteps.length - 1 && <i> →</i>}</span>{i < tvSteps.length - 1 && ' '}</span>
-  ));
   // la cifra del bloque: la primera del sitio en grande; la nota junta las dos siguientes (sin texto nuevo)
   const num = (v: number, d: number) => new Intl.NumberFormat(locale, { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
   const noteOf = (stats: Stat[]) => stats.slice(1, 3).map((s) => `${s.value} ${s.label}`).join(' · ');
   const recall = TRAUMAVISION_METRICS.find((m) => m.key === 'recall')!;
+  // la cifra de Eleven en la vitrina sigue con sus datos (fundación, clientes, enfoque); la ficha usa eleven.stats
+  const elevenFig: Stat[] = [
+    { value: t('eleven.stat_founded'), label: t('eleven.stat_founded_label') },
+    { value: t('eleven.stat_sites'), label: t('eleven.stat_sites_label') },
+    { value: t('eleven.stat_approach'), label: t('eleven.stat_approach_label') },
+  ];
 
   // mismo orden que GAL_PROJECTS (gallery.ts): TraumaVision, KIBBO, Eleven, LEEX
   const items: Item[] = [
     {
-      title: traumavision.title, eyebrow: t('traumavision.label'), caseEyebrow: traumavision.eyebrow, sub: traumavision.subtitle,
-      line: t('traumavision.led_line'), stats: traumavision.stats, demo: traumavision.demo,
+      title: traumavision.title, eyebrow: t('traumavision.label'), caseEyebrow: traumavision.eyebrow, sub: traumavision.line,
+      line: traumavision.line, stats: traumavision.stats, demo: traumavision.demo,
       fig: { num: num(recall.value, recall.decimals), unit: recall.suffix, label: t('traumavision.metric_recall'), note: t('traumavision.metrics_note') },
-      body: caseBody(traumavision, TRAUMAVISION_STACK, screens(traumavision.shots.length, openTraumavision), undefined, (
-        <><p className="pj-k">{t('traumavision.pipeline_label')}</p><p className="pj-mono">{tvPipeline}</p></>
-      )),
+      body: caseBody(traumavision, TRAUMAVISION_STACK, screens(traumavision.shots.length, openTraumavision)),
     },
     {
-      title: kibbo.title, eyebrow: kibbo.eyebrow, sub: kibbo.subtitle, line: t('kibbo.led_line'), stats: kibbo.stats, demo: kibbo.demo,
+      title: kibbo.title, eyebrow: kibbo.eyebrow, sub: kibbo.line, line: kibbo.line, stats: kibbo.stats, demo: kibbo.demo,
       fig: { num: kibbo.stats[0].value, label: kibbo.stats[0].label, note: noteOf(kibbo.stats) },
       body: caseBody(kibbo, KIBBO_STACK, (
         <>
@@ -377,17 +372,17 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       )),
     },
     {
-      title: eleven.title, eyebrow: eleven.eyebrow, sub: t('eleven.description'), line: t('eleven.led_line'), stats: eleven.stats, demo: eleven.demo,
-      fig: { num: eleven.stats[0].value, label: eleven.stats[0].label, note: eleven.stats.slice(1).map((s) => `${s.label} ${s.value}`).join(' · ') },
+      title: eleven.title, eyebrow: eleven.eyebrow, sub: eleven.line, line: eleven.line, stats: eleven.stats, demo: eleven.demo,
+      fig: { num: elevenFig[0].value, label: elevenFig[0].label, note: elevenFig.slice(1).map((s) => `${s.label} ${s.value}`).join(' · ') },
       body: caseBody(eleven, ELEVEN_STACK, (
         <>
           {screens(eleven.shots.length, openEleven)}
           {eleven.cta && <a className="pj-btn pj-cta" href={eleven.cta.href} target="_blank" rel="noopener noreferrer">{eleven.cta.label}</a>}
         </>
-      ), undefined, undefined, true),
+      ), undefined, true),
     },
     {
-      title: leex.title, eyebrow: leex.eyebrow, sub: leex.subtitle, line: t('leex.led_line'), badge: leex.badge, soon: true, stats: leex.stats, demo: leex.demo,
+      title: leex.title, eyebrow: leex.eyebrow, sub: leex.line, line: leex.line, badge: leex.badge, soon: true, stats: leex.stats, demo: leex.demo,
       fig: { num: leex.stats[0].value, label: leex.stats[0].label, note: noteOf(leex.stats) },
       body: caseBody(leex, LEEX_STACK, screens(leex.shots.length, openLeex), leex.shotsNote),
     },
