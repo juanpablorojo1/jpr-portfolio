@@ -14,8 +14,6 @@
 .ab .ab-dot { display: none; }
 /* punto de estado: el mismo cuadrado rojo del rótulo, quieto, en todos los anchos (antes verde, redondo y con ping: fuera de paleta) */
 .ab .ab-status-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
-.ab .ab-img { filter: grayscale(85%) contrast(1.05); }
-.ab .ab-light, .ab .ab-matte { display: none; }
 .ab .ab-fg { display: none; }
 .ab .ab-hz { display: none; }   /* horizonte: sólo celular (bloque al final) */
 
@@ -85,45 +83,24 @@
   /* el bloque de la foto se disuelve (display: contents): la foto va a la derecha y la ficha al pie de la columna de texto;
      bajo la foto, a 1200 en ES, la ficha se partía en dos filas y la edad quedaba fuera del frame */
   .ab .ab-photo { display: contents; }
+  /* «más grande» (Juan, 2026-10-15): la figura a 1,6× (1,28 ph × 1,6 ph, 4:5 como el recorte), apoyada en el mismo pie
+     de antes y creciendo hacia arriba, detrás del titular y del texto (z-index). Pegada al borde derecho: con el margen,
+     a 1440×900 la cara caía detrás de «PRODUCTO». Medido: a 1536×730 (/es) el marco va de y 126 a 711 y la cabeza empieza en
+     ~155 (nav hasta 65); a 1440×900, de y 153 a 873, cabeza en ~190. Sin overflow horizontal (right: 0). */
   .ab .ab-frame {
-    position: absolute; right: var(--pad); top: calc(var(--rail) + clamp(10px, 1.4vh, 16px));
-    width: calc(var(--ph) * .8); height: var(--ph); max-width: none; margin: 0; aspect-ratio: auto; overflow: hidden;
+    position: absolute; right: 0; top: calc(var(--rail) + clamp(10px, 1.4vh, 16px) - var(--ph) * .6); z-index: 0;
+    width: calc(var(--ph) * 1.28); height: calc(var(--ph) * 1.6); max-width: none; margin: 0; aspect-ratio: auto; overflow: hidden;
   }
-  .ab .ab-frame img { transform: scale(1.3); transform-origin: 50% 16%; }
-  /* La foto recibe la luz de la escena: la pared clara de la toma cae a la oscuridad y Juan queda como lo
-     iluminado. Sigue siendo la foto plana (sólo color y capas encima), la cara sin tocar y nítida. */
-  .ab .ab-frame { --fw: calc(var(--ph) * .8); }   /* ancho del marco */
-  .ab .ab-img { filter: grayscale(90%) contrast(1.08) brightness(.96); }
-  /* Pared: un velo oscuro con la silueta recortada. La máscara es el recorte del hero (juan-2d-static.webp, ya
-     cargado por el hero): sale de esta misma foto al doble de tamaño, región x 50–633 / y 170–1024 de 683×1024
-     (registrado píxel a píxel). Con cover arriba la foto mide fw × 1,4993 fw; el velo lleva el mismo scale 1,3. */
-  .ab .ab-matte {
-    position: absolute; inset: 0; pointer-events: none;
-    transform: scale(1.3); transform-origin: 50% 16%;
-    background: linear-gradient(180deg, rgba(16, 8, 8, .86), rgba(8, 8, 8, .92) 45%, rgba(8, 8, 8, .95));
-    -webkit-mask-image: linear-gradient(#000, #000), url(/senal/juan-2d-static.webp);
-            mask-image: linear-gradient(#000, #000), url(/senal/juan-2d-static.webp);
-    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
-    -webkit-mask-size: 100% 100%, calc(var(--fw) * .85359) calc(var(--fw) * 1.25037);
-            mask-size: 100% 100%, calc(var(--fw) * .85359) calc(var(--fw) * 1.25037);
-    -webkit-mask-position: 0 0, calc(var(--fw) * .07321) calc(var(--fw) * .24891);
-            mask-position: 0 0, calc(var(--fw) * .07321) calc(var(--fw) * .24891);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-  }
-  /* sin máscaras compuestas el velo taparía la cara: entonces no va */
-  @supports (mask-composite: exclude) or (-webkit-mask-composite: xor) {
-    .ab .ab-matte { display: block; }
-  }
-  .ab .ab-light {
-    display: block; position: absolute; inset: 0; pointer-events: none;
-    background:
-      /* resto rojo del riel, que corre justo arriba del borde */
-      linear-gradient(180deg, rgba(232, 39, 42, .13), rgba(232, 39, 42, 0) 18%),
-      /* viñeta: los bordes del marco se hunden en la escena */
-      radial-gradient(ellipse 80% 72% at 50% 42%, rgba(8, 8, 8, 0) 45%, rgba(8, 8, 8, .7) 100%);
-    /* filo: una línea fina de luz fría, con el borde de arriba tomando el rojo */
-    box-shadow: inset 0 0 0 1px rgba(232, 228, 222, .08), inset 0 1px 0 rgba(232, 39, 42, .45);
-  }
+  .ab .ab-top, .ab .ab-body, .ab .ab-meta { z-index: 1; }
+  /* Foto del About (Juan, 2026-10-14: «sin blanco y negro, cortala y que se difumine»): a color, sin filtro. El recorte
+     about-rocking-the-industry-cutout.webp ya trae el alfa: silueta BiRefNet erosionada 2 px y difuminada (sin el filo
+     blanco de la pantalla del escenario), color del borde tomado del interior, y fundido a negro del 60 al 97 % del alto
+     (el corte del muslo se pierde en el fondo). Sin marco, viñeta ni velo: la figura flota sobre la escena. */
+  /* «con poca opacidad» (Juan, 2026-10-15): presencia de fondo, detrás del texto. Va en la imagen y no en .ab-frame,
+     que es lo que anima la entrada (GSAP lo lleva a 1): así la entrada termina en este valor. Probado 0,25–0,4 a 1536×730:
+     a 0,32 la cara se reconoce y la figura queda claramente detrás del contenido. */
+  /* «en blanco y negro» (Juan, 2026-10-15): grises completos con contraste para que los negros no queden lavados */
+  .ab .ab-img { opacity: .32; filter: grayscale(1) contrast(1.2); }
   .ab .ab-meta {
     position: absolute; left: var(--pad); bottom: clamp(20px, 4vh, 44px);
     margin: 0; padding-top: 12px; gap: 16px; flex-wrap: nowrap;
