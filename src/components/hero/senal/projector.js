@@ -2,13 +2,17 @@
    sección de videos (clients/jpr-portfolio/maquetas/2026-10-12-videos/a/), elegida por Juan («A»). Reemplaza a la sala
    de proyección (U4); la galería 360 de u2-galeria360 no se usa (Juan: «No me gusta»).
 
-   Un tambor de cinco pantallas LED (una por video, 9:16, en el orden fijo de Juan) sobre un zócalo de aluminio grafito,
+   Un tambor de cinco pantallas LED (9:16, los videos en el orden fijo de Juan) sobre un zócalo de aluminio grafito,
    en el vacío. La línea roja con la que se cierra la última laptop de Projects corre por el piso desde el umbral, sube
    por el zócalo y se abre en el anillo rojo de la base; las caras se encienden desde el anillo hacia arriba. El tambor
    gira SÓLO si el usuario lo pide (S.fbf.rot lo escribe VideosStage.tsx: flechas, ← →, arrastre) y da la vuelta
    completa. La cara de frente queda casi de frente (órbita ±4°) y grande; las vecinas se ven de canto, así que a mitad
    de un giro hay dos caras a ±36° y nunca un hueco en el centro. Al girar, la cámara se aleja y sube un poco y vuelve.
    El video horizontal (comparación de modelos) sale de su cara y se abre a 16:9 delante del tambor.
+   10 videos, 5 caras (2026-10-14, opción A de Juan: «Mismo tambor, 10 videos»): el prisma no cambia; S.fbf.rot es el
+   paso lógico. Cara de frente = paso mod 5, video = paso mod 10, giro infinito. Cada cara muestra el video del paso más
+   cercano que le toca (paso ≡ cara mod 5): ese paso cambia sólo cuando la cara cruza los 180° (de espaldas, tapada por
+   el resto del prisma), y ahí se le reasigna video y textura. Nunca hay un cambio a la vista.
    Haz rojo tenue (Juan: «(a) Tenue») desde arriba y adelante: al salir se descompone en los puntos de Stack.
 
    Nitidez (el «se ve borroso» de Juan): cada cara es un MeshBasic con el video como textura común (no VideoTexture) con
@@ -39,7 +43,14 @@ const smooth = (a, b, x) => sm(range(x, a, b));
 const damp = (a, b, l, dt) => a + (b - a) * (1 - Math.exp(-l * dt));
 const easeIO = (x) => 0.5 - 0.5 * Math.cos(Math.PI * clamp01(x));
 const mod = (a, n) => ((a % n) + n) % n;
-const N = VIDEOS.length;
+const N = 5;                                         // caras del prisma (fijo: la geometría que eligió Juan)
+const NV = VIDEOS.length;                            // videos que recorre (10)
+/** pasos de la cara k al frente, en [-N/2, N/2): ±2,5 = de espaldas (180°) */
+const relOf = (k, r) => mod(k - r + N / 2, N) - N / 2;
+/** el video que muestra la cara k con el tambor en r: el del paso más cercano que cae en esa cara */
+const vidOf = (k, r) => mod(Math.round(r + relOf(k, r)), NV);
+const LANDJ = VIDEOS.findIndex((v) => v.width > v.height);
+const SRC_IN = 1.5, SRC_OUT = 1.9;                   // src cuando la cara puede llegar al frente; se suelta lejos de él
 const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
 
 /* ---------- el tambor (metros del pasillo) ---------- */
@@ -78,8 +89,13 @@ export async function buildProjector({
 
   /* ---------- pósters (las texturas hasta que el video tiene su primer cuadro) ---------- */
   const loadImg = (src) => new Promise((res, rej) => { const i = new Image(); i.decoding = 'async'; i.onload = () => res(i); i.onerror = rej; i.src = src; });
-  const posters = await Promise.all(VIDEOS.map((v) => loadImg(v.poster)));
+  // al armar: los de las cinco caras de arranque (y el horizontal); el resto, en segundo plano apenas está el tambor
+  const r0 = (S.fbf && S.fbf.rot) || 0;
+  const posterTex = VIDEOS.map(() => null), posterReq = VIDEOS.map(() => null);
+  const first = [...new Set([...Array.from({ length: N }, (_, k) => vidOf(k, r0)), ...(LANDJ >= 0 ? [LANDJ] : [])])];
+  const firstImgs = await Promise.all(first.map((j) => loadImg(VIDEOS[j].poster)));
   if (!alive()) return null;
+  first.forEach((j, i) => { posterTex[j] = sharp(new THREE.Texture(firstImgs[i])); });
   await yieldToMain();
   if (!alive()) return null;
 
@@ -156,16 +172,16 @@ export async function buildProjector({
   }
   const mkU = () => ({ dim: uniform(1), cropW: uniform(1), cropH: uniform(1), offY: uniform(0), lift: uniform(0), refl: uniform(0), halo: uniform(0) });
 
-  const faces = VIDEOS.map((vd, k) => {
+  const cropOf = (j) => { const vd = VIDEOS[j]; return vd.width > vd.height ? (W / H) / (vd.width / vd.height) : 1; };  // la cara muestra el centro del 16:9
+  const faces = Array.from({ length: N }, (_, k) => {
+    const j = vidOf(k, r0);
     const th = k * STEP;
     const g = new THREE.Group();
     g.position.set(Math.sin(th) * AP, Y0 + H / 2, Math.cos(th) * AP); g.rotation.y = th;
     drum.add(g);
-    const land = vd.width > vd.height;
-    const cropW = land ? (W / H) / (vd.width / vd.height) : 1;    // la cara muestra el centro del 16:9
-    const poster = sharp(new THREE.Texture(posters[k]));
+    const poster = posterTex[j];
     const u = mkU();
-    const sc = screenMat(poster, cropW, u);
+    const sc = screenMat(poster, cropOf(j), u);
     const scr = new THREE.Mesh(new THREE.PlaneGeometry(W, H), sc.m);
     scr.position.z = 0.012; g.add(scr);
     const bz = new THREE.Mesh(new THREE.BoxGeometry(W + 0.03, H + 0.03, 0.03), bezelM);
@@ -192,27 +208,35 @@ export async function buildProjector({
     const hl = haloMat(poster, u, 2.3);
     const halo = new THREE.Mesh(new THREE.PlaneGeometry(W * 2.3, H * 2.3), hl.m);
     halo.position.z = -0.45; halo.renderOrder = 1; g.add(halo);
-    return { k, vd, land, g, scr, u, nodes: [sc.tn, rf.tn, hl.tn].filter(Boolean), halo, ring, front: 0, facing: 0, pw: 0, cropW };
+    return { k, j, g, scr, u, nodes: [sc.tn, rf.tn, hl.tn].filter(Boolean), halo, ring, front: 0, facing: 0, pw: 0 };
   });
 
-  /* ---------- la cara horizontal: sale del tambor y se abre a 16:9 delante ---------- */
-  const WIDE = faces.find((f) => f.land) || null;
+  /* ---------- la cara horizontal: sale del tambor y se abre a 16:9 delante ----------
+     Cuelga de la cara que tiene el video horizontal (se muda de cara sólo con el 16:9 cerrado). */
   let wide = null;
-  if (WIDE) {
-    const asp = WIDE.vd.width / WIDE.vd.height;
+  if (LANDJ >= 0) {
+    const vd = VIDEOS[LANDJ];
+    const asp = vd.width / vd.height;
     const H2 = H * 0.86, W2 = H2 * asp;
     const u = mkU();
-    const sc = screenMat(WIDE.nodes[0].value, 1, u);
+    const sc = screenMat(posterTex[LANDJ], 1, u);
     const scr = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), sc.m);
-    scr.renderOrder = 3; WIDE.g.add(scr);
+    scr.renderOrder = 3; scr.visible = false;
     const bz = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), bezelM);
-    WIDE.g.add(bz);
-    const rf = reflMat(WIDE.nodes[0].value, u);
+    bz.visible = false;
+    const rf = reflMat(posterTex[LANDJ], u);
     const refl = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), rf.m);
-    refl.renderOrder = -1; if (REFL) WIDE.g.add(refl);
-    WIDE.nodes.push(sc.tn, rf.tn);
-    wide = { u, scr, bz, refl, H2, W2, asp, e: 0 };
+    refl.renderOrder = -1; refl.visible = false;
+    wide = { u, scr, bz, refl, H2, W2, asp, e: 0, f: null, nodes: [sc.tn, rf.tn] };
   }
+  /** cuelga el 16:9 de la cara f */
+  function hangWide(f) {
+    wide.f = f;
+    if (!f) return;
+    f.g.add(wide.scr, wide.bz);
+    if (REFL) f.g.add(wide.refl);
+  }
+  if (wide) hangWide(faces.find((f) => f.j === LANDJ) || null);
   await yieldToMain();
   if (!alive()) return null;
 
@@ -337,8 +361,55 @@ export async function buildProjector({
   await yieldToMain();
   if (!alive()) return null;
 
-  /* ---------- videos: fuera del DOM, mudos, en loop; src recién cuando su cara puede llegar al frente ---------- */
-  const vids = faces.map(() => null);
+  /* ---------- videos: fuera del DOM, mudos, en loop; src recién cuando su cara puede llegar al frente ----------
+     Uno por video (no por cara). El que se aleja del frente suelta su src (removeAttribute + load) y su textura: con las
+     vueltas la memoria no crece (a lo sumo las tres caras que pueden llegar al frente tienen src). */
+  const vids = VIDEOS.map(() => null);
+  /** lo que muestra el video j: su textura de video si ya tiene cuadro, si no su póster */
+  const texOf = (j) => (vids[j] && vids[j].tex) || posterTex[j];
+  /** apunta las caras (y el 16:9) que muestran el video j a su textura actual */
+  function showVid(j) {
+    const t = texOf(j);
+    if (!t) return;
+    faces.forEach((f) => { if (f.j === j) f.nodes.forEach((n) => { n.value = t; }); });
+    if (wide && j === LANDJ) wide.nodes.forEach((n) => { n.value = t; });
+  }
+  /** póster del video entrante: se pide antes de que su cara llegue a los 180° (en segundo plano, una vez) */
+  function loadPoster(j) {
+    if (posterTex[j] || posterReq[j]) return;
+    posterReq[j] = loadImg(VIDEOS[j].poster).then((img) => {
+      if (!alive()) return;
+      posterTex[j] = sharp(new THREE.Texture(img));
+      if (!(vids[j] && vids[j].tex)) showVid(j);
+    }).catch(() => { posterReq[j] = null; });
+  }
+  /** la cara f pasa a mostrar el video j (sólo de espaldas: ver update) */
+  function assign(f, j) {
+    f.j = j;
+    f.u.cropW.value = cropOf(j);
+    loadPoster(j);
+    const t = texOf(j);
+    if (t) f.nodes.forEach((n) => { n.value = t; });
+  }
+  const dropTex = (t) => {
+    for (const a of [texs, ctl.texs]) { const i = a.indexOf(t); if (i >= 0) a.splice(i, 1); }
+    t.dispose();
+  };
+  /** el video j suelta su src y su textura; lo que lo mostraba vuelve a su póster */
+  function release(j) {
+    const r = vids[j];
+    if (!r) return;
+    vids[j] = null;
+    try { r.v.pause(); r.v.removeAttribute('src'); r.v.load(); } catch (e) { /* noop */ }
+    if (!r.tex) return;
+    faces.forEach((f) => {
+      if (f.nodes[0].value !== r.tex) return;
+      const t = posterTex[f.j] || posterTex[j];
+      f.nodes.forEach((n) => { n.value = t; });
+    });
+    if (wide && wide.nodes[0].value === r.tex) wide.nodes.forEach((n) => { n.value = posterTex[LANDJ]; });
+    dropTex(r.tex);
+  }
   function ensureVideo(k) {
     if (vids[k]) return vids[k];
     const v = document.createElement('video');
@@ -347,10 +418,10 @@ export async function buildProjector({
     v.preload = 'auto';
     const rec = { v, tex: null, last: -1 };
     v.addEventListener('loadeddata', () => {
-      if (!alive() || rec.tex) return;
+      if (!alive() || rec.tex || vids[k] !== rec) return;
       v.width = v.videoWidth; v.height = v.videoHeight;      // la textura común toma el tamaño de estos atributos
       rec.tex = sharp(new THREE.Texture(v));
-      faces[k].nodes.forEach((n) => { n.value = rec.tex; });
+      showVid(k);
     });
     v.src = VIDEOS[k].src;
     v.load();                                                // explícito: fuera del DOM Chrome puede no empezar a cargar solo
@@ -467,6 +538,8 @@ export async function buildProjector({
     st.spin = damp(st.spin, clamp01(Math.abs(v) / 1.6), 3.2, dt);
     drum.rotation.y = -st.rot * STEP;
     drum.rotation.z = rm ? 0 : -st.vel * 0.004;
+    // reasignación: el paso de una cara cambia sólo al cruzar los 180° (de espaldas); ahí toma su video nuevo
+    faces.forEach((f) => { const j = vidOf(f.k, st.rot); if (j !== f.j) assign(f, j); });
     const fadeK = rm ? smooth(0, 0.35, t - st.fadeT) : 1;
 
     // la señal: corre por el piso desde el umbral y sube por el zócalo; queda una cola encendida que alimenta el anillo
@@ -526,12 +599,15 @@ export async function buildProjector({
 
     // la cara horizontal sale cuando el usuario se queda en ella (estadía, sin arrastrar, tambor quieto)
     if (wide) {
+      const wf = faces.find((f) => f.j === LANDJ) || null;
+      if (wf !== wide.f && wide.e < 0.002) hangWide(wf);
+      const WF = wide.f;
       const near = Math.abs(st.rot - Math.round(st.rot)) < 0.03;
-      const settled = mod(Math.round(st.rot), N) === WIDE.k && near && !S.fbf.drag && WIDE.pw > 0.99 && u > FBF_STAY[0] && u < FBF_STAY[1] + 0.05;
+      const settled = !!WF && WF.j === LANDJ && mod(Math.round(st.rot), NV) === LANDJ && near && !S.fbf.drag && WF.pw > 0.99 && u > FBF_STAY[0] && u < FBF_STAY[1] + 0.05;
       wide.e = rm ? (settled ? 1 : 0) : damp(wide.e, settled ? 1 : 0, settled ? 2.6 : 8, dt);
       const e = sm(clamp01(wide.e));
       const sw = lerp(W, wide.W2, e), sh = lerp(H, wide.H2, e);
-      const vis = wide.e > 0.002;
+      const vis = wide.e > 0.002 && !!WF;
       wide.scr.visible = vis; wide.bz.visible = vis; wide.refl.visible = vis;
       const y = lerp(0, (wide.H2 - H) / 2 + 0.1, e), z = 0.03 + e * 0.95;
       wide.scr.scale.set(sw, sh, 1); wide.scr.position.set(0, y, z);
@@ -540,7 +616,7 @@ export async function buildProjector({
       wide.u.dim.value = fadeK;
       wide.refl.scale.set(sw, sh, 1); wide.refl.position.set(0, -2 * (Y0 + H / 2) - y, z);
       wide.u.refl.value = 0.03 * e;
-      WIDE.u.dim.value *= lerp(1, 0.06, e); WIDE.u.refl.value *= 1 - e; WIDE.u.halo.value *= 1 - e;
+      if (WF) { WF.u.dim.value *= lerp(1, 0.06, e); WF.u.refl.value *= 1 - e; WF.u.halo.value *= 1 - e; }
     }
 
     // haz tenue desde arriba (Juan: «(a) Tenue»)
@@ -558,11 +634,17 @@ export async function buildProjector({
     scrPos.value.copy(wp).addScaledVector(nrm, 0.7);
     scrI.value = fa.pw * 0.5 * fadeK;
 
-    // videos: src cuando su cara puede llegar al frente; corre el de frente (y el que llega, en un giro)
+    // videos: src cuando su cara puede llegar al frente (la de frente y sus dos vecinas); el que se aleja lo suelta;
+    // corre el de frente (y el que llega, en un giro)
+    const srcWin = ready && u > GAL_END - 0.4 && u < FBF_END + 0.3;
+    vids.forEach((r, j) => {
+      if (!r) return;
+      const f = faces.find((x) => x.j === j);
+      if (!f || Math.abs(relOf(f.k, st.rot)) > SRC_OUT) release(j);
+    });
     faces.forEach((f) => {
-      const rel = Math.abs(((f.k - st.rot) % N + N + N / 2) % N - N / 2);
-      if (ready && u > GAL_END - 0.4 && u < FBF_END + 0.3 && (rel < 1.5 || (u > FBF_STAY[0] - 0.3 && rel < 2.6))) ensureVideo(f.k);
-      const r = vids[f.k];
+      if (srcWin && Math.abs(relOf(f.k, st.rot)) < SRC_IN) ensureVideo(f.j);
+      const r = vids[f.j];
       if (!r) return;
       const play = ready && inView && !document.hidden && !S.fbf.paused && f.pw > 0.3 && f.front > 0.45 && u < FBF_OFF + 0.2;
       if (play && r.v.paused) r.v.play().catch(() => {});
@@ -608,7 +690,7 @@ export async function buildProjector({
     ndc.set(mx, -my);
     ray.setFromCamera(ndc, camera);
     const targets = [faces[st.active].scr];
-    if (wide && wide.scr.visible && st.active === (WIDE && WIDE.k)) targets.push(wide.scr);
+    if (wide && wide.scr.visible && wide.f === faces[st.active]) targets.push(wide.scr);
     return ray.intersectObjects(targets, false).length ? st.active : -1;
   }
 
@@ -619,15 +701,19 @@ export async function buildProjector({
     if (v) { saved = objs.map((o) => o.visible); objs.forEach((o) => { o.visible = true; }); }
     else if (saved) { objs.forEach((o, i) => { o.visible = saved[i]; }); saved = null; }
   }
+  VIDEOS.forEach((_, j) => loadPoster(j));         // pósters entrantes, en segundo plano
   void housingMat; void metalMat; void prep; void focusU; void rangeU; void cameraPosition;
 
   return {
     pose, calm, update, placeTags, pick, pauseAll, warm, maskNode, lookW,
     lampK: () => st.lampK,
     info: () => ({
-      fbf: st.mode, rot: +st.rot.toFixed(2), active: st.active, spin: +st.spin.toFixed(2),
+      fbf: st.mode, rot: +st.rot.toFixed(2), active: st.active, vid: st.active < 0 ? -1 : mod(Math.round(st.rot), NV), spin: +st.spin.toFixed(2),
+      faceVid: faces.map((f) => f.j),
+      faceTex: faces.map((f) => (vids[f.j] && f.nodes[0].value === vids[f.j].tex ? 'video' : f.nodes[0].value === posterTex[f.j] ? 'poster' : 'other')),
       pw: faces.map((f) => +f.pw.toFixed(2)), wide: wide ? +wide.e.toFixed(2) : 0,
       vids: vids.map((r) => (r ? (r.tex ? (r.v.paused ? 'paused' : 'playing') : 'loading') : '-')),
+      vidSrc: vids.filter(Boolean).length,
     }),
   };
 }

@@ -235,6 +235,36 @@
     "sound": "Video sound",
     "sound_short": "Sound",
     "items": {
+      "reel_type": {
+        "eyebrow": "Kinetic type",
+        "title": "Eight verbs, one logo",
+        "caption": "The monogram assembles, splits and regroups on each beat among the Spanish verbs MUEVE, CORTA, ESTIRA and ENCAJA (move, cut, stretch, lock in), in cobalt and acid green.",
+        "made_with": "Made with: Claude Code · HyperFrames · GSAP · FFmpeg. Monogram from its exact vector paths, Pixabay music"
+      },
+      "reel_liquid": {
+        "eyebrow": "Fluid shapes",
+        "title": "From circle to monogram",
+        "caption": "A circle flows into the pieces of the monogram while floods of color hit on the beat, in three inks.",
+        "made_with": "Made with: Claude Code · HyperFrames · GSAP · FFmpeg. Monogram from its exact vector paths, Pixabay music"
+      },
+      "reel_ui": {
+        "eyebrow": "UI motion",
+        "title": "Logo in app mode",
+        "caption": "The monogram works as an app icon while an interface springs into place around it, with cards and data moving on each beat.",
+        "made_with": "Made with: Claude Code · HyperFrames · GSAP · FFmpeg. Monogram from its exact vector paths, Pixabay music"
+      },
+      "reel_3d": {
+        "eyebrow": "3D physics",
+        "title": "Drop, collide, lock in",
+        "caption": "The monogram's 3D pieces fall in a dark studio, collide and bounce, then lock into place on the last beat.",
+        "made_with": "Made with: Claude Code · Remotion · React Three Fiber · Rapier · FFmpeg. Pixabay music"
+      },
+      "reel_sting": {
+        "eyebrow": "Logo sting",
+        "title": "Four techniques, one signature",
+        "caption": "On black, the monogram builds itself from type, shape, interface and physics, with its leg in the brand red.",
+        "made_with": "Made with: Claude Code · HyperFrames · GSAP · FFmpeg. Monogram from its exact vector paths, Pixabay music"
+      },
       "b6_story": {
         "eyebrow": "LEEX · B6 incubator",
         "title": "Where the incubator came from",
@@ -271,39 +301,85 @@
   "skills": {
     "label": "Tech Stack",
     "headline": "Stack by Layer",
-    "ai_metrics": "TraumaVision · Sensitivity 96.7% (thesis test set)",
     "lang_en_label": "English",
     "lang_en_value": "B2 · LTC Eastbourne (UK) + California",
     "lang_es_label": "Spanish",
     "lang_es_value": "Native",
     "cluster_ai": {
       "title": "AI / ML",
-      "items": ["PyTorch · CUDA", "YOLOv8m · Ultralytics", "Claude API · Anthropic SDK", "OpenCV", "PyDICOM · DICOM", "Scikit-learn", "NumPy · Pandas", "Jupyter · Matplotlib", "Prompt Engineering", "Prompt Caching · Extended Thinking", "Tool Use · Function Calling", "Multi-Agent Orchestration", "RAG Systems", "Replicate · Real-ESRGAN"]
+      "items": [
+        "Claude API · Anthropic SDK",
+        "Claude Agent SDK",
+        "Claude Code · Claude Cowork · Claude Desktop · Claude in Chrome",
+        "Subagents · Hooks · Skills · Claude Code Plugins",
+        "Agentic Flows (role-based agents and subagents)",
+        "Multi-Agent Workflows (orchestration, cross-agent review and QA)",
+        "Custom MCP Servers",
+        "Tool Use · Function Calling",
+        "Context Engineering (memory, context window, handoffs)",
+        "RAG Systems",
+        "Prompt & Agent Evals",
+        "Prompt Engineering",
+        "Prompt Caching · Extended Thinking",
+        "Reusable Skills & System Prompts",
+        "ChatGPT · OpenAI API",
+        "PyTorch · CUDA",
+        "YOLOv8m · Ultralytics",
+        "OpenCV",
+        "pydicom · DICOM",
+        "scikit-learn",
+        "NumPy · Pandas",
+        "Jupyter · Matplotlib",
+        "n8n · Make · Zapier",
+        "Replicate · Real-ESRGAN"
+      ]
     },
     "cluster_web": {
       "title": "Web",
-      "items": ["Next.js · React", "TypeScript · JavaScript", "FastAPI · Uvicorn · Python", "Supabase · PostgreSQL · SQLite", "GSAP · ScrollTrigger", "Tailwind CSS · shadcn/ui", "OGL · WebGL", "Vercel · GitHub · Git", "VS Code · GitHub Copilot", "MCP Protocol · Claude Code CLI", "next-intl · i18n", "REST APIs · JSON", "Node.js", "Resend · Email APIs", "HTML · CSS · SVG"]
+      "items": [
+        "TypeScript · JavaScript",
+        "Next.js · React",
+        "Node.js",
+        "FastAPI · Uvicorn · Python",
+        "Supabase · PostgreSQL · SQLite",
+        "REST APIs · JSON",
+        "Vercel · GitHub · Git",
+        "Hostinger · VPS",
+        "Tailwind CSS · shadcn/ui",
+        "GSAP · ScrollTrigger",
+        "OGL · WebGL",
+        "next-intl · i18n",
+        "Resend · Email APIs",
+        "VS Code · GitHub Copilot",
+        "HTML · CSS · SVG"
+      ]
     },
     "cluster_tools": {
-      "title": "Automation & Media",
+      "title": "Content Creation & Automation",
       "items": [
-        "HyperFrames · Video from HTML",
-        "Remotion",
-        "Canva MCP",
+        "Three.js · WebGPU · TSL Shaders",
+        "Motion Graphics (Remotion · HyperFrames · GSAP)",
+        "3D Physics (Rapier · cannon-es)",
+        "FFmpeg · GPU Encoding (NVENC)",
         "Playwright MCP",
         "Meta API · WhatsApp Business",
+        "AI Content Automation for LinkedIn",
         "AI Image Generation",
+        "Beat Sync (librosa)",
+        "Sound Design · SFX · Music with Claude Code",
+        "Canva MCP",
+        "Reels for Instagram & LinkedIn",
+        "CapCut · Video Editing",
+        "Animated Presentations",
         "Brand System Design",
-        "Copywriting · AIDA · PAS",
-        "Video Editing",
-        "Animated Presentations"
+        "Copywriting · AIDA · PAS"
       ]
     },
     "cluster_bio": {
       "title": "Biomedical",
       "items": ["CDSS / SaMD", "JCI Standards", "ANMAT · ISO 13485 · IEC 62304", "Corrective & Preventive Maintenance", "Adult ICU · CCU · OR", "Pediatric ICU · NICU", "Endoscopy · Wards · Outpatient", "Defibrillators · Multiparameter Monitors", "Infusion Pumps · IABP", "Incubators · Radiant Warmers", "Electrical Safety · Fluke", "Neovero CMMS · Inventory", "Biomedical Instrumentation", "Healthcare Regulations"]
     },
-    "network_aria": "Stack network in four layers: biomedical engineering, AI, web and automation."
+    "network_aria": "Stack network in four layers: biomedical engineering, AI, web, and content creation and automation."
   },
   "experience": {
     "label": "Experience",

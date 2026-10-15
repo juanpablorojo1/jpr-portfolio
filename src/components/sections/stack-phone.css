@@ -86,14 +86,6 @@
   /* los tres primeros de cada capa (las listas vienen en orden de peso): en blanco y bold */
   .sk-classic .skm-items .badge-item:nth-child(-n+3) > span { color: #fff !important; font-weight: 700; }
 
-  /* la cifra de la capa de IA: una lectura de monitor */
-  .sk-classic .skm-metric {
-    display: flex; gap: 10px; align-items: baseline; margin: 18px 0 0 !important; padding: 14px 0 0 !important;
-    border-top: 1px solid var(--line) !important;
-    font-size: 12px !important; line-height: 1.6 !important; letter-spacing: .04em !important; color: var(--off) !important;
-  }
-  .sk-classic .skm-metric::before { content: ''; flex: none; width: 5px; height: 5px; background: var(--red); transform: translateY(-1px); }
-
   /* idiomas: cierre en dos canales */
   .sk-classic .skm-langs {
     display: grid !important; grid-template-columns: 1fr 1fr; gap: 0 20px !important;

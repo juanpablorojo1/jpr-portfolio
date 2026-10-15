@@ -297,6 +297,12 @@ html { scroll-padding-top: 65px; }
     transform: none; visibility: visible;
     transition: transform .6s cubic-bezier(0.16, 1, 0.3, 1) .08s, visibility 0s linear 0s;
   }
+  /* F-04: con los controles del Tambor en la franja del dock (html.fvm-ctrl-low, VideosPhone.tsx) el dock se retira:
+     sin toques desde el primer instante, sale con su transición de siempre y vuelve cuando los controles salen de ahí */
+  html.fvm-ctrl-low .jnav-dock[data-shown] {
+    transform: translateY(100%); visibility: hidden; pointer-events: none;
+    transition: transform .3s cubic-bezier(0.7, 0, 0.84, 0), visibility 0s linear .3s;
+  }
   /* la lectura del canal: como el rótulo de un monitor */
   .jnav-dock-ch {
     flex: 1 1 auto; min-width: 0; margin: 0; display: flex; align-items: center; gap: 10px;

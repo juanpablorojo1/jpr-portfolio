@@ -5,7 +5,7 @@
    capa del stack, y la señal que las atraviesa. Acá vive la capa HTML:
    - Rótulo de sección y contador de capa (el sistema de Projects y Frame by Frame).
    - Plano de situación: titular e idiomas, mientras la señal sale de la nube de puntos de Frame by Frame.
-   - Una cabecera por capa (índice, título; en IA, la cifra de TraumaVision) del lado contrario a sus nodos.
+   - Una cabecera por capa (índice y título) del lado contrario a sus nodos.
    - Un rótulo por nodo con nombre (cada tecnología de messages skills.<capa>.items). La escena les escribe la
      posición del nodo y data-on cuando la onda lo alcanza, en el mismo frame del render (S.stk.items).
    Entradas con el gesto del sitio (titulares desde z −1100, expo.out 1,2 s; el resto 14 px, 1,0 s); salen en 0,5 s.
@@ -55,7 +55,7 @@ export default function StackStage() {
 
       type T = { el: HTMLElement; title: HTMLElement; rest: HTMLElement[]; split: SplitText | null; on: boolean; tl: gsap.core.Timeline | null };
       const mk = (el: HTMLElement, title: HTMLElement, rest: HTMLElement[]): T => ({ el, title, rest, split: null, on: false, tl: null });
-      const ls: T[] = layers.map((el) => mk(el, el.querySelector<HTMLElement>('.sk-title')!, Array.from(el.querySelectorAll<HTMLElement>('.sk-eyebrow, .sk-metric'))));
+      const ls: T[] = layers.map((el) => mk(el, el.querySelector<HTMLElement>('.sk-title')!, Array.from(el.querySelectorAll<HTMLElement>('.sk-eyebrow'))));
       const it: T = mk(intro, head, Array.from(intro.querySelectorAll<HTMLElement>('.sk-langs')));
       const all = [...ls, it];
       let chromeOn = false, wasLive = false;
@@ -188,8 +188,7 @@ export default function StackStage() {
             <article key={key} className="sk-layer" data-side={side < 0 ? 'l' : 'r'} data-cols={list.length > 10 ? 3 : 2} aria-labelledby={`sk-t-${k}`}>
               <div className="sk-lhead">
                 <p className="sk-eyebrow"><b>{pad2(k + 1)}</b> / {total}</p>
-                <h3 id={`sk-t-${k}`} className="sk-title font-display" aria-label={title}>{title}</h3>
-                {key === 'cluster_ai' && <p className="sk-metric">{t('ai_metrics')}</p>}
+                <h3 id={`sk-t-${k}`} className="sk-title font-display" data-long={title.split(/\s+/).some((w) => w.length > 12) ? '' : undefined} aria-label={title}>{title}</h3>
               </div>
               <ul className="sk-items">
                 {list.map((item) => (

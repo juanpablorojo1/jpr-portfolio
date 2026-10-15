@@ -40,7 +40,7 @@ const easeIO = (x) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, x))
 const D2R = Math.PI / 180;
 const NL = STK_LAYERS.length;
 const CLOUD = NL;                                 // índice de «capa» de la nube de puntos de Frame by Frame
-const DEFAULT_COUNTS = [14, 14, 15, 10];
+const DEFAULT_COUNTS = [14, 24, 15, 16];
 const WAVE_K = 1.12;                              // la onda pasa un poco más allá del último nodo con nombre
 
 /* azar con semilla: la red (y por lo tanto cada rótulo) es la misma en cada carga */
