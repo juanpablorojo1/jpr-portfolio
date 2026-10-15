@@ -383,7 +383,8 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
     },
     {
       title: leex.title, eyebrow: leex.eyebrow, sub: leex.line, line: leex.line, badge: leex.badge, soon: true, stats: leex.stats, demo: leex.demo,
-      fig: { num: leex.stats[0].value, label: leex.stats[0].label, note: noteOf(leex.stats) },
+      // los logros de LEEX no son cifras (Juan, 2026-10-14): la vitrina lleva su propio dato (alcance nacional)
+      fig: { num: t('leex.fig_value'), label: t('leex.fig_label'), note: t('leex.fig_note') },
       body: caseBody(leex, LEEX_STACK, screens(leex.shots.length, openLeex), leex.shotsNote),
     },
   ];

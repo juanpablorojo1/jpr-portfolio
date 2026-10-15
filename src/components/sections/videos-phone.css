@@ -29,11 +29,13 @@
 
   /* ---------- rótulo y titular ---------- */
   .fvm-head { padding: 0 var(--pad); margin-bottom: 22px; }
+  /* título de sección (Juan, 2026-10-14: «mucho más grande»): Bebas Neue, sobre el titular del tambor */
   .fvm-label {
-    display: flex; align-items: center; gap: 10px; margin: 0 0 22px;
-    font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
+    display: flex; align-items: center; gap: 12px; margin: 0 0 14px;
+    font: 400 clamp(36px, 10.6vw, 56px)/.9 var(--font-bebas-neue), sans-serif; letter-spacing: .01em;
+    text-transform: uppercase; color: #e8e4de;
   }
-  .fvm-dot { display: inline-block; flex: none; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
+  .fvm-dot { display: inline-block; flex: none; width: 8px; height: 8px; margin-top: -.08em; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
   .fvm-title {
     margin: 0; font: 400 clamp(52px, 16.4vw, 96px)/.88 var(--font-bebas-neue), sans-serif; letter-spacing: .005em;
     text-transform: uppercase; color: #fff; text-wrap: balance;

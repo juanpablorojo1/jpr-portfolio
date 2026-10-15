@@ -31,14 +31,21 @@
     border-bottom-color: transparent;
   }
 
-  /* rótulo de sección: el mismo sistema que Projects */
+  /* título de sección (Juan, 2026-10-14: «mucho más grande»): Bebas Neue, la familia display de 02-brand, en dos
+     líneas a la izquierda del tambor. Medido con el tambor de 5 caras: a 1536×730 el borde izquierdo del tambor queda
+     en ~537 px y el título termina antes (ver 03-tech); la altura manda (12vh) para no crecer en pantallas bajas. */
   .fv-label {
     position: absolute; top: clamp(84px, 11vh, 110px); left: var(--pad); margin: 0;
-    display: flex; align-items: center; gap: 10px;
-    font: 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: #e8e4de;
+    display: flex; align-items: flex-start; gap: .16em; max-width: 4.6em;
+    font: 400 clamp(56px, min(6vw, 12vh), 104px)/.88 var(--font-bebas-neue), sans-serif; letter-spacing: .005em;
+    text-transform: uppercase; color: #e8e4de; text-wrap: balance;
     text-shadow: 0 0 2px rgba(0, 0, 0, .95), 0 0 6px rgba(0, 0, 0, .9), 0 1px 14px rgba(0, 0, 0, .85);
   }
-  .fv-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
+  /* el video horizontal (comparación de modelos) llega casi al borde del cuadro: el título se funde mientras está de
+     frente. filter y no opacity: la opacidad la escribe GSAP en línea (entrada y salida de la sección). */
+  .fv-label { transition: filter .45s var(--ease-out); }
+  .fv-label[data-land] { filter: opacity(0); }
+  .fv-dot { display: inline-block; flex-shrink: 0; width: 8px; height: 8px; margin-top: .3em; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
 
   /* ---------- la galería: región con foco, arrastre, controles ---------- */
   .fv-ring { position: absolute; inset: 0; outline: none; }
@@ -137,5 +144,5 @@
 }
 
 @media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
-  .fv-btn, .fv-btn > span::before, .fv-tgl, .fv-ctrl, .fv-acts, .fv-credit, .fv-front img { transition: none; }
+  .fv-label, .fv-btn, .fv-btn > span::before, .fv-tgl, .fv-ctrl, .fv-acts, .fv-credit, .fv-front img { transition: none; }
 }

@@ -30,7 +30,7 @@
     "p1": "Ingeniería Biomédica en la UNC Córdoba: tesis entregada, defensa pendiente. La tesis es TraumaVision, un prototipo académico que detecta fracturas en radiografías de muñeca pediátrica. Desarrollé el modelo, la API y la aplicación web.",
     "p2": "Desde agosto de 2026 trabajo a tiempo completo en Córdoba como Especialista en automatización en LEEX, empresa de equipamiento médico, y como AI Engineer en KIBBO, plataforma de mantenimiento de equipos hospitalarios. En 2026 también fundé Eleven, una agencia web y de IA que funciona sobre un pipeline de agentes que construí con Claude API.",
     "p3": "Primer puesto en Rocking the Industry (RTS Group, 2025), un hackathon industrial con 150 equipos multidisciplinarios, con el equipo Algarroba LID.",
-    "p4": "Vivo en Córdoba, Argentina. Inglés: B2 (LTC Eastbourne, Reino Unido) y trabajo a tiempo completo en California, en un entorno solo en inglés.",
+    "p4": "Vivo en Córdoba, Argentina. Inglés: B2 (LTC Eastbourne, Reino Unido) y una temporada de trabajo en California, en un entorno solo en inglés.",
     "sub_tagline": "Biomédica · IA · Web · Automatización",
     "meta_location": "Ubicación",
     "meta_location_value": "Córdoba, AR",
@@ -59,7 +59,7 @@
         { "value": "96,7% · 93,1%", "label": "Sensibilidad · especificidad, test interno de 3.038 imágenes" },
         { "value": "0,987", "label": "AUC-ROC, test interno" },
         { "value": "97,4% · 88,3%", "label": "Sensibilidad · especificidad con radiografías de otro país, sin reentrenar" },
-        { "value": "Emprende U 2026", "label": "En etapa de escalado" }
+        { "value": "Semifinalista · Finalista", "label": "Emprende U 2026 · AI Founders Lab, de Endeavor y AWS" }
       ],
       "scope_note": "Prototipo académico (tesis entregada) evaluado con datos retrospectivos. No registrado ante la ANMAT ni autorizado para uso clínico.",
       "demo_alt": "Video demo de TraumaVision, sin sonido, 36 s: ingreso, carga del estudio (imagen individual o ZIP de DICOM), un resultado REVISAR con la zona marcada por YOLOv8m, el visor invertido con el puntaje por zona, la revisión del médico, el informe PDF, un caso negativo, el historial, el desempeño del modelo y el alcance y las limitaciones.",
@@ -195,11 +195,13 @@
         "Aplicación web: tablero, cola de revisión, vista «Mi trabajo» y salud de las fuentes"
       ],
       "stats": [
-        { "value": "33", "label": "Fuentes de compras barridas" },
-        { "value": "19", "label": "Fuentes que antes no se veían" },
-        { "value": "28", "label": "Categorías de producto" },
-        { "value": "10k+", "label": "Tests automatizados" }
+        { "value": "Licitaciones", "label": "Gestión completa dentro del sistema" },
+        { "value": "Pliegos", "label": "Cotización y comparación" },
+        { "value": "Todo el país", "label": "Barrido de todos los portales de compras públicas para detectar licitaciones" }
       ],
+      "fig_value": "AR",
+      "fig_label": "Todos los portales de compras públicas",
+      "fig_note": "Gestión de licitaciones · cotización y comparación de pliegos",
       "demo_alt": "Video demo del Sistema de Licitaciones LEEX, sin sonido, 30 s, con datos de clientes y montos difuminados: detección automática con los barridos incompletos marcados, el descarte NO APTO, una ficha con su veredicto por requisito, el tablero, mi trabajo, la cola de revisión y la salud de las fuentes. En desarrollo, lanzamiento próximo.",
       "blur_note": "Datos de clientes y montos difuminados",
       "shots": [
@@ -313,7 +315,7 @@
         "year": "ago. 2026–presente",
         "company": "LEEX",
         "role": "Especialista en automatización",
-        "description": "Automatizo con IA los flujos de licitaciones y los documentos comerciales (fichas técnicas, folletos). Desarrollo webs SEO/GEO y agentes de IA para generar leads, y optimizo campañas de Google Ads y Meta."
+        "description": "Automatizo con IA los flujos de licitaciones y los documentos comerciales (fichas técnicas, folletos). Creo proyectos en Claude Cowork, agentes de IA para ventas y producto, bases de datos de producto con embeddings y bases de datos de los equipos para usar con IA generativa. Desarrollo webs SEO/GEO y agentes para generar leads, y optimizo campañas de Google Ads y Meta."
       },
       {
         "year": "ago. 2026–presente",
@@ -343,7 +345,7 @@
         "year": "dic. 2023–mar. 2024",
         "company": "Big Bear Mountain Resort",
         "role": "Técnico de alquiler de equipos",
-        "description": "Alquiler de equipos, mantenimiento técnico de rutina y atención al público, a tiempo completo en Big Bear Lake, California, en un entorno de trabajo solo en inglés."
+        "description": "Alquiler de equipos, mantenimiento técnico de rutina y atención al público en Big Bear Lake, California, en un entorno de trabajo solo en inglés."
       }
     ],
     "education_label": "Educación",
@@ -371,9 +373,15 @@
     "recognition": [
       {
         "year": "2026",
+        "institution": "AI Founders Lab",
+        "degree": "Finalista · TraumaVision AI",
+        "detail": "Organizado por Endeavor y Amazon Web Services (AWS)"
+      },
+      {
+        "year": "2026",
         "institution": "Emprende U 2026",
-        "degree": "TraumaVision AI",
-        "detail": "Concurso nacional de emprendimientos estudiantiles · proyecto en etapa de escalado"
+        "degree": "Semifinalista · TraumaVision AI",
+        "detail": "Concurso nacional de emprendimientos estudiantiles"
       },
       {
         "year": "2025",

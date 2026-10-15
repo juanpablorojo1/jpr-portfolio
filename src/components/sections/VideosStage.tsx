@@ -268,7 +268,8 @@ export default function VideosStage() {
   return (
     <section ref={ref} className="fv-gal" aria-labelledby="fv-h" style={{ height: `${FBF_SECTION_VH * 100}vh` }}>
       <div className="fv-stage">
-        <p className="fv-label" aria-hidden="true"><span className="fv-dot" />{t('label')}</p>
+        {/* el video horizontal de frente ocupa el margen izquierdo: el título se aparta (videos-senal.css) */}
+        <p className="fv-label" aria-hidden="true" data-land={fItem.width > fItem.height ? '' : undefined}><span className="fv-dot" />{t('label')}</p>
         <h2 id="fv-h" className="sr-only">{t('headline')}</h2>
 
         <div
