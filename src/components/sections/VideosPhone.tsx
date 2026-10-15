@@ -70,6 +70,7 @@ export default function VideosPhone() {
   const shadeRefs = useRef<(HTMLElement | null)[]>([]);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const floorRef = useRef<HTMLDivElement>(null);
+  const ctrlRef = useRef<HTMLDivElement>(null);
   const rot = useRef({ v: 0, target: 0 });
   const twRef = useRef<gsap.core.Tween | null>(null);
   const beatRef = useRef<gsap.core.Tween | null>(null);
@@ -183,6 +184,30 @@ export default function VideosPhone() {
     io.observe(scene);
     return () => io.disconnect();
   }, []);
+
+  /* F-04: el dock (Navbar, < 1024) no queda nunca sobre los controles. Mientras los controles cruzan la franja del dock
+     (su alto: 56 px + safe area, contra el borde inferior) html.fvm-ctrl-low lo retira (navbar.css), como el escritorio
+     retira el sonido global con fv-drum-ui. Afuera de esa franja el dock no cambia. Se mide en el mismo evento de scroll
+     (sin esperar un cuadro): el toque que sigue ya encuentra el control. */
+  useEffect(() => {
+    const ctrl = ctrlRef.current;
+    if (!phone || !ctrl) return;
+    const html = document.documentElement;
+    const dock = document.querySelector<HTMLElement>('.jnav-dock');
+    const check = () => {
+      const r = ctrl.getBoundingClientRect();
+      const low = r.height > 0 && r.top < innerHeight && r.bottom > innerHeight - (dock?.offsetHeight || 56);
+      if (low !== html.classList.contains('fvm-ctrl-low')) html.classList.toggle('fvm-ctrl-low', low);
+    };
+    check();
+    addEventListener('scroll', check, { passive: true });
+    addEventListener('resize', check);
+    return () => {
+      removeEventListener('scroll', check);
+      removeEventListener('resize', check);
+      html.classList.remove('fvm-ctrl-low');
+    };
+  }, [phone]);
 
   /* ---------- entrada del tambor: llega girando desde la cara anterior y se asienta en un latido ---------- */
   useEffect(() => {
@@ -442,7 +467,7 @@ export default function VideosPhone() {
           <span className="fvm-name" key={item.id}>{title}</span>
         </p>
 
-        <div className="fvm-ctrl">
+        <div ref={ctrlRef} className="fvm-ctrl">
           <button type="button" className="fvm-btn" onClick={() => go(-1)} aria-label={t('prev')}>
             <span aria-hidden="true">←</span>
           </button>
