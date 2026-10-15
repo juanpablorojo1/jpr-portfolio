@@ -14,8 +14,6 @@
 .ab .ab-dot { display: none; }
 /* punto de estado: el mismo cuadrado rojo del rótulo, quieto, en todos los anchos (antes verde, redondo y con ping: fuera de paleta) */
 .ab .ab-status-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
-.ab .ab-img { filter: grayscale(85%) contrast(1.05); }
-.ab .ab-light, .ab .ab-matte { display: none; }
 .ab .ab-fg { display: none; }
 .ab .ab-hz { display: none; }   /* horizonte: sólo celular (bloque al final) */
 
@@ -89,40 +87,10 @@
     position: absolute; right: var(--pad); top: calc(var(--rail) + clamp(10px, 1.4vh, 16px));
     width: calc(var(--ph) * .8); height: var(--ph); max-width: none; margin: 0; aspect-ratio: auto; overflow: hidden;
   }
-  /* foto del escenario de Rocking the Industry (2026-10-14): recortada en 4:5 desde el original, sin zoom en CSS */
-  /* La foto recibe la luz de la escena: la pared clara de la toma cae a la oscuridad y Juan queda como lo
-     iluminado. Sigue siendo la foto plana (sólo color y capas encima), la cara sin tocar y nítida. */
-  .ab .ab-frame { --fw: calc(var(--ph) * .8); }   /* ancho del marco */
-  .ab .ab-img { filter: grayscale(90%) contrast(1.08) brightness(.96); }
-  /* Fondo (pantalla y pared del escenario): un velo oscuro con la silueta recortada. La máscara es la silueta de esta
-     misma foto (about-rocking-the-industry-mask.webp, BiRefNet sobre el mismo recorte 4:5): la foto y el marco tienen
-     la misma proporción (fw × 1,25 fw, cover arriba), así que la máscara va a 100 % × 100 % sin corrimiento. */
-  .ab .ab-matte {
-    position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(180deg, rgba(16, 8, 8, .86), rgba(8, 8, 8, .92) 45%, rgba(8, 8, 8, .95));
-    -webkit-mask-image: linear-gradient(#000, #000), url(/images/about-rocking-the-industry-mask.webp);
-            mask-image: linear-gradient(#000, #000), url(/images/about-rocking-the-industry-mask.webp);
-    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
-    -webkit-mask-size: 100% 100%, 100% 100%;
-            mask-size: 100% 100%, 100% 100%;
-    -webkit-mask-position: 0 0, 0 0;
-            mask-position: 0 0, 0 0;
-    -webkit-mask-composite: xor; mask-composite: exclude;
-  }
-  /* sin máscaras compuestas el velo taparía la cara: entonces no va */
-  @supports (mask-composite: exclude) or (-webkit-mask-composite: xor) {
-    .ab .ab-matte { display: block; }
-  }
-  .ab .ab-light {
-    display: block; position: absolute; inset: 0; pointer-events: none;
-    background:
-      /* resto rojo del riel, que corre justo arriba del borde */
-      linear-gradient(180deg, rgba(232, 39, 42, .13), rgba(232, 39, 42, 0) 18%),
-      /* viñeta: los bordes del marco se hunden en la escena */
-      radial-gradient(ellipse 80% 72% at 50% 42%, rgba(8, 8, 8, 0) 45%, rgba(8, 8, 8, .7) 100%);
-    /* filo: una línea fina de luz fría, con el borde de arriba tomando el rojo */
-    box-shadow: inset 0 0 0 1px rgba(232, 228, 222, .08), inset 0 1px 0 rgba(232, 39, 42, .45);
-  }
+  /* Foto del About (Juan, 2026-10-14: «sin blanco y negro, cortala y que se difumine»): a color, sin filtro. El recorte
+     about-rocking-the-industry-cutout.webp ya trae el alfa: silueta BiRefNet erosionada 2 px y difuminada (sin el filo
+     blanco de la pantalla del escenario), color del borde tomado del interior, y fundido a negro del 60 al 97 % del alto
+     (el corte del muslo se pierde en el fondo). Sin marco, viñeta ni velo: la figura flota sobre la escena. */
   .ab .ab-meta {
     position: absolute; left: var(--pad); bottom: clamp(20px, 4vh, 44px);
     margin: 0; padding-top: 12px; gap: 16px; flex-wrap: nowrap;

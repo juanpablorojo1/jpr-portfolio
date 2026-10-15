@@ -189,21 +189,16 @@ export default function About() {
           </p>
         </div>
 
-        {/* Foto real, 2D plana, cara visible */}
+        {/* Foto real a color, Juan recortado del escenario: la figura flota sobre el fondo y se funde hacia abajo */}
         <div className="ab-photo relative mt-8">
           <div className="ab-frame relative aspect-[4/5] max-w-md mx-auto">
             {/* < 1024 la foto no se muestra: DeskOnlyImage no la pide en el teléfono (competía con el LCP del hero) */}
             <DeskOnlyImage
-              src="/images/about-rocking-the-industry.jpg"
+              src="/images/about-rocking-the-industry-cutout.webp"
               alt={t('photo_alt')}
               className="ab-img object-cover object-top"
               sizes="(max-width: 1023px) 80vw, 30vw"
             />
-            {/* ≥1024: la pared clara de la toma cae a la oscuridad (recorte del hero como máscara) y la escena
-                ilumina la foto (viñeta, resto rojo del riel, filo); about-senal.css */}
-            <div className="ab-matte" aria-hidden="true" />
-            <div className="absolute inset-0 bg-gradient-to-t from-bg/60 to-transparent" />
-            <div className="ab-light" aria-hidden="true" />
           </div>
 
           {/* Metadata bar */}
