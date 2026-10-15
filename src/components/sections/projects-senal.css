@@ -191,14 +191,16 @@
   /* D-08: Eleven no tiene cifras sino datos (fundación, clientes, enfoque): ficha vertical rótulo / valor */
   .pj-c-stats.pj-facts { display: grid; grid-template-columns: max-content max-content; gap: 0 22px; }
   .pj-c-stats.pj-facts > div { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: baseline; border-top: 1px solid var(--line); padding: 8px 0 7px; }
+  .pj-c-stats.pj-facts > div { column-gap: 22px; }   /* D-03: el gap 6px de .pj-c-stats div pisaba el del dl (rótulo largo pegado al valor) */
   .pj-c-stats.pj-facts > div:last-child { border-bottom: 1px solid var(--line); }
   .pj-c-stats.pj-facts dt { max-width: none; margin: 0; }
   .pj-c-stats.pj-facts dd { order: 0; font: 400 20px/1.1 var(--font-barlow-condensed), 'Arial Narrow', sans-serif; letter-spacing: .02em; color: #e8e4de; }
   /* logros con valores dobles («96,7% · 93,1%», TraumaVision): dos columnas parejas y el rótulo a lo ancho de la suya
      (a 15ch el rótulo largo se partía en cinco líneas); los valores alineados arriba en cada fila. Misma letra. */
-  .pj-c-stats.pj-long:has(> div:nth-child(4):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .pj-c-stats.pj-long > div { justify-content: flex-end; }   /* column-reverse: el valor arriba, alineado por fila */
-  .pj-c-stats.pj-long dt { max-width: none; }
+  /* D-04: cualquier grupo de cuatro (LEEX también) reparte así el ancho del bloque; antes LEEX quedaba en 94 px con rótulos de 3 líneas */
+  .pj-c-stats:not(.pj-facts):has(> div:nth-child(4):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pj-c-stats.pj-long > div, .pj-c-stats:not(.pj-facts):has(> div:nth-child(4):last-child) > div { justify-content: flex-end; }   /* column-reverse: el valor arriba, alineado por fila */
+  .pj-c-stats.pj-long dt, .pj-c-stats:not(.pj-facts):has(> div:nth-child(4):last-child) dt { max-width: none; }
   .pj-c-block .pj-c-stats + .pj-note { margin-top: 24px !important; }   /* la nota de alcance, separada del último logro */
   .pj-acts { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
   .pj-btn {
