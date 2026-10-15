@@ -235,6 +235,36 @@
     "sound": "Sonido del video",
     "sound_short": "Sonido",
     "items": {
+      "reel_type": {
+        "eyebrow": "Tipografía cinética",
+        "title": "Ocho verbos, un logo",
+        "caption": "El monograma se arma, se parte y se reordena en cada beat entre los verbos MUEVE, CORTA, ESTIRA y ENCAJA, en cobalto y verde ácido.",
+        "made_with": "Hecho con: Claude Code · HyperFrames · GSAP · FFmpeg. Monograma con sus trazados exactos, música de Pixabay"
+      },
+      "reel_liquid": {
+        "eyebrow": "Formas líquidas",
+        "title": "Del círculo al monograma",
+        "caption": "Un círculo fluye hasta volverse las piezas del monograma mientras inundaciones de color golpean en el beat, en tres tintas.",
+        "made_with": "Hecho con: Claude Code · HyperFrames · GSAP · FFmpeg. Monograma con sus trazados exactos, música de Pixabay"
+      },
+      "reel_ui": {
+        "eyebrow": "Motion de interfaz",
+        "title": "Logo en modo app",
+        "caption": "El monograma hace de ícono de app mientras una interfaz se arma con resortes, tarjetas y datos que se mueven en cada beat.",
+        "made_with": "Hecho con: Claude Code · HyperFrames · GSAP · FFmpeg. Monograma con sus trazados exactos, música de Pixabay"
+      },
+      "reel_3d": {
+        "eyebrow": "Física 3D",
+        "title": "Cae, choca, encaja",
+        "caption": "Las piezas del monograma en 3D caen en un estudio oscuro, chocan, rebotan y encajan exactas en el último beat.",
+        "made_with": "Hecho con: Claude Code · Remotion · React Three Fiber · Rapier · FFmpeg. Música de Pixabay"
+      },
+      "reel_sting": {
+        "eyebrow": "Firma de logo",
+        "title": "Cuatro técnicas, una firma",
+        "caption": "Sobre negro, el monograma se construye con letra, forma, interfaz y física, con la pierna en el rojo de marca.",
+        "made_with": "Hecho con: Claude Code · HyperFrames · GSAP · FFmpeg. Monograma con sus trazados exactos, música de Pixabay"
+      },
       "b6_story": {
         "eyebrow": "LEEX · Incubadora B6",
         "title": "De dónde viene la incubadora",

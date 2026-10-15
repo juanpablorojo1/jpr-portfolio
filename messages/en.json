@@ -235,6 +235,36 @@
     "sound": "Video sound",
     "sound_short": "Sound",
     "items": {
+      "reel_type": {
+        "eyebrow": "Kinetic type",
+        "title": "Eight verbs, one logo",
+        "caption": "The monogram assembles, splits and regroups on each beat among the Spanish verbs MUEVE, CORTA, ESTIRA and ENCAJA (move, cut, stretch, lock in), in cobalt and acid green.",
+        "made_with": "Made with: Claude Code · HyperFrames · GSAP · FFmpeg. Monogram from its exact vector paths, Pixabay music"
+      },
+      "reel_liquid": {
+        "eyebrow": "Fluid shapes",
+        "title": "From circle to monogram",
+        "caption": "A circle flows into the pieces of the monogram while floods of color hit on the beat, in three inks.",
+        "made_with": "Made with: Claude Code · HyperFrames · GSAP · FFmpeg. Monogram from its exact vector paths, Pixabay music"
+      },
+      "reel_ui": {
+        "eyebrow": "UI motion",
+        "title": "Logo in app mode",
+        "caption": "The monogram works as an app icon while an interface springs into place around it, with cards and data moving on each beat.",
+        "made_with": "Made with: Claude Code · HyperFrames · GSAP · FFmpeg. Monogram from its exact vector paths, Pixabay music"
+      },
+      "reel_3d": {
+        "eyebrow": "3D physics",
+        "title": "Drop, collide, lock in",
+        "caption": "The monogram's 3D pieces fall in a dark studio, collide and bounce, then lock into place on the last beat.",
+        "made_with": "Made with: Claude Code · Remotion · React Three Fiber · Rapier · FFmpeg. Pixabay music"
+      },
+      "reel_sting": {
+        "eyebrow": "Logo sting",
+        "title": "Four techniques, one signature",
+        "caption": "On black, the monogram builds itself from type, shape, interface and physics, with its leg in the brand red.",
+        "made_with": "Made with: Claude Code · HyperFrames · GSAP · FFmpeg. Monogram from its exact vector paths, Pixabay music"
+      },
       "b6_story": {
         "eyebrow": "LEEX · B6 incubator",
         "title": "Where the incubator came from",
