@@ -91,6 +91,10 @@
      about-rocking-the-industry-cutout.webp ya trae el alfa: silueta BiRefNet erosionada 2 px y difuminada (sin el filo
      blanco de la pantalla del escenario), color del borde tomado del interior, y fundido a negro del 60 al 97 % del alto
      (el corte del muslo se pierde en el fondo). Sin marco, viñeta ni velo: la figura flota sobre la escena. */
+  /* «con poca opacidad» (Juan, 2026-10-15): presencia de fondo, detrás del texto. Va en la imagen y no en .ab-frame,
+     que es lo que anima la entrada (GSAP lo lleva a 1): así la entrada termina en este valor. Probado 0,25–0,4 a 1536×730:
+     a 0,32 la cara se reconoce y la figura queda claramente detrás del contenido. */
+  .ab .ab-img { opacity: .32; }
   .ab .ab-meta {
     position: absolute; left: var(--pad); bottom: clamp(20px, 4vh, 44px);
     margin: 0; padding-top: 12px; gap: 16px; flex-wrap: nowrap;
