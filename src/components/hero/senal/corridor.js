@@ -4,7 +4,7 @@
    «Vitrina» con una laptop íntegra por proyecto). Lo que queda acá es la parte que no es de Projects:
    - el sistema de coordenadas del pasillo (`group`, girado 90°, con su origen sobre la recta del About), en el que
      viven Frame by Frame (projector.js), Stack, Experience y Contact;
-   - el riel (la recta del About que sigue a la izquierda) con su cabezal, el piso de puntos y el polvo del tramo final;
+   - el riel (la recta del About que sigue a la izquierda) con su cabezal y el polvo del tramo final (sin piso desde 2026-10-15);
    - el post (DOF + bloom del rojo + viñeta + grano) que usan las secciones que siguen.
    Projects es vitrina.js: cuatro laptops en el vacío (sin paredes), la señal que dibuja cada vitrina y la salida, que
    corre por el riel hasta el umbral donde Frame by Frame recibe el cabezal (la misma toma de antes en u = GAL_END).
@@ -58,7 +58,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const redFar = uniform(1), redNear = uniform(1), ambX = uniform(0), roomI = uniform(0), dotK = uniform(0);
   // post (más abajo); acá porque el polvo de la sala (projector.js) también los lee
   const focusU = uniform(7), rangeU = uniform(1.6), bokehU = uniform(12.0), voidK = uniform(0), grainK = uniform(0), farK = uniform(50);
-  // el tramo del riel (piso, polvo, grano): aparece con la salida de Projects; en la vitrina no hay piso ni grano
+  // el tramo del riel (grano): aparece con la salida de Projects; en la vitrina no hay grano
   const fbfK = uniform(0);
   // polvo del tramo final: recién en Video (R3-02: en la salida de Projects eran ~1150 motas fuera de cualquier haz)
   const dustK = uniform(0);
@@ -80,31 +80,15 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const fogF = (k = 1) => float(1).sub(exp(distance(positionWorld, cameraPosition).mul(-0.05 * k)));
   const withFog = (c, k = 1) => mix(c, FOG, fogF(k));
 
-  const FLOOR_NEAR = Z_IN + 4, FLOOR_FAR = Z_END - 120;   // sigue bajo la sala de proyección (projector.js)
-  const floorMat = new THREE.MeshBasicNodeMaterial({ transparent: true });
-  {
-    const p = toL(positionWorld);
-    const d = length(fract(p.xz.div(0.6)).sub(0.5));
-    // los puntos cercanos a cámara se apagan (fuera de foco eran discos de bokeh en el tercio inferior)
-    const dots = float(1).sub(smoothstep(0.02, 0.06, d))
-      .mul(float(1).sub(dotK.mul(float(1).sub(smoothstep(2.2, 7.5, distance(positionWorld, cameraPosition))))));
-    const seam = smoothstep(0.985, 1.0, abs(fract(p.z.div(1.2)).sub(0.5)).mul(2)).mul(0.5);
-    const alb = float(0.07).add(dots.mul(0.6)).add(seam.mul(0.12));
-    const edge = smoothstep(FLOOR_NEAR, FLOOR_NEAR - 5, p.z);
-    // el borde lejano (y los laterales) se funden al fondo del render (#080808 lineal) (D-15)
-    const farEdge = smoothstep(FLOOR_FAR, FLOOR_FAR + 60, p.z).mul(smoothstep(45, 33, abs(p.x)));
-    floorMat.colorNode = mix(vec3(0.00243), withFog(lightAt(p).mul(alb).add(float(0.0018).mul(appear)).mul(edge)), farEdge);
-    // en la vitrina no hay piso (el vacío): aparece con la salida, bajo el riel que lleva a la sala
-    floorMat.opacityNode = fbfK;
-  }
+  /* Sin piso (2026-10-15, Juan: «eliminar ese piso gris que se ve en la galeria de videos»). El tramo final ya no tiene
+     la superficie gris con su retícula de puntos: el riel, la señal y el tambor flotan en el mismo vacío negro que la
+     vitrina. La señal roja (projector.js) sigue corriendo a ras del plano y la perspectiva sola la sostiene; el charco
+     de luz del video era del piso y se fue con él. */
   const metalMat = new THREE.MeshBasicNodeMaterial();
   metalMat.colorNode = withFog(lightAt(toL(positionWorld)).mul(0.2).add(float(0.004).mul(appear)));
   const housingMat = new THREE.MeshBasicNodeMaterial();
   housingMat.colorNode = withFog(lightAt(toL(positionWorld)).mul(0.075).add(float(0.003).mul(appear)));
 
-  const floorM = new THREE.Mesh(new THREE.PlaneGeometry(90, FLOOR_NEAR - FLOOR_FAR), floorMat);
-  floorM.position.set(0, 0, (FLOOR_NEAR + FLOOR_FAR) / 2); floorM.rotation.set(-Math.PI / 2, 0, 0); floorM.renderOrder = -2;
-  group.add(floorM);
   await yieldToMain();
   if (!alive()) return null;
 
@@ -278,7 +262,6 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     roomI.value = 0.55 * smooth(LAST_OUT + 0.2, LAST_OUT + 1.0, u) * (1 - 0.5 * smooth(FBF_BEAM[0], FBF_BEAM[1] + 0.3, u));
     dotK.value = thr;
     fbfK.value = smooth(LAST_OUT + 0.3, GAL_END - 0.05, u);
-    floorM.visible = fbfK.value > 0.001;
     dustK.value = smooth(GAL_END - 0.1, GAL_END + 0.4, u);
     dust.visible = dustK.value > 0.001;
     const fbfMid = smooth(FBF_INTRO[0], FBF_INTRO[1], u) * (1 - smooth(FBF_OFF - 0.2, FBF_OFF + 0.2, u));

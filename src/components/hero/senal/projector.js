@@ -165,8 +165,12 @@ export async function buildProjector({
     const d = length(max(abs(p).sub(vec2(1 / spread, 1 / spread)), 0).mul(spread));
     // caída gaussiana y ventana que llega a cero en el borde del plano: sin rectángulo visible (la costura de la maqueta)
     const edge = float(1).sub(smoothstep(0.55, 1.0, abs(p.x))).mul(float(1).sub(smoothstep(0.55, 1.0, abs(p.y))));
+    // sin piso (2026-10-15): la mitad de abajo del halo ya no la tapa nada y bajaba como una columna de luz detrás de
+    // los controles (el lugar de R7-02). Se apaga suave bajo el zócalo, donde antes cortaba el piso: luz alrededor del
+    // objeto, nada colgando en el vacío
+    const under = smoothstep(-0.55, 0.12, toL(positionWorld).y);
     const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
-    m.colorNode = avg.mul(exp(d.mul(d).mul(-3.2)).mul(edge)).mul(u.halo).mul(appear);
+    m.colorNode = avg.mul(exp(d.mul(d).mul(-3.2)).mul(edge).mul(under)).mul(u.halo).mul(appear);
     m.opacityNode = float(1);
     return { m, tn };
   }
