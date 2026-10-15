@@ -83,10 +83,15 @@
   /* el bloque de la foto se disuelve (display: contents): la foto va a la derecha y la ficha al pie de la columna de texto;
      bajo la foto, a 1200 en ES, la ficha se partía en dos filas y la edad quedaba fuera del frame */
   .ab .ab-photo { display: contents; }
+  /* «más grande» (Juan, 2026-10-15): la figura a 1,6× (1,28 ph × 1,6 ph, 4:5 como el recorte), apoyada en el mismo pie
+     de antes y creciendo hacia arriba, detrás del titular y del texto (z-index). Pegada al borde derecho: con el margen,
+     a 1440×900 la cara caía detrás de «PRODUCTO». Medido: a 1536×730 el marco va de y 112 a 697 y la cabeza empieza en
+     ~140 (nav hasta 65); a 1440×900, de y 153 a 873, cabeza en ~190. Sin overflow horizontal (right: 0). */
   .ab .ab-frame {
-    position: absolute; right: var(--pad); top: calc(var(--rail) + clamp(10px, 1.4vh, 16px));
-    width: calc(var(--ph) * .8); height: var(--ph); max-width: none; margin: 0; aspect-ratio: auto; overflow: hidden;
+    position: absolute; right: 0; top: calc(var(--rail) + clamp(10px, 1.4vh, 16px) - var(--ph) * .6); z-index: 0;
+    width: calc(var(--ph) * 1.28); height: calc(var(--ph) * 1.6); max-width: none; margin: 0; aspect-ratio: auto; overflow: hidden;
   }
+  .ab .ab-top, .ab .ab-body, .ab .ab-meta { z-index: 1; }
   /* Foto del About (Juan, 2026-10-14: «sin blanco y negro, cortala y que se difumine»): a color, sin filtro. El recorte
      about-rocking-the-industry-cutout.webp ya trae el alfa: silueta BiRefNet erosionada 2 px y difuminada (sin el filo
      blanco de la pantalla del escenario), color del borde tomado del interior, y fundido a negro del 60 al 97 % del alto
@@ -94,7 +99,8 @@
   /* «con poca opacidad» (Juan, 2026-10-15): presencia de fondo, detrás del texto. Va en la imagen y no en .ab-frame,
      que es lo que anima la entrada (GSAP lo lleva a 1): así la entrada termina en este valor. Probado 0,25–0,4 a 1536×730:
      a 0,32 la cara se reconoce y la figura queda claramente detrás del contenido. */
-  .ab .ab-img { opacity: .32; }
+  /* «en blanco y negro» (Juan, 2026-10-15): grises completos con contraste para que los negros no queden lavados */
+  .ab .ab-img { opacity: .32; filter: grayscale(1) contrast(1.2); }
   .ab .ab-meta {
     position: absolute; left: var(--pad); bottom: clamp(20px, 4vh, 44px);
     margin: 0; padding-top: 12px; gap: 16px; flex-wrap: nowrap;
