@@ -18,16 +18,15 @@ type Def = {
   loop?: boolean;            // lecho (zumbido): loopSound, no bloquea ni es bloqueado
 };
 
-/* Volúmenes: un solo número por id. ui-, air- y sig-: finales del director (volumenes-finales.md, 2026-10-15);
-   mat-: los del mapa hasta que cierre D3. */
+/* Volúmenes: un solo número por id; los 18 son los finales del director (volumenes-finales.md, 2026-10-15). */
 const SOUNDS = {
   // materia: lente, cenital, bisagra, tambor, zumbido
   'mat-focus': { vol: 0.35, gap: 280, prio: 2, scene: true, vary: [0.02, 0.1] },     // rack focus en cada cambio de modo
-  'mat-spot': { vol: 0.55, gap: 400, prio: 1, scene: true, vary: [0.03, 0.08] },     // el cenital se enciende
-  'mat-hinge': { vol: 0.4, gap: 300, prio: 2, scene: true, vary: [0.03, 0.08] },     // la tapa termina de cerrarse
+  'mat-spot': { vol: 0.7, gap: 400, prio: 1, scene: true, vary: [0.03, 0.08] },     // el cenital se enciende
+  'mat-hinge': { vol: 0.5, gap: 300, prio: 2, scene: true, vary: [0.03, 0.08] },     // la tapa termina de cerrarse
   'mat-hum': { vol: 0.2, gap: 0, prio: 3, loop: true },                               // zumbido de la laptop encendida
   'mat-drum': { vol: 0.45, gap: 150, prio: 2, vary: [0.03, 0] },                      // el Tambor empieza a girar
-  'mat-detent': { vol: 0.3, gap: 90, prio: 3, vary: [0.04, 0.1] },                    // una cara encastra al frente
+  'mat-detent': { vol: 0.55, gap: 90, prio: 3, vary: [0.04, 0.1] },                    // una cara encastra al frente
   // aire: la cámara entre secciones
   'air-section': { vol: 0.45, gap: 1500, prio: 1, scene: true, vary: [0.02, 0] },    // entrada a Video, Stack, Experience
   'air-jump': { vol: 0.4, gap: 800, prio: 1, vary: [0.02, 0], hold: 1600 },           // salto del menú, logo, volver arriba
