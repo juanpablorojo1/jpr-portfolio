@@ -8,9 +8,11 @@
    gira SÓLO si el usuario lo pide (S.fbf.rot lo escribe VideosStage.tsx: flechas, ← →, arrastre) y da la vuelta
    completa. La cara de frente queda casi de frente (órbita ±4°) y grande; las vecinas se ven de canto, así que a mitad
    de un giro hay dos caras a ±36° y nunca un hueco en el centro. Al girar, la cámara se aleja y sube un poco y vuelve.
-   El video horizontal (comparación de modelos) sale de su cara y se abre a 16:9 delante del tambor.
-   10 videos, 5 caras (2026-10-14, opción A de Juan: «Mismo tambor, 10 videos»): el prisma no cambia; S.fbf.rot es el
-   paso lógico. Cara de frente = paso mod 5, video = paso mod 10, giro infinito. Cada cara muestra el video del paso más
+   Cada video horizontal sale de su cara y se abre a 16:9 delante del tambor (un solo 16:9 que se muda a la cara de
+   frente que tenga un horizontal; 2026-10-15: son tres, la demo de licitaciones, el trailer LEEX × KIBBO y la
+   comparación de modelos). N videos, 5 caras (2026-10-14, opción A de Juan: «Mismo tambor, 10 videos»; 12 desde el
+   2026-10-15): el prisma no cambia; S.fbf.rot es el paso lógico. Cara de frente = paso mod 5, video = paso mod N, giro
+   infinito. Cada cara muestra el video del paso más
    cercano que le toca (paso ≡ cara mod 5): ese paso cambia sólo cuando la cara cruza los 180° (de espaldas, tapada por
    el resto del prisma), y ahí se le reasigna video y textura. Nunca hay un cambio a la vista.
    Haz rojo tenue (Juan: «(a) Tenue») desde arriba y adelante: al salir se descompone en los puntos de Stack.
@@ -44,12 +46,13 @@ const damp = (a, b, l, dt) => a + (b - a) * (1 - Math.exp(-l * dt));
 const easeIO = (x) => 0.5 - 0.5 * Math.cos(Math.PI * clamp01(x));
 const mod = (a, n) => ((a % n) + n) % n;
 const N = 5;                                         // caras del prisma (fijo: la geometría que eligió Juan)
-const NV = VIDEOS.length;                            // videos que recorre (10)
+const NV = VIDEOS.length;                            // videos que recorre (12)
 /** pasos de la cara k al frente, en [-N/2, N/2): ±2,5 = de espaldas (180°) */
 const relOf = (k, r) => mod(k - r + N / 2, N) - N / 2;
 /** el video que muestra la cara k con el tambor en r: el del paso más cercano que cae en esa cara */
 const vidOf = (k, r) => mod(Math.round(r + relOf(k, r)), NV);
-const LANDJ = VIDEOS.findIndex((v) => v.width > v.height);
+/** el video j es horizontal: en la cara se ve su centro y, con el tambor quieto, se abre a 16:9 */
+const isLand = (j) => VIDEOS[j].width > VIDEOS[j].height;
 const SRC_IN = 1.5, SRC_OUT = 1.9;                   // src cuando la cara puede llegar al frente; se suelta lejos de él
 const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
 
@@ -89,10 +92,14 @@ export async function buildProjector({
 
   /* ---------- pósters (las texturas hasta que el video tiene su primer cuadro) ---------- */
   const loadImg = (src) => new Promise((res, rej) => { const i = new Image(); i.decoding = 'async'; i.onload = () => res(i); i.onerror = rej; i.src = src; });
-  // al armar: los de las cinco caras de arranque (y el horizontal); el resto, en segundo plano apenas está el tambor
+  // al armar: los de las cinco caras de arranque; el resto, en segundo plano apenas está el tambor
   const r0 = (S.fbf && S.fbf.rot) || 0;
   const posterTex = VIDEOS.map(() => null), posterReq = VIDEOS.map(() => null);
-  const first = [...new Set([...Array.from({ length: N }, (_, k) => vidOf(k, r0)), ...(LANDJ >= 0 ? [LANDJ] : [])])];
+  /** un <video> por video (ver «videos» más abajo); arriba porque el 16:9 lee su textura al colgarse */
+  const vids = VIDEOS.map(() => null);
+  /** lo que muestra el video j: su textura de video si ya tiene cuadro, si no su póster */
+  const texOf = (j) => (vids[j] && vids[j].tex) || posterTex[j];
+  const first = [...new Set(Array.from({ length: N }, (_, k) => vidOf(k, r0)))];
   const firstImgs = await Promise.all(first.map((j) => loadImg(VIDEOS[j].poster)));
   if (!alive()) return null;
   first.forEach((j, i) => { posterTex[j] = sharp(new THREE.Texture(firstImgs[i])); });
@@ -212,31 +219,37 @@ export async function buildProjector({
   });
 
   /* ---------- la cara horizontal: sale del tambor y se abre a 16:9 delante ----------
-     Cuelga de la cara que tiene el video horizontal (se muda de cara sólo con el 16:9 cerrado). */
+     Un solo 16:9 para todos los horizontales: cuelga de la cara de frente cuando su video es horizontal y toma su
+     textura y su proporción (se muda de cara o de video sólo con el 16:9 cerrado). */
   let wide = null;
-  if (LANDJ >= 0) {
-    const vd = VIDEOS[LANDJ];
-    const asp = vd.width / vd.height;
-    const H2 = H * 0.86, W2 = H2 * asp;
+  if (VIDEOS.some((_, j) => isLand(j))) {
+    const H2 = H * 0.86;
     const u = mkU();
-    const sc = screenMat(posterTex[LANDJ], 1, u);
+    const t0 = posterTex[first[0]];
+    const sc = screenMat(t0, 1, u);
     const scr = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), sc.m);
     scr.renderOrder = 3; scr.visible = false;
     const bz = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), bezelM);
     bz.visible = false;
-    const rf = reflMat(posterTex[LANDJ], u);
+    const rf = reflMat(t0, u);
     const refl = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), rf.m);
     refl.renderOrder = -1; refl.visible = false;
-    wide = { u, scr, bz, refl, H2, W2, asp, e: 0, f: null, nodes: [sc.tn, rf.tn] };
+    wide = { u, scr, bz, refl, H2, W2: H2, asp: 1, j: -1, e: 0, f: null, nodes: [sc.tn, rf.tn] };
   }
-  /** cuelga el 16:9 de la cara f */
+  /** cuelga el 16:9 de la cara f, con el video que muestra esa cara */
   function hangWide(f) {
     wide.f = f;
-    if (!f) return;
+    if (!f) { wide.j = -1; return; }
+    wide.j = f.j;
+    const vd = VIDEOS[f.j];
+    wide.asp = vd.width / vd.height; wide.W2 = wide.H2 * wide.asp;
+    const t = texOf(f.j);
+    if (t) wide.nodes.forEach((n) => { n.value = t; });
     f.g.add(wide.scr, wide.bz);
     if (REFL) f.g.add(wide.refl);
   }
-  if (wide) hangWide(faces.find((f) => f.j === LANDJ) || null);
+  // al armar ya cuelga de una cara (warm lo compila con el resto); la de frente si es horizontal
+  if (wide) hangWide(faces.find((f) => f.k === mod(Math.round(r0), N) && isLand(f.j)) || faces.find((f) => isLand(f.j)) || faces[0]);
   await yieldToMain();
   if (!alive()) return null;
 
@@ -364,15 +377,12 @@ export async function buildProjector({
   /* ---------- videos: fuera del DOM, mudos, en loop; src recién cuando su cara puede llegar al frente ----------
      Uno por video (no por cara). El que se aleja del frente suelta su src (removeAttribute + load) y su textura: con las
      vueltas la memoria no crece (a lo sumo las tres caras que pueden llegar al frente tienen src). */
-  const vids = VIDEOS.map(() => null);
-  /** lo que muestra el video j: su textura de video si ya tiene cuadro, si no su póster */
-  const texOf = (j) => (vids[j] && vids[j].tex) || posterTex[j];
   /** apunta las caras (y el 16:9) que muestran el video j a su textura actual */
   function showVid(j) {
     const t = texOf(j);
     if (!t) return;
     faces.forEach((f) => { if (f.j === j) f.nodes.forEach((n) => { n.value = t; }); });
-    if (wide && j === LANDJ) wide.nodes.forEach((n) => { n.value = t; });
+    if (wide && j === wide.j) wide.nodes.forEach((n) => { n.value = t; });
   }
   /** póster del video entrante: se pide antes de que su cara llegue a los 180° (en segundo plano, una vez) */
   function loadPoster(j) {
@@ -407,7 +417,7 @@ export async function buildProjector({
       const t = posterTex[f.j] || posterTex[j];
       f.nodes.forEach((n) => { n.value = t; });
     });
-    if (wide && wide.nodes[0].value === r.tex) wide.nodes.forEach((n) => { n.value = posterTex[LANDJ]; });
+    if (wide && wide.nodes[0].value === r.tex) wide.nodes.forEach((n) => { n.value = posterTex[wide.j] || posterTex[j]; });
     dropTex(r.tex);
   }
   function ensureVideo(k) {
@@ -521,7 +531,7 @@ export async function buildProjector({
     hall.visible = on;
     const ready = on && gw > 0.5;
     lookW.value = on ? gw * (1 - smooth(FBF_OFF + 0.1, FBF_END, u)) : 0;
-    if (!on) { st.active = -1; S.fbf.active = -1; scrI.value = 0; pauseAll(); return null; }
+    if (!on) { st.active = -1; S.fbf.active = -1; S.fbf.wide = 0; scrI.value = 0; pauseAll(); return null; }
     camL.value.copy(P);                               // P ya está en coordenadas del pasillo (camPose)
 
     // giro: S.fbf.rot (continuo) lo escribe el HTML con su tween. Reduced motion: corte con fundido.
@@ -599,12 +609,14 @@ export async function buildProjector({
 
     // la cara horizontal sale cuando el usuario se queda en ella (estadía, sin arrastrar, tambor quieto)
     if (wide) {
-      const wf = faces.find((f) => f.j === LANDJ) || null;
-      if (wf !== wide.f && wide.e < 0.002) hangWide(wf);
+      const ff = faces[mod(Math.round(st.rot), N)];
+      const wf = isLand(ff.j) ? ff : null;
+      if ((wf !== wide.f || (wf && wf.j !== wide.j)) && wide.e < 0.002) hangWide(wf);
       const WF = wide.f;
       const near = Math.abs(st.rot - Math.round(st.rot)) < 0.03;
-      const settled = !!WF && WF.j === LANDJ && mod(Math.round(st.rot), NV) === LANDJ && near && !S.fbf.drag && WF.pw > 0.99 && u > FBF_STAY[0] && u < FBF_STAY[1] + 0.05;
+      const settled = !!WF && WF.j === wide.j && isLand(WF.j) && mod(Math.round(st.rot), NV) === WF.j && near && !S.fbf.drag && WF.pw > 0.99 && u > FBF_STAY[0] && u < FBF_STAY[1] + 0.05;
       wide.e = rm ? (settled ? 1 : 0) : damp(wide.e, settled ? 1 : 0, settled ? 2.6 : 8, dt);
+      S.fbf.wide = wide.e;                            // VideosStage funde el título sólo con el 16:9 abierto
       const e = sm(clamp01(wide.e));
       const sw = lerp(W, wide.W2, e), sh = lerp(H, wide.H2, e);
       const vis = wide.e > 0.002 && !!WF;

@@ -237,6 +237,18 @@
     "sound": "Sonido del video",
     "sound_short": "Sonido",
     "items": {
+      "leex_bids_demo": {
+        "eyebrow": "LEEX · Demo de producto",
+        "title": "Sistema de Licitaciones LEEX",
+        "caption": "Recorrido por el sistema en ocho pasos: detecta licitaciones de equipamiento médico en los portales de compras públicas, la IA aparta las que están fuera de rubro, ordena por vencimiento, compara el pliego con el catálogo, arma la cotización con precio, IVA y total, y exporta el PDF para adjuntar. Después sigue cada licitación por etapa, avisa aperturas y cambios, y cierra con el tablero del equipo y el estado de cada portal.",
+        "made_with": "Hecho con: Remotion. Pantallas del Sistema de Licitaciones LEEX"
+      },
+      "leex_kibbo_trailer": {
+        "eyebrow": "LEEX × KIBBO · Trailer",
+        "title": "Trailer LEEX × KIBBO",
+        "caption": "Presenta a LEEX y a KIBBO, su plataforma de gestión de equipos hospitalarios. Parte de los problemas de siempre en un hospital (equipos sin ubicar, accesorios equivocados, inventarios obsoletos) y recorre la app con capturas reales: QR en cada equipo, reporte de fallas desde el celular, estado en tiempo real, órdenes y preventivos, compra de accesorios en la tienda de LEEX, equipos de cualquier fabricante y un tablero para decidir qué reparar o dar de baja.",
+        "made_with": "Hecho con: Remotion. Capturas reales de app.kibbo.io"
+      },
       "reel_type": {
         "eyebrow": "Tipografía cinética",
         "title": "Ocho verbos, un logo",

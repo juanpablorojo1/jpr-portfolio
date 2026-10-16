@@ -53,7 +53,7 @@ export type Senal = {
       sound: el video de frente suena (toggle del HTML; apagado por defecto). active: cara de frente en la estadía
       (−1 ninguna; escena). hover: cara de frente bajo el puntero (−1; escena): el clic pausa. paused: el usuario
       pausó los videos (HTML, WCAG 2.2.2). tags/open: sin uso (no hay rótulos ni diálogo). live: armado y se dibuja. */
-  fbf: { rot: number; drag: boolean; sound: boolean; tags: HTMLElement[]; active: number; hover: number; paused: boolean; open: number; live: boolean };
+  fbf: { rot: number; drag: boolean; sound: boolean; tags: HTMLElement[]; active: number; hover: number; paused: boolean; open: number; live: boolean; wide: number };
   /** Stack «la red por capas»: lo comparten el HTML (StackStage.tsx) y la escena (network.js).
       items: los rótulos de cada capa (uno por nodo con nombre; la escena les escribe la posición y data-on en el
       mismo frame del render). active: capa en estadía (−1 ninguna; escena). live: la red está armada y se dibuja. */
@@ -166,7 +166,7 @@ export function createSignal(search: string): Senal {
     inView: true,
     onView: () => {},
     neg: { tags: [], open: -1, hover: -1, live: false, paused: false },
-    fbf: { rot: 0, drag: false, sound: false, tags: [], active: -1, hover: -1, paused: false, open: -1, live: false },
+    fbf: { rot: 0, drag: false, sound: false, tags: [], active: -1, hover: -1, paused: false, open: -1, live: false, wide: 0 },
     stk: { items: [], active: -1, live: false },
     exp: { v0: NaN, counts: [0, 0, 0], tags: [], box: [], live: false },
     ctc: { v0: NaN, dot: null, hover: false, press: false, live: false },
