@@ -558,7 +558,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
       if (T1 > 0.02) want = false;
       lidA *= 1 - easeIO(range(T1, 0.0, k < N - 1 ? 0.24 : 0.3));
       // luz real, en tiempo real: golpe de lámpara al encender; al apagar cae en ~0,4 s (corte, no fundido)
-      if (want && !lap.on) { lap.on = true; lap.onT0 = t; if (gw > 0.5) playSound('mat-spot'); }
+      if (want && !lap.on) { lap.on = true; lap.onT0 = t; }   // sin golpe al llegar (Juan, 2026-10-15)
       if (!want && lap.on) { lap.on = false; }
       if (lap.on) lap.light = RM ? 1 : Math.min(flicker(t - lap.onT0), 1);
       else lap.light = lap.light < 0.004 ? 0 : lap.light * Math.exp(-rdt / 0.085);

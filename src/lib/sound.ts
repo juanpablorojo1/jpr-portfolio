@@ -18,11 +18,11 @@ type Def = {
   loop?: boolean;            // lecho (zumbido): loopSound, no bloquea ni es bloqueado
 };
 
-/* Volúmenes: un solo número por id; los 18 son los finales del director (volumenes-finales.md, 2026-10-15). */
+/* Volúmenes: un solo número por id; los 17 son los finales del director (volumenes-finales.md, 2026-10-15).
+   Sin mat-spot: «No me gustan los golpes al llegar a las laptop, sacalos» (Juan, 2026-10-15). */
 const SOUNDS = {
   // materia: lente, cenital, bisagra, tambor, zumbido
   'mat-focus': { vol: 0.35, gap: 280, prio: 2, scene: true, vary: [0.02, 0.1] },     // rack focus en cada cambio de modo
-  'mat-spot': { vol: 0.7, gap: 400, prio: 1, scene: true, vary: [0.03, 0.08] },     // el cenital se enciende
   'mat-hinge': { vol: 0.5, gap: 300, prio: 2, scene: true, vary: [0.03, 0.08] },     // la tapa termina de cerrarse
   'mat-hum': { vol: 0.2, gap: 0, prio: 3, loop: true },                               // zumbido de la laptop encendida
   'mat-drum': { vol: 0.45, gap: 150, prio: 2, vary: [0.03, 0] },                      // el Tambor empieza a girar

@@ -55,9 +55,9 @@ width = 800; sessionStorage.s['jpr-sound'] = '1'; S.restoreSound(); await tick()
 ok(H.created.length === 0, 'restaurar por debajo de 1024: 0 Howl creados');
 S.setSound(false); width = 1440;
 
-// 3. encender con clic: carga 18 ids con [webm, m4a] y suena ui-on una vez
+// 3. encender con clic: carga 17 ids con [webm, m4a] y suena ui-on una vez
 S.setSound(true); await tick(); await tick(); await tick();
-ok(H.created.length === 18, `encendido: ${H.created.length} Howl creados`);
+ok(H.created.length === 17, `encendido: ${H.created.length} Howl creados`);
 ok(count('ui-on') === 1, 'ui-on suena una vez al terminar la carga');
 
 // 4. P1 calla todo 250 ms
