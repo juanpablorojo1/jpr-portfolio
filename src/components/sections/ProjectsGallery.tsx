@@ -124,13 +124,14 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       let openK = -1;
       let lastFocus: HTMLElement | null = null;
       let restoring = false;
+      let hoverQuiet = 0;   // sonido: al abrir o cerrar el caso el panel se mueve bajo el puntero quieto (S-01)
       // dentro del panel se scrollea el panel; fuera, nada
       const blockScroll = (e: Event) => { if (openK >= 0 && !(e.target as HTMLElement).closest?.('.pj-panel')) e.preventDefault(); };
       const SCROLL_KEYS = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' ']);
       const otherModal = () => Array.from(document.querySelectorAll('[aria-modal="true"]')).some((d) => !d.classList.contains('pj-panel'));
       const openCase = (k: number) => {
         if (openK === k) return;
-        playSound('ui-open');
+        playSound('ui-open'); hoverQuiet = performance.now() + 400;
         if (openK >= 0) closeCase(true);
         openK = k;
         lastFocus = document.activeElement as HTMLElement | null;
@@ -160,7 +161,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         const p = panels[k];
         gsap.to(p, { opacity: 0, duration: 0.35, ease: 'expo.out', overwrite: true, onComplete: () => { if (openK !== k) p.removeAttribute('data-open'); } });
         if (!silent) {
-          playSound('ui-close');
+          playSound('ui-close'); hoverQuiet = performance.now() + 400;
           // vuelve a donde estaba el foco; si se abrió con clic en la placa, a la entrada del caso en su rótulo
           const back = lastFocus && lastFocus !== document.body && document.contains(lastFocus) ? lastFocus : tags[k].querySelector<HTMLElement>('.pj-view');
           restoring = true; back?.focus({ preventScroll: true }); restoring = false;
@@ -173,7 +174,7 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       section.addEventListener('click', onOpenClick);
       // sonido (lib/sound.ts): el puntero fino que entra en «Ver proyecto» (no el foco de teclado)
       const onViewOver = (e: PointerEvent) => {
-        const v = e.pointerType === 'mouse' ? (e.target as HTMLElement).closest('.pj-view') : null;
+        const v = e.pointerType === 'mouse' && performance.now() > hoverQuiet ? (e.target as HTMLElement).closest('.pj-view') : null;
         if (v && !v.contains(e.relatedTarget as Node | null)) playSound('ui-hover');
       };
       section.addEventListener('pointerover', onViewOver);
