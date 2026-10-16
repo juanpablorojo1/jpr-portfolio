@@ -315,15 +315,15 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
       // en la vitrina suenan el cenital y la bisagra (vitrina.js); el rack focus queda para Frame by Frame en adelante
       if (st8.mode && st8.liveDone && gw > 0.5 && !/^(relay|enter|exit|stay)/.test(mode)) {
         // sonido del cambio (contenido/2026-10-15-sfx/mapa-gesto-sonido.md §A y §B): bajando, la entrada a Video, Stack y
-        // Experience es aire; el anillo del Tambor, cada latido de Experience y la convergencia de Contact son señal;
-        // todo lo demás, y todo hacia arriba, es el rack focus
+        // Experience no suena (Juan, 2026-10-15: «air-section: sin sonido»); el anillo del Tambor, cada latido de
+        // Experience y la convergencia de Contact son señal; todo lo demás, y todo hacia arriba, es el rack focus
         const p = st8.mode;
         const snd = (mode === 'fbf-run' && !/^fbf-/.test(p)) || (mode === 'stk-connect' && !/^stk/.test(p))
-          || (mode === 'exp-intro' && !/^exp-/.test(p)) ? 'air-section'
+          || (mode === 'exp-intro' && !/^exp-/.test(p)) ? null
           : mode === 'fbf-drum' && p !== 'fbf-end' ? 'sig-ring'
           : /^exp-(r\d+|edu|rec)$/.test(mode) ? 'sig-beat'
           : mode === 'ctc' ? 'sig-converge' : 'mat-focus';
-        playSound(snd, { rate: snd === 'mat-focus' ? (fT > st8.focus ? 0.92 : 1.1) : 1 });
+        if (snd) playSound(snd, { rate: snd === 'mat-focus' ? (fT > st8.focus ? 0.92 : 1.1) : 1 });
       }
       st8.mode = mode;
     }

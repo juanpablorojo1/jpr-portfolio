@@ -55,14 +55,14 @@ width = 800; sessionStorage.s['jpr-sound'] = '1'; S.restoreSound(); await tick()
 ok(H.created.length === 0, 'restaurar por debajo de 1024: 0 Howl creados');
 S.setSound(false); width = 1440;
 
-// 3. encender con clic: carga 17 ids con [webm, m4a] y suena ui-on una vez
+// 3. encender con clic: carga 16 ids con [webm, m4a] y suena ui-on una vez
 S.setSound(true); await tick(); await tick(); await tick();
-ok(H.created.length === 17, `encendido: ${H.created.length} Howl creados`);
+ok(H.created.length === 16, `encendido: ${H.created.length} Howl creados`);
 ok(count('ui-on') === 1, 'ui-on suena una vez al terminar la carga');
 
 // 4. P1 calla todo 250 ms
-now = 10000; S.playSound('air-section'); now += 100; S.playSound('ui-hover'); S.playSound('mat-focus');
-ok(count('air-section') === 1 && count('ui-hover') === 0 && count('mat-focus') === 0, 'P1: dentro de 250 ms no suena nada más');
+now = 10000; S.playSound('sig-converge'); now += 100; S.playSound('ui-hover'); S.playSound('mat-focus');
+ok(count('sig-converge') === 1 && count('ui-hover') === 0 && count('mat-focus') === 0, 'P1: dentro de 250 ms no suena nada más');
 now += 200; S.playSound('ui-hover');
 ok(count('ui-hover') === 1, 'P1: pasados 250 ms, un P3 suena');
 
