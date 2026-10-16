@@ -148,6 +148,10 @@ export interface VideoItem {
 export const CC_BY_4_URL = 'https://creativecommons.org/licenses/by/4.0/';
 
 export const VIDEOS: readonly VideoItem[] = [
+  // LEEX (Juan, 2026-10-15: «que vaya primero el de licitaciones y luego el de leex»). Masters de Remotion 1920×1080
+  // (60 y 30 fps) reencodeados con h264_nvenc a 1080p30: ver 03-tech. Música y efectos, sin voz.
+  { id: 'leex_bids_demo', src: '/videos/leex-licitaciones-demo.mp4', poster: '/videos/leex-licitaciones-demo-poster.jpg', orientation: 'landscape', width: 1920, height: 1080, duration: '1:22', audioLang: 'none' },
+  { id: 'leex_kibbo_trailer', src: '/videos/leex-kibbo-trailer.mp4', poster: '/videos/leex-kibbo-trailer-poster.jpg', orientation: 'landscape', width: 1920, height: 1080, duration: '1:22', audioLang: 'none' },
   // Showreel v3 (Juan, 2026-10-14): los 5 reels con el logo de protagonista van primero. Música Pixabay Content
   // License (sin atribución obligatoria) y SFX, sin voz. Al reexportarse se reemplazan los archivos con el mismo nombre.
   // PLACEHOLDER: reel-04-3d-fisicas.mp4 y su póster son una copia del 05 hasta que exista el reel 04.

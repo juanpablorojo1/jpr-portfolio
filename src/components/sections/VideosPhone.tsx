@@ -16,8 +16,8 @@
      el botón de reproducir).
    En >= 1024 este bloque está en display: none (videos-phone.css) y sus pósters piden un GIF de 1 px.
    10 videos, 5 caras (2026-10-14, opción A de Juan: «Mismo tambor, 10 videos»): el prisma sigue siendo de 5. El giro es
-   un paso lógico: cara de frente = paso mod 5, video = paso mod 10. Cada cara muestra el video del paso más cercano que
-   le toca; cambia sólo cuando la cara cruza los 180° (oculta), y ahí suelta el src del video que sale. */
+   un paso lógico: cara de frente = paso mod 5, video = paso mod N (12 desde el 2026-10-15). Cada cara muestra el
+   video del paso más cercano que le toca; cambia sólo cuando la cara cruza los 180° (oculta), y ahí suelta el src del video que sale. */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getImageProps } from 'next/image';
@@ -28,7 +28,7 @@ import { VIDEOS } from '../../lib/content';
 import { phoneReveal } from '../../lib/phoneMotion';
 import './videos-phone.css';
 
-const NV = VIDEOS.length;                        // videos que recorre (10)
+const NV = VIDEOS.length;                        // videos que recorre (12)
 const N = 5;                                     // caras del prisma (fijo)
 const STEP = 360 / N;
 const modN = (a: number, n: number) => ((a % n) + n) % n;
@@ -76,6 +76,7 @@ export default function VideosPhone() {
   const beatRef = useRef<gsap.core.Tween | null>(null);
   const touched = useRef(false);                 // el usuario ya giró: la entrada no se mete
   const [front, setFront] = useState(0);
+  const [frontFace, setFrontFace] = useState(0); // la cara de frente sale del paso, no del video (12 videos, 5 caras)
   const [paused, setPaused] = useState(false);
   const [sound, setSound] = useState(false);
   const [inView, setInView] = useState(false);
@@ -144,6 +145,7 @@ export default function VideosPhone() {
   const turnTo = useCallback((target: number, dur = 0.9, ease = 'expo.out', fromSwipe = false) => {
     rot.current.target = target;
     setFront(mod(target));
+    setFrontFace(face(target));
     twRef.current?.kill();
     beatRef.current?.kill();
     if (reduced()) { rot.current.v = target; paint(target); return; }
@@ -324,7 +326,8 @@ export default function VideosPhone() {
 
   /* ---------- reproducción: sólo la cara de frente, muda salvo que se pida sonido ---------- */
   const live = phone && inView && pageOn;
-  const ff = face(front);                        // la cara de frente (front es el video)
+  // la cara de frente. Con 10 videos daba lo mismo face(front); con 12 no: el paso 12 cae en la cara 2 con el video 0
+  const ff = frontFace;
   useEffect(() => {
     if (live && !armed[ff] && faceVid[ff] === front) setArmed((a) => a.map((x, k) => x || k === ff));
   }, [live, ff, front, armed, faceVid]);

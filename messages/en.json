@@ -237,6 +237,18 @@
     "sound": "Video sound",
     "sound_short": "Sound",
     "items": {
+      "leex_bids_demo": {
+        "eyebrow": "LEEX · Product demo",
+        "title": "LEEX Tender System",
+        "caption": "A walkthrough of the system in eight steps: it detects medical-equipment tenders on public procurement portals, the AI sets aside the ones outside the product range, sorts by deadline, checks the tender specs against the catalog, builds the quote with price, VAT and total, and exports the PDF ready to attach. Then it tracks each tender by stage, flags openings and changes, and closes on the team board and the status of every portal.",
+        "made_with": "Made with: Remotion. Screens from the LEEX Tender System"
+      },
+      "leex_kibbo_trailer": {
+        "eyebrow": "LEEX × KIBBO · Trailer",
+        "title": "LEEX × KIBBO trailer",
+        "caption": "Introduces LEEX and KIBBO, its hospital equipment management platform. It starts from the usual problems in a hospital (equipment that can’t be located, wrong accessories, outdated inventories) and walks through the app with real captures: a QR code on each device, fault reports from a phone, real-time status, work orders and preventive maintenance, accessory purchases in the LEEX store, equipment from any manufacturer and a dashboard to decide what to repair or retire.",
+        "made_with": "Made with: Remotion. Real captures from app.kibbo.io"
+      },
       "reel_type": {
         "eyebrow": "Kinetic type",
         "title": "Eight verbs, one logo",
