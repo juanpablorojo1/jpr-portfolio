@@ -14,7 +14,7 @@ type Def = {
   prio: 1 | 2 | 3;           // regla de densidad: P1 calla todo 250 ms; P2 calla P2 y P3 150 ms; P3 sólo su gap
   scene?: boolean;           // lo dispara el scroll de la escena: se retiene durante un salto (holdScene)
   vary?: [number, number];   // variación por disparo: rate × [1−a, 1+a] y volumen × [1−b, 1+b]
-  hold?: number;             // salto programático: retiene la escena hasta scrollend o estos ms
+  hold?: number;             // salto programático: retiene la escena hasta scrollend + 0,9 s (o estos ms sin scrollend)
   loop?: boolean;            // lecho (zumbido): loopSound, no bloquea ni es bloqueado
 };
 
@@ -92,10 +92,14 @@ export function onSound(f: (on: boolean) => void) {
   return () => { subs.delete(f); };
 }
 
-/** Retiene los sonidos de escena mientras viaja un scroll suave (hasta scrollend o, como máximo, `ms`). */
+/** Retiene los sonidos de escena mientras viaja un scroll suave: hasta scrollend más 0,9 s, lo que tarda en llegar la
+    cámara amortiguada (CAM_LAMBDA 4 en scene.js, ~0,25 s de constante: sin esa cola, al llegar sonaban los cambios de
+    modo que la cámara cruzaba detrás del scroll). Sin scrollend (no hubo scroll, o Safari viejo), `ms`. */
 export function holdScene(ms: number) {
-  holdUntil = performance.now() + ms;
-  addEventListener('scrollend', () => { holdUntil = 0; }, { once: true });
+  const t0 = performance.now();
+  holdUntil = t0 + ms;
+  // un salto que no scrolleó deja el listener armado: el scrollend de un scroll propio, más tarde, no retiene nada
+  addEventListener('scrollend', () => { const t = performance.now(); if (t - t0 < 4000) holdUntil = t + 900; }, { once: true });
 }
 
 /** variación por disparo en [−1, 1], nunca pegada a la anterior: dos disparos seguidos nunca suenan idénticos */
