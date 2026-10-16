@@ -78,7 +78,7 @@ export function setSound(v: boolean, chime = true) {
   if (v === on) return;
   on = v;
   try { sessionStorage.setItem(KEY, v ? '1' : '0'); } catch { /* modo privado */ }
-  if (v) load().then(() => { if (chime && on) playSound('ui-on'); });
+  if (v && wide()) load().then(() => { if (chime && on) playSound('ui-on'); });   // angosto: carga recién al ensanchar (playSound)
   subs.forEach((f) => f(v));
 }
 
