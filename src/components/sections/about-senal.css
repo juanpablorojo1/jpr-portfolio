@@ -84,7 +84,8 @@
      texto; bajo la foto, a 1200 en ES, la ficha se partía en dos filas y la edad quedaba fuera del frame */
   .ab .ab-photo { display: contents; }
   /* Retrato editorial (opción A, 2026-10-15; Juan: «ahora está muy mal implementada»). La foto se lee como foto: nítida,
-     a opacidad plena, en ByN de contraste alto con el fondo del escenario bajado a carbón (grade horneado, sin filter).
+     a opacidad plena y en su color natural (2026-10-16, Juan: «no hace falta muchos filtros ni recortes»): sin ByN, sin
+     grade, sin máscara; sólo encuadre.
      Columna propia a la derecha, al lado del cuerpo y no detrás: arranca --fgap después del cuerpo (la misma cuenta que
      .ab-body) y nunca antes del final del titular (--tr, lo mide About.tsx, + --tgap); sale a sangre por el borde
      derecho. Techo a la altura del rótulo «Sobre mí» (--ft-m) y piso en el filete de la ficha (--fb-m), los dos medidos
@@ -104,10 +105,10 @@
   .ab .ab-frame {
     position: absolute; right: 0; top: var(--ftop); bottom: max(var(--fb-m, var(--fb)), 80px); z-index: 4;
     width: min(calc(var(--pad) + var(--ph) * .8 + var(--gut) - var(--fgap)), calc(100% - var(--tr, 0px) - var(--tgap)));
-    margin: 0; overflow: hidden; background: #0b0b0b;
+    margin: 0; overflow: hidden;
   }
   .ab .ab-frame picture { display: contents; }
-  .ab .ab-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 58% 0; }
+  .ab .ab-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 54% 0; }
   /* el rojo toca la foto, no la tiñe: el filo izquierdo se enciende donde llega la recta y se apaga hacia arriba y abajo */
   .ab .ab-frame::before {
     content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; z-index: 1; pointer-events: none;
@@ -127,6 +128,8 @@
     display: block; position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; opacity: 0;
   }
   .ab .ab-fg i { position: absolute; left: 0; top: 0; border-radius: 50%; will-change: transform; }
+  /* la mota 1 se asomaba por el filo izquierdo de la foto (design-critic, MINOR): apagada en escritorio */
+  .ab .ab-fg i:nth-child(1) { display: none; }
   .ab .ab-fg i:nth-child(1) {
     width: 24vh; height: 24vh;
     background: radial-gradient(closest-side, rgba(232, 228, 222, .04), rgba(232, 228, 222, .05) 74%, rgba(232, 228, 222, .072) 89%, rgba(232, 228, 222, 0));
@@ -218,7 +221,7 @@
      texto encima. Entra con el corte de señal (phoneMotion «cut»): la recta roja barre el pie y destapa la foto; queda
      como el horizonte sobre el que está parado. El <img> recién existe después de `load` y a un viewport (AbPlate). */
   .ab .ab-plate { display: block; position: relative; margin: 2.2em calc(-1 * var(--pad)) 2.1em; }
-  .ab .ab-plate-img { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: #0b0b0b; }
+  .ab .ab-plate-img { position: relative; aspect-ratio: 4 / 5; overflow: hidden; }
   /* tablet: a sangre llenaba el viewport entero (766×958 a 768); ahí va como lámina de 480 alineada al texto */
   @media (min-width: 600px) { .ab .ab-plate { max-width: 480px; margin-left: 0; margin-right: 0; } }
   .ab .ab-plate-img picture { display: contents; }

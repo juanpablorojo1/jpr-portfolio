@@ -6,8 +6,8 @@
    (data-see-through en su TransitionZone, lo pone hero-controller) y la cámara termina detrás del texto.
    Titular: se ensambla desde la profundidad (el mismo gesto que el tagline del hero) cuando el riel llega;
    sin máscaras ni scrub, así no puede quedar cortado arriba.
-   Retrato editorial (2026-10-15, opción A): la foto del escenario de Rocking the Industry leída como foto, nítida y a
-   opacidad plena, en su propia columna a sangre a la derecha; el riel pasa por detrás y le enciende el filo izquierdo.
+   Retrato editorial (2026-10-15, opción A; color natural desde 2026-10-16): la foto del escenario de Rocking the Industry
+   leída como foto, nítida y a opacidad plena, en su propia columna a sangre a la derecha; el riel pasa por detrás y le enciende el filo izquierdo.
    Se abre desde la línea cuando llega la señal (clip-path, nunca opacidad: la recta 3D no se ve a través del pecho).
    Debajo de 1024 (2026-10-14, mobile-senal): diseño de teléfono en about-senal.css. La recta de la señal del hero sigue
    como horizonte del titular (SVG que se dibuja al entrar), cuerpo legible y la ficha como lectura de monitor. El retrato
@@ -29,10 +29,10 @@ gsap.registerPlugin(SplitText);
 // Horizonte del celular: la recta a 30 de 44 y un solo latido (P, QRS, T) pasada la mitad, donde el pulgar no tapa.
 const AB_HZ = 'M0 30 H232 q6 -6 12 0 h9 l3 4 l6 -27 l6 33 l4 -10 h13 q9 -10 18 0 H400';
 
-// Retrato: BiRefNet (RTX 4060) sólo como máscara de grade, sin recorte: el fondo del escenario baja a carbón y Juan
-// queda en ByN de contraste alto. Escritorio: x 1860–3140 / y 0–1950 del original; teléfono 4:5: x 1860–3140 / y 0–1600.
-// Fuera de cuadro siempre la otra persona (x < 1500), el público (y > 2540) y la figura de la pared (x > 3850): el
-// archivo ya no las contiene, así que ningún object-position puede traerlas.
+// Retrato (2026-10-16, Juan: «no hace falta muchos filtros ni recortes»): la foto como foto, en su color natural, sin
+// máscara, sin grade, sin ByN. Sólo encuadre. Escritorio: x 1860–3140 / y 0–1950 del original; teléfono 4:5: x 1860–3140 /
+// y 0–1600. Fuera de cuadro siempre la otra persona (x < 1500), el público (y > 2540) y la figura de la pared (x > 3850):
+// el archivo ya no las contiene, así que ningún object-position puede traerlas.
 const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 const srcSet = (n: string, ws: number[], ext: string) => ws.map((w) => `/images/${n}-${w}.${ext} ${w}w`).join(', ');
 const D_W = [640, 960, 1280], M_W = [480, 800, 1160];
@@ -61,10 +61,10 @@ function AbPlate({ alt }: { alt: string }) {
       <div className="ab-plate-img" data-pm="cut" data-shown={shown ? '' : undefined}>
         {on && (
           <picture>
-            <source type="image/avif" srcSet={srcSet('about-retrato-m', M_W, 'avif')} sizes="100vw" />
-            <source type="image/webp" srcSet={srcSet('about-retrato-m', M_W, 'webp')} sizes="100vw" />
+            <source type="image/avif" srcSet={srcSet('about-foto-m', M_W, 'avif')} sizes="100vw" />
+            <source type="image/webp" srcSet={srcSet('about-foto-m', M_W, 'webp')} sizes="100vw" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/about-retrato-m-800.webp" alt={alt} width={800} height={1000} decoding="async" onLoad={() => setShown(true)} />
+            <img src="/images/about-foto-m-800.webp" alt={alt} width={800} height={1000} decoding="async" onLoad={() => setShown(true)} />
           </picture>
         )}
       </div>
@@ -301,10 +301,10 @@ export default function About() {
             {/* < 1024 la fuente es un GIF de 1 px: el teléfono no pide esta versión (tiene la suya, AbPlate) */}
             <picture>
               <source media="(max-width: 1023px)" srcSet={BLANK} />
-              <source type="image/avif" srcSet={srcSet('about-retrato-d', D_W, 'avif')} sizes="34vw" />
-              <source type="image/webp" srcSet={srcSet('about-retrato-d', D_W, 'webp')} sizes="34vw" />
+              <source type="image/avif" srcSet={srcSet('about-foto-d', D_W, 'avif')} sizes="34vw" />
+              <source type="image/webp" srcSet={srcSet('about-foto-d', D_W, 'webp')} sizes="34vw" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="ab-img" src="/images/about-retrato-d-960.webp" alt={t('photo_alt')} width={960} height={1463} loading="lazy" decoding="async" />
+              <img className="ab-img" src="/images/about-foto-d-960.webp" alt={t('photo_alt')} width={960} height={1463} loading="lazy" decoding="async" />
             </picture>
           </div>
 
