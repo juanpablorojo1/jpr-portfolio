@@ -11,6 +11,7 @@ import { useDialogFocus } from '../../hooks/useDialogFocus';
 import ProjectsGallery from './ProjectsGallery';
 import { CaseStudyMobile, useNear, type CaseStudyData, type CaseStat } from './CaseStudy';
 import { phoneReveal } from '../../lib/phoneMotion';
+import { playSound } from '../../lib/sound';
 import {
   TRAUMAVISION_STACK,
   TRAUMAVISION_SCREENSHOTS,
@@ -102,6 +103,17 @@ export default function Projects() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [elevenLightboxIndex, isPhone]);
+
+  // sonido de los visores de screens (lib/sound.ts): abrir (null → n), pasar (n → m) y cerrar (n → null)
+  const shotsWas = useRef<(number | null)[]>([null, null, null, null]);
+  useEffect(() => {
+    const now = [lightboxIndex, elevenLightboxIndex, kibboLightboxIndex, leexLightboxIndex];
+    now.forEach((n, i) => {
+      const was = shotsWas.current[i];
+      if (n !== was) playSound(was === null ? 'ui-open' : n === null ? 'ui-close' : 'ui-step');
+    });
+    shotsWas.current = now;
+  }, [lightboxIndex, elevenLightboxIndex, kibboLightboxIndex, leexLightboxIndex]);
 
 
   const kibboShots = withSrc(KIBBO_SCREENSHOTS, t.raw('kibbo.shots') as ShotCopy[]);
