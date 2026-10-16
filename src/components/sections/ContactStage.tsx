@@ -22,6 +22,7 @@ import { SOCIAL_LINKS } from '../../lib/content';
 import LogoMark from '../layout/LogoMark';
 import LanguageSelector from '../ui/LanguageSelector';
 import { idleTask, setBatch } from '../../lib/idle';
+import { playSound } from '../../lib/sound';
 import './contact-senal.css';
 
 gsap.registerPlugin(SplitText);
@@ -44,6 +45,7 @@ export default function ContactStage() {
   const copy = () => {
     if (!navigator.clipboard) return;
     navigator.clipboard.writeText(SOCIAL_LINKS.email).then(() => {
+      playSound('ui-click');
       setCopied(true);
       clearTimeout(copyTimer.current);
       copyTimer.current = window.setTimeout(() => setCopied(false), 1800);
@@ -51,6 +53,7 @@ export default function ContactStage() {
   };
   const toTop = (e: React.MouseEvent) => {
     e.preventDefault();
+    playSound('air-jump');
     window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   };
 
@@ -158,6 +161,13 @@ export default function ContactStage() {
         ['pointerleave', set('press', false)], ['pointercancel', set('press', false)],
       ];
       evs.forEach(([e, f]) => dot.addEventListener(e, f));
+      // sonido (lib/sound.ts): el puntero fino que llega al punto lo roza; presionarlo (o Enter) es el latido
+      const sndOver = (e: PointerEvent) => { if (e.pointerType === 'mouse') playSound('ui-hover'); };
+      const sndPress = (e: PointerEvent) => { if (e.button === 0) playSound('sig-dot'); };
+      const sndKey = (e: KeyboardEvent) => { if (e.key === 'Enter') playSound('sig-dot'); };
+      dot.addEventListener('pointerenter', sndOver);
+      dot.addEventListener('pointerdown', sndPress);
+      dot.addEventListener('keydown', sndKey);
 
       // titular partido fuera de la hidratación, en su propia tarea ociosa (D-01): partir, medir, preparar
       document.fonts.ready.then(() => {
@@ -181,6 +191,9 @@ export default function ContactStage() {
         ro.disconnect();
         section.removeEventListener('focusin', onFocus);
         evs.forEach(([e, f]) => dot.removeEventListener(e, f));
+        dot.removeEventListener('pointerenter', sndOver);
+        dot.removeEventListener('pointerdown', sndPress);
+        dot.removeEventListener('keydown', sndKey);
         if (S) { S.ctc.dot = null; S.ctc.v0 = NaN; S.ctc.hover = false; S.ctc.press = false; }
         offSignal();
         headTl?.kill(); bodyTl?.kill();
@@ -242,7 +255,7 @@ export default function ContactStage() {
               </a>
             </li>
             <li>
-              <a href={cvHref} target="_blank" rel="noopener noreferrer">
+              <a href={cvHref} target="_blank" rel="noopener noreferrer" onClick={() => playSound('ui-click')}>
                 <span className="ct-k">PDF</span>
                 <span className="ct-v">{t('cv_cta')}</span>
               </a>

@@ -25,6 +25,7 @@ import { FBF_SECTION_VH, FBF_STAY, FBF_OFF, fbfCtrlWanted, fbfCanTurn, fbfChrome
 import { GAL_DWELLS } from '../hero/senal/gallery';
 import { VIDEOS } from '../../lib/content';
 import { idleTask, lazySet } from '../../lib/idle';
+import { playSound } from '../../lib/sound';
 import './videos-senal.css';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -59,17 +60,24 @@ export default function VideosStage() {
 
   /* ---------- giro ---------- */
   const writeRot = () => { if (sRef.current) sRef.current.fbf.rot = rot.current.v; };
+  /** sonido del Tambor (lib/sound.ts): a la mitad con «Sonido del video» encendido (el video manda) */
+  const fbfGain = () => (sRef.current?.fbf.sound ? 0.5 : 1);
+  const arrowHover = (e: { pointerType: string }) => { if (e.pointerType === 'mouse') playSound('ui-hover'); };
   /** con la escena viva, sólo con el tambor encendido y la cámara frente a él */
   const canTurn = () => {
     const S = sRef.current;
     return !liveRef.current || !S ? true : fbfCanTurn(S.state.gal);
   };
   const turnTo = (target: number, dur = 1.3, ease = 'expo.inOut') => {
+    // sonido: el giro arranca (más grave si recorre más de una cara); la cara encastra al terminar (onComplete)
+    const span = Math.abs(target - rot.current.v);
+    if (span > 0.15) playSound('mat-drum', { rate: span > 1 ? 0.9 : 1, gain: fbfGain() });
     rot.current.target = target;
     setFront(mod(target));
     twRef.current?.kill();
     if (!liveRef.current || reduced()) { rot.current.v = target; writeRot(); return; }
-    twRef.current = gsap.to(rot.current, { v: target, duration: dur, ease, onUpdate: writeRot });
+    twRef.current = gsap.to(rot.current, { v: target, duration: dur, ease, onUpdate: writeRot,
+      onComplete: () => playSound('mat-detent', { gain: fbfGain() }) });
   };
   const go = (d: number) => { if (canTurn()) turnTo(rot.current.target + d); };
   const goRef = useRef(go);
@@ -80,12 +88,14 @@ export default function VideosStage() {
     const el = dragRef.current;
     if (!el) return;
     let id = -1, x0 = 0, r0 = 0, moved = false, lastX = 0, lastT = 0, vel = 0;
+    let pv = 0;   // sonido: posición anterior del tambor, para oír cada cara que cruza el frente
     const per = () => Math.max(380, innerWidth * 0.3);        // px de arrastre por cara
     const setDrag = (v: boolean) => { if (sRef.current) sRef.current.fbf.drag = v; };
     const down = (e: PointerEvent) => {
       if (e.button !== 0 || !e.isPrimary || !canTurn()) return;
       id = e.pointerId; x0 = lastX = e.clientX; lastT = performance.now(); vel = 0; moved = false;
       r0 = rot.current.v;
+      pv = r0;
       try { el.setPointerCapture(id); } catch { /* puntero sintético o ya liberado */ }
     };
     const move = (e: PointerEvent) => {
@@ -97,6 +107,9 @@ export default function VideosStage() {
       vel = vel * 0.6 + ((e.clientX - lastX) / dt) * 0.4;           // px/ms, suavizado
       lastX = e.clientX; lastT = now;
       if (liveRef.current && !reduced()) { rot.current.v = r0 - dx / per(); writeRot(); }
+      const cv = rot.current.v;   // sonido: una cara cruzó el frente (un entero, sin contar el de partida)
+      if (Math.floor(pv) !== Math.floor(cv) && Math.ceil(pv) !== Math.ceil(cv)) playSound('mat-detent', { rate: 1.08, gain: fbfGain() });
+      pv = cv;
     };
     const up = (e: PointerEvent) => {
       if (e.pointerId !== id) return;
@@ -107,7 +120,7 @@ export default function VideosStage() {
       if (!moved) {
         // un toque sin arrastre sobre la cara de frente: pausa o reanuda
         const S = sRef.current;
-        if (!liveRef.current || (S && S.fbf.hover >= 0)) setPaused((p) => !p);
+        if (!liveRef.current || (S && S.fbf.hover >= 0)) { playSound('ui-click', { gain: fbfGain() }); setPaused((p) => !p); }
         return;
       }
       const dx = e.clientX - x0;
@@ -310,21 +323,21 @@ export default function VideosStage() {
           <p className="sr-only" aria-live="polite">{t('slide_aria', { n: front + 1, total: N, title: fTitle })}</p>
 
           <div className="fv-ctrl">
-            <button type="button" className="fv-btn fv-arrow" onClick={() => go(-1)} aria-label={t('prev')}>
+            <button type="button" className="fv-btn fv-arrow" onClick={() => go(-1)} onPointerEnter={arrowHover} aria-label={t('prev')}>
               <span aria-hidden="true">←</span>
             </button>
             <p className="fv-pos" aria-hidden="true"><b>{pad2(front + 1)}</b> / {total}</p>
-            <button type="button" className="fv-btn fv-arrow" onClick={() => go(1)} aria-label={t('next')}>
+            <button type="button" className="fv-btn fv-arrow" onClick={() => go(1)} onPointerEnter={arrowHover} aria-label={t('next')}>
               <span aria-hidden="true">→</span>
             </button>
           </div>
           <div className="fv-acts">
-            <button type="button" className="fv-tgl fv-pause" onClick={() => setPaused((p) => !p)} data-on={paused ? '' : undefined} aria-label={paused ? t('resume') : t('pause')}>
+            <button type="button" className="fv-tgl fv-pause" onClick={() => { playSound('ui-click', { gain: fbfGain() }); setPaused((p) => !p); }} data-on={paused ? '' : undefined} aria-label={paused ? t('resume') : t('pause')}>
               {paused
                 ? <svg width="9" height="10" viewBox="0 0 14 16" fill="currentColor" aria-hidden="true"><path d="M0 0 L14 8 L0 16 Z" /></svg>
                 : <svg width="9" height="10" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true"><path d="M0 0h3.5v12H0zM6.5 0H10v12H6.5z" /></svg>}
             </button>
-            <button type="button" className="fv-tgl fv-snd" onClick={() => setSound((s) => !s)} aria-pressed={sound}>
+            <button type="button" className="fv-tgl fv-snd" onClick={() => { playSound('ui-click', { gain: fbfGain() }); setSound((s) => !s); }} aria-pressed={sound}>
               <span className="fv-bars" aria-hidden="true"><i /><i /><i /></span>
               {t('sound')}
             </button>

@@ -532,7 +532,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     voidW.value = gw * (1 - sm(range(u, LAST_OUT + 0.2, GAL_END)));
     if (!group.visible) {
       MQ[0].on.value = 0; MQ[1].on.value = 0; setLens(0); spot.intensity = 0;
-      if (sound.hum) { sound.hum = false; loopSound('hum', false); }
+      if (sound.hum) { sound.hum = false; loopSound('mat-hum', false); }
       return;
     }
     camL.value.copy(camera.position); group.worldToLocal(camL.value);
@@ -558,7 +558,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
       if (T1 > 0.02) want = false;
       lidA *= 1 - easeIO(range(T1, 0.0, k < N - 1 ? 0.24 : 0.3));
       // luz real, en tiempo real: golpe de lámpara al encender; al apagar cae en ~0,4 s (corte, no fundido)
-      if (want && !lap.on) { lap.on = true; lap.onT0 = t; if (gw > 0.5) playSound('spot', { minGap: 400 }); }
+      if (want && !lap.on) { lap.on = true; lap.onT0 = t; }   // sin golpe al llegar (Juan, 2026-10-15)
       if (!want && lap.on) { lap.on = false; }
       if (lap.on) lap.light = RM ? 1 : Math.min(flicker(t - lap.onT0), 1);
       else lap.light = lap.light < 0.004 ? 0 : lap.light * Math.exp(-rdt / 0.085);
@@ -569,7 +569,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
       const spark = T1 > 0 ? Math.exp(-Math.pow((T1 - 0.06) / 0.05, 2)) : 0;
       lap.u.rim.value = (sm(arriveSig) * (0.35 + 0.65 * Math.exp(-Math.pow((arriveSig - 0.9) / 0.2, 2))) * (1 - sm(range(T1, 0.04, 0.2)))) + spark;
       // clic de bisagra al cerrarse
-      if (lap.lastLid > 0.06 && lidA <= 0.06 && T1 > 0 && gw > 0.5) playSound('hinge', { minGap: 300 });
+      if (lap.lastLid > 0.06 && lidA <= 0.06 && T1 > 0 && gw > 0.5) playSound('mat-hinge');
       lap.lastLid = lidA;
       lap.lidA = lidA;
       lap.hinge.rotation.x = lerp(CLOSED, OPEN, lidA);
@@ -639,7 +639,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
 
     // zumbido grave en la estadía (sólo con el interruptor; sound.ts lo ignora apagado)
     const humWant = gw > 0.5 && /^stay/.test(st.mode) && stage > 0.9 && S.inView && !document.hidden;
-    if (humWant !== sound.hum || humWant) { sound.hum = humWant; loopSound('hum', humWant); }
+    if (humWant !== sound.hum || humWant) { sound.hum = humWant; loopSound('mat-hum', humWant); }
 
     setLens(st.shift);
     if (st.roll) { camera.rotateZ(st.roll); camera.updateMatrixWorld(); }
@@ -736,7 +736,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
   }
 
   /** fuera de Projects (la galería cerrada no llama a update): apaga el zumbido */
-  function idle() { if (sound.hum) { sound.hum = false; loopSound('hum', false); } }
+  function idle() { if (sound.hum) { sound.hum = false; loopSound('mat-hum', false); } }
 
   let saved = null;
   function warm(v) {

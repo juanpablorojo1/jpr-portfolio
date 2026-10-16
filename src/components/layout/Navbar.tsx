@@ -16,6 +16,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import LanguageSelector from '../ui/LanguageSelector';
 import LogoSlot from './LogoSlot';
 import LogoMark from './LogoMark';
+import { playSound } from '../../lib/sound';
 import './navbar.css';
 
 const prefersReducedMotion = () =>
@@ -35,7 +36,7 @@ const TRACE_D = 'M0 90 H340 l10 -6 l8 6 H372 l5 5 l9 -86 l9 96 l6 -15 H470 q22 -
 
 function CvLink({ href, label }: { href: string; label: string }) {
   return (
-    <a className="jnav-cv" href={href} target="_blank" rel="noopener noreferrer">
+    <a className="jnav-cv" href={href} target="_blank" rel="noopener noreferrer" onClick={() => playSound('ui-click')}>
       <span>{label}</span>
       <svg viewBox="0 0 9 11" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true">
         <path d="M4.5 0v9M1 5.5l3.5 3.5L8 5.5M0 10.5h9" />
@@ -171,6 +172,7 @@ export default function Navbar() {
     if (!sheet) return;
     // Escape (cancel → close), el botón de cerrar o un link: siempre pasa por acá.
     const onClose = () => {
+      playSound('ui-close');
       setMenuOpen(false);
       unlockScroll();
       const target = navTargetRef.current ? document.getElementById(navTargetRef.current) : null;
@@ -205,6 +207,7 @@ export default function Navbar() {
   ];
 
   const scrollToSection = (id: string) => {
+    playSound('air-jump');   // un solo aire; la escena calla mientras viaja (lib/sound.ts)
     const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
     document.getElementById(id)?.scrollIntoView({ behavior });
   };
@@ -224,6 +227,7 @@ export default function Navbar() {
   const handleLogoClick = (e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     if (sheetRef.current?.open) closeSheet();
+    playSound('air-jump');
     window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
   };
 
@@ -231,6 +235,7 @@ export default function Navbar() {
 
   const openMenu = (from: 'top' | 'dock') => {
     openerRef.current = from === 'dock' ? dockBtnRef.current : menuBtnRef.current;
+    playSound('ui-open');
     setOpenedFrom(from);
     setMenuOpen(true);
   };
