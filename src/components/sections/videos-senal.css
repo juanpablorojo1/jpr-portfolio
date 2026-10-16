@@ -26,10 +26,8 @@
   /* Video hereda el negro de la vitrina: sin el grano DOM del hero ni la barra sólida del nav (VideosStage pone fv-vit
      en <html> desde la salida de Projects hasta el apagado del tambor; el fundido de .grain vive en projects-senal.css) */
   html.fv-vit .senal .grain { opacity: 0; }
-  html.fv-vit .jnav.is-scrolled {
-    background: linear-gradient(180deg, rgba(2, 2, 5, .92) 0%, rgba(2, 2, 5, .55) 70%, rgba(2, 2, 5, 0) 100%);
-    border-bottom-color: transparent;
-  }
+  html.fv-vit .jnav.is-scrolled { background-color: transparent; border-bottom-color: transparent; }
+  html.fv-vit .jnav.is-scrolled::before { opacity: 1; }   /* el degradé vive en .jnav::before (navbar.css): R2-01 */
 
   /* título de sección (Juan, 2026-10-14: «mucho más grande»): Bebas Neue, la familia display de 02-brand, en dos
      líneas a la izquierda del tambor. Medido con el tambor de 5 caras: a 1536×730 el borde izquierdo del tambor queda
