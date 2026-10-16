@@ -21,7 +21,7 @@ import {
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { GAL_DWELLS, GAL_END, GAL_ABOUT_OUT, tagWanted } from './gallery';
-import { FBF_BEAM, FBF_INTRO, FBF_OFF } from './frames';
+import { FBF_BEAM, FBF_INTRO, FBF_OFF, FBF_END } from './frames';
 import { playSound } from '../../../lib/sound';
 import { buildProjector } from './projector';
 import { buildVitrina, VIT_FOV } from './vitrina';
@@ -212,6 +212,28 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   /** x de mundo del final del riel (la cinta de la señal termina ahí) */
   const railEndX = () => group.position.x + RAIL_STOP;
 
+  /* ---------- D-01: el grano DOM del hero vuelve con el scroll, no de golpe ----------
+     VideosStage saca html.fv-vit en u = FBF_OFF + 0,45 y ahí volvía entero el grano DOM del hero (.senal .grain: 3 % de
+     ruido + líneas al 1,2 %, fijo, z 30, sobre todo el cuadro): el negro de la salida a Stack saltaba de #070708 a
+     #0D0D0E en un tick de rueda. Mientras dura la rampa (FBF_OFF + 0,3 → FBF_END + 0,05) la opacidad va en línea y
+     atada a u; fuera de ella se borra y mandan las clases, que en los bordes valen lo mismo (fv-vit: 0; sin clase: 1). */
+  const GR_A = FBF_OFF + 0.3, GR_B = FBF_END + 0.05;
+  let grainEl = null, grainSet = false;
+  function grainRamp(u) {
+    if (!grainEl || !grainEl.isConnected) grainEl = document.querySelector('.senal .grain');
+    if (!grainEl) return;
+    if (u > GR_A && u < GR_B) {
+      grainEl.style.transition = 'none';
+      grainEl.style.opacity = smooth(GR_A, GR_B, u).toFixed(3);
+      grainSet = true;
+    } else if (grainSet) grainClear();
+  }
+  function grainClear() {
+    if (grainEl) { grainEl.style.opacity = ''; grainEl.style.transition = ''; }
+    grainSet = false;
+  }
+  ctl.offs.push(grainClear);
+
   /* ---------- estado por frame ---------- */
   const st8 = { u: 0, focus: 7, range: 4, bokeh: 12, farK: 50, mode: '', headZ: RAIL_STOP + 0.15, endK: 0, lampK: 0, joinZ: -1e9, liveDone: false };
   const P = new THREE.Vector3(), L = new THREE.Vector3(), q = new THREE.Vector3(), fwd = new THREE.Vector3();
@@ -264,6 +286,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     fbfK.value = smooth(LAST_OUT + 0.3, GAL_END - 0.05, u);
     dustK.value = smooth(GAL_END - 0.1, GAL_END + 0.4, u);
     dust.visible = dustK.value > 0.001;
+    grainRamp(u);
     const fbfMid = smooth(FBF_INTRO[0], FBF_INTRO[1], u) * (1 - smooth(FBF_OFF - 0.2, FBF_OFF + 0.2, u));
     voidK.value = smooth(LAST_OUT + 0.15, LAST_OUT + 0.6, u) * (1 - 0.22 * fbfMid);
     grainK.value = thr;
@@ -390,7 +413,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     /** óptica: la vitrina usa una más larga (VIT_FOV); vuelve a la del sitio con la salida a Video */
     fovAt: (u, base) => base + (VIT_FOV - base) * (1 - smooth(LAST_OUT + 0.2, GAL_END, u)) * smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.6, u),
     /** la galería cerrada (scene.js no llama a update): silencio */
-    idle: () => vit.idle(),
+    idle: () => { if (grainSet) grainClear(); vit.idle(); },
     /** peso de la vitrina (1 en Projects): scene.js achica el halo del bloom ahí (el rojo es un hilo, no neón: D-04) */
     vitW: () => vit.voidW.value,
     headWorldX: () => group.position.x + st8.headZ,
