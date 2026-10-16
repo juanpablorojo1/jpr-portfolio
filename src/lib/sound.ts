@@ -94,10 +94,14 @@ export function onSound(f: (on: boolean) => void) {
 
 /** Retiene los sonidos de escena mientras viaja un scroll suave: hasta scrollend más 0,9 s, lo que tarda en llegar la
     cámara amortiguada (CAM_LAMBDA 4 en scene.js, ~0,25 s de constante: sin esa cola, al llegar sonaban los cambios de
-    modo que la cámara cruzaba detrás del scroll). Sin scrollend (no hubo scroll, o Safari viejo), `ms`. */
+    modo que la cámara cruzaba detrás del scroll). Sin scrollend (no hubo scroll, o Safari viejo), `ms`. Durante 4 s,
+    cada scroll también la empuja: un scroll suave que arranca tarde no queda sin retención (design-critic S-03). */
 export function holdScene(ms: number) {
   const t0 = performance.now();
   holdUntil = t0 + ms;
+  const push = () => { const t = performance.now(); if (t - t0 < 4000) holdUntil = Math.max(holdUntil, t + 900); };
+  addEventListener('scroll', push, { passive: true });
+  setTimeout(() => removeEventListener('scroll', push), 4000);
   // un salto que no scrolleó deja el listener armado: el scrollend de un scroll propio, más tarde, no retiene nada
   addEventListener('scrollend', () => { const t = performance.now(); if (t - t0 < 4000) holdUntil = t + 900; }, { once: true });
 }
