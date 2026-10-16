@@ -138,7 +138,9 @@ export function playSound(name: SoundName, opts: { rate?: number; gain?: number 
   if (r !== 1) h.rate(r, id);
 }
 
-/** Sonido en loop (zumbido): suena mientras `want` y el interruptor estén encendidos; entra y sale con fundido corto. */
+/** Sonido en loop (zumbido): suena mientras `want` y el interruptor estén encendidos; entra y sale con fundido corto.
+    No arranca durante la retención de un salto (la cámara cruza estadías de paso: arrancaba y cortaba ~6 veces en
+    0,5 s, functional-tester F-01) y sale del volumen que tenga, no del pleno. */
 const looping: Partial<Record<SoundName, number>> = {};
 export function loopSound(name: SoundName, want: boolean) {
   const h = loaded[name];
@@ -146,9 +148,9 @@ export function loopSound(name: SoundName, want: boolean) {
   const v = def(name).vol;
   if (want && soundOn()) {
     if (!h) { load(); return; }
-    if (id === undefined) { const nid = h.play(); h.volume(0, nid); h.fade(0, v, 600, nid); looping[name] = nid; }
+    if (id === undefined && performance.now() >= holdUntil) { const nid = h.play(); h.volume(0, nid); h.fade(0, v, 600, nid); looping[name] = nid; }
   } else if (h && id !== undefined) {
-    h.fade(v, 0, 400, id);
+    h.fade(h.volume(id) as number, 0, 400, id);
     const stopId = id;
     setTimeout(() => h.stop(stopId), 420);
     delete looping[name];
