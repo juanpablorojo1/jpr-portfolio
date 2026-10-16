@@ -41,8 +41,8 @@
     text-transform: uppercase; color: #e8e4de; text-wrap: balance;
     text-shadow: 0 0 2px rgba(0, 0, 0, .95), 0 0 6px rgba(0, 0, 0, .9), 0 1px 14px rgba(0, 0, 0, .85);
   }
-  /* el video horizontal (comparación de modelos) llega casi al borde del cuadro: el título se funde mientras está de
-     frente. filter y no opacity: la opacidad la escribe GSAP en línea (entrada y salida de la sección). */
+  /* el 16:9 abierto llega casi al borde del cuadro: el título se funde mientras está abierto (S.fbf.wide; sin escena,
+     con el horizontal de frente). filter y no opacity: la opacidad la escribe GSAP en línea (entrada y salida). */
   .fv-label { transition: filter .45s var(--ease-out); }
   .fv-label[data-land] { filter: opacity(0); }
   .fv-dot { display: inline-block; flex-shrink: 0; width: 8px; height: 8px; margin-top: .3em; background: #e8272a; box-shadow: 0 0 10px #e8272a; }

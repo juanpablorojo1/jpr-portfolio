@@ -531,7 +531,7 @@ export async function buildProjector({
     hall.visible = on;
     const ready = on && gw > 0.5;
     lookW.value = on ? gw * (1 - smooth(FBF_OFF + 0.1, FBF_END, u)) : 0;
-    if (!on) { st.active = -1; S.fbf.active = -1; scrI.value = 0; pauseAll(); return null; }
+    if (!on) { st.active = -1; S.fbf.active = -1; S.fbf.wide = 0; scrI.value = 0; pauseAll(); return null; }
     camL.value.copy(P);                               // P ya está en coordenadas del pasillo (camPose)
 
     // giro: S.fbf.rot (continuo) lo escribe el HTML con su tween. Reduced motion: corte con fundido.
@@ -616,6 +616,7 @@ export async function buildProjector({
       const near = Math.abs(st.rot - Math.round(st.rot)) < 0.03;
       const settled = !!WF && WF.j === wide.j && isLand(WF.j) && mod(Math.round(st.rot), NV) === WF.j && near && !S.fbf.drag && WF.pw > 0.99 && u > FBF_STAY[0] && u < FBF_STAY[1] + 0.05;
       wide.e = rm ? (settled ? 1 : 0) : damp(wide.e, settled ? 1 : 0, settled ? 2.6 : 8, dt);
+      S.fbf.wide = wide.e;                            // VideosStage funde el título sólo con el 16:9 abierto
       const e = sm(clamp01(wide.e));
       const sw = lerp(W, wide.W2, e), sh = lerp(H, wide.H2, e);
       const vis = wide.e > 0.002 && !!WF;

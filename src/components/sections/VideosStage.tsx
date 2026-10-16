@@ -50,6 +50,8 @@ export default function VideosStage() {
   const [front, setFront] = useState(0);
   const [paused, setPaused] = useState(false);
   const [sound, setSound] = useState(false);
+  // con la escena viva: el 16:9 está abierto de verdad (S.fbf.wide); null = sin escena, manda el video de frente
+  const [wideOpen, setWideOpen] = useState<boolean | null>(null);
   const total = pad2(N);
 
   useEffect(() => { if (sRef.current) sRef.current.fbf.paused = paused; }, [paused]);
@@ -195,6 +197,7 @@ export default function VideosStage() {
       };
       section.addEventListener('focusin', onFocusIn);
 
+      let wideOpenRef: boolean | null = null;
       const tick = () => {
         if (!zone.hasAttribute('data-gallery')) return;
         const live = !!(zone.hasAttribute('data-see-through') && S && !S.dead && S.fbf.live);
@@ -204,6 +207,9 @@ export default function VideosStage() {
           if (!live) { twRef.current?.kill(); rot.current.v = rot.current.target; }
         }
         if (S && S.fbf.rot !== rot.current.v) S.fbf.rot = rot.current.v;
+        // Juan (2026-10-15, opción a): el título se ve al llegar y se funde recién cuando el 16:9 se abre
+        const wo = live && S ? (S.fbf.wide || 0) > 0.3 : null;
+        if (wo !== wideOpenRef) { wideOpenRef = wo; setWideOpen(wo); }
         const u = live && S ? S.state.gal : (scrollY - land) / innerHeight;
         const wantChrome = fbfChromeWanted(u);
         if (wantChrome !== chromeOn) {
@@ -250,6 +256,7 @@ export default function VideosStage() {
         offSignal();
         sRef.current = null;
         liveRef.current = false;
+        setWideOpen(null);
         rot.current.v = rot.current.target;
         stage.classList.remove('is-live');
         ring.setAttribute('data-on', '');
@@ -268,8 +275,9 @@ export default function VideosStage() {
   return (
     <section ref={ref} className="fv-gal" aria-labelledby="fv-h" style={{ height: `${FBF_SECTION_VH * 100}vh` }}>
       <div className="fv-stage">
-        {/* el video horizontal de frente ocupa el margen izquierdo: el título se aparta (videos-senal.css) */}
-        <p className="fv-label" aria-hidden="true" data-land={fItem.width > fItem.height ? '' : undefined}><span className="fv-dot" />{t('label')}</p>
+        {/* el 16:9 abierto ocupa el margen izquierdo: el título se aparta (videos-senal.css). Con la escena viva, sólo
+            mientras está abierto (al llegar con un horizontal de frente el título se ve); sin escena, con el horizontal */}
+        <p className="fv-label" aria-hidden="true" data-land={(wideOpen ?? fItem.width > fItem.height) ? '' : undefined}><span className="fv-dot" />{t('label')}</p>
         <h2 id="fv-h" className="sr-only">{t('headline')}</h2>
 
         <div
