@@ -64,6 +64,32 @@ export function attachPerfMeter({ renderer, ctl, backend, gpu }) {
     o.observe({ type: 'long-animation-frame', buffered: false }); obs.push(o);
   } catch (e) { /* sin soporte */ }
 
+  // GPU de primer uso (WebGPU): pipelines creados en forma síncrona (compilación en pleno frame), módulos de shader,
+  // texturas nuevas y subidas de imágenes/video (copyExternalImageToTexture), con su u y su costo de CPU. Sirve para
+  // atribuir cada tirón a lo que pasó en ese frame (el resumen los trae en `gpu`).
+  const gev = [];
+  const dev = renderer.backend && renderer.backend.device;
+  const uNow = () => (ctl.info && ctl.info.gal ? +ctl.info.gal().toFixed(2) : null);
+  const wrapDev = (obj, name, kind, sizeOf) => {
+    if (!obj || typeof obj[name] !== 'function') return;
+    const orig = obj[name].bind(obj);
+    obj[name] = (...a) => {
+      const t0 = performance.now();
+      const r = orig(...a);
+      gev.push({ t: t0, ms: performance.now() - t0, kind, u: uNow(), sec: sectionAt(), px: sizeOf ? sizeOf(...a) : 0 });
+      if (gev.length > 4000) gev.splice(0, 1000);
+      return r;
+    };
+  };
+  const dim = (e) => (e ? (e.width != null ? e.width * (e.height || 1) : (e[0] || 0) * (e[1] || 1)) : 0);
+  if (dev) {
+    wrapDev(dev, 'createRenderPipeline', 'pipeSync');
+    wrapDev(dev, 'createRenderPipelineAsync', 'pipeAsync');
+    wrapDev(dev, 'createShaderModule', 'shader');
+    wrapDev(dev, 'createTexture', 'texNew', (d) => dim(d && d.size));
+    wrapDev(dev.queue, 'copyExternalImageToTexture', 'upload', (s, d, e) => dim(e));
+  }
+
   // registro
   let rec = null;
   const newRec = () => ({ t0: performance.now(), by: {}, hitches: [] });
@@ -87,7 +113,14 @@ export function attachPerfMeter({ renderer, ctl, backend, gpu }) {
       b.calls.push(running ? r.drawCalls : 0); b.tris.push(running ? r.triangles : 0);
       b.heap.push(heap); b.gpuB.push(gpuB); b.tex.push(mem.textures); b.geo.push(mem.geometries);
       b.scrollPx += Math.abs(scrollY - lastY); if (running) b.runOn++;
-      if (dt > 50) rec.hitches.push({ t: Math.round(now - rec.t0), dt: Math.round(dt), sec, y: Math.round(scrollY), u: ctl.info && ctl.info.gal ? +ctl.info.gal().toFixed(2) : null });
+      if (dt > 50) {
+        // lo que la GPU hizo por primera vez en ese frame (y el anterior): pipelines síncronos, shaders, texturas, subidas
+        const ev = gev.filter((e) => e.t >= now - dt - 20 && e.t <= now);
+        const k = (kind) => ev.filter((e) => e.kind === kind);
+        rec.hitches.push({ t: Math.round(now - rec.t0), dt: Math.round(dt), sec, y: Math.round(scrollY), u: ctl.info && ctl.info.gal ? +ctl.info.gal().toFixed(2) : null,
+          pipeSync: k('pipeSync').length, pipeSyncMs: Math.round(k('pipeSync').reduce((a, e) => a + e.ms, 0)), shader: k('shader').length,
+          texNew: k('texNew').length, upload: k('upload').length, uploadMPx: +(k('upload').reduce((a, e) => a + e.px, 0) / 1e6).toFixed(2) });
+      }
     }
     lastY = scrollY;
     if (++paint % 8 === 0) {
@@ -123,6 +156,16 @@ export function attachPerfMeter({ renderer, ctl, backend, gpu }) {
         texMax: mx(b.tex), geoMax: mx(b.geo), gpuMBMax: MB(mx(b.gpuB)), heapMBMax: MB(mx(b.heap)),
       };
     }
+    // GPU de primer uso por sección (cantidades y CPU de la llamada; el costo de GPU no se ve acá)
+    const ge = gev.filter((e) => e.t >= rec.t0 && e.t <= t1);
+    out.gpu = {};
+    for (const e of ge) {
+      const g = out.gpu[e.sec] || (out.gpu[e.sec] = { pipeSync: 0, pipeSyncMs: 0, pipeAsync: 0, shader: 0, texNew: 0, upload: 0, uploadMPx: 0, uploadMs: 0 });
+      if (e.kind === 'pipeSync') { g.pipeSync++; g.pipeSyncMs += e.ms; }
+      else if (e.kind === 'upload') { g.upload++; g.uploadMPx += e.px / 1e6; g.uploadMs += e.ms; }
+      else g[e.kind]++;
+    }
+    for (const g of Object.values(out.gpu)) { g.pipeSyncMs = Math.round(g.pipeSyncMs); g.uploadMPx = +g.uploadMPx.toFixed(1); g.uploadMs = Math.round(g.uploadMs); }
     const lts = lt.filter((e) => e.t >= rec.t0 && e.t <= t1);
     out.longTasks = { n: lts.length, ms: Math.round(lts.reduce((a, e) => a + e.d, 0)), max: Math.round(mx(lts.map((e) => e.d))) };
     // LoAF: scripts con más tiempo acumulado
@@ -137,6 +180,14 @@ export function attachPerfMeter({ renderer, ctl, backend, gpu }) {
     start() { rec = newRec(); return true; },
     stop() { const s = summarize(); rec = null; return s; },
     snapshot() { return box.textContent; },
+    /** eventos de GPU de primer uso de los últimos ms (por defecto 10 s): [{t, ms, kind, u, sec, px}] */
+    gpuEvents(ms = 10000) { const t = performance.now() - ms; return gev.filter((e) => e.t >= t).map((e) => ({ ...e, t: Math.round(e.t), ms: +e.ms.toFixed(1) })); },
+    /** objetos visibles de la escena en este instante (mallas y sprites; sin frustum culling): cuántos y de qué tipo */
+    visible() {
+      const out = { n: 0, sprites: 0, spriteInst: 0, meshes: 0, draw: info.render.drawCalls };
+      if (ctl.scene) ctl.scene.traverseVisible((o) => { if (o.isSprite) { out.n++; out.sprites++; out.spriteInst += o.count || 1; } else if (o.isMesh) { out.n++; out.meshes++; } });
+      return out;
+    },
     hold(sec = 4) { rec = newRec(); return new Promise((res) => setTimeout(() => { const s = summarize(); rec = null; res(s); }, sec * 1000)); },
     // recorrido completo de arriba a abajo a vhPerSec viewports por segundo
     tour(vhPerSec = 1, fromTop = true) {
