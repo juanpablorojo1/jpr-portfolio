@@ -239,7 +239,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     scene.add(d);
     return d;
   }
-  makeDust(isMobile() ? 380 : 900, (a, j) => {
+  const heroDust = makeDust(isMobile() ? 380 : 900, (a, j) => {
     a[j] = (Math.random() - 0.5) * 16; a[j + 1] = (Math.random() - 0.3) * 7; a[j + 2] = 8 - Math.random() * 46;
   });
 
@@ -925,6 +925,17 @@ async function boot({ S, root, after, assetBase }, ctl) {
     abGroup.visible = U.abW.value * (1 - G.w) > 0.001;
     U.dissolve.value = smooth(0.04, 0.2, p);
     echoes.forEach((e) => { e.alpha.value = smooth(0.1, 0.35, p) * 0.5 * (1 - smooth(0.7, 0.95, p)); });
+    // No dibujar lo invisible: lo que en este cuadro tiene opacidad (o brillo) 0 exacto o casi (≤ 1e-4, muy por debajo de un
+    // nivel de 8 bits) no se dibuja. Mismo cuadro, menos draw calls y menos relleno: el piso de puntos (150 × 110, media
+    // pantalla) y el polvo del hero se seguían dibujando × (1 − galW) = 0 desde Projects hasta Contacto.
+    const heroK = 1 - G.w;
+    floorM.visible = heroK > 1e-4;
+    heroDust.visible = heroK > 1e-4;
+    fig.visible = U.dissolve.value < 1 - 1e-4;         // la figura × (1 − dissolve)
+    head.visible = headOpacity.value > 1e-4;
+    lamp.visible = lampOpacity.value > 1e-4;
+    echoes.forEach((e) => { e.mesh.visible = e.alpha.value > 1e-4; });
+    extCore.mesh.visible = extHalo.mesh.visible = G.w > 1e-4;   // la extensión del riel: brillo × galW
     buildRibbons(t, bend);
     const bs = 0.95 + U.pulse.value * 0.7 + Math.min(st.vel, 1.2) * 0.35;
     bl.strength.value = bs;

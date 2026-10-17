@@ -227,7 +227,7 @@ export async function buildProjector({
     const hl = haloMat(poster, u, 2.3);
     const halo = new THREE.Mesh(new THREE.PlaneGeometry(W * 2.3, H * 2.3), hl.m);
     halo.position.z = -0.45; halo.renderOrder = 1; g.add(halo);
-    return { k, j, g, scr, u, nodes: [sc.tn, rf.tn, hl.tn].filter(Boolean), halo, ring, front: 0, facing: 0, pw: 0 };
+    return { k, j, g, scr, u, nodes: [sc.tn, rf.tn, hl.tn].filter(Boolean), halo, ring, ringM, front: 0, facing: 0, pw: 0 };
   });
 
   /* ---------- la cara horizontal: sale del tambor y se abre a 16:9 delante ----------
@@ -323,6 +323,9 @@ export async function buildProjector({
 
   /* ---------- haz rojo tenue: de arriba y adelante hacia la cara de frente (cinta ancha que mira a cámara) ---------- */
   const beamI = uniform(0);
+  // no dibujar lo invisible: el haz (× beamI), el polvo (× luz del haz o del video) y, por cara, el halo y el anillo
+  // (× su intensidad) dejan de dibujarse cuando valen 0; desde Stack se dibujaban apagados hasta Contacto
+  let beamMesh = null, hallDust = null;
   const bA = uniform(LAMP.clone()), bB = uniform(V(0, Y0 + H * 0.78, FZ + 0.2));
   {
     const geo = new THREE.BufferGeometry();
@@ -345,9 +348,9 @@ export async function buildProjector({
     const near = smoothstep(0.8, 2.6, distance(P, camL));
     m.colorNode = RED.mul(prof.mul(along).mul(motes).mul(near).mul(beamI).mul(0.07)).mul(appear);
     m.opacityNode = float(1);
-    const beam = new THREE.Mesh(geo, m);
-    beam.frustumCulled = false; beam.renderOrder = 4;
-    hall.add(beam);
+    beamMesh = new THREE.Mesh(geo, m);
+    beamMesh.frustumCulled = false; beamMesh.renderOrder = 4;
+    hall.add(beamMesh);
   }
 
   /* ---------- polvo alrededor del tambor (lo único con bokeh): toma la luz del video y, en el haz, el rojo ---------- */
@@ -380,8 +383,8 @@ export async function buildProjector({
     const pool = exp(dp.mul(dp).mul(-0.9)).mul(float(1).sub(smoothstep(0.2, 0.7, pl.y))).mul(scrI.mul(2.0)).min(1);
     const lit = max(inB.mul(beamI), pool);
     m.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(smoothstep(0.3, 0.9, near)).mul(lit).mul(appear);
-    const dust = new THREE.Sprite(m); dust.count = DUST; dust.frustumCulled = false; dust.renderOrder = 30;
-    hall.add(dust);
+    hallDust = new THREE.Sprite(m); hallDust.count = DUST; hallDust.frustumCulled = false; hallDust.renderOrder = 30;
+    hall.add(hallDust);
   }
   await yieldToMain();
   if (!alive()) return null;
@@ -653,6 +656,8 @@ export async function buildProjector({
 
     // haz tenue desde arriba (Juan: «(a) Tenue»)
     beamI.value = smooth(FBF_BEAM[0], FBF_BEAM[1] + 0.2, u) * (1 - off);
+    beamMesh.visible = beamI.value > 1e-4;
+    faces.forEach((f) => { f.halo.visible = f.u.halo.value > 1e-6; f.ringM.visible = f.ring.inten.value > 1e-6; });
 
     const stayOn = u > FBF_STAY[0] - 0.12 && u < FBF_OFF;
     const active = stayOn ? mod(Math.round(st.rot), N) : -1;
@@ -665,6 +670,7 @@ export async function buildProjector({
     wp.set(nrm.x * AP, FY, ZC + nrm.z * AP);
     scrPos.value.copy(wp).addScaledVector(nrm, 0.7);
     scrI.value = fa.pw * 0.5 * fadeK;
+    hallDust.visible = beamI.value > 1e-4 || scrI.value > 1e-4;
 
     // videos: src cuando su cara puede llegar al frente (la de frente y sus dos vecinas); el que se aleja lo suelta;
     // corre el de frente (y el que llega, en un giro)
@@ -729,7 +735,7 @@ export async function buildProjector({
   /** precalentado (corridor.warm): todo visible para que compileAsync lo incluya */
   let saved = null;
   function warm(v) {
-    const objs = [hall, line.mesh, ...faces.map((f) => f.scr), ...(wide ? [wide.scr, wide.bz, wide.refl] : [])];
+    const objs = [hall, line.mesh, beamMesh, hallDust, ...faces.flatMap((f) => [f.scr, f.halo, f.ringM]), ...(wide ? [wide.scr, wide.bz, wide.refl] : [])];
     if (v) { saved = objs.map((o) => o.visible); objs.forEach((o) => { o.visible = true; }); }
     else if (saved) { objs.forEach((o, i) => { o.visible = saved[i]; }); saved = null; }
   }

@@ -306,6 +306,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
   /* ---------- polvo con bokeh falso (con el fondo y el nombre, lo único desenfocado) ---------- */
   const dustFocus = uniform(9), dustI = uniform(0);
   const coneA = uniform(new THREE.Vector3(0, 10, 0)), coneB = uniform(new THREE.Vector3()), coneR = uniform(1.9);   // cono del cenital, en el mundo
+  let vDust = null;                              // las motas del cono: × dustI (sin luz, 0: no se dibujan)
   {
     // las motas viven DENTRO del cono del cenital (coordenadas de la vitrina): s a lo largo del eje, ángulo y radio
     // relativo; el cono las lleva de una notebook a la otra. En el apagón (dustI = 0) no hay ninguna (D-11).
@@ -334,6 +335,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     m.opacityNode = disk.mul(seedA.mul(0.5).add(0.25)).mul(float(1).sub(coc.min(1).mul(0.8))).mul(fade).mul(edgeF).mul(dustI).mul(appear);
     const s = new THREE.Sprite(m); s.count = n; s.frustumCulled = false; s.renderOrder = 30;
     group.add(s);
+    vDust = s;
   }
 
   /* ---------- fondo: negro casi absoluto con un pozo de luz chico detrás del objeto (cae con el apagón) ---------- */
@@ -616,6 +618,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     // el cenital queda siempre en la escena (intensidad 0 = apagado): sacarlo cambiaría la cuenta de luces y obligaría
     // a recompilar los materiales en pleno scroll
     dustI.value = stage;
+    vDust.visible = stage > 1e-4;
 
     // la recta viajera: sale del canto, cruza el vacío a oscuras y entra por la bisagra de la siguiente
     relays.forEach((R, k) => {
@@ -744,7 +747,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
 
   let saved = null;
   function warm(v) {
-    const objs = [group, spot, ...laps.map((l) => l.outer), ...beams.map((b) => b.mesh), ...relays.flatMap((r) => [r.r.mesh, r.rm.mesh]), ...(exit ? [exit.mesh, exit.rm.mesh] : [])];
+    const objs = [group, spot, vDust, ...laps.map((l) => l.outer), ...beams.map((b) => b.mesh), ...relays.flatMap((r) => [r.r.mesh, r.rm.mesh]), ...(exit ? [exit.mesh, exit.rm.mesh] : [])];
     if (v) { saved = objs.map((o) => o.visible); objs.forEach((o) => { o.visible = true; }); spot.intensity = 1; }
     else if (saved) { objs.forEach((o, i) => { o.visible = saved[i]; }); saved = null; spot.intensity = 0; }
   }
