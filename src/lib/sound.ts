@@ -46,8 +46,8 @@ const SOUNDS = {
 export type SoundName = keyof typeof SOUNDS;
 const def = (n: SoundName): Def => SOUNDS[n];
 
-/** Volumen general del sitio, sobre la mezcla del director (Juan, 2026-10-17: «Necesito reducir el volumen de los sfx»). 0,5 = −6 dB. */
-const MASTER = 0.5;
+/** Volumen general del sitio, sobre la mezcla del director (Juan, 2026-10-17: «Necesito reducir el volumen de los sfx»). 0,25 = −12 dB (2026-10-17: «mas»). */
+const MASTER = 0.25;
 
 const KEY = 'jpr-sound';
 let on = false;
