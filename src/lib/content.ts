@@ -116,7 +116,7 @@ export interface ProjectDemo {
 const demo = (id: ProjectDemoId, duration: string): ProjectDemo => ({
   mp4: `/projects/${id}/${id}-demo.mp4`,
   webm: `/projects/${id}/${id}-demo.webm`,
-  poster: `/projects/${id}/${id}-demo-poster.jpg`,
+  poster: `/projects/${id}/${id}-demo-poster.webp`,
   width: 1280, height: 720, duration,
 });
 export const PROJECT_DEMOS: Readonly<Record<ProjectDemoId, ProjectDemo>> = {
