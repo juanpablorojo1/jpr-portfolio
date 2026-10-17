@@ -150,21 +150,21 @@ export const CC_BY_4_URL = 'https://creativecommons.org/licenses/by/4.0/';
 export const VIDEOS: readonly VideoItem[] = [
   // LEEX (Juan, 2026-10-15: «que vaya primero el de licitaciones y luego el de leex»). Masters de Remotion 1920×1080
   // (60 y 30 fps) reencodeados con h264_nvenc a 1080p30: ver 03-tech. Música y efectos, sin voz.
-  { id: 'leex_bids_demo', src: '/videos/leex-licitaciones-demo.mp4', poster: '/videos/leex-licitaciones-demo-poster.jpg', orientation: 'landscape', width: 1920, height: 1080, duration: '1:22', audioLang: 'none' },
-  { id: 'leex_kibbo_trailer', src: '/videos/leex-kibbo-trailer.mp4', poster: '/videos/leex-kibbo-trailer-poster.jpg', orientation: 'landscape', width: 1920, height: 1080, duration: '1:22', audioLang: 'none' },
+  { id: 'leex_bids_demo', src: '/videos/leex-licitaciones-demo.mp4', poster: '/videos/leex-licitaciones-demo-poster.webp', orientation: 'landscape', width: 1920, height: 1080, duration: '1:22', audioLang: 'none' },
+  { id: 'leex_kibbo_trailer', src: '/videos/leex-kibbo-trailer.mp4', poster: '/videos/leex-kibbo-trailer-poster.webp', orientation: 'landscape', width: 1920, height: 1080, duration: '1:22', audioLang: 'none' },
   // Showreel v3 (Juan, 2026-10-14): los 5 reels con el logo de protagonista van primero. Música Pixabay Content
   // License (sin atribución obligatoria) y SFX, sin voz. Al reexportarse se reemplazan los archivos con el mismo nombre.
   // PLACEHOLDER: reel-04-3d-fisicas.mp4 y su póster son una copia del 05 hasta que exista el reel 04.
   { id: 'reel_type', src: '/videos/reel-01-tipografia.mp4', poster: '/videos/reel-01-tipografia-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:16', audioLang: 'none' },
-  { id: 'reel_liquid', src: '/videos/reel-02-liquida.mp4', poster: '/videos/reel-02-liquida-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:16', audioLang: 'none' },
-  { id: 'reel_ui', src: '/videos/reel-03-interfaz.mp4', poster: '/videos/reel-03-interfaz-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:16', audioLang: 'none' },
-  { id: 'reel_3d', src: '/videos/reel-04-3d-fisicas.mp4', poster: '/videos/reel-04-3d-fisicas-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:16', audioLang: 'none' },
-  { id: 'reel_sting', src: '/videos/reel-05-sting.mp4', poster: '/videos/reel-05-sting-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:16', audioLang: 'none' },
-  { id: 'b6_story', src: '/videos/b6-story.mp4', poster: '/videos/b6-story-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:46', audioLang: 'es', creditHref: CC_BY_4_URL },
-  { id: 'kibbo_film', src: '/videos/kibbo-film.mp4', poster: '/videos/kibbo-film-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:46', audioLang: 'es' },
-  { id: 'v8v_cpr', src: '/videos/v8v-rcp.mp4', poster: '/videos/v8v-rcp-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:18', audioLang: 'es' },
-  { id: 'mri_explainer', src: '/videos/mri-explainer.mp4', poster: '/videos/mri-explainer-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '1:00', audioLang: 'es' },
-  { id: 'model_comparison', src: '/videos/model-comparison.mp4', poster: '/videos/model-comparison-poster.jpg', orientation: 'landscape', width: 1920, height: 1080, duration: '0:10', audioLang: 'none' },
+  { id: 'reel_liquid', src: '/videos/reel-02-liquida.mp4', poster: '/videos/reel-02-liquida-poster.webp', orientation: 'portrait', width: 1080, height: 1920, duration: '0:16', audioLang: 'none' },
+  { id: 'reel_ui', src: '/videos/reel-03-interfaz.mp4', poster: '/videos/reel-03-interfaz-poster.webp', orientation: 'portrait', width: 1080, height: 1920, duration: '0:16', audioLang: 'none' },
+  { id: 'reel_3d', src: '/videos/reel-04-3d-fisicas.mp4', poster: '/videos/reel-04-3d-fisicas-poster.webp', orientation: 'portrait', width: 1080, height: 1920, duration: '0:16', audioLang: 'none' },
+  { id: 'reel_sting', src: '/videos/reel-05-sting.mp4', poster: '/videos/reel-05-sting-poster.webp', orientation: 'portrait', width: 1080, height: 1920, duration: '0:16', audioLang: 'none' },
+  { id: 'b6_story', src: '/videos/b6-story.mp4', poster: '/videos/b6-story-poster.webp', orientation: 'portrait', width: 1080, height: 1920, duration: '0:46', audioLang: 'es', creditHref: CC_BY_4_URL },
+  { id: 'kibbo_film', src: '/videos/kibbo-film.mp4', poster: '/videos/kibbo-film-poster.webp', orientation: 'portrait', width: 1080, height: 1920, duration: '0:46', audioLang: 'es' },
+  { id: 'v8v_cpr', src: '/videos/v8v-rcp.mp4', poster: '/videos/v8v-rcp-poster.webp', orientation: 'portrait', width: 1080, height: 1920, duration: '0:18', audioLang: 'es' },
+  { id: 'mri_explainer', src: '/videos/mri-explainer.mp4', poster: '/videos/mri-explainer-poster.webp', orientation: 'portrait', width: 1080, height: 1920, duration: '1:00', audioLang: 'es' },
+  { id: 'model_comparison', src: '/videos/model-comparison.mp4', poster: '/videos/model-comparison-poster.webp', orientation: 'landscape', width: 1920, height: 1080, duration: '0:10', audioLang: 'none' },
 ] as const;
 
 // Desktop Projects rail: width of each panel in viewport units (1 = 100vw of rail
