@@ -61,8 +61,8 @@ function AbPlate({ alt }: { alt: string }) {
       <div className="ab-plate-img" data-pm="cut" data-shown={shown ? '' : undefined}>
         {on && (
           <picture>
-            <source type="image/avif" srcSet={srcSet('about-foto-m', M_W, 'avif')} sizes="100vw" />
-            <source type="image/webp" srcSet={srcSet('about-foto-m', M_W, 'webp')} sizes="100vw" />
+            <source type="image/avif" srcSet={srcSet('about-foto-m', M_W, 'avif')} sizes="(min-width: 600px) 480px, 100vw" />
+            <source type="image/webp" srcSet={srcSet('about-foto-m', M_W, 'webp')} sizes="(min-width: 600px) 480px, 100vw" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/about-foto-m-800.webp" alt={alt} width={800} height={1000} decoding="async" onLoad={() => setShown(true)} />
           </picture>
@@ -133,14 +133,16 @@ export default function About() {
       let S: Senal | null = null;
       const offSignal = onSignal((s) => { S = s; });
       setBatch([[[label, ...rest], { opacity: 0, y: 14 }]]);
-      // El retrato se abre y se cierra sobre la línea del riel (donde la cruza, en px desde su borde de arriba), siempre a
-      // opacidad plena: con un fundido la recta 3D se vería a través del pecho mientras entra.
+      // El retrato se abre y se cierra sobre la línea del riel (donde la cruza, desde su borde de arriba), siempre a
+      // opacidad plena: con un fundido la recta 3D se vería a través del pecho mientras entra. En % que suman 100: en px,
+      // el cierre fijado con el marco en 561 quedaba viejo cuando las fuentes lo llevaban a 568 (tira de 7 px, D-01).
       const rail = section.querySelector<HTMLElement>('.ab-rail');
       const shut = () => {
         if (!frame) return 'none';
         const fh = frame.offsetHeight;
         const h = Math.min(fh, Math.max(0, (rail?.offsetTop ?? fh * 0.4) - frame.offsetTop));
-        return `inset(${h}px 0px ${fh - h}px 0px)`;
+        const p = fh ? (h / fh) * 100 : 40;
+        return `inset(${p}% 0% ${100 - p}% 0%)`;
       };
       let twFrame: gsap.core.Tween | null = null;
       if (frame) gsap.set(frame, { clipPath: shut() });
@@ -193,7 +195,7 @@ export default function About() {
         twRest = gsap.to(rest, { opacity: 1, y: 0, duration: 1.0, ease: 'expo.out', stagger: 0.06, delay: lag });
         twFrame?.kill();
         if (frame) {
-          twFrame = gsap.to(frame, { clipPath: 'inset(0px 0px 0px 0px)', duration: 1.1, ease: 'expo.out', delay: lag });
+          twFrame = gsap.to(frame, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.1, ease: 'expo.out', delay: lag });
           // la foto se asienta mientras se abre (sólo transform): no se lee como un rectángulo rígido que se destapa
           if (img) gsap.fromTo(img, { scale: 1.05 }, { scale: 1, duration: 1.6, ease: 'expo.out', delay: lag, overwrite: true });
         }
@@ -299,10 +301,11 @@ export default function About() {
         <div className="ab-photo relative mt-8">
           <div className="ab-frame">
             {/* < 1024 la fuente es un GIF de 1 px: el teléfono no pide esta versión (tiene la suya, AbPlate) */}
+            {/* sizes = lo que se pinta con cover: alto del marco (≤78vh) × 0,656 del archivo ≈ 51vh, con margen 58vh; o el ancho del marco (≤27vw, EN) */}
             <picture>
               <source media="(max-width: 1023px)" srcSet={BLANK} />
-              <source type="image/avif" srcSet={srcSet('about-foto-d', D_W, 'avif')} sizes="34vw" />
-              <source type="image/webp" srcSet={srcSet('about-foto-d', D_W, 'webp')} sizes="34vw" />
+              <source type="image/avif" srcSet={srcSet('about-foto-d', D_W, 'avif')} sizes="max(27vw, 58vh)" />
+              <source type="image/webp" srcSet={srcSet('about-foto-d', D_W, 'webp')} sizes="max(27vw, 58vh)" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="ab-img" src="/images/about-foto-d-960.webp" alt={t('photo_alt')} width={960} height={1463} loading="lazy" decoding="async" />
             </picture>
