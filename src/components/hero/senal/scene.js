@@ -716,6 +716,11 @@ async function boot({ S, root, after, assetBase }, ctl) {
     return { lo, hi };
   };
   console.info('[senal] backend:', backend, '| gpu:', gpu);
+  // medidor de rendimiento (?perf, perf-meter.js): chunk aparte que se pide sólo con el flag; sin él no se importa nada
+  if (params.has('perf')) {
+    try { const { attachPerfMeter } = await import('./perf-meter.js'); if (!ctl.disposed && !S.dead) attachPerfMeter({ renderer, ctl, backend, gpu }); }
+    catch (e) { console.warn('[senal] perf:', e && e.message); }
+  }
 
   /* ---------- Projects: armado diferido del pasillo ----------
      Sólo escritorio ≥1024. Se arma por proximidad: cuando el usuario empieza a bajar (el primer scroll fuera del
