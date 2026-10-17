@@ -46,6 +46,9 @@ const SOUNDS = {
 export type SoundName = keyof typeof SOUNDS;
 const def = (n: SoundName): Def => SOUNDS[n];
 
+/** Volumen general del sitio, sobre la mezcla del director (Juan, 2026-10-17: «Necesito reducir el volumen de los sfx»). 0,5 = −6 dB. */
+const MASTER = 0.5;
+
 const KEY = 'jpr-sound';
 let on = false;
 let loaded: Partial<Record<SoundName, Howl>> = {};
@@ -60,7 +63,8 @@ const wide = () => typeof window !== 'undefined' && matchMedia('(min-width: 1024
 
 function load() {
   if (loading) return loading;
-  loading = import('howler').then(({ Howl }) => {
+  loading = import('howler').then(({ Howl, Howler }) => {
+    Howler.volume(MASTER);
     (Object.keys(SOUNDS) as SoundName[]).forEach((n) => {
       const s = def(n);
       loaded[n] = new Howl({ src: [`/sounds/${n}.webm`, `/sounds/${n}.m4a`], volume: s.vol, loop: !!s.loop, preload: true });
