@@ -53,7 +53,7 @@ const CW = LW / 2 + 0.05;
 const flicker = (t) => (t < 0 ? 0 : t < 0.05 ? 1 : t < 0.11 ? 0.25 : t < 0.16 ? 0.95 : t < 0.22 ? 0.55 : 1);
 
 /** Arma la vitrina. Devuelve el controlador o null si se desmontó a mitad. */
-export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear, yieldToMain, assetBase = '/projects/', railStop, railY = 0.03 }) {
+export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear, yieldToMain, assetBase = '/projects/', railStop, railY = 0.03, spot: spotIn = null }) {
   const alive = () => !ctl.disposed && !S.dead;
   const group = new THREE.Group();
   group.name = 'vitrina';
@@ -104,9 +104,11 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
   const env = await studioEnv(renderer, hdr);
   if (!alive()) return null;
 
-  /* ---------- la luz: un cenital duro que sigue a la notebook encendida ---------- */
-  const spot = new THREE.SpotLight(0xfff4ea, 0, 0, 0.3, 0.55, 2);
-  group.add(spot, spot.target);
+  /* ---------- la luz: un cenital duro que sigue a la notebook encendida ----------
+     Con `spotIn` (scene.js) la luz vive en la raíz de la escena, siempre en la lista de luces (sin recompilar al entrar
+     y salir de Projects): se ubica en el mundo con la matriz de la vitrina (la misma toma que como hija del grupo). */
+  const spot = spotIn || new THREE.SpotLight(0xfff4ea, 0, 0, 0.3, 0.55, 2);
+  if (!spotIn) group.add(spot, spot.target);
 
   /* ---------- la señal: cinta de luz que mira a cámara, con ventana [s0, s1] sobre su largo ---------- */
   const camL = uniform(new THREE.Vector3());     // cámara en coordenadas de la vitrina (las cintas viven ahí)
@@ -134,7 +136,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     g.setIndex(idx);
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e4);
     const u = { s0: uniform(0), s1: uniform(0), inten: uniform(0), head: uniform(1) };
-    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const aTan = attribute('aTan', 'vec3'), aSide = attribute('aSide', 'float'), aS = attribute('aS', 'float');
     const toCam = normalize(camL.sub(positionLocal));
     const n = normalize(cross(aTan, toCam));
@@ -602,10 +604,12 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     if (active >= 0) {
       // un poco por detrás del objeto: además del deck, rasante en el borde trasero (rim) y el canto de la tapa (D-02)
       const c = centers[active];
-      spot.position.set(c.x + 0.3, c.y + 6.2, c.z - 1.2);
+      tmpT.set(c.x + 0.3, c.y + 6.2, c.z - 1.2);
+      coneA.value.copy(tmpT);
+      spot.position.copy(tmpT);
       spot.target.position.copy(c);
+      if (spotIn) { group.localToWorld(spot.position); group.localToWorld(spot.target.position); }
       spot.intensity = 80 * stage;
-      coneA.value.copy(spot.position);
       coneB.value.set(c.x, laps[active].home.y, c.z + 0.3);
       coneR.value = 2.0;
     } else spot.intensity = 0;
@@ -736,7 +740,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
   }
 
   /** fuera de Projects (la galería cerrada no llama a update): apaga el zumbido */
-  function idle() { if (sound.hum) { sound.hum = false; loopSound('mat-hum', false); } }
+  function idle() { spot.intensity = 0; if (sound.hum) { sound.hum = false; loopSound('mat-hum', false); } }
 
   let saved = null;
   function warm(v) {

@@ -305,7 +305,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
     geo.setAttribute('bri', new THREE.BufferAttribute(bri, 1).setUsage(THREE.DynamicDrawUsage));
     geo.setIndex(idx);
-    const mat = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const mat = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const b = attribute('bri', 'float');
     mat.colorNode = RED.mul(intensity).mul(b.add(U.pulse.mul(0.35)));
     mat.opacityNode = clamp(b, 0, 1).mul(alphaMul);
@@ -348,6 +348,13 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const lamp = new THREE.Sprite(lampMat);
   lamp.scale.setScalar(0.24); lamp.renderOrder = 3;
   scene.add(lamp);
+  /* El cenital de la vitrina (vitrina.js lo mueve y lo enciende) vive en la escena desde el arranque y nunca sale de la
+     lista de luces. Si entraba y salía con el pasillo, three recompilaba los materiales a la vista en cada cruce de
+     Projects (con una luz en la escena los Basic arman su modelo de luz) y el precalentado del pasillo, que arma los
+     nodos después de restaurar la visibilidad, compilaba las notebooks sin luz: cada llegada compilaba en pleno scroll
+     (tirones de 150–580 ms). Con intensidad 0 no aporta nada: todo lo del hero es Basic o Sprite (luz directa 0). */
+  const stageLight = new THREE.SpotLight(0xfff4ea, 0, 0, 0.3, 0.55, 2);
+  scene.add(stageLight, stageLight.target);
   // corr, corrBuilding, corrIn: declarados arriba, junto a sync
   let stk = null, ecgX = null, ctcX = null;     // Stack (network.js), Experience (ecg.js) y Contact (convergence.js): se enganchan con el pasillo listo
 
@@ -760,7 +767,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     corrBuilding = true;
     const t0 = performance.now();
     loadShots()
-      .then(({ buildCorridor }) => (ctl.disposed || S.dead ? null : buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW: U.galW, yieldToMain: yieldBuild })))
+      .then(({ buildCorridor }) => (ctl.disposed || S.dead ? null : buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW: U.galW, yieldToMain: yieldBuild, stageLight })))
       .then(async (c) => {
         if (!c || ctl.disposed || S.dead) return;
         c.place({ yT: lay.yT, railZ: RAIL_Z, aboutPos: lay.endPos, aboutLook: lay.endLook });
@@ -797,7 +804,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
       let pending = null;
       try {
         if (scenePass.renderTarget) renderer.setRenderTarget(scenePass.renderTarget);
-        pending = renderer.compileAsync(n.group, camera, scene);
+        pending = c.compileAt ? c.compileAt(n.group, camera, scene) : renderer.compileAsync(n.group, camera, scene);
       } catch (e) { /* compila en el primer frame */ }
       finally { renderer.setRenderTarget(prevRT); n.warm(false); }
       try { await Promise.race([pending, new Promise((r) => setTimeout(r, 4000))]); } catch (e) { /* idem */ }

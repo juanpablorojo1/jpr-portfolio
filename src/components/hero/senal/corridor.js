@@ -35,7 +35,7 @@ const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
 const NP = GAL_DWELLS.length;
 
 /** Arma el riel, la vitrina y la sala (async, con pausas al hilo principal). Devuelve el controlador o null si se desmontó a mitad. */
-export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW, assetBase = '/projects/', yieldToMain }) {
+export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW, assetBase = '/projects/', yieldToMain, stageLight = null }) {
   const alive = () => !ctl.disposed && !S.dead;
   const group = new THREE.Group();
   group.name = 'corridor';
@@ -117,7 +117,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
 
   /* ---------- Projects: la vitrina (cuatro laptops en el vacío) ---------- */
   ctl.corrStage = 'vitrina';
-  const vit = await buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear, yieldToMain, assetBase, railStop: RAIL_STOP });
+  const vit = await buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear, yieldToMain, assetBase, railStop: RAIL_STOP, spot: stageLight });
   if (!vit || !alive()) return null;
   group.add(vit.group);
   vit.texs.forEach((t) => texs.push(t));
@@ -128,7 +128,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   ctl.corrStage = 'projector';
   const END_P = V(0.78, 0.86, -54.8), END_L = V(-0.12, 0.12, -61.8);   // última pose de Projects (= primera de la sala)
   const proj = await buildProjector({
-    group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
+    renderer, group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
     headPos, headI, scrPos, scrI, endP: END_P, endL: END_L, railHeadZ: RAIL_STOP + 0.15, focusU, rangeU,
   });
   if (!proj || !alive()) return null;
@@ -349,6 +349,22 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     vit.placeTags(S.neg.tags, mouseRef);
   }
 
+  /* Profundidad de llamada del pase de escena dentro de este post. three la pone en la clave del contexto de render: el
+     pase de escena dibuja anidado (render del cuadro final → pase del DOF/bloom → pase de escena: 2 con este grafo,
+     medido en el navegador con los objetos de render del pasillo) y compileAsync compila siempre con 0. Con 0, cada
+     objeto se volvía a preparar al dibujarse por primera vez en Projects y, donde el código cambia (el teclado instanciado
+     nombra su buffer con un id nuevo), se compilaba el pipeline en pleno scroll. Se compila con la profundidad real.
+     Usa internos de three (versión fija 0.186): si no están, compila como antes. */
+  const SCENE_DEPTH = 2;
+  /** compileAsync con la profundidad de llamada del pase de escena (la del render real); lo usan el pasillo y las tomas
+      que se enganchan después (scene.js, attachExt). Arma la lista en forma síncrona y devuelve la promesa. */
+  function compileAt(target, cam, targetScene) {
+    const rc = renderer._renderContexts, get = rc && rc.get;
+    const own = rc && Object.prototype.hasOwnProperty.call(rc, 'get');
+    if (get) rc.get = function (rt, mrt, cd) { return get.call(this, rt, mrt, cd === undefined ? SCENE_DEPTH : cd); };
+    try { return renderer.compileAsync(target, cam, targetScene); } finally { if (get) { if (own) rc.get = get; else delete rc.get; } }
+  }
+
   /** Precalentado: compila los materiales (sin dibujar) con todo visible. */
   async function warm() {
     const prevVis = group.visible;
@@ -356,28 +372,34 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     proj.warm(true);
     vit.warm(true);
     const culled = [];
-    group.traverse((o) => { if (o.isMesh || o.isSprite) { culled.push([o, o.frustumCulled]); o.frustumCulled = false; } });
+    // toda la escena, visible y sin culling (no sólo el pasillo): lo que vive en la raíz y en este momento está oculto o
+    // fuera del cuadro (el cabezal del riel, las capas del About, la figura) también se dibuja con el post del pasillo
+    // (en la entrada a Projects y en Video), con este mismo contexto de render
+    scene.traverse((o) => { if (o.isMesh || o.isSprite || o.isGroup) { culled.push([o, o.frustumCulled, o.visible]); o.frustumCulled = false; o.visible = true; } });
     ctl.corrStage = 'compile';
-    // compileAsync arma la lista y pide los pipelines en forma síncrona y recién después espera: todo lo que se tocó se
-    // restaura ANTES del await (si no, un frame del loop podía dibujar el post dentro de la textura que él mismo lee).
+    // compileAsync arma la lista en forma síncrona: todo lo que se tocó se restaura ANTES del await (si no, un frame del
+    // loop podía dibujar el post dentro de la textura que él mismo lee). Ojo: en three 0.186 los nodos se arman DESPUÉS,
+    // de a uno por tarea, con el estado de ese momento: lo que cambia el código (las luces) tiene que ser estable; por eso
+    // el cenital vive en la raíz de la escena (scene.js) y no entra y sale con el pasillo.
     const prevRT = renderer.getRenderTarget();
     let pending = null;
     try {
       if (scenePass.renderTarget) renderer.setRenderTarget(scenePass.renderTarget);
-      pending = renderer.compileAsync(scene, camera);
+      pending = compileAt(scene, camera);
     } catch (e) { /* sin compileAsync: compila en el primer frame */ }
     finally {
       renderer.setRenderTarget(prevRT);
-      culled.forEach(([o, f]) => { o.frustumCulled = f; });
+      culled.forEach(([o, f, v]) => { o.frustumCulled = f; o.visible = v; });
       group.visible = prevVis;
       proj.warm(false);
       vit.warm(false);
     }
     // tope de 4 s (WebGL 2 con la pestaña oculta no termina nunca); lo que falte compila en el primer frame
     try { await Promise.race([pending, new Promise((r) => setTimeout(r, 4000))]); } catch (e) { /* idem */ }
-    // las texturas (pantallas, teclado, nombres, pósters) se suben a la GPU acá, de a una por tarea (U-fix-2)
+    // las texturas (pantallas, teclado, nombres, pósters del tambor) se suben a la GPU acá, de a una por tarea (U-fix-2).
+    // Los pósters del tambor estaban afuera de esta lista: se subían (con mipmaps) en el primer cuadro del pase a Video.
     ctl.corrStage = 'upload';
-    for (const t of texs) {
+    for (const t of [...texs, ...proj.texs]) {
       if (!alive()) return;
       try { renderer.initTexture(t); } catch (e) { /* se sube en el primer frame */ }
       await yieldToMain();
@@ -385,7 +407,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   }
 
   return {
-    group, pipeline, bloom: bl, place, camPose, update, placeTags, warm, railEndX,
+    group, pipeline, bloom: bl, place, camPose, update, placeTags, warm, railEndX, compileAt,
     /** brillo de la cinta del riel en x de mundo. Entrada: la recta del About se recoge hasta la base de TraumaVision
         (que queda encendida en su estadía). Salida: estela del cabezal desde la unión con la línea de LEEX hasta el
         umbral. Nada en el resto (la vitrina vive en el vacío). */

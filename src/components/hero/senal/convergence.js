@@ -169,7 +169,7 @@ export async function buildConvergence({ corr, camera, S, ctl, RED, OFF, galW, y
   lGeo.setAttribute('fade', new THREE.BufferAttribute(lFade, 1));
   lGeo.setIndex(new THREE.BufferAttribute(lIdx, 1));
   {
-    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const sideA = attribute('side', 'float'), arc = attribute('arc', 'float'), kind = attribute('kind', 'float');
     const wpx = attribute('wpx', 'float'), fade = attribute('fade', 'float');
     const pos = positionGeometry, dir = attribute('dir', 'vec3');

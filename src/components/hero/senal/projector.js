@@ -55,6 +55,7 @@ const vidOf = (k, r) => mod(Math.round(r + relOf(k, r)), NV);
 const isLand = (j) => VIDEOS[j].width > VIDEOS[j].height;
 const SRC_IN = 1.5, SRC_OUT = 1.9;                   // src cuando la cara puede llegar al frente; se suelta lejos de él
 const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
+const PRE_U = LAST_OUT - 1.5;                        // precalentado del video de frente: ~2,5 viewports antes de GAL_END
 
 /* ---------- el tambor (metros del pasillo) ---------- */
 const H = FBF_DRUM.h, W = FBF_DRUM.w, Y0 = FBF_DRUM.base;
@@ -68,7 +69,7 @@ const FILL = 0.7;                                    // la cara de frente: ~70 %
 
 /** Arma el tambor. Devuelve el controlador o null si se desmontó a mitad. */
 export async function buildProjector({
-  group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
+  renderer, group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
   headPos, headI, scrPos, scrI, endP, endL, railHeadZ, focusU, rangeU,
 }) {
   const alive = () => !ctl.disposed && !S.dead;
@@ -88,6 +89,13 @@ export async function buildProjector({
     t.colorSpace = THREE.SRGBColorSpace; t.generateMipmaps = true;
     t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = 16;
     t.needsUpdate = true; texs.push(t); ctl.texs.push(t); return t;
+  };
+  /** sube la textura a la GPU (con sus mipmaps) en un hueco ocioso, no en el primer cuadro en que se ve: los pósters que
+      llegan en segundo plano y el primer cuadro de cada video (antes se subían en pleno pase Projects → Video) */
+  const idleUpload = (t) => {
+    if (!renderer || !renderer.initTexture) return;
+    const go = () => { if (alive() && texs.includes(t)) { try { renderer.initTexture(t); } catch (e) { /* se sube al dibujarla */ } } };
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(go, { timeout: 400 }); else setTimeout(go, 0);
   };
 
   /* ---------- pósters (las texturas hasta que el video tiene su primer cuadro) ---------- */
@@ -159,7 +167,7 @@ export async function buildProjector({
     const st = vec2(uv().x, float(1).sub(uv().y)).sub(0.5).mul(vec2(u.cropW, u.cropH)).add(vec2(0.5, u.offY.add(0.5)));
     const tn = texture(tex, st).level(3.6);
     // aditivo y sin prueba de profundidad: se dibuja sobre el piso de puntos (el piso es opaco y lo taparía)
-    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const fade = smoothstep(0.8, 1.0, uv().y).pow(1.6);
     m.colorNode = tn.rgb.mul(fade).mul(u.refl).mul(appear);
     m.opacityNode = float(1);
@@ -282,7 +290,7 @@ export async function buildProjector({
     geo.setIndex(idx);
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e4);
     const u = { s0: uniform(0), s1: uniform(0), inten: uniform(0), head: uniform(1) };
-    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const aTan = attribute('aTan', 'vec3'), aSide = attribute('aSide', 'float'), aS = attribute('aS', 'float');
     const n = normalize(cross(aTan, normalize(camL.sub(positionLocal))));
     m.positionNode = positionLocal.add(n.mul(aSide).mul(width));
@@ -323,7 +331,7 @@ export async function buildProjector({
     geo.setAttribute('aSide', new THREE.BufferAttribute(new Float32Array([-1, 1, -1, 1]), 1));
     geo.setIndex([0, 2, 1, 1, 2, 3]);
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e4);
-    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const e = attribute('aEnd', 'float'), sd = attribute('aSide', 'float');
     const P = mix(bA, bB, e);
     const dir = normalize(bB.sub(bA));
@@ -394,6 +402,7 @@ export async function buildProjector({
     posterReq[j] = loadImg(VIDEOS[j].poster).then((img) => {
       if (!alive()) return;
       posterTex[j] = sharp(new THREE.Texture(img));
+      idleUpload(posterTex[j]);
       if (!(vids[j] && vids[j].tex)) showVid(j);
     }).catch(() => { posterReq[j] = null; });
   }
@@ -424,17 +433,18 @@ export async function buildProjector({
     if (wide && wide.nodes[0].value === r.tex) wide.nodes.forEach((n) => { n.value = posterTex[wide.j] || posterTex[j]; });
     dropTex(r.tex);
   }
-  function ensureVideo(k) {
+  function ensureVideo(k, preload = 'auto') {
     if (vids[k]) return vids[k];
     const v = document.createElement('video');
     v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true;
     v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
-    v.preload = 'auto';
+    v.preload = preload;
     const rec = { v, tex: null, last: -1 };
     v.addEventListener('loadeddata', () => {
       if (!alive() || rec.tex || vids[k] !== rec) return;
       v.width = v.videoWidth; v.height = v.videoHeight;      // la textura común toma el tamaño de estos atributos
       rec.tex = sharp(new THREE.Texture(v));
+      idleUpload(rec.tex);
       showVid(k);
     });
     v.src = VIDEOS[k].src;
@@ -535,7 +545,13 @@ export async function buildProjector({
     hall.visible = on;
     const ready = on && gw > 0.5;
     lookW.value = on ? gw * (1 - smooth(FBF_OFF + 0.1, FBF_END, u)) : 0;
-    if (!on) { st.active = -1; S.fbf.active = -1; S.fbf.wide = 0; scrI.value = 0; pauseAll(); return null; }
+    if (!on) {
+      st.active = -1; S.fbf.active = -1; S.fbf.wide = 0; scrI.value = 0; pauseAll();
+      // precalentado: el video de la cara de frente pide src (sólo metadatos y su primer cuadro) desde la llegada a LEEX,
+      // y ese primer cuadro se sube a la GPU en idle; en el pase al Tambor ya está (antes: src + load + subida en el pase)
+      if (gw > 0.5 && u > PRE_U) ensureVideo(faces[mod(Math.round(st.rot), N)].j, 'metadata');
+      return null;
+    }
     camL.value.copy(P);                               // P ya está en coordenadas del pasillo (camPose)
 
     // giro: S.fbf.rot (continuo) lo escribe el HTML con su tween. Reduced motion: corte con fundido.
@@ -659,7 +675,7 @@ export async function buildProjector({
       if (!f || Math.abs(relOf(f.k, st.rot)) > SRC_OUT) release(j);
     });
     faces.forEach((f) => {
-      if (srcWin && Math.abs(relOf(f.k, st.rot)) < SRC_IN) ensureVideo(f.j);
+      if (srcWin && Math.abs(relOf(f.k, st.rot)) < SRC_IN) { const rr = ensureVideo(f.j); if (rr.v.preload !== 'auto') rr.v.preload = 'auto'; }
       const r = vids[f.j];
       if (!r) return;
       const play = ready && inView && !document.hidden && !S.fbf.paused && f.pw > 0.3 && f.front > 0.45 && u < FBF_OFF + 0.2;
@@ -721,7 +737,7 @@ export async function buildProjector({
   void housingMat; void metalMat; void prep; void focusU; void rangeU; void cameraPosition;
 
   return {
-    pose, calm, update, placeTags, pick, pauseAll, warm, maskNode, lookW,
+    pose, calm, update, placeTags, pick, pauseAll, warm, maskNode, lookW, texs,
     lampK: () => st.lampK,
     info: () => ({
       fbf: st.mode, rot: +st.rot.toFixed(2), active: st.active, vid: st.active < 0 ? -1 : mod(Math.round(st.rot), NV), spin: +st.spin.toFixed(2),

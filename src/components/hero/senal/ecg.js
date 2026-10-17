@@ -183,7 +183,7 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
   lGeo.setAttribute('wpx', new THREE.BufferAttribute(lW, 1));
   lGeo.setIndex(new THREE.BufferAttribute(lIdx, 1));
   {
-    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const sideA = attribute('side', 'float'), sy = attribute('sy', 'float'), lead = attribute('lead', 'float');
     const spk = attribute('spk', 'float'), wpx = attribute('wpx', 'float');
     const pos = positionGeometry, dir = attribute('dir', 'vec3');

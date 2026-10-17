@@ -110,7 +110,7 @@ export async function buildNetwork({ corr, camera, S, ctl, RED, OFF, galW, yield
   /* ---------- materiales ---------- */
   // líneas: quads que miran a la cámara, ~1,5 px de ancho (con antialias en el borde), en coordenadas del pasillo
   function lineMat({ widthPx, colorFn, path = false }) {
-    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const sideA = attribute('side', 'float');
     let pos = positionGeometry, dir = attribute('dir', 'vec3');
     if (path) { pos = mix(positionGeometry, attribute('pos2', 'vec3'), straightK.mul(attribute('mv', 'float'))); dir = mix(dir, attribute('dir2', 'vec3'), straightK.mul(attribute('mv', 'float'))); }
