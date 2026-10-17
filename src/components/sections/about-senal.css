@@ -16,6 +16,7 @@
 .ab .ab-status-dot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; background: #e8272a; box-shadow: 0 0 10px #e8272a; }
 .ab .ab-fg { display: none; }
 .ab .ab-hz { display: none; }   /* horizonte: sólo celular (bloque al final) */
+.ab .ab-plate { display: none; } /* retrato del teléfono: sólo < 1024 (bloque al final) */
 
 /* Escena viva detrás (hero-controller pone data-see-through): el About entra transparente y la cámara
    termina su recorrido detrás del texto. Sin sombra: sobre un card transparente la sombra dibuja una costura. */
@@ -79,28 +80,42 @@
      700 y no 600: Barlow sólo está cargada en 400/700 (con 600 ya se dibuja la 700, pero axe/Lighthouse cuentan bold desde 700) */
   .ab .ab-body .ab-sub { margin: 0; break-inside: avoid; font-weight: 700; font-size: clamp(19px, 1.3vw, 22px); }
 
-  /* la foto real, 2D plana, cuelga del riel */
-  /* el bloque de la foto se disuelve (display: contents): la foto va a la derecha y la ficha al pie de la columna de texto;
-     bajo la foto, a 1200 en ES, la ficha se partía en dos filas y la edad quedaba fuera del frame */
+  /* el bloque de la foto se disuelve (display: contents): el retrato va a la derecha y la ficha al pie de la columna de
+     texto; bajo la foto, a 1200 en ES, la ficha se partía en dos filas y la edad quedaba fuera del frame */
   .ab .ab-photo { display: contents; }
-  /* «más grande» (Juan, 2026-10-15): la figura a 1,6× (1,28 ph × 1,6 ph, 4:5 como el recorte), apoyada en el mismo pie
-     de antes y creciendo hacia arriba, detrás del titular y del texto (z-index). Pegada al borde derecho: con el margen,
-     a 1440×900 la cara caía detrás de «PRODUCTO». Medido: a 1536×730 (/es) el marco va de y 126 a 711 y la cabeza empieza en
-     ~155 (nav hasta 65); a 1440×900, de y 153 a 873, cabeza en ~190. Sin overflow horizontal (right: 0). */
+  /* Retrato editorial (opción A, 2026-10-15; Juan: «ahora está muy mal implementada»). La foto se lee como foto: nítida,
+     a opacidad plena y en su color natural (2026-10-16, Juan: «no hace falta muchos filtros ni recortes»): sin ByN, sin
+     grade, sin máscara; sólo encuadre.
+     Columna propia a la derecha, al lado del cuerpo y no detrás: arranca --fgap después del cuerpo (la misma cuenta que
+     .ab-body) y nunca antes del final del titular (--tr, lo mide About.tsx, + --tgap); sale a sangre por el borde
+     derecho. Techo a la altura del rótulo «Sobre mí» (--ft-m) y piso en el filete de la ficha (--fb-m), los dos medidos
+     por About.tsx; nunca más abajo que el interruptor de sonido (fijo: bottom 28 + 36 de alto). Va encima de las motas
+     .ab-fg (z 3): nada pinta sobre la cara. Cruza el riel: la recta 3D pasa por detrás (la foto la tapa como un objeto)
+     y le enciende el filo izquierdo justo donde entra. */
+  .ab {
+    --nav: 80px;
+    --gut: 6vw;                                            /* el mismo aire que descuenta .ab-body */
+    --fgap: clamp(36px, 3.4vw, 64px);
+    --tgap: clamp(28px, 2.8vw, 52px);
+    --ft: calc(var(--nav) + clamp(18px, 3.2vh, 40px));
+    --fb: calc(64px + clamp(16px, 2.4vh, 28px));
+    --ftop: max(var(--ft-m, var(--ft)), calc(var(--nav) + 12px));
+    --hit: calc(var(--rail) - var(--ftop));     /* dónde cruza el riel, desde el borde de arriba del retrato */
+  }
   .ab .ab-frame {
-    position: absolute; right: 0; top: calc(var(--rail) + clamp(10px, 1.4vh, 16px) - var(--ph) * .6); z-index: 0;
-    width: calc(var(--ph) * 1.28); height: calc(var(--ph) * 1.6); max-width: none; margin: 0; aspect-ratio: auto; overflow: hidden;
+    position: absolute; right: 0; top: var(--ftop); bottom: max(var(--fb-m, var(--fb)), 80px); z-index: 4;
+    width: min(calc(var(--pad) + var(--ph) * .8 + var(--gut) - var(--fgap)), calc(100% - var(--tr, 0px) - var(--tgap)));
+    margin: 0; overflow: hidden;
+  }
+  .ab .ab-frame picture { display: contents; }
+  .ab .ab-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 54% 0; }
+  /* el rojo toca la foto, no la tiñe: el filo izquierdo se enciende donde llega la recta y se apaga hacia arriba y abajo */
+  .ab .ab-frame::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; z-index: 1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(232, 39, 42, 0) calc(var(--hit) - 26vh), rgba(232, 39, 42, .9) var(--hit),
+      rgba(232, 39, 42, 0) calc(var(--hit) + 26vh));
   }
   .ab .ab-top, .ab .ab-body, .ab .ab-meta { z-index: 1; }
-  /* Foto del About (Juan, 2026-10-14: «sin blanco y negro, cortala y que se difumine»): a color, sin filtro. El recorte
-     about-rocking-the-industry-cutout.webp ya trae el alfa: silueta BiRefNet erosionada 2 px y difuminada (sin el filo
-     blanco de la pantalla del escenario), color del borde tomado del interior, y fundido a negro del 60 al 97 % del alto
-     (el corte del muslo se pierde en el fondo). Sin marco, viñeta ni velo: la figura flota sobre la escena. */
-  /* «con poca opacidad» (Juan, 2026-10-15): presencia de fondo, detrás del texto. Va en la imagen y no en .ab-frame,
-     que es lo que anima la entrada (GSAP lo lleva a 1): así la entrada termina en este valor. Probado 0,25–0,4 a 1536×730:
-     a 0,32 la cara se reconoce y la figura queda claramente detrás del contenido. */
-  /* «en blanco y negro» (Juan, 2026-10-15): grises completos con contraste para que los negros no queden lavados */
-  .ab .ab-img { opacity: .32; filter: grayscale(1) contrast(1.2); }
   .ab .ab-meta {
     position: absolute; left: var(--pad); bottom: clamp(20px, 4vh, 44px);
     margin: 0; padding-top: 12px; gap: 16px; flex-wrap: nowrap;
@@ -113,6 +128,8 @@
     display: block; position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; opacity: 0;
   }
   .ab .ab-fg i { position: absolute; left: 0; top: 0; border-radius: 50%; will-change: transform; }
+  /* la mota 1 se asomaba por el filo izquierdo de la foto (design-critic, MINOR): apagada en escritorio */
+  .ab .ab-fg i:nth-child(1) { display: none; }
   .ab .ab-fg i:nth-child(1) {
     width: 24vh; height: 24vh;
     background: radial-gradient(closest-side, rgba(232, 228, 222, .04), rgba(232, 228, 222, .05) 74%, rgba(232, 228, 222, .072) 89%, rgba(232, 228, 222, 0));
@@ -137,16 +154,17 @@
 }
 @media (min-width: 1024px) and (max-width: 1199px) {
   .ab .ab-body { width: calc(100vw - 2 * var(--pad) - var(--ph) * .8 - 3.5vw); column-gap: 24px; }
+  .ab { --gut: 3.5vw; --fgap: 28px; }
 }
+@media (min-width: 1200px) { .ab { --nav: 64px; } }   /* la barra baja de 80 a 64 px desde 1200 */
 
 
 /* =====================================================================================================================
    Celular y tablet (< 1024, 2026-10-14, rama mobile-senal). Escritorio no lee este bloque.
    Misma gramática que el hero del teléfono: titular sobre la línea, datos debajo. La recta de la señal sigue como
    horizonte del titular (SVG con un latido, se dibuja al entrar: phoneMotion «draw»). El cuerpo a 17 px (el primer
-   párrafo, a 21, abre la lectura). La ficha es una lectura de monitor de tres canales. Sin foto: es la misma toma que la
-   figura del hero (que ya está a pantalla completa arriba) y su descarga competía con el LCP; con display: none la
-   imagen lazy no se pide.
+   párrafo, a 21, abre la lectura). La ficha es una lectura de monitor de tres canales. El retrato va como lámina propia
+   (.ab-plate, 2026-10-15): no es la toma del hero y se pide después de `load`, así no compite con su LCP.
    ===================================================================================================================== */
 @media (max-width: 1023px) {
   .ab {
@@ -198,6 +216,26 @@
 
   .ab .ab-photo { margin-top: 40px; }
   .ab .ab-frame { display: none; }
+
+  /* Retrato (opción A): lámina a sangre entre el segundo párrafo y el del hackatón, que le hace de epígrafe. 4:5, sin
+     texto encima. Entra con el corte de señal (phoneMotion «cut»): la recta roja barre el pie y destapa la foto; queda
+     como el horizonte sobre el que está parado. El <img> recién existe después de `load` y a un viewport (AbPlate). */
+  .ab .ab-plate { display: block; position: relative; margin: 2.2em calc(-1 * var(--pad)) 2.1em; }
+  .ab .ab-plate-img { position: relative; aspect-ratio: 4 / 5; overflow: hidden; }
+  /* tablet: a sangre llenaba el viewport entero (766×958 a 768); ahí va como lámina de 480 alineada al texto */
+  @media (min-width: 600px) { .ab .ab-plate { max-width: 480px; margin-left: 0; margin-right: 0; } }
+  .ab .ab-plate-img picture { display: contents; }
+  .ab .ab-plate-img img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0;
+    opacity: 0; transition: opacity .6s cubic-bezier(.16, 1, .3, 1);
+  }
+  .ab .ab-plate-img[data-shown] img { opacity: 1; }
+  .ab .ab-plate .pm-cut { position: absolute; left: 0; right: 0; bottom: 0; height: 1px; z-index: 1; pointer-events: none; }
+  .ab .ab-plate .pm-cut b { position: absolute; inset: 0; background: rgba(232, 39, 42, .78); }
+  .ab .ab-plate .pm-cut i {
+    position: absolute; left: -24px; top: -1px; width: 24px; height: 3px; opacity: 0;
+    background: var(--red-core, #ff5254); box-shadow: 0 0 10px var(--red-core, #ff5254);
+  }
 
   /* ficha: tres canales de monitor, rótulo arriba y lectura abajo */
   .ab .ab-meta {
