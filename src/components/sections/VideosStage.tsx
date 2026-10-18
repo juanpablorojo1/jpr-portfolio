@@ -53,6 +53,10 @@ export default function VideosStage() {
   const [sound, setSound] = useState(false);
   // con la escena viva: el 16:9 está abierto de verdad (S.fbf.wide); null = sin escena, manda el video de frente
   const [wideOpen, setWideOpen] = useState<boolean | null>(null);
+  // C-06: los 12 pósters de .fv-front son el respaldo SIN escena. Mientras la escena pueda correr (la zona tiene
+  // data-gallery, que GALLERY_SCRIPT pone antes del primer pintado y goStatic saca) no se montan: si no, el lazy loader
+  // bajaba los 12 pósters completos además de los del tambor (en medio/bajo, los -720: el doble de descarga)
+  const [frontOn, setFrontOn] = useState(false);
   const total = pad2(N);
 
   useEffect(() => { if (sRef.current) sRef.current.fbf.paused = paused; }, [paused]);
@@ -150,6 +154,20 @@ export default function VideosStage() {
     };
     // canTurn/turnTo/writeRot sólo usan refs: estables para el efecto
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // C-06: los pósters de respaldo se montan sólo si la zona no tiene data-gallery (y aparecen si goStatic o un resize
+  // se la sacan)
+  useEffect(() => {
+    const section = ref.current;
+    if (!section) return;
+    const zone = section.closest<HTMLElement>('.fbf-zone');
+    const sync = () => setFrontOn(!zone || !zone.hasAttribute('data-gallery'));
+    sync();
+    if (!zone) return;
+    const mo = new MutationObserver(sync);
+    mo.observe(zone, { attributes: true, attributeFilter: ['data-gallery'] });
+    return () => mo.disconnect();
   }, []);
 
   /* ---------- con la escena viva: visibilidad atada a la cámara; teclado durante la estadía ---------- */
@@ -304,7 +322,7 @@ export default function VideosStage() {
         >
           {/* sin escena viva: el póster de la cara de frente, con fundido al cambiar (con la escena, el tambor es 3D) */}
           <div className="fv-front" aria-hidden="true">
-            {VIDEOS.map((item, k) => (
+            {frontOn && VIDEOS.map((item, k) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img key={item.id} src={item.poster} alt="" decoding="async" loading="lazy" width={item.width} height={item.height}
                 data-land={item.width > item.height ? '' : undefined} data-on={k === front ? '' : undefined} />
