@@ -49,6 +49,7 @@ export function bootScene({ S, root, after, assetBase = '/senal/' }) {
     if (ctl.canvas) ctl.canvas.remove();
     if (ctl.info && window.__senal === ctl.info) delete window.__senal;
   }
+  ctl.dispose = dispose;                          // el último nivel automático (versión estática) libera todo en vivo (C-03)
   return { ready, dispose };
 }
 
@@ -722,8 +723,13 @@ async function boot({ S, root, after, assetBase }, ctl) {
     aq.st = state;
     Qs.ceiling = state.ceiling;
     if (!action) return;
-    if (action.type === 'level') aq.pending = { lv: action.level, f };
-    else S.goStatic('quality: bajo a ' + f.toFixed(1) + ' fps');
+    if (action.type === 'level') { aq.pending = { lv: action.level, f }; return; }
+    // C-03: a la versión estática en plena sesión. Antes de cortar el loop: pausar los videos del Tambor (el de frente
+    // puede tener sonido) y apagar el zumbido de la vitrina; después, liberar la escena, los videos y la GPU (dispose:
+    // loop, listeners, ctl.offs con los <video> soltados, geometrías, materiales, texturas, render targets, renderer)
+    if (corr) { try { corr.fbf.pauseAll(); corr.idle(); } catch (e) { /* noop */ } }
+    S.goStatic('quality: bajo a ' + f.toFixed(1) + ' fps');
+    if (ctl.dispose) ctl.dispose();
   }
   S.q = Qs;
   applyDust();                                   // el polvo del hero; el del pasillo y las tomas, al engancharse
