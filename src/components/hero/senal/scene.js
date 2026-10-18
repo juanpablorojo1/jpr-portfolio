@@ -121,7 +121,9 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const QL = () => QUALITY[Qs.level];
   let renderer;
   try {
-    renderer = new THREE.WebGPURenderer({ canvas, antialias: QL().msaa, forceWebGL: params.has('webgl'), powerPreference: 'high-performance' });
+    // ?msaa=0|4 (QA): fuerza el MSAA del pase por encima del nivel, para medir su costo
+    const msaa = params.has('msaa') ? params.get('msaa') !== '0' : QL().msaa;
+    renderer = new THREE.WebGPURenderer({ canvas, antialias: msaa, forceWebGL: params.has('webgl'), powerPreference: 'high-performance' });
     ctl.renderer = renderer;
     await renderer.init();
   } catch (e) { clearWatchdog(); return S.goStatic('renderer: ' + e.message); }

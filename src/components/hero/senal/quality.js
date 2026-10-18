@@ -22,7 +22,10 @@ export const LEVELS = ['bajo', 'medio', 'alto'];
 export const QUALITY = {
   alto: { dprCap: 2, msaa: true, bloomRes: 0.5, dust: 1, aniso: 16, lite: false, video720: false, frontOnly: false },
   medio: { dprCap: 1, msaa: true, bloomRes: 0.25, dust: 0.6, aniso: 8, lite: true, video720: true, frontOnly: false },
-  bajo: { dprCap: 0.85, msaa: false, bloomRes: 0.25, dust: 0.35, aniso: 4, lite: true, video720: true, frontOnly: true },
+  // bajo con MSAA 4× (WebGPU sólo admite 1 o 4 muestras): sin él, a DPR 0,85 se dentaban el borde de la pantalla de la
+  // notebook y las cintas rojas. Costo medido con __senal.bench (CPU+GPU por cuadro, Intel UHD, 1536×730): Projects
+  // 7,35 → 7,16 ms (ruido), Tambor 6,12 → 7,62 ms. Sin pasada nueva (FXAA sumaba un render a pantalla completa).
+  bajo: { dprCap: 0.85, msaa: true, bloomRes: 0.25, dust: 0.35, aniso: 4, lite: true, video720: true, frontOnly: true },
 };
 
 // dedicada primero (C-08): Intel Arc por WebGPU es «intel · xe-hpg», por WebGL «Intel(R) Arc(TM) …»
