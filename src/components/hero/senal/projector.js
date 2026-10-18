@@ -687,7 +687,15 @@ export async function buildProjector({
       if (!f || Math.abs(relOf(f.k, st.rot)) > SRC_OUT) release(j);
     });
     faces.forEach((f) => {
-      if (srcWin && Math.abs(relOf(f.k, st.rot)) < SRC_IN) { const rr = ensureVideo(f.j); if (rr.v.preload !== 'auto') rr.v.preload = 'auto'; }
+      // preload: la cara de frente (o la que empieza a llegar en un giro: |rel| < 1) baja entera; las vecinas, sólo
+      // metadatos y su primer cuadro (antes, las tres con 'auto': hasta 36,8 MB por recorrido sin tocar nada). Al
+      // empezar el giro, la que llega pasa a 'auto'; el póster y su primer cuadro cubren la espera.
+      const rel = Math.abs(relOf(f.k, st.rot));
+      if (srcWin && rel < SRC_IN) {
+        const full = rel < 0.999;
+        const rr = ensureVideo(f.j, full ? 'auto' : 'metadata');
+        if (full && rr.v.preload !== 'auto') rr.v.preload = 'auto';
+      }
       const r = vids[f.j];
       if (!r) return;
       const play = ready && inView && !document.hidden && !S.fbf.paused && f.pw > 0.3 && f.front > 0.45 && u < FBF_OFF + 0.2;
