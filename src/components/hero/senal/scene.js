@@ -792,6 +792,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const CORR_IDLE_MS = 2500;
   let lastScrollT = -1e9;
   const markScroll = () => { lastScrollT = performance.now(); };
+  S.scrollQuiet = () => performance.now() - lastScrollT > 600;   // projector.js: precalentado de los videos con el scroll quieto
   on(window, 'scroll', markScroll, { passive: true });
   on(window, 'wheel', markScroll, { passive: true });
   const yieldBuild = () => (performance.now() - lastScrollT < 150

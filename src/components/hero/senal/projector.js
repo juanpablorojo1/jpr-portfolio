@@ -56,7 +56,8 @@ const vidOf = (k, r) => mod(Math.round(r + relOf(k, r)), NV);
 const isLand = (j) => VIDEOS[j].width > VIDEOS[j].height;
 const SRC_IN = 1.5, SRC_OUT = 1.9;                   // src cuando la cara puede llegar al frente; se suelta lejos de él
 const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
-const PRE_U = LAST_OUT - 1.5;                        // precalentado del video de frente: ~2,5 viewports antes de GAL_END
+const PRE_U = LAST_OUT - 1.5;                        // precalentado de los videos aunque el scroll no se detenga (~u 7,5)
+const PRE_FROM = 1.0;                                // desde la estadía de TraumaVision, con el scroll quieto
 
 /* ---------- el tambor (metros del pasillo) ---------- */
 const H = FBF_DRUM.h, W = FBF_DRUM.w, Y0 = FBF_DRUM.base;
@@ -98,9 +99,17 @@ export async function buildProjector({
   };
   /** sube la textura a la GPU (con sus mipmaps) en un hueco ocioso, no en el primer cuadro en que se ve: los pósters que
       llegan en segundo plano y el primer cuadro de cada video (antes se subían en pleno pase Projects → Video) */
-  const idleUpload = (t) => {
-    if (!renderer || !renderer.initTexture) return;
-    const go = () => { if (alive() && texs.includes(t)) { try { renderer.initTexture(t); } catch (e) { /* se sube al dibujarla */ } } };
+  /* Con el scroll quieto (S.scrollQuiet, scene.js): subir 1080p con mipmaps en pleno scroll era parte del tirón del
+     precalentado (u 7,6). Si el scroll no se queda quieto en ~3 s, se sube igual. `done`: después de subir. */
+  const quiet = () => !S.scrollQuiet || S.scrollQuiet();
+  const idleUpload = (t, done) => {
+    if (!renderer || !renderer.initTexture) { if (done) done(); return; }
+    let tries = 0;
+    const go = () => {
+      if (!alive() || !texs.includes(t)) return;
+      if (!quiet() && ++tries < 10) { setTimeout(() => (typeof requestIdleCallback === 'function' ? requestIdleCallback(go, { timeout: 400 }) : go()), 300); return; }
+      try { renderer.initTexture(t); if (done) done(); } catch (e) { /* se sube al dibujarla */ }
+    };
     if (typeof requestIdleCallback === 'function') requestIdleCallback(go, { timeout: 400 }); else setTimeout(go, 0);
   };
 
@@ -112,7 +121,9 @@ export async function buildProjector({
   /** un <video> por video (ver «videos» más abajo); arriba porque el 16:9 lee su textura al colgarse */
   const vids = VIDEOS.map(() => null);
   /** lo que muestra el video j: su textura de video si ya tiene cuadro, si no su póster */
-  const texOf = (j) => (vids[j] && vids[j].tex) || posterTex[j];
+  // el video recién se muestra con su primer cuadro ya subido a la GPU (ready); hasta ahí, su póster: así la subida de
+  // 1080p con mipmaps nunca cae en el primer cuadro en que la cara se ve (tirón de u 9,7 / 11)
+  const texOf = (j) => (vids[j] && vids[j].ready && vids[j].tex) || posterTex[j];
   const first = [...new Set(Array.from({ length: N }, (_, k) => vidOf(k, r0)))];
   const firstImgs = await Promise.all(first.map((j) => loadImg(posterOf(j))));
   if (!alive()) return null;
@@ -412,7 +423,7 @@ export async function buildProjector({
       if (!alive()) return;
       posterTex[j] = sharp(new THREE.Texture(img));
       idleUpload(posterTex[j]);
-      if (!(vids[j] && vids[j].tex)) showVid(j);
+      if (!(vids[j] && vids[j].ready)) showVid(j);
     }).catch(() => { posterReq[j] = null; });
   }
   /** la cara f pasa a mostrar el video j (sólo de espaldas: ver update) */
@@ -459,13 +470,24 @@ export async function buildProjector({
       if (!alive() || rec.tex || vids[k] !== rec) return;
       v.width = v.videoWidth; v.height = v.videoHeight;      // la textura común toma el tamaño de estos atributos
       rec.tex = sharp(new THREE.Texture(v));
-      idleUpload(rec.tex);
-      showVid(k);
+      // subido el primer cuadro, no se vuelve a subir el mismo en el primer cuadro visible (antes currentTime ≠ −1 lo
+      // volvía a marcar al entrar al Tambor)
+      idleUpload(rec.tex, () => {
+        if (vids[k] !== rec) return;
+        rec.last = v.currentTime; rec.fresh = false; rec.ready = true;
+        showVid(k);
+      });
     });
     v.src = Q().video720 ? src720(VIDEOS[k]) : VIDEOS[k].src;
     v.load();                                                // explícito: fuera del DOM Chrome puede no empezar a cargar solo
     vids[k] = rec;
     return rec;
+  }
+  function preheat() {
+    if (vids.some((r) => r && !r.tex)) return;                 // de a uno: el anterior todavía no tiene su primer cuadro
+    const near = faces.filter((f) => Math.abs(relOf(f.k, st.rot)) < SRC_IN)
+      .sort((a, b) => Math.abs(relOf(a.k, st.rot)) - Math.abs(relOf(b.k, st.rot)));
+    for (const f of near) if (!vids[f.j]) { ensureVideo(f.j, 'metadata'); return; }
   }
   function pauseAll() { vids.forEach((r) => { if (r && !r.v.paused) r.v.pause(); }); }
   ctl.offs.push(() => {
@@ -562,9 +584,10 @@ export async function buildProjector({
     lookW.value = on ? gw * (1 - smooth(FBF_OFF + 0.1, FBF_END, u)) : 0;
     if (!on) {
       st.active = -1; S.fbf.active = -1; S.fbf.wide = 0; scrI.value = 0; pauseAll();
-      // precalentado: el video de la cara de frente pide src (sólo metadatos y su primer cuadro) desde la llegada a LEEX,
-      // y ese primer cuadro se sube a la GPU en idle; en el pase al Tambor ya está (antes: src + load + subida en el pase)
-      if (gw > 0.5 && u > PRE_U) ensureVideo(faces[mod(Math.round(st.rot), N)].j, 'metadata');
+      // precalentado (tirones de u 7,6 y 9,7): los videos de la cara de frente y sus vecinas piden src (sólo metadatos y
+      // su primer cuadro), de a uno, desde Projects y con el scroll quieto; el primer cuadro se sube en idle, también
+      // quieto. Si el usuario no se detiene nunca, desde PRE_U igual (como antes). En el pase al Tambor ya están.
+      if (gw > 0.5 && u > PRE_FROM && (u > PRE_U || quiet())) preheat();
       return null;
     }
     camL.value.copy(P);                               // P ya está en coordenadas del pasillo (camPose)
@@ -705,6 +728,9 @@ export async function buildProjector({
       const r = vids[f.j];
       if (!r) return;
       const play = ready && inView && !document.hidden && !S.fbf.paused && f.pw > 0.3 && f.front > 0.45 && u < FBF_OFF + 0.2;
+      // si el usuario llegó sin pausa y el primer cuadro todavía no se subió en idle, al reproducir se muestra igual
+      // (nunca un póster quieto con el video corriendo)
+      if (play && r.tex && !r.ready) { r.ready = true; showVid(f.j); }
       if (play && r.v.paused) r.v.play().catch(() => {});
       else if (!play && !r.v.paused) r.v.pause();
       r.v.muted = !(S.fbf.sound && f.k === active);
