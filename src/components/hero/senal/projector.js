@@ -35,6 +35,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { GAL_END, GAL_DWELLS } from './gallery';
 import { FBF_RUN, FBF_BEAM, FBF_STAY, FBF_OFF, FBF_END, FBF_DRUM } from './frames';
 import { VIDEOS } from '../../../lib/content';
+import { src720, poster720 } from './quality';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const clamp01 = (x) => Math.min(1, Math.max(0, x));
@@ -69,7 +70,7 @@ const FILL = 0.7;                                    // la cara de frente: ~70 %
 
 /** Arma el tambor. Devuelve el controlador o null si se desmontó a mitad. */
 export async function buildProjector({
-  renderer, group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
+  renderer, quality = null, group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
   headPos, headI, scrPos, scrI, endP, endL, railHeadZ, focusU, rangeU,
 }) {
   const alive = () => !ctl.disposed && !S.dead;
@@ -85,9 +86,14 @@ export async function buildProjector({
      apagado del tambor, camino a Stack. */
   const lookW = uniform(0);
   const texs = [];
+  /* nivel de calidad vigente (quality.js): en medio y bajo el video 720p y su póster; en bajo, src sólo para la cara de
+     frente (la que llega en un giro lo pide al empezar el giro). Se aplica en cada asignación, nunca a un video que ya
+     corre. Anisotropía 16/8/4 al crear la textura. */
+  const Q = () => (quality ? quality() : { aniso: 16, video720: false, frontOnly: false });
+  const posterOf = (j) => (Q().video720 ? poster720(VIDEOS[j]) : VIDEOS[j].poster);
   const sharp = (t) => {
     t.colorSpace = THREE.SRGBColorSpace; t.generateMipmaps = true;
-    t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = 16;
+    t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = Q().aniso;
     t.needsUpdate = true; texs.push(t); ctl.texs.push(t); return t;
   };
   /** sube la textura a la GPU (con sus mipmaps) en un hueco ocioso, no en el primer cuadro en que se ve: los pósters que
@@ -108,7 +114,7 @@ export async function buildProjector({
   /** lo que muestra el video j: su textura de video si ya tiene cuadro, si no su póster */
   const texOf = (j) => (vids[j] && vids[j].tex) || posterTex[j];
   const first = [...new Set(Array.from({ length: N }, (_, k) => vidOf(k, r0)))];
-  const firstImgs = await Promise.all(first.map((j) => loadImg(VIDEOS[j].poster)));
+  const firstImgs = await Promise.all(first.map((j) => loadImg(posterOf(j))));
   if (!alive()) return null;
   first.forEach((j, i) => { posterTex[j] = sharp(new THREE.Texture(firstImgs[i])); });
   await yieldToMain();
@@ -383,7 +389,7 @@ export async function buildProjector({
     const pool = exp(dp.mul(dp).mul(-0.9)).mul(float(1).sub(smoothstep(0.2, 0.7, pl.y))).mul(scrI.mul(2.0)).min(1);
     const lit = max(inB.mul(beamI), pool);
     m.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(smoothstep(0.3, 0.9, near)).mul(lit).mul(appear);
-    hallDust = new THREE.Sprite(m); hallDust.count = DUST; hallDust.frustumCulled = false; hallDust.renderOrder = 30;
+    hallDust = new THREE.Sprite(m); hallDust.count = DUST; hallDust.frustumCulled = false; hallDust.renderOrder = 30; hallDust.userData.dust = DUST;
     hall.add(hallDust);
   }
   await yieldToMain();
@@ -402,7 +408,7 @@ export async function buildProjector({
   /** póster del video entrante: se pide antes de que su cara llegue a los 180° (en segundo plano, una vez) */
   function loadPoster(j) {
     if (posterTex[j] || posterReq[j]) return;
-    posterReq[j] = loadImg(VIDEOS[j].poster).then((img) => {
+    posterReq[j] = loadImg(posterOf(j)).then((img) => {
       if (!alive()) return;
       posterTex[j] = sharp(new THREE.Texture(img));
       idleUpload(posterTex[j]);
@@ -456,7 +462,7 @@ export async function buildProjector({
       idleUpload(rec.tex);
       showVid(k);
     });
-    v.src = VIDEOS[k].src;
+    v.src = Q().video720 ? src720(VIDEOS[k]) : VIDEOS[k].src;
     v.load();                                                // explícito: fuera del DOM Chrome puede no empezar a cargar solo
     vids[k] = rec;
     return rec;
@@ -691,7 +697,7 @@ export async function buildProjector({
       // metadatos y su primer cuadro (antes, las tres con 'auto': hasta 36,8 MB por recorrido sin tocar nada). Al
       // empezar el giro, la que llega pasa a 'auto'; el póster y su primer cuadro cubren la espera.
       const rel = Math.abs(relOf(f.k, st.rot));
-      if (srcWin && rel < SRC_IN) {
+      if (srcWin && rel < (Q().frontOnly ? 0.999 : SRC_IN)) {
         const full = rel < 0.999;
         const rr = ensureVideo(f.j, full ? 'auto' : 'metadata');
         if (full && rr.v.preload !== 'auto') rr.v.preload = 'auto';
