@@ -141,7 +141,9 @@ export async function studioEnv(renderer, hdr = null) {
 
 /** Arma una notebook. u: uniforms propios (light = la luz real del cuadro, pw = encendido de la pantalla,
     rim = la línea roja, scrC/scrN = centro y normal de la pantalla en el mundo, scrCol = color promedio del home). */
-export function buildNotebook({ screenTex, scrColor, env, appear, RED, hdrEnv = false, aluK = 1 }) {
+export function buildNotebook({ screenTex, scrColor, env, appear, RED, hdrEnv = false, aluK = 1, lite = false }) {
+  // lite (niveles medio y bajo, quality.js): trackpad y bisel sin clearcoat (una capa de reflejo menos por píxel)
+  const coat = lite ? 0 : 1;
   // con el HDRI los octaboxes reales son fuentes más concentradas: el vidrio (trackpad, bisel) refleja menos para no
   // pasar de su meta (trackpad ≥ 1,8:1 contra el deck; bisel ≤ ~8 %)
   const padK = hdrEnv ? 0.1 : 0.3, glassK = hdrEnv ? 0.5 : 1.1;
@@ -192,11 +194,11 @@ export function buildNotebook({ screenTex, scrColor, env, appear, RED, hdrEnv = 
   wellM.colorNode = vec3(0.0012, 0.0012, 0.0014).add(spill(0.01)).mul(appear);
   // R4-01: vidrio oscuro (~#40 contra el apoyamuñecas ~#6E, ≥ 1,8:1). A ese ángulo rasante el Fresnel del coat lo
   // levantaba al gris del deck (1,1:1): coat a la mitad y reflejos del estudio al 30 %. Filo claro de ~1 px alrededor.
-  const padM = new THREE.MeshPhysicalNodeMaterial({ color: 0x121316, metalness: 0, roughness: 0.2, clearcoat: 0.5, clearcoatRoughness: hdrEnv ? 0.25 : 0.1, envMap: env, envMapIntensity: envI * padK });
+  const padM = new THREE.MeshPhysicalNodeMaterial({ color: 0x121316, metalness: 0, roughness: 0.2, clearcoat: 0.5 * coat, clearcoatRoughness: hdrEnv ? 0.25 : 0.1, envMap: env, envMapIntensity: envI * padK });
   const padEdgeM = new THREE.MeshBasicNodeMaterial();
   padEdgeM.colorNode = vec3(0.075, 0.077, 0.082).mul(u.light).mul(appear);
   padM.emissiveNode = spill(0.03).mul(appear);
-  const glassM = new THREE.MeshPhysicalNodeMaterial({ color: 0x030304, metalness: 0, roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.04, envMap: env, envMapIntensity: envI * glassK });
+  const glassM = new THREE.MeshPhysicalNodeMaterial({ color: 0x030304, metalness: 0, roughness: 0.1, clearcoat: coat, clearcoatRoughness: 0.04, envMap: env, envMapIntensity: envI * glassK });
   const footM = new THREE.MeshStandardNodeMaterial({ color: 0x0a0a0b, roughness: 0.9 });
   const camM = new THREE.MeshBasicNodeMaterial();
   camM.colorNode = vec3(0.012, 0.013, 0.02).mul(appear);

@@ -169,7 +169,7 @@ export async function buildConvergence({ corr, camera, S, ctl, RED, OFF, galW, y
   lGeo.setAttribute('fade', new THREE.BufferAttribute(lFade, 1));
   lGeo.setIndex(new THREE.BufferAttribute(lIdx, 1));
   {
-    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const sideA = attribute('side', 'float'), arc = attribute('arc', 'float'), kind = attribute('kind', 'float');
     const wpx = attribute('wpx', 'float'), fade = attribute('fade', 'float');
     const pos = positionGeometry, dir = attribute('dir', 'vec3');
@@ -235,7 +235,7 @@ export async function buildConvergence({ corr, camera, S, ctl, RED, OFF, galW, y
     m.colorNode = mix(OFF.mul(0.32), RED.mul(1.5), hl.mul(0.85)).mul(hl.mul(1.8).add(0.45)).mul(k);
     m.opacityNode = k;
     const dust = new THREE.Sprite(m);
-    dust.count = ND; dust.frustumCulled = false; dust.renderOrder = 2;
+    dust.count = ND; dust.frustumCulled = false; dust.renderOrder = 2; dust.userData.dust = ND;   // polvo: quality.js lo escala por nivel
     g.add(dust);
   }
 

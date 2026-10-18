@@ -35,7 +35,9 @@ const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
 const NP = GAL_DWELLS.length;
 
 /** Arma el riel, la vitrina y la sala (async, con pausas al hilo principal). Devuelve el controlador o null si se desmontó a mitad. */
-export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW, assetBase = '/projects/', yieldToMain }) {
+export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW, assetBase = '/projects/', yieldToMain, stageLight = null, quality = null }) {
+  // nivel de calidad vigente (quality.js, scene.js): anisotropía al armar, video 720 / sólo frente al asignar
+  const Q = () => (quality ? quality() : { aniso: 16, bloomRes: 0.5 });
   const alive = () => !ctl.disposed && !S.dead;
   const group = new THREE.Group();
   group.name = 'corridor';
@@ -43,7 +45,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   // positionWorld → coordenadas del pasillo (grupo girado +90° en y: x_w = z_l + ox, z_w = −x_l + oz)
   const toL = (p) => { const q = p.sub(offU); return vec3(q.z.negate(), q.y, q.x); };
   const texs = [];
-  const prep = (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : 8); t.needsUpdate = true; texs.push(t); ctl.texs.push(t); return t; };
+  const prep = (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, Q().aniso, renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : 8); t.needsUpdate = true; texs.push(t); ctl.texs.push(t); return t; };
 
   ctl.corrStage = 'materials';
   /* ---------- luz y materiales del tramo final (coordenadas del pasillo) ---------- */
@@ -113,11 +115,11 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const oof = smoothstep(rangeU.mul(0.35), rangeU, near.sub(focusU).abs()).mul(0.8).mul(dotK);
     dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(fogF())).mul(smoothstep(0.3, 0.9, near)).mul(float(1).sub(oof)).mul(appear).mul(dustK);
   }
-  const dust = new THREE.Sprite(dustMat); dust.count = DUST; dust.frustumCulled = false; group.add(dust);
+  const dust = new THREE.Sprite(dustMat); dust.count = DUST; dust.frustumCulled = false; dust.userData.dust = DUST; group.add(dust);
 
   /* ---------- Projects: la vitrina (cuatro laptops en el vacío) ---------- */
   ctl.corrStage = 'vitrina';
-  const vit = await buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear, yieldToMain, assetBase, railStop: RAIL_STOP });
+  const vit = await buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear, yieldToMain, assetBase, railStop: RAIL_STOP, spot: stageLight, quality: Q() });
   if (!vit || !alive()) return null;
   group.add(vit.group);
   vit.texs.forEach((t) => texs.push(t));
@@ -128,7 +130,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   ctl.corrStage = 'projector';
   const END_P = V(0.78, 0.86, -54.8), END_L = V(-0.12, 0.12, -61.8);   // última pose de Projects (= primera de la sala)
   const proj = await buildProjector({
-    group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
+    renderer, quality: Q, group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
     headPos, headI, scrPos, scrI, endP: END_P, endL: END_L, railHeadZ: RAIL_STOP + 0.15, focusU, rangeU,
   });
   if (!proj || !alive()) return null;
@@ -156,6 +158,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const dofN = dof(col, viewZ, focusU, rangeU, bokehU);
   const redOnly = (c) => { const r = max(c.r.sub(max(c.g, c.b).mul(1.15)), 0); return vec4(r, r.mul(0.04), r.mul(0.05), 1); };
   const bl = bloom(mix(dofN, redOnly(dofN), galW), 1.2, 0.6, 0.12);
+  if (Q().bloomRes !== 0.5) bl.setResolutionScale(Q().bloomRes);   // alto: el 0,5 de siempre (default de BloomNode)
   const vigHero = smoothstep(1.05, 0.25, length(screenUV.sub(0.5).mul(vec2(1.25, 1.0))).mul(1.35)).mul(0.85).add(0.15);
   const vigNeg = smoothstep(1.05, 0.2, length(screenUV.sub(0.5).mul(vec2(1.2, 1.0))).mul(1.3)).mul(0.82).add(0.18);
   const grainN = fract(sin(dot(screenUV.mul(vec2(1731.3, 977.1)).add(fract(time.mul(13.7)).mul(91.7)), vec2(12.9898, 78.233))).mul(43758.5453)).sub(0.5).mul(0.03);
@@ -349,6 +352,22 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     vit.placeTags(S.neg.tags, mouseRef);
   }
 
+  /* Profundidad de llamada del pase de escena dentro de este post. three la pone en la clave del contexto de render: el
+     pase de escena dibuja anidado (render del cuadro final → pase del DOF/bloom → pase de escena: 2 con este grafo,
+     medido en el navegador con los objetos de render del pasillo) y compileAsync compila siempre con 0. Con 0, cada
+     objeto se volvía a preparar al dibujarse por primera vez en Projects y, donde el código cambia (el teclado instanciado
+     nombra su buffer con un id nuevo), se compilaba el pipeline en pleno scroll. Se compila con la profundidad real.
+     Usa internos de three (versión fija 0.186): si no están, compila como antes. */
+  const SCENE_DEPTH = 2;
+  /** compileAsync con la profundidad de llamada del pase de escena (la del render real); lo usan el pasillo y las tomas
+      que se enganchan después (scene.js, attachExt). Arma la lista en forma síncrona y devuelve la promesa. */
+  function compileAt(target, cam, targetScene) {
+    const rc = renderer._renderContexts, get = rc && rc.get;
+    const own = rc && Object.prototype.hasOwnProperty.call(rc, 'get');
+    if (get) rc.get = function (rt, mrt, cd) { return get.call(this, rt, mrt, cd === undefined ? SCENE_DEPTH : cd); };
+    try { return renderer.compileAsync(target, cam, targetScene); } finally { if (get) { if (own) rc.get = get; else delete rc.get; } }
+  }
+
   /** Precalentado: compila los materiales (sin dibujar) con todo visible. */
   async function warm() {
     const prevVis = group.visible;
@@ -356,28 +375,34 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     proj.warm(true);
     vit.warm(true);
     const culled = [];
-    group.traverse((o) => { if (o.isMesh || o.isSprite) { culled.push([o, o.frustumCulled]); o.frustumCulled = false; } });
+    // toda la escena, visible y sin culling (no sólo el pasillo): lo que vive en la raíz y en este momento está oculto o
+    // fuera del cuadro (el cabezal del riel, las capas del About, la figura) también se dibuja con el post del pasillo
+    // (en la entrada a Projects y en Video), con este mismo contexto de render
+    scene.traverse((o) => { if (o.isMesh || o.isSprite || o.isGroup) { culled.push([o, o.frustumCulled, o.visible]); o.frustumCulled = false; o.visible = true; } });
     ctl.corrStage = 'compile';
-    // compileAsync arma la lista y pide los pipelines en forma síncrona y recién después espera: todo lo que se tocó se
-    // restaura ANTES del await (si no, un frame del loop podía dibujar el post dentro de la textura que él mismo lee).
+    // compileAsync arma la lista en forma síncrona: todo lo que se tocó se restaura ANTES del await (si no, un frame del
+    // loop podía dibujar el post dentro de la textura que él mismo lee). Ojo: en three 0.186 los nodos se arman DESPUÉS,
+    // de a uno por tarea, con el estado de ese momento: lo que cambia el código (las luces) tiene que ser estable; por eso
+    // el cenital vive en la raíz de la escena (scene.js) y no entra y sale con el pasillo.
     const prevRT = renderer.getRenderTarget();
     let pending = null;
     try {
       if (scenePass.renderTarget) renderer.setRenderTarget(scenePass.renderTarget);
-      pending = renderer.compileAsync(scene, camera);
+      pending = compileAt(scene, camera);
     } catch (e) { /* sin compileAsync: compila en el primer frame */ }
     finally {
       renderer.setRenderTarget(prevRT);
-      culled.forEach(([o, f]) => { o.frustumCulled = f; });
+      culled.forEach(([o, f, v]) => { o.frustumCulled = f; o.visible = v; });
       group.visible = prevVis;
       proj.warm(false);
       vit.warm(false);
     }
     // tope de 4 s (WebGL 2 con la pestaña oculta no termina nunca); lo que falte compila en el primer frame
     try { await Promise.race([pending, new Promise((r) => setTimeout(r, 4000))]); } catch (e) { /* idem */ }
-    // las texturas (pantallas, teclado, nombres, pósters) se suben a la GPU acá, de a una por tarea (U-fix-2)
+    // las texturas (pantallas, teclado, nombres, pósters del tambor) se suben a la GPU acá, de a una por tarea (U-fix-2).
+    // Los pósters del tambor estaban afuera de esta lista: se subían (con mipmaps) en el primer cuadro del pase a Video.
     ctl.corrStage = 'upload';
-    for (const t of texs) {
+    for (const t of [...texs, ...proj.texs]) {
       if (!alive()) return;
       try { renderer.initTexture(t); } catch (e) { /* se sube en el primer frame */ }
       await yieldToMain();
@@ -385,7 +410,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   }
 
   return {
-    group, pipeline, bloom: bl, place, camPose, update, placeTags, warm, railEndX,
+    group, pipeline, bloom: bl, place, camPose, update, placeTags, warm, railEndX, compileAt,
     /** brillo de la cinta del riel en x de mundo. Entrada: la recta del About se recoge hasta la base de TraumaVision
         (que queda encendida en su estadía). Salida: estela del cabezal desde la unión con la línea de LEEX hasta el
         umbral. Nada en el resto (la vitrina vive en el vacío). */
@@ -413,7 +438,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     /** óptica: la vitrina usa una más larga (VIT_FOV); vuelve a la del sitio con la salida a Video */
     fovAt: (u, base) => base + (VIT_FOV - base) * (1 - smooth(LAST_OUT + 0.2, GAL_END, u)) * smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.6, u),
     /** la galería cerrada (scene.js no llama a update): silencio */
-    idle: () => { if (grainSet) grainClear(); vit.idle(); },
+    idle: () => { if (grainSet) grainClear(); vit.idle(); proj.idle(); },
     /** peso de la vitrina (1 en Projects): scene.js achica el halo del bloom ahí (el rojo es un hilo, no neón: D-04) */
     vitW: () => vit.voidW.value,
     headWorldX: () => group.position.x + st8.headZ,

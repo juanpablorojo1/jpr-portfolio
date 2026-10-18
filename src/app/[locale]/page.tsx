@@ -19,16 +19,16 @@ import '../../components/sections/experience-phone.css';
 import '../../components/sections/contact-senal.css';
 import '../../components/sections/contact-phone.css';
 import SoundToggle from '../../components/ui/SoundToggle';
-import { phoneGate } from '../../lib/phoneGate';
+import { phoneLoad } from '../../lib/phoneGate';
 
 // Bajo el pliegue: HTML del servidor siempre; el JS de cada sección en su chunk, que en el teléfono se pide recién con la
-// página cargada (phoneGate, U6b: el LCP del hero ya no espera la evaluación de todo el sitio). En escritorio, en el acto.
-const About = dynamic(() => phoneGate().then(() => import('../../components/sections/About')));
-const Projects = dynamic(() => phoneGate().then(() => import('../../components/sections/Projects')));
-const Videos = dynamic(() => phoneGate().then(() => import('../../components/sections/Videos')));
-const Skills = dynamic(() => phoneGate().then(() => import('../../components/sections/Skills')));
-const Experience = dynamic(() => phoneGate().then(() => import('../../components/sections/Experience')));
-const Contact = dynamic(() => phoneGate().then(() => import('../../components/sections/Contact')));
+// página cargada y de a una (phoneLoad, U6b: el LCP del hero ya no espera la evaluación de todo el sitio). En escritorio, en el acto.
+const About = dynamic(() => phoneLoad(() => import('../../components/sections/About')));
+const Projects = dynamic(() => phoneLoad(() => import('../../components/sections/Projects')));
+const Videos = dynamic(() => phoneLoad(() => import('../../components/sections/Videos')));
+const Skills = dynamic(() => phoneLoad(() => import('../../components/sections/Skills')));
+const Experience = dynamic(() => phoneLoad(() => import('../../components/sections/Experience')));
+const Contact = dynamic(() => phoneLoad(() => import('../../components/sections/Contact')));
 
 // Corre mientras se parsea el HTML, antes del primer pintado: en escritorio con la escena posible (≥1024, sin reduced
 // motion ni ?static) las secciones de la galería ya llevan data-gallery, la misma decisión que toma hero-controller al

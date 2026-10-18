@@ -16,6 +16,7 @@ import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { GAL_ABOUT_OUT } from './gallery';
+import { QUALITY, probeGpu, pickLevel, initAdaptive, stepAdaptive } from './quality';
 // corridor / network / ecg / convergence: en shots.js, importado por proximidad (startCorridor)
 let shotsMod = null;
 const loadShots = () => (shotsMod = shotsMod || import('./shots'));
@@ -48,6 +49,7 @@ export function bootScene({ S, root, after, assetBase = '/senal/' }) {
     if (ctl.canvas) ctl.canvas.remove();
     if (ctl.info && window.__senal === ctl.info) delete window.__senal;
   }
+  ctl.dispose = dispose;                          // el último nivel automático (versión estática) libera todo en vivo (C-03)
   return { ready, dispose };
 }
 
@@ -90,6 +92,10 @@ async function boot({ S, root, after, assetBase }, ctl) {
   // el pasillo (Projects → Contact) se declara acá y no donde se arma: sync corre desde S.onView y visibilitychange
   // durante los await del arranque, y leía `corr` en su zona muerta temporal (ReferenceError en la consola)
   let corr = null, corrBuilding = false, corrIn = 0;
+  // C-02: después de un cambio de tamaño del drawing buffer (nivel de calidad o resize) el post que NO está en uso
+  // (el del pasillo en el hero, el del hero en la galería) rehace sus render targets y recompila recién al dibujarse:
+  // se lo dibuja una vez con el scroll quieto, antes de que haga falta
+  let warmPost = false;
   const sync = () => {
     if (ctl.disposed || S.dead) return;
     if (shouldRun()) wdRun(); else { wdPause(); if (corr) corr.fbf.pauseAll(); }   // videos de Frame by Frame: pausa fuera de vista
@@ -108,9 +114,16 @@ async function boot({ S, root, after, assetBase }, ctl) {
     canvas.getContext = (type, attrs) => getCtx(type, type === 'webgl2' ? { ...attrs, powerPreference: 'high-performance' } : attrs);
     canvas.__hiPerf = true;
   }
+  // nivel de calidad (quality.js): se decide antes del renderer porque el MSAA va en su constructor
+  const qBoot = pickLevel(params, await probeGpu(params.has('webgl')));
+  if (ctl.disposed || S.dead) return;
+  const Qs = { ...qBoot };
+  const QL = () => QUALITY[Qs.level];
   let renderer;
   try {
-    renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: params.has('webgl'), powerPreference: 'high-performance' });
+    // ?msaa=0|4 (QA): fuerza el MSAA del pase por encima del nivel, para medir su costo
+    const msaa = params.has('msaa') ? params.get('msaa') !== '0' : QL().msaa;
+    renderer = new THREE.WebGPURenderer({ canvas, antialias: msaa, forceWebGL: params.has('webgl'), powerPreference: 'high-performance' });
     ctl.renderer = renderer;
     await renderer.init();
   } catch (e) { clearWatchdog(); return S.goStatic('renderer: ' + e.message); }
@@ -134,7 +147,10 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const isMobile = () => innerWidth < 900;
   // la galería de Projects existe sólo ≥1024 (data-gallery, projects-senal.css); debajo, Projects queda apilado
   const wideMQ = matchMedia('(min-width: 1024px)');
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));   // la cara nítida en retina (mobile y desktop)
+  // DPR por nivel (alto: el de siempre, min(dpr, 2), la cara nítida en retina). En el teléfono nunca menos de 1,5.
+  const dprFor = (lv) => { const c = Math.min(devicePixelRatio, QUALITY[lv].dprCap); return isMobile() ? Math.max(c, Math.min(devicePixelRatio, 1.5)) : c; };
+  renderer.setPixelRatio(dprFor(Qs.level));
+  if (params.has('perf')) console.info('[senal] quality:', Qs.level, '|', Qs.reason);   // D-04: el diagnóstico sólo con ?perf
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.setClearColor(0x080808, 1);
   renderer.toneMapping = THREE.NoToneMapping;
@@ -235,11 +251,11 @@ async function boot({ S, root, after, assetBase }, ctl) {
     dustMat.colorNode = mix(OFF.mul(0.5), RED.mul(2.2), near.mul(0.8));
     dustMat.opacityNode = soft.mul(U.ignite).mul(near.mul(1.4).add(0.12)).mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(U.galW));
     const d = new THREE.Sprite(dustMat);
-    d.count = count; d.frustumCulled = false;
+    d.count = count; d.frustumCulled = false; d.userData.dust = count;
     scene.add(d);
     return d;
   }
-  makeDust(isMobile() ? 380 : 900, (a, j) => {
+  const heroDust = makeDust(isMobile() ? 380 : 900, (a, j) => {
     a[j] = (Math.random() - 0.5) * 16; a[j + 1] = (Math.random() - 0.3) * 7; a[j + 2] = 8 - Math.random() * 46;
   });
 
@@ -305,7 +321,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
     geo.setAttribute('bri', new THREE.BufferAttribute(bri, 1).setUsage(THREE.DynamicDrawUsage));
     geo.setIndex(idx);
-    const mat = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const mat = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const b = attribute('bri', 'float');
     mat.colorNode = RED.mul(intensity).mul(b.add(U.pulse.mul(0.35)));
     mat.opacityNode = clamp(b, 0, 1).mul(alphaMul);
@@ -348,6 +364,13 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const lamp = new THREE.Sprite(lampMat);
   lamp.scale.setScalar(0.24); lamp.renderOrder = 3;
   scene.add(lamp);
+  /* El cenital de la vitrina (vitrina.js lo mueve y lo enciende) vive en la escena desde el arranque y nunca sale de la
+     lista de luces. Si entraba y salía con el pasillo, three recompilaba los materiales a la vista en cada cruce de
+     Projects (con una luz en la escena los Basic arman su modelo de luz) y el precalentado del pasillo, que arma los
+     nodos después de restaurar la visibilidad, compilaba las notebooks sin luz: cada llegada compilaba en pleno scroll
+     (tirones de 150–580 ms). Con intensidad 0 no aporta nada: todo lo del hero es Basic o Sprite (luz directa 0). */
+  const stageLight = new THREE.SpotLight(0xfff4ea, 0, 0, 0.3, 0.55, 2);
+  scene.add(stageLight, stageLight.target);
   // corr, corrBuilding, corrIn: declarados arriba, junto a sync
   let stk = null, ecgX = null, ctcX = null;     // Stack (network.js), Experience (ecg.js) y Contact (convergence.js): se enganchan con el pasillo listo
 
@@ -364,6 +387,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     camera.fov = G.fov; camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight, false);
     U.dpr.value = renderer.getPixelRatio();
+    warmPost = true;
     lay.m = m; lay.horizon = G.horizon; lay.amp = G.amp;
     const hT = visH(TRACE_Z), h0 = visH(0);
     lay.yT = (0.5 - G.horizon) * hT;
@@ -452,6 +476,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const scenePass = pass(scene, camera);
   const col = scenePass.getTextureNode('output');
   const bl = bloom(col, 1.1, 0.55, 0.55);
+  if (QL().bloomRes !== 0.5) bl.setResolutionScale(QL().bloomRes);   // alto: el 0,5 de siempre (default de BloomNode)
   ctl.nodes.push(bl, scenePass);   // render targets propios del bloom y del pass
   // en la galería la viñeta afloja: los planos viven en la mitad derecha y no deben hundirse en el borde
   const vig = smoothstep(1.05, 0.25, length(screenUV.sub(0.5).mul(vec2(1.25, 1.0))).mul(mix(float(1.35), float(1.05), U.galW)));
@@ -665,33 +690,60 @@ async function boot({ S, root, after, assetBase }, ctl) {
 
   /* ---------- loop ---------- */
   const fpsBuf = []; let lastNow = performance.now(), loopOn = false;
-  /* Calidad adaptativa (DPR), con ida y vuelta. Se mide en ventanas de 120 frames válidos (~2 s): un frame de más de
-     250 ms (pestaña oculta, ventana tapada, GC largo, vuelta de segundo plano) no es una medición y reinicia la ventana.
-     < 48 fps → DPR al piso. En el piso, ventanas seguidas ≥ 57 fps → DPR completo de nuevo. Si al subir vuelve a caer,
-     la próxima subida pide el doble de ventanas buenas (2 → 4 → 8 → 16): no oscila. */
-  const DPR_MAX = Math.min(devicePixelRatio, 2);
-  const aq = { n: 0, sum: 0, low: false, good: 0, need: 2 };
-  const setDpr = (d, f) => {
-    renderer.setPixelRatio(d); U.dpr.value = d;          // setPixelRatio ya rehace el tamaño del canvas
-    console.info('[senal] adaptive: dpr →', d, 'at', f.toFixed(1), 'fps');
+  /* Niveles de calidad en vivo (quality.js), con ida y vuelta. Se mide en ventanas de frames válidos (~2 s; la primera,
+     de 60, es la prueba corta de frame time): un frame de más de 250 ms (pestaña oculta, ventana tapada, GC largo) no es
+     una medición y reinicia la ventana. < 48 fps → un nivel abajo. Ventanas seguidas ≥ 57 fps → un nivel arriba, nunca
+     por encima del de arranque; si al subir vuelve a caer, la próxima subida pide el doble de ventanas (2 → 4 → 8 → 16):
+     no oscila. En bajo, < 24 fps en 4 ventanas seguidas con la ventana al frente → la versión estática. Con ?q= no se
+     mueve. El cambio se aplica con el scroll quieto (cambiar el DPR rehace los render targets y recompila el DOF y el
+     bloom: mejor un cuadro largo quieto que un tirón en pleno scroll). */
+  const aq = { n: 0, sum: 0, first: true, pending: null, st: initAdaptive(Qs.level, Qs.ceiling) };
+  const applyDust = () => {
+    const k = QL().dust;
+    scene.traverse((o) => { if (o.userData && o.userData.dust) o.count = Math.max(1, Math.round(o.userData.dust * k)); });
   };
+  function applyLevel(lv, f) {
+    Qs.level = lv;
+    const d = dprFor(lv);
+    if (renderer.getPixelRatio() !== d) { renderer.setPixelRatio(d); U.dpr.value = d; }   // setPixelRatio rehace el canvas
+    bl.setResolutionScale(QL().bloomRes);
+    if (corr && corr.bloom) corr.bloom.setResolutionScale(QL().bloomRes);
+    applyDust();
+    warmPost = true;
+    if (params.has('perf')) console.info('[senal] quality: →', lv, f != null ? 'at ' + f.toFixed(1) + ' fps' : '');
+  }
   function adaptive(dtMs, t) {
+    // C-01: con un cambio pendiente no se mide (la escena todavía dibuja el nivel anterior); al aplicarlo, la ventana
+    // arranca de cero: cada ventana mide el nivel efectivo y se baja de a un escalón
+    if (aq.pending) {
+      aq.n = 0; aq.sum = 0;
+      if (performance.now() - lastScrollT > 600) { const p = aq.pending; aq.pending = null; applyLevel(p.lv, p.f); }
+      return;
+    }
     if (dtMs > 250 || document.hidden) { aq.n = 0; aq.sum = 0; return; }
-    if (t <= 6) return;                                     // el arranque (compilación, latido) no cuenta
+    if (t <= 6 || Qs.forced) return;                        // el arranque (compilación, latido) no cuenta
     aq.n++; aq.sum += dtMs;
-    if (aq.n < 120) return;
+    if (aq.n < (aq.first ? 60 : 120)) return;
+    aq.first = false;
     const f = (aq.n * 1000) / aq.sum;
     aq.n = 0; aq.sum = 0;
-    const floor = isMobile() ? 1.5 : 1;                     // en mobile nunca por debajo de 1,5 (la cara se ablanda)
-    if (!aq.low) {
-      if (f < 48 && renderer.getPixelRatio() > floor) { aq.low = true; aq.good = 0; setDpr(floor, f); }
-    } else if (f >= 57) {
-      if (++aq.good >= aq.need) { aq.low = false; aq.need = Math.min(aq.need * 2, 16); setDpr(DPR_MAX, f); }
-    } else aq.good = 0;
+    const { state, action } = stepAdaptive(aq.st, f, { focused: document.hasFocus() });
+    aq.st = state;
+    Qs.ceiling = state.ceiling;
+    if (!action) return;
+    if (action.type === 'level') { aq.pending = { lv: action.level, f }; return; }
+    // C-03: a la versión estática en plena sesión. Antes de cortar el loop: pausar los videos del Tambor (el de frente
+    // puede tener sonido) y apagar el zumbido de la vitrina; después, liberar la escena, los videos y la GPU (dispose:
+    // loop, listeners, ctl.offs con los <video> soltados, geometrías, materiales, texturas, render targets, renderer)
+    if (corr) { try { corr.fbf.pauseAll(); corr.idle(); } catch (e) { /* noop */ } }
+    S.goStatic('quality: bajo a ' + f.toFixed(1) + ' fps');
+    if (ctl.dispose) ctl.dispose();
   }
+  S.q = Qs;
+  applyDust();                                   // el polvo del hero; el del pasillo y las tomas, al engancharse
   const hud = params.has('hud') ? root.querySelector('.senal-hud') : null;
   if (hud) hud.hidden = false;
-  ctl.info = { backend, gpu, t: { rendererReady: Math.round(performance.now()) }, fps: () => (fpsBuf.length ? (fpsBuf.length / (fpsBuf.reduce((a, b) => a + b, 0) / 1000)).toFixed(1) : null), frames: 0, running: () => loopOn, dpr: () => renderer.getPixelRatio() };
+  ctl.info = { backend, gpu, t: { rendererReady: Math.round(performance.now()) }, fps: () => (fpsBuf.length ? (fpsBuf.length / (fpsBuf.reduce((a, b) => a + b, 0) / 1000)).toFixed(1) : null), frames: 0, running: () => loopOn, dpr: () => renderer.getPixelRatio(), q: () => ({ ...Qs, msaa: renderer.samples || 0 }) };
   window.__senal = ctl.info;
   // QA (?hud): dónde cae la traza en pantalla para un progreso dado, sin renderizar (sirve con la pestaña oculta).
   // Devuelve el rango de y (px CSS) de la cinta principal entre x0 y x1. El frame siguiente rehace cámara y cintas.
@@ -716,6 +768,11 @@ async function boot({ S, root, after, assetBase }, ctl) {
     return { lo, hi };
   };
   console.info('[senal] backend:', backend, '| gpu:', gpu);
+  // medidor de rendimiento (?perf, perf-meter.js): chunk aparte que se pide sólo con el flag; sin él no se importa nada
+  if (params.has('perf')) {
+    try { const { attachPerfMeter } = await import('./perf-meter.js'); if (!ctl.disposed && !S.dead) attachPerfMeter({ renderer, ctl, backend, gpu }); }
+    catch (e) { console.warn('[senal] perf:', e && e.message); }
+  }
 
   /* ---------- Projects: armado diferido del pasillo ----------
      Sólo escritorio ≥1024. Se arma por proximidad: cuando el usuario empieza a bajar (el primer scroll fuera del
@@ -725,7 +782,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
      pausas entre etapas. Hasta que está listo, la galería no abre (G.w = 0) y el HTML de Projects usa su posición de
      respaldo, como siempre. */
   const corrNear = () => cam.target > 0 || gal.target > 0;
-  let corrPost = false;
+  let corrPost = 0;                              // cuadros que quedan del post del pasillo con la galería cerrada (precalentado)
 
   /* Respaldo del armado (U-fix-2): por proximidad, el armado caía en el primer scroll y lo trababa (frames de
      130-180 ms). Ahora arranca también solo, con el hilo libre, CORR_IDLE_MS después del primer frame: lo que
@@ -735,6 +792,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const CORR_IDLE_MS = 2500;
   let lastScrollT = -1e9;
   const markScroll = () => { lastScrollT = performance.now(); };
+  S.scrollQuiet = () => performance.now() - lastScrollT > 600;   // projector.js: precalentado de los videos con el scroll quieto
   on(window, 'scroll', markScroll, { passive: true });
   on(window, 'wheel', markScroll, { passive: true });
   const yieldBuild = () => (performance.now() - lastScrollT < 150
@@ -755,13 +813,13 @@ async function boot({ S, root, after, assetBase }, ctl) {
     corrBuilding = true;
     const t0 = performance.now();
     loadShots()
-      .then(({ buildCorridor }) => (ctl.disposed || S.dead ? null : buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW: U.galW, yieldToMain: yieldBuild })))
+      .then(({ buildCorridor }) => (ctl.disposed || S.dead ? null : buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW: U.galW, yieldToMain: yieldBuild, stageLight, quality: QL })))
       .then(async (c) => {
         if (!c || ctl.disposed || S.dead) return;
         c.place({ yT: lay.yT, railZ: RAIL_Z, aboutPos: lay.endPos, aboutLook: lay.endLook });
         await c.warm();
         if (ctl.disposed || S.dead) return;
-        corr = c; corrPost = true;
+        corr = c; corrPost = 2; applyDust();
         ctl.info.neg = c.info;
         ctl.info.t.corridor = Math.round(performance.now() - t0);
         console.info('[senal] corridor ready in', ctl.info.t.corridor, 'ms');
@@ -792,12 +850,12 @@ async function boot({ S, root, after, assetBase }, ctl) {
       let pending = null;
       try {
         if (scenePass.renderTarget) renderer.setRenderTarget(scenePass.renderTarget);
-        pending = renderer.compileAsync(n.group, camera, scene);
+        pending = c.compileAt ? c.compileAt(n.group, camera, scene) : renderer.compileAsync(n.group, camera, scene);
       } catch (e) { /* compila en el primer frame */ }
       finally { renderer.setRenderTarget(prevRT); n.warm(false); }
       try { await Promise.race([pending, new Promise((r) => setTimeout(r, 4000))]); } catch (e) { /* idem */ }
       if (ctl.disposed || S.dead) return;
-      c.setExt(n);
+      c.setExt(n); applyDust();
       ctl.offs.push(() => n.dispose());
       ctl.info.t[name] = Math.round(performance.now() - t0);
       console.info('[senal] ' + name + ' ready in', ctl.info.t[name], 'ms');
@@ -913,13 +971,30 @@ async function boot({ S, root, after, assetBase }, ctl) {
     abGroup.visible = U.abW.value * (1 - G.w) > 0.001;
     U.dissolve.value = smooth(0.04, 0.2, p);
     echoes.forEach((e) => { e.alpha.value = smooth(0.1, 0.35, p) * 0.5 * (1 - smooth(0.7, 0.95, p)); });
+    // No dibujar lo invisible: lo que en este cuadro tiene opacidad (o brillo) 0 exacto o casi (≤ 1e-4, muy por debajo de un
+    // nivel de 8 bits) no se dibuja. Mismo cuadro, menos draw calls y menos relleno: el piso de puntos (150 × 110, media
+    // pantalla) y el polvo del hero se seguían dibujando × (1 − galW) = 0 desde Projects hasta Contacto.
+    const heroK = 1 - G.w;
+    floorM.visible = heroK > 1e-4;
+    heroDust.visible = heroK > 1e-4;
+    fig.visible = U.dissolve.value < 1 - 1e-4;         // la figura × (1 − dissolve)
+    head.visible = headOpacity.value > 1e-4;
+    lamp.visible = lampOpacity.value > 1e-4;
+    echoes.forEach((e) => { e.mesh.visible = e.alpha.value > 1e-4; });
+    extCore.mesh.visible = extHalo.mesh.visible = G.w > 1e-4;   // la extensión del riel: brillo × galW
     buildRibbons(t, bend);
     const bs = 0.95 + U.pulse.value * 0.7 + Math.min(st.vel, 1.2) * 0.35;
     bl.strength.value = bs;
 
     // con el pasillo abierto, su post (DOF + bloom del rojo + grano); con G.w → 0 empata con el del hero.
-    // corrPost: un frame con el post del pasillo apenas está listo, para compilarlo antes de que haga falta.
-    let pl = pipeline;
+    // corrPost: DOS cuadros con el post del pasillo apenas está listo (o tras un cambio de tamaño). En el primer render
+    // three arma los nodos y el DOF corre anidado a otra profundidad que en los siguientes: sus pasadas se recompilaban en
+    // el segundo render, que era la entrada a Projects (las 4 compilaciones del DOF). Con galW 0 empata con el del hero.
+    let pl = pipeline, warmHero = false, warmCorr = false;
+    if (warmPost && corr && !skipRender && performance.now() - lastScrollT > 600) {
+      warmPost = false;
+      if (G.w > 0) warmHero = true; else corrPost = 2;   // con galW 0 el post del pasillo empata con el del hero
+    }
     if (corr && (G.w > 0 || corrPost)) {
       const cb = corr.bloom, w = G.w;
       cb.strength.value = bs + (1.2 - bs) * w; cb.radius.value = 0.55 + 0.05 * w; cb.threshold.value = 0.55 - 0.43 * w;
@@ -928,9 +1003,17 @@ async function boot({ S, root, after, assetBase }, ctl) {
       // R2-02: umbral alto en la vitrina: la línea del canto (≤ el rojo de marca, 0,81 lineal) no entra al bloom; sólo
       // la cabeza de la señal, que tiene su propio resplandor en el shader
       if (vw > 0) { cb.radius.value += (0.12 - cb.radius.value) * vw; cb.strength.value += (0.75 - cb.strength.value) * vw; cb.threshold.value += (0.9 - cb.threshold.value) * vw; }
-      pl = corr.pipeline; corrPost = false;
+      // D-01: con la galería cerrada el precalentado dibuja el post del pasillo ANTES que el del hero (el último render
+      // gana el canvas): antes quedaba en pantalla un cuadro desenfocado en el hero y el About (~4 s tras la carga y en
+      // cada resize)
+      if (G.w > 0) pl = corr.pipeline; else warmCorr = true;
+      if (corrPost > 0) corrPost--;
     }
-    if (!skipRender) pl.render();
+    if (!skipRender) {                                   // el último render gana el canvas
+      if (warmHero) pipeline.render();
+      if (warmCorr) corr.pipeline.render();
+      pl.render();
+    }
     placeFg();
 
     // rótulos en el espacio (mismo frame que el render) y placa bajo el puntero

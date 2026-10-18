@@ -53,11 +53,13 @@ const CW = LW / 2 + 0.05;
 const flicker = (t) => (t < 0 ? 0 : t < 0.05 ? 1 : t < 0.11 ? 0.25 : t < 0.16 ? 0.95 : t < 0.22 ? 0.55 : 1);
 
 /** Arma la vitrina. Devuelve el controlador o null si se desmontó a mitad. */
-export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear, yieldToMain, assetBase = '/projects/', railStop, railY = 0.03 }) {
+export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear, yieldToMain, assetBase = '/projects/', railStop, railY = 0.03, spot: spotIn = null, quality = null }) {
   const alive = () => !ctl.disposed && !S.dead;
   const group = new THREE.Group();
   group.name = 'vitrina';
-  const aniso = Math.min(16, renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : 8);
+  // nivel de calidad (quality.js) al armar: anisotropía 16/8/4 y, en medio/bajo, la notebook sin clearcoat
+  const q = quality || { aniso: 16, lite: false };
+  const aniso = Math.min(q.aniso, renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : 8);
   const REDL = vec3(0.807, 0.02, 0.023);         // #E8272A en lineal (el mismo RED de scene.js)
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -104,9 +106,11 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
   const env = await studioEnv(renderer, hdr);
   if (!alive()) return null;
 
-  /* ---------- la luz: un cenital duro que sigue a la notebook encendida ---------- */
-  const spot = new THREE.SpotLight(0xfff4ea, 0, 0, 0.3, 0.55, 2);
-  group.add(spot, spot.target);
+  /* ---------- la luz: un cenital duro que sigue a la notebook encendida ----------
+     Con `spotIn` (scene.js) la luz vive en la raíz de la escena, siempre en la lista de luces (sin recompilar al entrar
+     y salir de Projects): se ubica en el mundo con la matriz de la vitrina (la misma toma que como hija del grupo). */
+  const spot = spotIn || new THREE.SpotLight(0xfff4ea, 0, 0, 0.3, 0.55, 2);
+  if (!spotIn) group.add(spot, spot.target);
 
   /* ---------- la señal: cinta de luz que mira a cámara, con ventana [s0, s1] sobre su largo ---------- */
   const camL = uniform(new THREE.Vector3());     // cámara en coordenadas de la vitrina (las cintas viven ahí)
@@ -134,7 +138,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     g.setIndex(idx);
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e4);
     const u = { s0: uniform(0), s1: uniform(0), inten: uniform(0), head: uniform(1) };
-    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const aTan = attribute('aTan', 'vec3'), aSide = attribute('aSide', 'float'), aS = attribute('aS', 'float');
     const toCam = normalize(camL.sub(positionLocal));
     const n = normalize(cross(aTan, toCam));
@@ -176,7 +180,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     outer.position.copy(home); outer.rotation.y = pr.yaw;
     group.add(outer);
     // aluK: TraumaVision (de frente al octabox principal) leía plata con el HDRI; lo baja al grafito de los otros tres
-    const nb = buildNotebook({ screenTex: scrTex[k], scrColor: scrCols[k], env, appear, RED: REDL, hdrEnv, aluK: hdrEnv && pr.yaw === 0 ? 0.8 : 1 });
+    const nb = buildNotebook({ screenTex: scrTex[k], scrColor: scrCols[k], env, appear, RED: REDL, hdrEnv, aluK: hdrEnv && pr.yaw === 0 ? 0.8 : 1, lite: q.lite });
     outer.add(nb.root);
     const lu = nb.u;
     // piso negro brillante: sólo existe donde llega la luz (el pozo del cenital y la luz de la pantalla adelante);
@@ -304,6 +308,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
   /* ---------- polvo con bokeh falso (con el fondo y el nombre, lo único desenfocado) ---------- */
   const dustFocus = uniform(9), dustI = uniform(0);
   const coneA = uniform(new THREE.Vector3(0, 10, 0)), coneB = uniform(new THREE.Vector3()), coneR = uniform(1.9);   // cono del cenital, en el mundo
+  let vDust = null;                              // las motas del cono: × dustI (sin luz, 0: no se dibujan)
   {
     // las motas viven DENTRO del cono del cenital (coordenadas de la vitrina): s a lo largo del eje, ángulo y radio
     // relativo; el cono las lleva de una notebook a la otra. En el apagón (dustI = 0) no hay ninguna (D-11).
@@ -330,8 +335,9 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     m.colorNode = vec3(1, 0.93, 0.88).mul(0.5);
     const edgeF = smoothstep(1.0, 0.6, rf).mul(smoothstep(0.12, 0.3, sAx));
     m.opacityNode = disk.mul(seedA.mul(0.5).add(0.25)).mul(float(1).sub(coc.min(1).mul(0.8))).mul(fade).mul(edgeF).mul(dustI).mul(appear);
-    const s = new THREE.Sprite(m); s.count = n; s.frustumCulled = false; s.renderOrder = 30;
+    const s = new THREE.Sprite(m); s.count = n; s.frustumCulled = false; s.renderOrder = 30; s.userData.dust = n;
     group.add(s);
+    vDust = s;
   }
 
   /* ---------- fondo: negro casi absoluto con un pozo de luz chico detrás del objeto (cae con el apagón) ---------- */
@@ -602,16 +608,19 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     if (active >= 0) {
       // un poco por detrás del objeto: además del deck, rasante en el borde trasero (rim) y el canto de la tapa (D-02)
       const c = centers[active];
-      spot.position.set(c.x + 0.3, c.y + 6.2, c.z - 1.2);
+      tmpT.set(c.x + 0.3, c.y + 6.2, c.z - 1.2);
+      coneA.value.copy(tmpT);
+      spot.position.copy(tmpT);
       spot.target.position.copy(c);
+      if (spotIn) { group.localToWorld(spot.position); group.localToWorld(spot.target.position); }
       spot.intensity = 80 * stage;
-      coneA.value.copy(spot.position);
       coneB.value.set(c.x, laps[active].home.y, c.z + 0.3);
       coneR.value = 2.0;
     } else spot.intensity = 0;
     // el cenital queda siempre en la escena (intensidad 0 = apagado): sacarlo cambiaría la cuenta de luces y obligaría
     // a recompilar los materiales en pleno scroll
     dustI.value = stage;
+    vDust.visible = stage > 1e-4;
 
     // la recta viajera: sale del canto, cruza el vacío a oscuras y entra por la bisagra de la siguiente
     relays.forEach((R, k) => {
@@ -736,11 +745,11 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
   }
 
   /** fuera de Projects (la galería cerrada no llama a update): apaga el zumbido */
-  function idle() { if (sound.hum) { sound.hum = false; loopSound('mat-hum', false); } }
+  function idle() { spot.intensity = 0; if (sound.hum) { sound.hum = false; loopSound('mat-hum', false); } }
 
   let saved = null;
   function warm(v) {
-    const objs = [group, spot, ...laps.map((l) => l.outer), ...beams.map((b) => b.mesh), ...relays.flatMap((r) => [r.r.mesh, r.rm.mesh]), ...(exit ? [exit.mesh, exit.rm.mesh] : [])];
+    const objs = [group, spot, vDust, ...laps.map((l) => l.outer), ...beams.map((b) => b.mesh), ...relays.flatMap((r) => [r.r.mesh, r.rm.mesh]), ...(exit ? [exit.mesh, exit.rm.mesh] : [])];
     if (v) { saved = objs.map((o) => o.visible); objs.forEach((o) => { o.visible = true; }); spot.intensity = 1; }
     else if (saved) { objs.forEach((o, i) => { o.visible = saved[i]; }); saved = null; spot.intensity = 0; }
   }

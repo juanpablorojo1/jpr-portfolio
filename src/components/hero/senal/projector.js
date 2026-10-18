@@ -35,6 +35,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { GAL_END, GAL_DWELLS } from './gallery';
 import { FBF_RUN, FBF_BEAM, FBF_STAY, FBF_OFF, FBF_END, FBF_DRUM } from './frames';
 import { VIDEOS } from '../../../lib/content';
+import { src720, poster720 } from './quality';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const clamp01 = (x) => Math.min(1, Math.max(0, x));
@@ -55,6 +56,8 @@ const vidOf = (k, r) => mod(Math.round(r + relOf(k, r)), NV);
 const isLand = (j) => VIDEOS[j].width > VIDEOS[j].height;
 const SRC_IN = 1.5, SRC_OUT = 1.9;                   // src cuando la cara puede llegar al frente; se suelta lejos de él
 const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
+const PRE_U = LAST_OUT - 1.5;                        // precalentado de los videos aunque el scroll no se detenga (~u 7,5)
+const PRE_FROM = 1.0;                                // desde la estadía de TraumaVision, con el scroll quieto
 
 /* ---------- el tambor (metros del pasillo) ---------- */
 const H = FBF_DRUM.h, W = FBF_DRUM.w, Y0 = FBF_DRUM.base;
@@ -68,7 +71,7 @@ const FILL = 0.7;                                    // la cara de frente: ~70 %
 
 /** Arma el tambor. Devuelve el controlador o null si se desmontó a mitad. */
 export async function buildProjector({
-  group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
+  renderer, quality = null, group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
   headPos, headI, scrPos, scrI, endP, endL, railHeadZ, focusU, rangeU,
 }) {
   const alive = () => !ctl.disposed && !S.dead;
@@ -84,10 +87,30 @@ export async function buildProjector({
      apagado del tambor, camino a Stack. */
   const lookW = uniform(0);
   const texs = [];
+  /* nivel de calidad vigente (quality.js): en medio y bajo el video 720p y su póster; en bajo, src sólo para la cara de
+     frente (la que llega en un giro lo pide al empezar el giro). Se aplica en cada asignación, nunca a un video que ya
+     corre. Anisotropía 16/8/4 al crear la textura. */
+  const Q = () => (quality ? quality() : { aniso: 16, video720: false, frontOnly: false });
+  const posterOf = (j) => (Q().video720 ? poster720(VIDEOS[j]) : VIDEOS[j].poster);
   const sharp = (t) => {
     t.colorSpace = THREE.SRGBColorSpace; t.generateMipmaps = true;
-    t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = 16;
+    t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = Q().aniso;
     t.needsUpdate = true; texs.push(t); ctl.texs.push(t); return t;
+  };
+  /** sube la textura a la GPU (con sus mipmaps) en un hueco ocioso, no en el primer cuadro en que se ve: los pósters que
+      llegan en segundo plano y el primer cuadro de cada video (antes se subían en pleno pase Projects → Video) */
+  /* Con el scroll quieto (S.scrollQuiet, scene.js): subir 1080p con mipmaps en pleno scroll era parte del tirón del
+     precalentado (u 7,6). Si el scroll no se queda quieto en ~3 s, se sube igual. `done`: después de subir. */
+  const quiet = () => !S.scrollQuiet || S.scrollQuiet();
+  const idleUpload = (t, done) => {
+    if (!renderer || !renderer.initTexture) { if (done) done(); return; }
+    let tries = 0;
+    const go = () => {
+      if (!alive() || !texs.includes(t)) return;
+      if (!quiet() && ++tries < 10) { setTimeout(() => (typeof requestIdleCallback === 'function' ? requestIdleCallback(go, { timeout: 400 }) : go()), 300); return; }
+      try { renderer.initTexture(t); if (done) done(); } catch (e) { /* se sube al dibujarla */ }
+    };
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(go, { timeout: 400 }); else setTimeout(go, 0);
   };
 
   /* ---------- pósters (las texturas hasta que el video tiene su primer cuadro) ---------- */
@@ -98,9 +121,11 @@ export async function buildProjector({
   /** un <video> por video (ver «videos» más abajo); arriba porque el 16:9 lee su textura al colgarse */
   const vids = VIDEOS.map(() => null);
   /** lo que muestra el video j: su textura de video si ya tiene cuadro, si no su póster */
-  const texOf = (j) => (vids[j] && vids[j].tex) || posterTex[j];
+  // el video recién se muestra con su primer cuadro ya subido a la GPU (ready); hasta ahí, su póster: así la subida de
+  // 1080p con mipmaps nunca cae en el primer cuadro en que la cara se ve (tirón de u 9,7 / 11)
+  const texOf = (j) => (vids[j] && vids[j].ready && vids[j].tex) || posterTex[j];
   const first = [...new Set(Array.from({ length: N }, (_, k) => vidOf(k, r0)))];
-  const firstImgs = await Promise.all(first.map((j) => loadImg(VIDEOS[j].poster)));
+  const firstImgs = await Promise.all(first.map((j) => loadImg(posterOf(j))));
   if (!alive()) return null;
   first.forEach((j, i) => { posterTex[j] = sharp(new THREE.Texture(firstImgs[i])); });
   await yieldToMain();
@@ -159,7 +184,7 @@ export async function buildProjector({
     const st = vec2(uv().x, float(1).sub(uv().y)).sub(0.5).mul(vec2(u.cropW, u.cropH)).add(vec2(0.5, u.offY.add(0.5)));
     const tn = texture(tex, st).level(3.6);
     // aditivo y sin prueba de profundidad: se dibuja sobre el piso de puntos (el piso es opaco y lo taparía)
-    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const fade = smoothstep(0.8, 1.0, uv().y).pow(1.6);
     m.colorNode = tn.rgb.mul(fade).mul(u.refl).mul(appear);
     m.opacityNode = float(1);
@@ -219,7 +244,7 @@ export async function buildProjector({
     const hl = haloMat(poster, u, 2.3);
     const halo = new THREE.Mesh(new THREE.PlaneGeometry(W * 2.3, H * 2.3), hl.m);
     halo.position.z = -0.45; halo.renderOrder = 1; g.add(halo);
-    return { k, j, g, scr, u, nodes: [sc.tn, rf.tn, hl.tn].filter(Boolean), halo, ring, front: 0, facing: 0, pw: 0 };
+    return { k, j, g, scr, u, nodes: [sc.tn, rf.tn, hl.tn].filter(Boolean), halo, ring, ringM, front: 0, facing: 0, pw: 0 };
   });
 
   /* ---------- la cara horizontal: sale del tambor y se abre a 16:9 delante ----------
@@ -282,7 +307,7 @@ export async function buildProjector({
     geo.setIndex(idx);
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e4);
     const u = { s0: uniform(0), s1: uniform(0), inten: uniform(0), head: uniform(1) };
-    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const aTan = attribute('aTan', 'vec3'), aSide = attribute('aSide', 'float'), aS = attribute('aS', 'float');
     const n = normalize(cross(aTan, normalize(camL.sub(positionLocal))));
     m.positionNode = positionLocal.add(n.mul(aSide).mul(width));
@@ -315,6 +340,9 @@ export async function buildProjector({
 
   /* ---------- haz rojo tenue: de arriba y adelante hacia la cara de frente (cinta ancha que mira a cámara) ---------- */
   const beamI = uniform(0);
+  // no dibujar lo invisible: el haz (× beamI), el polvo (× luz del haz o del video) y, por cara, el halo y el anillo
+  // (× su intensidad) dejan de dibujarse cuando valen 0; desde Stack se dibujaban apagados hasta Contacto
+  let beamMesh = null, hallDust = null;
   const bA = uniform(LAMP.clone()), bB = uniform(V(0, Y0 + H * 0.78, FZ + 0.2));
   {
     const geo = new THREE.BufferGeometry();
@@ -323,7 +351,7 @@ export async function buildProjector({
     geo.setAttribute('aSide', new THREE.BufferAttribute(new Float32Array([-1, 1, -1, 1]), 1));
     geo.setIndex([0, 2, 1, 1, 2, 3]);
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e4);
-    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, forceSinglePass: true });
     const e = attribute('aEnd', 'float'), sd = attribute('aSide', 'float');
     const P = mix(bA, bB, e);
     const dir = normalize(bB.sub(bA));
@@ -337,9 +365,9 @@ export async function buildProjector({
     const near = smoothstep(0.8, 2.6, distance(P, camL));
     m.colorNode = RED.mul(prof.mul(along).mul(motes).mul(near).mul(beamI).mul(0.07)).mul(appear);
     m.opacityNode = float(1);
-    const beam = new THREE.Mesh(geo, m);
-    beam.frustumCulled = false; beam.renderOrder = 4;
-    hall.add(beam);
+    beamMesh = new THREE.Mesh(geo, m);
+    beamMesh.frustumCulled = false; beamMesh.renderOrder = 4;
+    hall.add(beamMesh);
   }
 
   /* ---------- polvo alrededor del tambor (lo único con bokeh): toma la luz del video y, en el haz, el rojo ---------- */
@@ -372,8 +400,8 @@ export async function buildProjector({
     const pool = exp(dp.mul(dp).mul(-0.9)).mul(float(1).sub(smoothstep(0.2, 0.7, pl.y))).mul(scrI.mul(2.0)).min(1);
     const lit = max(inB.mul(beamI), pool);
     m.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(smoothstep(0.3, 0.9, near)).mul(lit).mul(appear);
-    const dust = new THREE.Sprite(m); dust.count = DUST; dust.frustumCulled = false; dust.renderOrder = 30;
-    hall.add(dust);
+    hallDust = new THREE.Sprite(m); hallDust.count = DUST; hallDust.frustumCulled = false; hallDust.renderOrder = 30; hallDust.userData.dust = DUST;
+    hall.add(hallDust);
   }
   await yieldToMain();
   if (!alive()) return null;
@@ -391,10 +419,11 @@ export async function buildProjector({
   /** póster del video entrante: se pide antes de que su cara llegue a los 180° (en segundo plano, una vez) */
   function loadPoster(j) {
     if (posterTex[j] || posterReq[j]) return;
-    posterReq[j] = loadImg(VIDEOS[j].poster).then((img) => {
+    posterReq[j] = loadImg(posterOf(j)).then((img) => {
       if (!alive()) return;
       posterTex[j] = sharp(new THREE.Texture(img));
-      if (!(vids[j] && vids[j].tex)) showVid(j);
+      idleUpload(posterTex[j]);
+      if (!(vids[j] && vids[j].ready)) showVid(j);
     }).catch(() => { posterReq[j] = null; });
   }
   /** la cara f pasa a mostrar el video j (sólo de espaldas: ver update) */
@@ -424,24 +453,46 @@ export async function buildProjector({
     if (wide && wide.nodes[0].value === r.tex) wide.nodes.forEach((n) => { n.value = posterTex[wide.j] || posterTex[j]; });
     dropTex(r.tex);
   }
-  function ensureVideo(k) {
+  function ensureVideo(k, preload = 'auto') {
     if (vids[k]) return vids[k];
     const v = document.createElement('video');
     v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true;
     v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
-    v.preload = 'auto';
-    const rec = { v, tex: null, last: -1 };
+    v.preload = preload;
+    const rec = { v, tex: null, last: -1, vfc: false, fresh: true };
+    // un cuadro nuevo del video avisa con requestVideoFrameCallback (Chrome lo dispara también fuera del DOM): la subida
+    // va a la cadencia del video (24-30 fps), no a la del rAF (72 o 144). Hasta el primer aviso (o sin rVFC), como antes.
+    if (typeof v.requestVideoFrameCallback === 'function') {
+      const onFrame = () => { if (vids[k] !== rec) return; rec.vfc = true; rec.fresh = true; v.requestVideoFrameCallback(onFrame); };
+      v.requestVideoFrameCallback(onFrame);
+    }
     v.addEventListener('loadeddata', () => {
       if (!alive() || rec.tex || vids[k] !== rec) return;
       v.width = v.videoWidth; v.height = v.videoHeight;      // la textura común toma el tamaño de estos atributos
       rec.tex = sharp(new THREE.Texture(v));
-      showVid(k);
+      // subido el primer cuadro, no se vuelve a subir el mismo en el primer cuadro visible (antes currentTime ≠ −1 lo
+      // volvía a marcar al entrar al Tambor)
+      idleUpload(rec.tex, () => {
+        if (vids[k] !== rec) return;
+        rec.last = v.currentTime; rec.fresh = false; rec.ready = true;
+        showVid(k);
+      });
     });
-    v.src = VIDEOS[k].src;
+    v.src = Q().video720 ? src720(VIDEOS[k]) : VIDEOS[k].src;
     v.load();                                                // explícito: fuera del DOM Chrome puede no empezar a cargar solo
     vids[k] = rec;
     return rec;
   }
+  function preheat() {
+    if (vids.some((r) => r && !r.tex)) return;                 // de a uno: el anterior todavía no tiene su primer cuadro
+    // R-04: en bajo (frontOnly) sólo la cara de frente, como en el camino `on`
+    const near = faces.filter((f) => Math.abs(relOf(f.k, st.rot)) < (Q().frontOnly ? 0.999 : SRC_IN))
+      .sort((a, b) => Math.abs(relOf(a.k, st.rot)) - Math.abs(relOf(b.k, st.rot)));
+    for (const f of near) if (!vids[f.j]) { ensureVideo(f.j, 'metadata'); return; }
+  }
+  /** R-05: los videos precalentados se sueltan (src y textura) si el usuario sale de Projects hacia arriba o la galería
+      se cierra; vuelven a pedirse al volver */
+  function dropPreheat() { vids.forEach((r, j) => { if (r) release(j); }); }
   function pauseAll() { vids.forEach((r) => { if (r && !r.v.paused) r.v.pause(); }); }
   ctl.offs.push(() => {
     vids.forEach((r) => { if (!r) return; try { r.v.pause(); r.v.removeAttribute('src'); r.v.load(); } catch (e) { /* noop */ } });
@@ -535,7 +586,15 @@ export async function buildProjector({
     hall.visible = on;
     const ready = on && gw > 0.5;
     lookW.value = on ? gw * (1 - smooth(FBF_OFF + 0.1, FBF_END, u)) : 0;
-    if (!on) { st.active = -1; S.fbf.active = -1; S.fbf.wide = 0; scrI.value = 0; pauseAll(); return null; }
+    if (!on) {
+      st.active = -1; S.fbf.active = -1; S.fbf.wide = 0; scrI.value = 0; pauseAll();
+      // precalentado (tirones de u 7,6 y 9,7): los videos de la cara de frente y sus vecinas piden src (sólo metadatos y
+      // su primer cuadro), de a uno, desde Projects y con el scroll quieto; el primer cuadro se sube en idle, también
+      // quieto. Si el usuario no se detiene nunca, desde PRE_U igual (como antes). En el pase al Tambor ya están.
+      if (gw > 0.5 && u > PRE_FROM && (u > PRE_U || quiet())) preheat();
+      else if (gw < 0.5 || u < PRE_FROM) dropPreheat();          // R-05: fuera de Projects se sueltan
+      return null;
+    }
     camL.value.copy(P);                               // P ya está en coordenadas del pasillo (camPose)
 
     // giro: S.fbf.rot (continuo) lo escribe el HTML con su tween. Reduced motion: corte con fundido.
@@ -637,6 +696,8 @@ export async function buildProjector({
 
     // haz tenue desde arriba (Juan: «(a) Tenue»)
     beamI.value = smooth(FBF_BEAM[0], FBF_BEAM[1] + 0.2, u) * (1 - off);
+    beamMesh.visible = beamI.value > 1e-4;
+    faces.forEach((f) => { f.halo.visible = f.u.halo.value > 1e-6; f.ringM.visible = f.ring.inten.value > 1e-6; });
 
     const stayOn = u > FBF_STAY[0] - 0.12 && u < FBF_OFF;
     const active = stayOn ? mod(Math.round(st.rot), N) : -1;
@@ -649,6 +710,7 @@ export async function buildProjector({
     wp.set(nrm.x * AP, FY, ZC + nrm.z * AP);
     scrPos.value.copy(wp).addScaledVector(nrm, 0.7);
     scrI.value = fa.pw * 0.5 * fadeK;
+    hallDust.visible = beamI.value > 1e-4 || scrI.value > 1e-4;
 
     // videos: src cuando su cara puede llegar al frente (la de frente y sus dos vecinas); el que se aleja lo suelta;
     // corre el de frente (y el que llega, en un giro)
@@ -659,15 +721,30 @@ export async function buildProjector({
       if (!f || Math.abs(relOf(f.k, st.rot)) > SRC_OUT) release(j);
     });
     faces.forEach((f) => {
-      if (srcWin && Math.abs(relOf(f.k, st.rot)) < SRC_IN) ensureVideo(f.j);
+      // preload: la cara de frente (o la que empieza a llegar en un giro: |rel| < 1) baja entera; las vecinas, sólo
+      // metadatos y su primer cuadro (antes, las tres con 'auto': hasta 36,8 MB por recorrido sin tocar nada). Al
+      // empezar el giro, la que llega pasa a 'auto'; el póster y su primer cuadro cubren la espera.
+      const rel = Math.abs(relOf(f.k, st.rot));
+      if (srcWin && rel < (Q().frontOnly ? 0.999 : SRC_IN)) {
+        const full = rel < 0.999;
+        const rr = ensureVideo(f.j, full ? 'auto' : 'metadata');
+        if (full && rr.v.preload !== 'auto') rr.v.preload = 'auto';
+      }
       const r = vids[f.j];
       if (!r) return;
       const play = ready && inView && !document.hidden && !S.fbf.paused && f.pw > 0.3 && f.front > 0.45 && u < FBF_OFF + 0.2;
+      // si el usuario llegó sin pausa y el primer cuadro todavía no se subió en idle, al reproducir se muestra igual
+      // (nunca un póster quieto con el video corriendo)
+      if (play && r.tex && !r.ready) { r.ready = true; showVid(f.j); }
       if (play && r.v.paused) r.v.play().catch(() => {});
       else if (!play && !r.v.paused) r.v.pause();
       r.v.muted = !(S.fbf.sound && f.k === active);
-      // sube un cuadro nuevo sólo cuando cambia (sin depender de requestVideoFrameCallback fuera del DOM)
-      if (r.tex && r.v.readyState >= 2 && r.v.currentTime !== r.last) { r.last = r.v.currentTime; r.tex.needsUpdate = true; }
+      // sube un cuadro sólo cuando el video presenta uno nuevo: con rVFC, una vez por cuadro del video (antes, con
+      // currentTime, que avanza en cada rAF, se subía el mismo cuadro 2-3 veces, cada una con sus mipmaps)
+      if (r.tex && r.v.readyState >= 2) {
+        if (r.vfc) { if (r.fresh) { r.fresh = false; r.tex.needsUpdate = true; } }
+        else if (r.v.currentTime !== r.last) { r.last = r.v.currentTime; r.tex.needsUpdate = true; }
+      }
     });
 
     // foco: viajando, la señal; frente al tambor, el post sin DOF (rango enorme); al final, los puntos
@@ -713,7 +790,7 @@ export async function buildProjector({
   /** precalentado (corridor.warm): todo visible para que compileAsync lo incluya */
   let saved = null;
   function warm(v) {
-    const objs = [hall, line.mesh, ...faces.map((f) => f.scr), ...(wide ? [wide.scr, wide.bz, wide.refl] : [])];
+    const objs = [hall, line.mesh, beamMesh, hallDust, ...faces.flatMap((f) => [f.scr, f.halo, f.ringM]), ...(wide ? [wide.scr, wide.bz, wide.refl] : [])];
     if (v) { saved = objs.map((o) => o.visible); objs.forEach((o) => { o.visible = true; }); }
     else if (saved) { objs.forEach((o, i) => { o.visible = saved[i]; }); saved = null; }
   }
@@ -721,7 +798,7 @@ export async function buildProjector({
   void housingMat; void metalMat; void prep; void focusU; void rangeU; void cameraPosition;
 
   return {
-    pose, calm, update, placeTags, pick, pauseAll, warm, maskNode, lookW,
+    pose, calm, update, placeTags, pick, pauseAll, warm, maskNode, lookW, texs, idle: dropPreheat,
     lampK: () => st.lampK,
     info: () => ({
       fbf: st.mode, rot: +st.rot.toFixed(2), active: st.active, vid: st.active < 0 ? -1 : mod(Math.round(st.rot), NV), spin: +st.spin.toFixed(2),

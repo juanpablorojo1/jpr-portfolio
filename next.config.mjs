@@ -1,4 +1,6 @@
 import createNextIntlPlugin from 'next-intl/plugin';
+import { PHASE_PRODUCTION_BUILD } from 'next/constants.js';
+import { assertUnchanged, immutableHeaders } from './scripts/immutable-assets.mjs';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
@@ -30,8 +32,14 @@ const nextConfig = {
           },
         ],
       },
+      // videos, pósters, imágenes, sonidos y fuentes de public/: un año, immutable (scripts/immutable-assets.mjs)
+      ...immutableHeaders(),
     ]
   },
 };
 
-export default withNextIntl(nextConfig);
+// el build falla si un archivo con caché immutable cambió de contenido con el mismo nombre
+export default (phase) => {
+  if (phase === PHASE_PRODUCTION_BUILD) assertUnchanged();
+  return withNextIntl(nextConfig);
+};

@@ -53,6 +53,19 @@ export default function VideosStage() {
   const [sound, setSound] = useState(false);
   // con la escena viva: el 16:9 está abierto de verdad (S.fbf.wide); null = sin escena, manda el video de frente
   const [wideOpen, setWideOpen] = useState<boolean | null>(null);
+  // C-06: los 12 pósters de .fv-front son el respaldo SIN escena. Mientras la escena pueda correr (la zona tiene
+  // data-gallery, que GALLERY_SCRIPT pone antes del primer pintado y goStatic saca) no se montan: si no, el lazy loader
+  // bajaba los 12 pósters completos además de los del tambor (en medio/bajo, los -720: el doble de descarga)
+  const [frontOn, setFrontOn] = useState(false);
+  // la escena dibuja el tambor (stage.is-live): con data-gallery, el póster de carga sólo hace falta mientras no
+  const [sceneLive, setSceneLive] = useState(false);
+  // la cara anterior (para el fundido del póster de carga) y el nivel de calidad de la escena (medio y bajo piden el
+  // póster -720 de las caras verticales: convención de 03-media-manifiesto.md §5, la misma de quality.js poster720)
+  const frontHist = useRef<[number, number]>([0, 0]);
+  if (frontHist.current[1] !== front) frontHist.current = [frontHist.current[1], front];
+  const prevFront = frontHist.current[0];
+  const qLevel = (sRef.current as unknown as { q?: { level?: string } } | null)?.q?.level;
+  const lowQ = qLevel === 'medio' || qLevel === 'bajo';
   const total = pad2(N);
 
   useEffect(() => { if (sRef.current) sRef.current.fbf.paused = paused; }, [paused]);
@@ -152,6 +165,20 @@ export default function VideosStage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // C-06: los pósters de respaldo se montan sólo si la zona no tiene data-gallery (y aparecen si goStatic o un resize
+  // se la sacan)
+  useEffect(() => {
+    const section = ref.current;
+    if (!section) return;
+    const zone = section.closest<HTMLElement>('.fbf-zone');
+    const sync = () => setFrontOn(!zone || !zone.hasAttribute('data-gallery'));
+    sync();
+    if (!zone) return;
+    const mo = new MutationObserver(sync);
+    mo.observe(zone, { attributes: true, attributeFilter: ['data-gallery'] });
+    return () => mo.disconnect();
+  }, []);
+
   /* ---------- con la escena viva: visibilidad atada a la cámara; teclado durante la estadía ---------- */
   useEffect(() => {
     const section = ref.current, ring = ringRef.current;
@@ -212,11 +239,16 @@ export default function VideosStage() {
 
       let wideOpenRef: boolean | null = null;
       const tick = () => {
-        if (!zone.hasAttribute('data-gallery')) return;
+        if (!zone.hasAttribute('data-gallery')) {
+          // R-02: sin galería (estático en plena sesión) el escenario deja de estar vivo
+          if (liveRef.current) { liveRef.current = false; stage.classList.remove('is-live'); setSceneLive(false); }
+          return;
+        }
         const live = !!(zone.hasAttribute('data-see-through') && S && !S.dead && S.fbf.live);
         if (live !== liveRef.current) {
           liveRef.current = live;
           stage.classList.toggle('is-live', live);
+          setSceneLive(live);
           if (!live) { twRef.current?.kill(); rot.current.v = rot.current.target; }
         }
         if (S && S.fbf.rot !== rot.current.v) S.fbf.rot = rot.current.v;
@@ -304,11 +336,18 @@ export default function VideosStage() {
         >
           {/* sin escena viva: el póster de la cara de frente, con fundido al cambiar (con la escena, el tambor es 3D) */}
           <div className="fv-front" aria-hidden="true">
-            {VIDEOS.map((item, k) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={item.id} src={item.poster} alt="" decoding="async" loading="lazy" width={item.width} height={item.height}
-                data-land={item.width > item.height ? '' : undefined} data-on={k === front ? '' : undefined} />
-            ))}
+            {VIDEOS.map((item, k) => {
+              // R-01: sin escena posible (frontOn) van los 12, como siempre. Con la escena por venir (data-gallery y el
+              // tambor todavía sin dibujar) sólo la cara de frente y la anterior (el fundido), con el póster del nivel:
+              // el mismo byte que pide el tambor (C-06: sin doble descarga). Con la escena viva, ninguno.
+              if (!frontOn && (sceneLive || (k !== front && k !== prevFront))) return null;
+              const src = !frontOn && lowQ && item.width < item.height ? item.poster.replace(/\.(webp|jpg)$/, '-720.$1') : item.poster;
+              return (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={item.id} src={src} alt="" decoding="async" loading="lazy" width={item.width} height={item.height}
+                  data-land={item.width > item.height ? '' : undefined} data-on={k === front ? '' : undefined} />
+              );
+            })}
           </div>
           <div ref={dragRef} className="fv-drag" aria-hidden="true" />
 
