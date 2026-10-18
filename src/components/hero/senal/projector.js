@@ -485,7 +485,8 @@ export async function buildProjector({
   }
   function preheat() {
     if (vids.some((r) => r && !r.tex)) return;                 // de a uno: el anterior todavía no tiene su primer cuadro
-    const near = faces.filter((f) => Math.abs(relOf(f.k, st.rot)) < SRC_IN)
+    // R-04: en bajo (frontOnly) sólo la cara de frente, como en el camino `on`
+    const near = faces.filter((f) => Math.abs(relOf(f.k, st.rot)) < (Q().frontOnly ? 0.999 : SRC_IN))
       .sort((a, b) => Math.abs(relOf(a.k, st.rot)) - Math.abs(relOf(b.k, st.rot)));
     for (const f of near) if (!vids[f.j]) { ensureVideo(f.j, 'metadata'); return; }
   }
