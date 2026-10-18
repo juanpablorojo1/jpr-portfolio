@@ -438,7 +438,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     /** óptica: la vitrina usa una más larga (VIT_FOV); vuelve a la del sitio con la salida a Video */
     fovAt: (u, base) => base + (VIT_FOV - base) * (1 - smooth(LAST_OUT + 0.2, GAL_END, u)) * smooth(GAL_ABOUT_OUT, GAL_ABOUT_OUT + 0.6, u),
     /** la galería cerrada (scene.js no llama a update): silencio */
-    idle: () => { if (grainSet) grainClear(); vit.idle(); },
+    idle: () => { if (grainSet) grainClear(); vit.idle(); proj.idle(); },
     /** peso de la vitrina (1 en Projects): scene.js achica el halo del bloom ahí (el rojo es un hilo, no neón: D-04) */
     vitW: () => vit.voidW.value,
     headWorldX: () => group.position.x + st8.headZ,

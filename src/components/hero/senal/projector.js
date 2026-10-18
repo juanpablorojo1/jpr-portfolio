@@ -490,6 +490,9 @@ export async function buildProjector({
       .sort((a, b) => Math.abs(relOf(a.k, st.rot)) - Math.abs(relOf(b.k, st.rot)));
     for (const f of near) if (!vids[f.j]) { ensureVideo(f.j, 'metadata'); return; }
   }
+  /** R-05: los videos precalentados se sueltan (src y textura) si el usuario sale de Projects hacia arriba o la galería
+      se cierra; vuelven a pedirse al volver */
+  function dropPreheat() { vids.forEach((r, j) => { if (r) release(j); }); }
   function pauseAll() { vids.forEach((r) => { if (r && !r.v.paused) r.v.pause(); }); }
   ctl.offs.push(() => {
     vids.forEach((r) => { if (!r) return; try { r.v.pause(); r.v.removeAttribute('src'); r.v.load(); } catch (e) { /* noop */ } });
@@ -589,6 +592,7 @@ export async function buildProjector({
       // su primer cuadro), de a uno, desde Projects y con el scroll quieto; el primer cuadro se sube en idle, también
       // quieto. Si el usuario no se detiene nunca, desde PRE_U igual (como antes). En el pase al Tambor ya están.
       if (gw > 0.5 && u > PRE_FROM && (u > PRE_U || quiet())) preheat();
+      else if (gw < 0.5 || u < PRE_FROM) dropPreheat();          // R-05: fuera de Projects se sueltan
       return null;
     }
     camL.value.copy(P);                               // P ya está en coordenadas del pasillo (camPose)
@@ -794,7 +798,7 @@ export async function buildProjector({
   void housingMat; void metalMat; void prep; void focusU; void rangeU; void cameraPosition;
 
   return {
-    pose, calm, update, placeTags, pick, pauseAll, warm, maskNode, lookW, texs,
+    pose, calm, update, placeTags, pick, pauseAll, warm, maskNode, lookW, texs, idle: dropPreheat,
     lampK: () => st.lampK,
     info: () => ({
       fbf: st.mode, rot: +st.rot.toFixed(2), active: st.active, vid: st.active < 0 ? -1 : mod(Math.round(st.rot), NV), spin: +st.spin.toFixed(2),
