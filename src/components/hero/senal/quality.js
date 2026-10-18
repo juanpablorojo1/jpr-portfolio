@@ -25,32 +25,39 @@ export const QUALITY = {
   bajo: { dprCap: 0.85, msaa: false, bloomRes: 0.25, dust: 0.35, aniso: 4, lite: true, video720: true, frontOnly: true },
 };
 
-const DEDICATED = /nvidia|geforce|rtx|gtx|quadro|radeon\s*(rx|pro)|\barc\b|apple/;
+// dedicada primero (C-08): Intel Arc por WebGPU es «intel · xe-hpg», por WebGL «Intel(R) Arc(TM) …»
+const DEDICATED = /nvidia|geforce|rtx|gtx|quadro|radeon(\(tm\))?\s*(rx|pro)|\barc\b|xe-hpg|apple/;
 const SOFTWARE = /swiftshader|llvmpipe|softpipe|basic render|microsoft basic|software/;
-const INTEGRATED = /intel|uhd|iris|gen-?\d|radeon\(tm\)\s*graphics|radeon graphics|vega|mali|adreno|powervr|videocore/;
+const INTEGRATED = /intel|uhd|iris|gen-?\d|radeon(\(tm\))?\s*graphics|radeon(\(tm\))?\s*\d{3}m\b|vega|mali|adreno|powervr|videocore/;
 
-/** nombre de la GPU antes de crear el renderer (no abre nada visible; el contexto de prueba se suelta enseguida) */
+/** Nombre de la GPU antes de crear el renderer (no abre nada visible; el contexto de prueba se suelta enseguida).
+    Junta lo que da WebGPU (`adapter.info`) con `UNMASKED_RENDERER_WEBGL` (C-04/C-07): WebGPU en una AMD integrada da
+    sólo «amd · gcn-5» (sin descripción) y Firefox/Safari lo dan vacío; el string de WebGL nombra el modelo. */
 export async function probeGpu(forceWebGL) {
+  const parts = [];
   try {
     if (!forceWebGL && typeof navigator !== 'undefined' && navigator.gpu) {
       const ad = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
       const i = ad && (ad.info || (ad.requestAdapterInfo ? await ad.requestAdapterInfo() : null));
-      if (i) return [i.vendor, i.architecture, i.description || i.device].filter(Boolean).join(' · ');
+      const s = i ? [i.vendor, i.architecture, i.description || i.device].filter(Boolean).join(' · ') : '';
+      if (s) parts.push(s);
     }
   } catch (e) { /* sigue con WebGL */ }
   try {
     const c = document.createElement('canvas');
-    const gl = c.getContext('webgl2') || c.getContext('webgl');
-    if (!gl) return '';
-    const ext = gl.getExtension('WEBGL_debug_renderer_info');
-    const s = String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
-    const lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext();
-    return s;
-  } catch (e) { return ''; }
+    const gl = c.getContext('webgl2', { powerPreference: 'high-performance' }) || c.getContext('webgl');
+    if (gl) {
+      const ext = gl.getExtension('WEBGL_debug_renderer_info');
+      const s = String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || '');
+      const lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext();
+      if (s) parts.push(s);
+    }
+  } catch (e) { /* sin dato */ }
+  return parts.join(' | ');
 }
 
-/** nivel de arranque: { level, ceiling, forced, reason } */
-export function pickLevel(params, gpu) {
+/** nivel de arranque: { level, ceiling, forced, reason }. `nav`: navigator (deviceMemory, hardwareConcurrency) */
+export function pickLevel(params, gpu, nav = typeof navigator !== 'undefined' ? navigator : {}) {
   const q = params && params.get('q');
   if (q && QUALITY[q]) return { level: q, ceiling: q, forced: true, reason: '?q=' + q };
   const g = String(gpu || '').toLowerCase();
@@ -58,7 +65,7 @@ export function pickLevel(params, gpu) {
   if (SOFTWARE.test(g)) { i = 0; why = 'gpu por software'; }
   else if (DEDICATED.test(g)) { i = 2; why = 'gpu dedicada'; }
   else if (INTEGRATED.test(g)) { i = 1; why = 'gpu integrada'; }
-  const mem = navigator.deviceMemory, cores = navigator.hardwareConcurrency;
+  const mem = nav.deviceMemory, cores = nav.hardwareConcurrency;
   if ((mem && mem <= 4) || (cores && cores <= 4)) { i = Math.max(0, i - 1); why += ` · ${mem || '?'} GB / ${cores || '?'} hilos`; }
   return { level: LEVELS[i], ceiling: LEVELS[i], forced: false, reason: why + (gpu ? ` (${gpu})` : '') };
 }
