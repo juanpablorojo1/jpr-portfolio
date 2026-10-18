@@ -92,6 +92,10 @@ async function boot({ S, root, after, assetBase }, ctl) {
   // el pasillo (Projects → Contact) se declara acá y no donde se arma: sync corre desde S.onView y visibilitychange
   // durante los await del arranque, y leía `corr` en su zona muerta temporal (ReferenceError en la consola)
   let corr = null, corrBuilding = false, corrIn = 0;
+  // C-02: después de un cambio de tamaño del drawing buffer (nivel de calidad o resize) el post que NO está en uso
+  // (el del pasillo en el hero, el del hero en la galería) rehace sus render targets y recompila recién al dibujarse:
+  // se lo dibuja una vez con el scroll quieto, antes de que haga falta
+  let warmPost = false;
   const sync = () => {
     if (ctl.disposed || S.dead) return;
     if (shouldRun()) wdRun(); else { wdPause(); if (corr) corr.fbf.pauseAll(); }   // videos de Frame by Frame: pausa fuera de vista
@@ -381,6 +385,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     camera.fov = G.fov; camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight, false);
     U.dpr.value = renderer.getPixelRatio();
+    warmPost = true;
     lay.m = m; lay.horizon = G.horizon; lay.amp = G.amp;
     const hT = visH(TRACE_Z), h0 = visH(0);
     lay.yT = (0.5 - G.horizon) * hT;
@@ -702,6 +707,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     bl.setResolutionScale(QL().bloomRes);
     if (corr && corr.bloom) corr.bloom.setResolutionScale(QL().bloomRes);
     applyDust();
+    warmPost = true;
     console.info('[senal] quality: →', lv, f != null ? 'at ' + f.toFixed(1) + ' fps' : '');
   }
   function adaptive(dtMs, t) {
@@ -774,7 +780,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
      pausas entre etapas. Hasta que está listo, la galería no abre (G.w = 0) y el HTML de Projects usa su posición de
      respaldo, como siempre. */
   const corrNear = () => cam.target > 0 || gal.target > 0;
-  let corrPost = false;
+  let corrPost = 0;                              // cuadros que quedan del post del pasillo con la galería cerrada (precalentado)
 
   /* Respaldo del armado (U-fix-2): por proximidad, el armado caía en el primer scroll y lo trababa (frames de
      130-180 ms). Ahora arranca también solo, con el hilo libre, CORR_IDLE_MS después del primer frame: lo que
@@ -810,7 +816,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
         c.place({ yT: lay.yT, railZ: RAIL_Z, aboutPos: lay.endPos, aboutLook: lay.endLook });
         await c.warm();
         if (ctl.disposed || S.dead) return;
-        corr = c; corrPost = true; applyDust();
+        corr = c; corrPost = 2; applyDust();
         ctl.info.neg = c.info;
         ctl.info.t.corridor = Math.round(performance.now() - t0);
         console.info('[senal] corridor ready in', ctl.info.t.corridor, 'ms');
@@ -978,8 +984,14 @@ async function boot({ S, root, after, assetBase }, ctl) {
     bl.strength.value = bs;
 
     // con el pasillo abierto, su post (DOF + bloom del rojo + grano); con G.w → 0 empata con el del hero.
-    // corrPost: un frame con el post del pasillo apenas está listo, para compilarlo antes de que haga falta.
-    let pl = pipeline;
+    // corrPost: DOS cuadros con el post del pasillo apenas está listo (o tras un cambio de tamaño). En el primer render
+    // three arma los nodos y el DOF corre anidado a otra profundidad que en los siguientes: sus pasadas se recompilaban en
+    // el segundo render, que era la entrada a Projects (las 4 compilaciones del DOF). Con galW 0 empata con el del hero.
+    let pl = pipeline, warmHero = false;
+    if (warmPost && corr && !skipRender && performance.now() - lastScrollT > 600) {
+      warmPost = false;
+      if (G.w > 0) warmHero = true; else corrPost = 2;   // con galW 0 el post del pasillo empata con el del hero
+    }
     if (corr && (G.w > 0 || corrPost)) {
       const cb = corr.bloom, w = G.w;
       cb.strength.value = bs + (1.2 - bs) * w; cb.radius.value = 0.55 + 0.05 * w; cb.threshold.value = 0.55 - 0.43 * w;
@@ -988,9 +1000,9 @@ async function boot({ S, root, after, assetBase }, ctl) {
       // R2-02: umbral alto en la vitrina: la línea del canto (≤ el rojo de marca, 0,81 lineal) no entra al bloom; sólo
       // la cabeza de la señal, que tiene su propio resplandor en el shader
       if (vw > 0) { cb.radius.value += (0.12 - cb.radius.value) * vw; cb.strength.value += (0.75 - cb.strength.value) * vw; cb.threshold.value += (0.9 - cb.threshold.value) * vw; }
-      pl = corr.pipeline; corrPost = false;
+      pl = corr.pipeline; if (corrPost > 0) corrPost--;
     }
-    if (!skipRender) pl.render();
+    if (!skipRender) { if (warmHero) pipeline.render(); pl.render(); }   // el último render gana el canvas
     placeFg();
 
     // rótulos en el espacio (mismo frame que el render) y placa bajo el puntero
