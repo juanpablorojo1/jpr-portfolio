@@ -284,7 +284,7 @@ export async function buildEcg({ corr, camera, S, ctl, RED, OFF, galW, yieldToMa
     m.colorNode = mix(OFF.mul(0.4), RED.mul(1.6), hl.mul(0.8)).mul(hl.mul(2.0).add(0.6)).mul(k);
     m.opacityNode = k;
     const dust = new THREE.Sprite(m);
-    dust.count = ND; dust.frustumCulled = false; dust.renderOrder = 2;
+    dust.count = ND; dust.frustumCulled = false; dust.renderOrder = 2; dust.userData.dust = ND;   // polvo: quality.js lo escala por nivel
     ecg.add(dust);
   }
 

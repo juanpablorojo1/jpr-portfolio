@@ -35,7 +35,9 @@ const LAST_OUT = GAL_DWELLS[GAL_DWELLS.length - 1][1];
 const NP = GAL_DWELLS.length;
 
 /** Arma el riel, la vitrina y la sala (async, con pausas al hilo principal). Devuelve el controlador o null si se desmontó a mitad. */
-export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW, assetBase = '/projects/', yieldToMain, stageLight = null }) {
+export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW, assetBase = '/projects/', yieldToMain, stageLight = null, quality = null }) {
+  // nivel de calidad vigente (quality.js, scene.js): anisotropía al armar, video 720 / sólo frente al asignar
+  const Q = () => (quality ? quality() : { aniso: 16, bloomRes: 0.5 });
   const alive = () => !ctl.disposed && !S.dead;
   const group = new THREE.Group();
   group.name = 'corridor';
@@ -43,7 +45,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   // positionWorld → coordenadas del pasillo (grupo girado +90° en y: x_w = z_l + ox, z_w = −x_l + oz)
   const toL = (p) => { const q = p.sub(offU); return vec3(q.z.negate(), q.y, q.x); };
   const texs = [];
-  const prep = (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : 8); t.needsUpdate = true; texs.push(t); ctl.texs.push(t); return t; };
+  const prep = (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, Q().aniso, renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : 8); t.needsUpdate = true; texs.push(t); ctl.texs.push(t); return t; };
 
   ctl.corrStage = 'materials';
   /* ---------- luz y materiales del tramo final (coordenadas del pasillo) ---------- */
@@ -113,11 +115,11 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
     const oof = smoothstep(rangeU.mul(0.35), rangeU, near.sub(focusU).abs()).mul(0.8).mul(dotK);
     dustMat.opacityNode = soft.mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(fogF())).mul(smoothstep(0.3, 0.9, near)).mul(float(1).sub(oof)).mul(appear).mul(dustK);
   }
-  const dust = new THREE.Sprite(dustMat); dust.count = DUST; dust.frustumCulled = false; group.add(dust);
+  const dust = new THREE.Sprite(dustMat); dust.count = DUST; dust.frustumCulled = false; dust.userData.dust = DUST; group.add(dust);
 
   /* ---------- Projects: la vitrina (cuatro laptops en el vacío) ---------- */
   ctl.corrStage = 'vitrina';
-  const vit = await buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear, yieldToMain, assetBase, railStop: RAIL_STOP, spot: stageLight });
+  const vit = await buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear, yieldToMain, assetBase, railStop: RAIL_STOP, spot: stageLight, quality: Q() });
   if (!vit || !alive()) return null;
   group.add(vit.group);
   vit.texs.forEach((t) => texs.push(t));
@@ -128,7 +130,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   ctl.corrStage = 'projector';
   const END_P = V(0.78, 0.86, -54.8), END_L = V(-0.12, 0.12, -61.8);   // última pose de Projects (= primera de la sala)
   const proj = await buildProjector({
-    renderer, group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
+    renderer, quality: Q, group, toL, RED, OFF, appear, S, ctl, prep, yieldToMain, withFog, lightAt, metalMat, housingMat,
     headPos, headI, scrPos, scrI, endP: END_P, endL: END_L, railHeadZ: RAIL_STOP + 0.15, focusU, rangeU,
   });
   if (!proj || !alive()) return null;
@@ -156,6 +158,7 @@ export async function buildCorridor({ renderer, scene, camera, scenePass, S, ctl
   const dofN = dof(col, viewZ, focusU, rangeU, bokehU);
   const redOnly = (c) => { const r = max(c.r.sub(max(c.g, c.b).mul(1.15)), 0); return vec4(r, r.mul(0.04), r.mul(0.05), 1); };
   const bl = bloom(mix(dofN, redOnly(dofN), galW), 1.2, 0.6, 0.12);
+  if (Q().bloomRes !== 0.5) bl.setResolutionScale(Q().bloomRes);   // alto: el 0,5 de siempre (default de BloomNode)
   const vigHero = smoothstep(1.05, 0.25, length(screenUV.sub(0.5).mul(vec2(1.25, 1.0))).mul(1.35)).mul(0.85).add(0.15);
   const vigNeg = smoothstep(1.05, 0.2, length(screenUV.sub(0.5).mul(vec2(1.2, 1.0))).mul(1.3)).mul(0.82).add(0.18);
   const grainN = fract(sin(dot(screenUV.mul(vec2(1731.3, 977.1)).add(fract(time.mul(13.7)).mul(91.7)), vec2(12.9898, 78.233))).mul(43758.5453)).sub(0.5).mul(0.03);

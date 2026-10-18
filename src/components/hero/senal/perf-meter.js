@@ -128,7 +128,7 @@ export function attachPerfMeter({ renderer, ctl, backend, gpu }) {
       const p50 = pct(s, 0.5), p95 = pct(s, 0.95);
       box.textContent = `${backend} · ${gpu}\n` +
         `fps p50 ${p50 ? (1000 / p50).toFixed(0) : '-'}  p5 ${p95 ? (1000 / p95).toFixed(0) : '-'}  frame ${p50.toFixed(1)} ms (p95 ${p95.toFixed(1)})\n` +
-        `scene cpu ${running ? sceneMs.toFixed(2) + ' ms' : 'en pausa'}  dpr ${renderer.getPixelRatio().toFixed(2)}  ${innerWidth}×${innerHeight}\n` +
+        `scene cpu ${running ? sceneMs.toFixed(2) + ' ms' : 'en pausa'}  dpr ${renderer.getPixelRatio().toFixed(2)}  ${innerWidth}×${innerHeight}  q ${ctl.info && ctl.info.q ? ctl.info.q().level : '-'}\n` +
         `draw ${r.drawCalls}  tris ${(r.triangles / 1000).toFixed(0)}k  tex ${mem.textures}  geo ${mem.geometries}  prog ${mem.programs}\n` +
         `gpu≈ ${MB(gpuB)} MB  js ${heap ? MB(heap) + ' MB' : 'n/d'}  sec ${sec}${rec ? '  ● rec' : ''}`;
     }
@@ -139,7 +139,7 @@ export function attachPerfMeter({ renderer, ctl, backend, gpu }) {
   function summarize() {
     if (!rec) return null;
     const t1 = performance.now();
-    const out = { backend, gpu, vw: innerWidth, vh: innerHeight, dpr: renderer.getPixelRatio(), devicePixelRatio, ms: Math.round(t1 - rec.t0), sections: {}, hitches: rec.hitches };
+    const out = { backend, gpu, q: ctl.info && ctl.info.q ? ctl.info.q().level : null, vw: innerWidth, vh: innerHeight, dpr: renderer.getPixelRatio(), devicePixelRatio, ms: Math.round(t1 - rec.t0), sections: {}, hitches: rec.hitches };
     const avg = (xs) => (xs.length ? xs.reduce((a, c) => a + c, 0) / xs.length : 0);
     const mx = (xs) => xs.reduce((a, c) => Math.max(a, c), 0);
     for (const [name] of ZONES) {

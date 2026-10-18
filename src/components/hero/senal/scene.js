@@ -16,6 +16,7 @@ import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { GAL_ABOUT_OUT } from './gallery';
+import { QUALITY, LEVELS, probeGpu, pickLevel } from './quality';
 // corridor / network / ecg / convergence: en shots.js, importado por proximidad (startCorridor)
 let shotsMod = null;
 const loadShots = () => (shotsMod = shotsMod || import('./shots'));
@@ -108,9 +109,14 @@ async function boot({ S, root, after, assetBase }, ctl) {
     canvas.getContext = (type, attrs) => getCtx(type, type === 'webgl2' ? { ...attrs, powerPreference: 'high-performance' } : attrs);
     canvas.__hiPerf = true;
   }
+  // nivel de calidad (quality.js): se decide antes del renderer porque el MSAA va en su constructor
+  const qBoot = pickLevel(params, await probeGpu(params.has('webgl')));
+  if (ctl.disposed || S.dead) return;
+  const Qs = { ...qBoot };
+  const QL = () => QUALITY[Qs.level];
   let renderer;
   try {
-    renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: params.has('webgl'), powerPreference: 'high-performance' });
+    renderer = new THREE.WebGPURenderer({ canvas, antialias: QL().msaa, forceWebGL: params.has('webgl'), powerPreference: 'high-performance' });
     ctl.renderer = renderer;
     await renderer.init();
   } catch (e) { clearWatchdog(); return S.goStatic('renderer: ' + e.message); }
@@ -134,7 +140,10 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const isMobile = () => innerWidth < 900;
   // la galería de Projects existe sólo ≥1024 (data-gallery, projects-senal.css); debajo, Projects queda apilado
   const wideMQ = matchMedia('(min-width: 1024px)');
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));   // la cara nítida en retina (mobile y desktop)
+  // DPR por nivel (alto: el de siempre, min(dpr, 2), la cara nítida en retina). En el teléfono nunca menos de 1,5.
+  const dprFor = (lv) => { const c = Math.min(devicePixelRatio, QUALITY[lv].dprCap); return isMobile() ? Math.max(c, Math.min(devicePixelRatio, 1.5)) : c; };
+  renderer.setPixelRatio(dprFor(Qs.level));
+  console.info('[senal] quality:', Qs.level, '|', Qs.reason);
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.setClearColor(0x080808, 1);
   renderer.toneMapping = THREE.NoToneMapping;
@@ -235,7 +244,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     dustMat.colorNode = mix(OFF.mul(0.5), RED.mul(2.2), near.mul(0.8));
     dustMat.opacityNode = soft.mul(U.ignite).mul(near.mul(1.4).add(0.12)).mul(seed.mul(0.6).add(0.4)).mul(float(1).sub(U.galW));
     const d = new THREE.Sprite(dustMat);
-    d.count = count; d.frustumCulled = false;
+    d.count = count; d.frustumCulled = false; d.userData.dust = count;
     scene.add(d);
     return d;
   }
@@ -459,6 +468,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const scenePass = pass(scene, camera);
   const col = scenePass.getTextureNode('output');
   const bl = bloom(col, 1.1, 0.55, 0.55);
+  if (QL().bloomRes !== 0.5) bl.setResolutionScale(QL().bloomRes);   // alto: el 0,5 de siempre (default de BloomNode)
   ctl.nodes.push(bl, scenePass);   // render targets propios del bloom y del pass
   // en la galería la viñeta afloja: los planos viven en la mitad derecha y no deben hundirse en el borde
   const vig = smoothstep(1.05, 0.25, length(screenUV.sub(0.5).mul(vec2(1.25, 1.0))).mul(mix(float(1.35), float(1.05), U.galW)));
@@ -672,33 +682,53 @@ async function boot({ S, root, after, assetBase }, ctl) {
 
   /* ---------- loop ---------- */
   const fpsBuf = []; let lastNow = performance.now(), loopOn = false;
-  /* Calidad adaptativa (DPR), con ida y vuelta. Se mide en ventanas de 120 frames válidos (~2 s): un frame de más de
-     250 ms (pestaña oculta, ventana tapada, GC largo, vuelta de segundo plano) no es una medición y reinicia la ventana.
-     < 48 fps → DPR al piso. En el piso, ventanas seguidas ≥ 57 fps → DPR completo de nuevo. Si al subir vuelve a caer,
-     la próxima subida pide el doble de ventanas buenas (2 → 4 → 8 → 16): no oscila. */
-  const DPR_MAX = Math.min(devicePixelRatio, 2);
-  const aq = { n: 0, sum: 0, low: false, good: 0, need: 2 };
-  const setDpr = (d, f) => {
-    renderer.setPixelRatio(d); U.dpr.value = d;          // setPixelRatio ya rehace el tamaño del canvas
-    console.info('[senal] adaptive: dpr →', d, 'at', f.toFixed(1), 'fps');
+  /* Niveles de calidad en vivo (quality.js), con ida y vuelta. Se mide en ventanas de frames válidos (~2 s; la primera,
+     de 60, es la prueba corta de frame time): un frame de más de 250 ms (pestaña oculta, ventana tapada, GC largo) no es
+     una medición y reinicia la ventana. < 48 fps → un nivel abajo. Ventanas seguidas ≥ 57 fps → un nivel arriba, nunca
+     por encima del de arranque; si al subir vuelve a caer, la próxima subida pide el doble de ventanas (2 → 4 → 8 → 16):
+     no oscila. En bajo, < 24 fps en 4 ventanas seguidas con la ventana al frente → la versión estática. Con ?q= no se
+     mueve. El cambio se aplica con el scroll quieto (cambiar el DPR rehace los render targets y recompila el DOF y el
+     bloom: mejor un cuadro largo quieto que un tirón en pleno scroll). */
+  const aq = { n: 0, sum: 0, good: 0, need: 2, bad: 0, first: true, pending: null };
+  const applyDust = () => {
+    const k = QL().dust;
+    scene.traverse((o) => { if (o.userData && o.userData.dust) o.count = Math.max(1, Math.round(o.userData.dust * k)); });
   };
+  function applyLevel(lv, f) {
+    Qs.level = lv;
+    const d = dprFor(lv);
+    if (renderer.getPixelRatio() !== d) { renderer.setPixelRatio(d); U.dpr.value = d; }   // setPixelRatio rehace el canvas
+    bl.setResolutionScale(QL().bloomRes);
+    if (corr && corr.bloom) corr.bloom.setResolutionScale(QL().bloomRes);
+    applyDust();
+    console.info('[senal] quality: →', lv, f != null ? 'at ' + f.toFixed(1) + ' fps' : '');
+  }
   function adaptive(dtMs, t) {
+    if (aq.pending && performance.now() - lastScrollT > 600) { const p = aq.pending; aq.pending = null; applyLevel(p.lv, p.f); }
     if (dtMs > 250 || document.hidden) { aq.n = 0; aq.sum = 0; return; }
-    if (t <= 6) return;                                     // el arranque (compilación, latido) no cuenta
+    if (t <= 6 || Qs.forced) return;                        // el arranque (compilación, latido) no cuenta
     aq.n++; aq.sum += dtMs;
-    if (aq.n < 120) return;
+    if (aq.n < (aq.first ? 60 : 120)) return;
+    aq.first = false;
     const f = (aq.n * 1000) / aq.sum;
     aq.n = 0; aq.sum = 0;
-    const floor = isMobile() ? 1.5 : 1;                     // en mobile nunca por debajo de 1,5 (la cara se ablanda)
-    if (!aq.low) {
-      if (f < 48 && renderer.getPixelRatio() > floor) { aq.low = true; aq.good = 0; setDpr(floor, f); }
-    } else if (f >= 57) {
-      if (++aq.good >= aq.need) { aq.low = false; aq.need = Math.min(aq.need * 2, 16); setDpr(DPR_MAX, f); }
-    } else aq.good = 0;
+    const i = LEVELS.indexOf(aq.pending ? aq.pending.lv : Qs.level), top = LEVELS.indexOf(Qs.ceiling);
+    if (f < 48) {
+      aq.good = 0;
+      if (i > 0) { aq.pending = { lv: LEVELS[i - 1], f }; if (aq.wasUp) aq.need = Math.min(aq.need * 2, 16); aq.wasUp = false; }
+      else if (f < 24 && document.hasFocus()) { if (++aq.bad >= 4) S.goStatic('quality: bajo a ' + f.toFixed(1) + ' fps'); }
+      else aq.bad = 0;
+    } else {
+      aq.bad = 0;
+      if (f >= 57 && i < top) { if (++aq.good >= aq.need) { aq.good = 0; aq.wasUp = true; aq.pending = { lv: LEVELS[i + 1], f }; } }
+      else aq.good = 0;
+    }
   }
+  S.q = Qs;
+  applyDust();                                   // el polvo del hero; el del pasillo y las tomas, al engancharse
   const hud = params.has('hud') ? root.querySelector('.senal-hud') : null;
   if (hud) hud.hidden = false;
-  ctl.info = { backend, gpu, t: { rendererReady: Math.round(performance.now()) }, fps: () => (fpsBuf.length ? (fpsBuf.length / (fpsBuf.reduce((a, b) => a + b, 0) / 1000)).toFixed(1) : null), frames: 0, running: () => loopOn, dpr: () => renderer.getPixelRatio() };
+  ctl.info = { backend, gpu, t: { rendererReady: Math.round(performance.now()) }, fps: () => (fpsBuf.length ? (fpsBuf.length / (fpsBuf.reduce((a, b) => a + b, 0) / 1000)).toFixed(1) : null), frames: 0, running: () => loopOn, dpr: () => renderer.getPixelRatio(), q: () => ({ ...Qs, msaa: renderer.samples || 0 }) };
   window.__senal = ctl.info;
   // QA (?hud): dónde cae la traza en pantalla para un progreso dado, sin renderizar (sirve con la pestaña oculta).
   // Devuelve el rango de y (px CSS) de la cinta principal entre x0 y x1. El frame siguiente rehace cámara y cintas.
@@ -767,13 +797,13 @@ async function boot({ S, root, after, assetBase }, ctl) {
     corrBuilding = true;
     const t0 = performance.now();
     loadShots()
-      .then(({ buildCorridor }) => (ctl.disposed || S.dead ? null : buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW: U.galW, yieldToMain: yieldBuild, stageLight })))
+      .then(({ buildCorridor }) => (ctl.disposed || S.dead ? null : buildCorridor({ renderer, scene, camera, scenePass, S, ctl, RED, OFF, galW: U.galW, yieldToMain: yieldBuild, stageLight, quality: QL })))
       .then(async (c) => {
         if (!c || ctl.disposed || S.dead) return;
         c.place({ yT: lay.yT, railZ: RAIL_Z, aboutPos: lay.endPos, aboutLook: lay.endLook });
         await c.warm();
         if (ctl.disposed || S.dead) return;
-        corr = c; corrPost = true;
+        corr = c; corrPost = true; applyDust();
         ctl.info.neg = c.info;
         ctl.info.t.corridor = Math.round(performance.now() - t0);
         console.info('[senal] corridor ready in', ctl.info.t.corridor, 'ms');
@@ -809,7 +839,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
       finally { renderer.setRenderTarget(prevRT); n.warm(false); }
       try { await Promise.race([pending, new Promise((r) => setTimeout(r, 4000))]); } catch (e) { /* idem */ }
       if (ctl.disposed || S.dead) return;
-      c.setExt(n);
+      c.setExt(n); applyDust();
       ctl.offs.push(() => n.dispose());
       ctl.info.t[name] = Math.round(performance.now() - t0);
       console.info('[senal] ' + name + ' ready in', ctl.info.t[name], 'ms');
