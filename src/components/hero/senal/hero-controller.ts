@@ -57,6 +57,10 @@ export function initHero(root: HTMLElement, S: Senal, { channels, phone }: Opts)
     if (tagSplit) { gsap.killTweensOf(tagSplit.chars); tagSplit.revert(); tagSplit = null; }
     gsap.set(root.querySelectorAll('[data-reveal], .channel'), { clearProps: 'all' });
     syncSeeThrough();
+    // R-02: si cae a estático en plena sesión (último nivel de calidad), las clases que la galería, la vitrina y el
+    // tambor ponen en <html> quedaban pegadas (sin interruptor de sonido, nav transparente, cursor pointer): sus tick
+    // dejan de correr sin data-gallery
+    document.documentElement.classList.remove('fv-drum-ui', 'fv-vit', 'fv-hot', 'pj-vit', 'pj-hot');
   }
   S.goStatic = goStatic;
 

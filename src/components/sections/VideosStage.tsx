@@ -57,6 +57,8 @@ export default function VideosStage() {
   // data-gallery, que GALLERY_SCRIPT pone antes del primer pintado y goStatic saca) no se montan: si no, el lazy loader
   // bajaba los 12 pósters completos además de los del tambor (en medio/bajo, los -720: el doble de descarga)
   const [frontOn, setFrontOn] = useState(false);
+  // la escena dibuja el tambor (stage.is-live): con data-gallery, el póster de carga sólo hace falta mientras no
+  const [sceneLive, setSceneLive] = useState(false);
   const total = pad2(N);
 
   useEffect(() => { if (sRef.current) sRef.current.fbf.paused = paused; }, [paused]);
@@ -230,11 +232,16 @@ export default function VideosStage() {
 
       let wideOpenRef: boolean | null = null;
       const tick = () => {
-        if (!zone.hasAttribute('data-gallery')) return;
+        if (!zone.hasAttribute('data-gallery')) {
+          // R-02: sin galería (estático en plena sesión) el escenario deja de estar vivo
+          if (liveRef.current) { liveRef.current = false; stage.classList.remove('is-live'); setSceneLive(false); }
+          return;
+        }
         const live = !!(zone.hasAttribute('data-see-through') && S && !S.dead && S.fbf.live);
         if (live !== liveRef.current) {
           liveRef.current = live;
           stage.classList.toggle('is-live', live);
+          setSceneLive(live);
           if (!live) { twRef.current?.kill(); rot.current.v = rot.current.target; }
         }
         if (S && S.fbf.rot !== rot.current.v) S.fbf.rot = rot.current.v;
