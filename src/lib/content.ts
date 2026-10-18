@@ -153,7 +153,9 @@ export const VIDEOS: readonly VideoItem[] = [
   { id: 'leex_bids_demo', src: '/videos/leex-licitaciones-demo.mp4', poster: '/videos/leex-licitaciones-demo-poster.webp', orientation: 'landscape', width: 1920, height: 1080, duration: '1:22', audioLang: 'none' },
   { id: 'leex_kibbo_trailer', src: '/videos/leex-kibbo-trailer.mp4', poster: '/videos/leex-kibbo-trailer-poster.webp', orientation: 'landscape', width: 1920, height: 1080, duration: '1:22', audioLang: 'none' },
   // Showreel v3 (Juan, 2026-10-14): los 5 reels con el logo de protagonista van primero. Música Pixabay Content
-  // License (sin atribución obligatoria) y SFX, sin voz. Al reexportarse se reemplazan los archivos con el mismo nombre.
+  // License (sin atribución obligatoria) y SFX, sin voz. Al reexportarse se publican con OTRO nombre (-v2, -v3…) y se
+  // actualiza la ruta acá: la media sale con caché immutable de un año y el build no deja reemplazarla en el lugar
+  // (scripts/immutable-assets.mjs).
   // PLACEHOLDER: reel-04-3d-fisicas.mp4 y su póster son una copia del 05 hasta que exista el reel 04.
   { id: 'reel_type', src: '/videos/reel-01-tipografia.mp4', poster: '/videos/reel-01-tipografia-poster.jpg', orientation: 'portrait', width: 1080, height: 1920, duration: '0:16', audioLang: 'none' },
   { id: 'reel_liquid', src: '/videos/reel-02-liquida.mp4', poster: '/videos/reel-02-liquida-poster.webp', orientation: 'portrait', width: 1080, height: 1920, duration: '0:16', audioLang: 'none' },
