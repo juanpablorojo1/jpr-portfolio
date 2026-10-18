@@ -442,7 +442,13 @@ export async function buildProjector({
     v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true;
     v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
     v.preload = preload;
-    const rec = { v, tex: null, last: -1 };
+    const rec = { v, tex: null, last: -1, vfc: false, fresh: true };
+    // un cuadro nuevo del video avisa con requestVideoFrameCallback (Chrome lo dispara también fuera del DOM): la subida
+    // va a la cadencia del video (24-30 fps), no a la del rAF (72 o 144). Hasta el primer aviso (o sin rVFC), como antes.
+    if (typeof v.requestVideoFrameCallback === 'function') {
+      const onFrame = () => { if (vids[k] !== rec) return; rec.vfc = true; rec.fresh = true; v.requestVideoFrameCallback(onFrame); };
+      v.requestVideoFrameCallback(onFrame);
+    }
     v.addEventListener('loadeddata', () => {
       if (!alive() || rec.tex || vids[k] !== rec) return;
       v.width = v.videoWidth; v.height = v.videoHeight;      // la textura común toma el tamaño de estos atributos
@@ -688,8 +694,12 @@ export async function buildProjector({
       if (play && r.v.paused) r.v.play().catch(() => {});
       else if (!play && !r.v.paused) r.v.pause();
       r.v.muted = !(S.fbf.sound && f.k === active);
-      // sube un cuadro nuevo sólo cuando cambia (sin depender de requestVideoFrameCallback fuera del DOM)
-      if (r.tex && r.v.readyState >= 2 && r.v.currentTime !== r.last) { r.last = r.v.currentTime; r.tex.needsUpdate = true; }
+      // sube un cuadro sólo cuando el video presenta uno nuevo: con rVFC, una vez por cuadro del video (antes, con
+      // currentTime, que avanza en cada rAF, se subía el mismo cuadro 2-3 veces, cada una con sus mipmaps)
+      if (r.tex && r.v.readyState >= 2) {
+        if (r.vfc) { if (r.fresh) { r.fresh = false; r.tex.needsUpdate = true; } }
+        else if (r.v.currentTime !== r.last) { r.last = r.v.currentTime; r.tex.needsUpdate = true; }
+      }
     });
 
     // foco: viajando, la señal; frente al tambor, el post sin DOF (rango enorme); al final, los puntos
