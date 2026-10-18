@@ -10,7 +10,7 @@
    leída como foto, nítida y a opacidad plena, en su propia columna a sangre a la derecha; el riel pasa por detrás y le enciende el filo izquierdo.
    Se abre desde la línea cuando llega la señal (clip-path, nunca opacidad: la recta 3D no se ve a través del pecho).
    Debajo de 1024 (2026-10-14, mobile-senal): diseño de teléfono en about-senal.css. La recta de la señal del hero sigue
-   como horizonte del titular (SVG que se dibuja al entrar), cuerpo legible y la ficha como lectura de monitor. El retrato
+   como horizonte del titular (SVG que se dibuja al entrar) y cuerpo legible. El retrato
    va como lámina a sangre antes del párrafo del hackatón y se pide recién después de `load` y a un viewport (AbPlate).
    Entradas por IntersectionObserver (phoneMotion). */
 
@@ -79,11 +79,11 @@ export default function About() {
   // Celular (< 1024, sin reduced motion): entradas al llegar a la vista
   useEffect(() => (sectionRef.current ? phoneReveal(sectionRef.current) : undefined), []);
 
-  // ≥1024: el retrato se ajusta a la grilla del texto. Arranca después del final del titular (--tr), su techo es el del
-  // rótulo «Sobre mí» (--ft-m) y su piso, el filete de la ficha (--fb-m). Se mide porque cambia con el idioma y el ancho
+  // ≥1024: el retrato se ajusta a la grilla del texto. Arranca después del final del titular (--tr) y su techo es el del
+  // rótulo «Sobre mí» (--ft-m); el piso es fijo en CSS (--fb). Se mide porque cambia con el idioma y el ancho
   // (a 1536×730 ES «PRODUCTO» termina en x 1176 y el cuerpo en 1067). Con SplitText ya aplicado se miden las palabras,
   // que no llevan transform (las letras sí, mientras entran); antes, el texto de cada línea con un Range. offsetTop no
-  // ve los transform de la entrada (rótulo y ficha suben 14 px).
+  // ve los transform de la entrada (el rótulo sube 14 px).
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
@@ -95,10 +95,8 @@ export default function About() {
         const wrap = section.querySelector<HTMLElement>('.ab-wrap');
         const top = section.querySelector<HTMLElement>('.ab-top');
         const label = section.querySelector<HTMLElement>('.ab-label');
-        const meta = section.querySelector<HTMLElement>('.ab-meta');
-        if (!mq.matches || !wrap) { ['--tr', '--ft-m', '--fb-m'].forEach((k) => section.style.removeProperty(k)); return; }
+        if (!mq.matches || !wrap) { ['--tr', '--ft-m'].forEach((k) => section.style.removeProperty(k)); return; }
         if (top && label) section.style.setProperty('--ft-m', `${top.offsetTop + label.offsetTop}px`);
-        if (meta) section.style.setProperty('--fb-m', `${wrap.offsetHeight - meta.offsetTop}px`);
         let right = 0;
         section.querySelectorAll<HTMLElement>('.ab-title .ab-line').forEach((line) => {
           const words = line.querySelectorAll<HTMLElement>('.word');
@@ -121,7 +119,7 @@ export default function About() {
     mm.add('(min-width: 1024px) and (prefers-reduced-motion: no-preference)', () => {
       const title = section.querySelector<HTMLElement>('.ab-title');
       const label = section.querySelector<HTMLElement>('.ab-label');
-      const rest = Array.from(section.querySelectorAll<HTMLElement>('.ab-paras p, .ab-sub, .ab-meta'));
+      const rest = Array.from(section.querySelectorAll<HTMLElement>('.ab-paras p, .ab-sub'));
       const frame = section.querySelector<HTMLElement>('.ab-frame');
       const img = frame?.querySelector<HTMLElement>('.ab-img');
       const zone = section.closest<HTMLElement>('.transition-zone');
@@ -298,7 +296,7 @@ export default function About() {
         </div>
 
         {/* Retrato editorial (≥1024): columna propia a sangre a la derecha, al lado del texto y no detrás */}
-        <div className="ab-photo relative mt-8">
+        <div className="ab-photo relative">
           <div className="ab-frame">
             {/* < 1024 la fuente es un GIF de 1 px: el teléfono no pide esta versión (tiene la suya, AbPlate) */}
             {/* sizes = lo que se pinta con cover: alto del marco (≤78vh) × 0,656 del archivo ≈ 51vh, con margen 58vh; o el ancho del marco (≤27vw, EN) */}
@@ -309,27 +307,6 @@ export default function About() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="ab-img" src="/images/about-foto-d-960.webp" alt={t('photo_alt')} width={960} height={1463} loading="lazy" decoding="async" />
             </picture>
-          </div>
-
-          {/* Metadata bar */}
-          <div data-pm="group" className="ab-meta mt-6 flex items-center gap-6 border-t border-border pt-4">
-            <div data-pm-i>
-              <span className="font-mono text-xs text-muted uppercase tracking-widest">{t('meta_location')} </span>
-              <span className="font-ui text-sm text-off-white">{t('meta_location_value')}</span>
-            </div>
-            <div className="ab-sep w-px h-4 bg-border" />
-            <div data-pm-i>
-              <span className="font-mono text-xs text-muted uppercase tracking-widest">{t('meta_status')} </span>
-              <span className="font-ui text-sm text-accent flex items-center gap-2">
-                <span className="ab-status-dot" aria-hidden="true" />
-                {t('meta_status_value')}
-              </span>
-            </div>
-            <div className="ab-sep w-px h-4 bg-border" />
-            <div data-pm-i>
-              <span className="font-mono text-xs text-muted uppercase tracking-widest">{t('meta_age')} </span>
-              <span className="font-ui text-sm text-off-white">24</span>
-            </div>
           </div>
         </div>
 
