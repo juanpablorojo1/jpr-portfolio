@@ -16,7 +16,7 @@ import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { GAL_ABOUT_OUT } from './gallery';
-import { QUALITY, LEVELS, probeGpu, pickLevel } from './quality';
+import { QUALITY, probeGpu, pickLevel, initAdaptive, stepAdaptive } from './quality';
 // corridor / network / ecg / convergence: en shots.js, importado por proximidad (startCorridor)
 let shotsMod = null;
 const loadShots = () => (shotsMod = shotsMod || import('./shots'));
@@ -689,7 +689,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
      no oscila. En bajo, < 24 fps en 4 ventanas seguidas con la ventana al frente → la versión estática. Con ?q= no se
      mueve. El cambio se aplica con el scroll quieto (cambiar el DPR rehace los render targets y recompila el DOF y el
      bloom: mejor un cuadro largo quieto que un tirón en pleno scroll). */
-  const aq = { n: 0, sum: 0, good: 0, need: 2, bad: 0, first: true, pending: null };
+  const aq = { n: 0, sum: 0, first: true, pending: null, st: initAdaptive(Qs.level, Qs.ceiling) };
   const applyDust = () => {
     const k = QL().dust;
     scene.traverse((o) => { if (o.userData && o.userData.dust) o.count = Math.max(1, Math.round(o.userData.dust * k)); });
@@ -704,7 +704,13 @@ async function boot({ S, root, after, assetBase }, ctl) {
     console.info('[senal] quality: →', lv, f != null ? 'at ' + f.toFixed(1) + ' fps' : '');
   }
   function adaptive(dtMs, t) {
-    if (aq.pending && performance.now() - lastScrollT > 600) { const p = aq.pending; aq.pending = null; applyLevel(p.lv, p.f); }
+    // C-01: con un cambio pendiente no se mide (la escena todavía dibuja el nivel anterior); al aplicarlo, la ventana
+    // arranca de cero: cada ventana mide el nivel efectivo y se baja de a un escalón
+    if (aq.pending) {
+      aq.n = 0; aq.sum = 0;
+      if (performance.now() - lastScrollT > 600) { const p = aq.pending; aq.pending = null; applyLevel(p.lv, p.f); }
+      return;
+    }
     if (dtMs > 250 || document.hidden) { aq.n = 0; aq.sum = 0; return; }
     if (t <= 6 || Qs.forced) return;                        // el arranque (compilación, latido) no cuenta
     aq.n++; aq.sum += dtMs;
@@ -712,17 +718,12 @@ async function boot({ S, root, after, assetBase }, ctl) {
     aq.first = false;
     const f = (aq.n * 1000) / aq.sum;
     aq.n = 0; aq.sum = 0;
-    const i = LEVELS.indexOf(aq.pending ? aq.pending.lv : Qs.level), top = LEVELS.indexOf(Qs.ceiling);
-    if (f < 48) {
-      aq.good = 0;
-      if (i > 0) { aq.pending = { lv: LEVELS[i - 1], f }; if (aq.wasUp) aq.need = Math.min(aq.need * 2, 16); aq.wasUp = false; }
-      else if (f < 24 && document.hasFocus()) { if (++aq.bad >= 4) S.goStatic('quality: bajo a ' + f.toFixed(1) + ' fps'); }
-      else aq.bad = 0;
-    } else {
-      aq.bad = 0;
-      if (f >= 57 && i < top) { if (++aq.good >= aq.need) { aq.good = 0; aq.wasUp = true; aq.pending = { lv: LEVELS[i + 1], f }; } }
-      else aq.good = 0;
-    }
+    const { state, action } = stepAdaptive(aq.st, f, { focused: document.hasFocus() });
+    aq.st = state;
+    Qs.ceiling = state.ceiling;
+    if (!action) return;
+    if (action.type === 'level') aq.pending = { lv: action.level, f };
+    else S.goStatic('quality: bajo a ' + f.toFixed(1) + ' fps');
   }
   S.q = Qs;
   applyDust();                                   // el polvo del hero; el del pasillo y las tomas, al engancharse

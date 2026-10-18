@@ -63,6 +63,36 @@ export function pickLevel(params, gpu) {
   return { level: LEVELS[i], ceiling: LEVELS[i], forced: false, reason: why + (gpu ? ` (${gpu})` : '') };
 }
 
+/* ---------- ajuste en vivo: máquina de estados pura (scene.js la alimenta con el fps de cada ventana) ----------
+   Cada ventana se mide con el nivel EFECTIVO (el que está dibujando): mientras un cambio espera el scroll quieto,
+   scene.js no mide (C-01). Baja de a un escalón; sube de a uno hasta el techo; la versión estática sólo desde bajo. */
+export const ADAPT = { down: 48, up: 57, dead: 24, deadWindows: 4, needMax: 16 };
+/** estado inicial: nivel de arranque y techo (= el de arranque) */
+export function initAdaptive(level, ceiling = level) { return { level, ceiling, need: 2, good: 0, bad: 0, wasUp: false }; }
+/** un paso: fps de una ventana medida en `st.level`. Devuelve { state, action }, action = null |
+    { type: 'level', level } | { type: 'static' }. `focused`: la ventana al frente (sin foco no se cae a estático). */
+export function stepAdaptive(st, f, { focused = true } = {}) {
+  const s = { ...st };
+  const i = LEVELS.indexOf(s.level), top = LEVELS.indexOf(s.ceiling);
+  if (f < ADAPT.down) {
+    s.good = 0;
+    if (i > 0) {
+      if (s.wasUp) s.need = Math.min(s.need * 2, ADAPT.needMax);   // volvió a caer después de subir: subir cuesta el doble
+      s.wasUp = false; s.bad = 0;
+      s.level = LEVELS[i - 1];
+      return { state: s, action: { type: 'level', level: s.level } };
+    }
+    if (f < ADAPT.dead && focused) { if (++s.bad >= ADAPT.deadWindows) return { state: s, action: { type: 'static' } }; }
+    else s.bad = 0;
+    return { state: s, action: null };
+  }
+  s.bad = 0;
+  if (f >= ADAPT.up && i < top) {
+    if (++s.good >= s.need) { s.good = 0; s.wasUp = true; s.level = LEVELS[i + 1]; return { state: s, action: { type: 'level', level: s.level } }; }
+  } else s.good = 0;
+  return { state: s, action: null };
+}
+
 /** video y póster por nivel (convención de 03-media-manifiesto.md §5: los 12 videos tienen -720.mp4; sólo los pósters
     verticales tienen -720) */
 export const src720 = (v) => v.src.replace(/\.mp4$/, '-720.mp4');
