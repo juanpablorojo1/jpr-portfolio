@@ -66,18 +66,24 @@ export function pickLevel(params, gpu) {
 /* ---------- ajuste en vivo: máquina de estados pura (scene.js la alimenta con el fps de cada ventana) ----------
    Cada ventana se mide con el nivel EFECTIVO (el que está dibujando): mientras un cambio espera el scroll quieto,
    scene.js no mide (C-01). Baja de a un escalón; sube de a uno hasta el techo; la versión estática sólo desde bajo. */
-export const ADAPT = { down: 48, up: 57, dead: 24, deadWindows: 4, needMax: 16 };
+// bounceWindows: una caída cuenta como rebote de una subida sólo dentro de esas ventanas (~10 s); bounceLock: con esos
+// rebotes, el techo queda en el nivel al que se volvió y no se intenta subir más en la sesión (C-09)
+export const ADAPT = { down: 48, up: 57, dead: 24, deadWindows: 4, needMax: 16, bounceWindows: 5, bounceLock: 3 };
 /** estado inicial: nivel de arranque y techo (= el de arranque) */
-export function initAdaptive(level, ceiling = level) { return { level, ceiling, need: 2, good: 0, bad: 0, wasUp: false }; }
+export function initAdaptive(level, ceiling = level) { return { level, ceiling, need: 2, good: 0, bad: 0, wasUp: false, sinceUp: 0, bounces: 0 }; }
 /** un paso: fps de una ventana medida en `st.level`. Devuelve { state, action }, action = null |
     { type: 'level', level } | { type: 'static' }. `focused`: la ventana al frente (sin foco no se cae a estático). */
 export function stepAdaptive(st, f, { focused = true } = {}) {
   const s = { ...st };
   const i = LEVELS.indexOf(s.level), top = LEVELS.indexOf(s.ceiling);
+  if (s.wasUp && ++s.sinceUp > ADAPT.bounceWindows) s.wasUp = false;   // la subida se sostuvo: ya no es rebote
   if (f < ADAPT.down) {
     s.good = 0;
     if (i > 0) {
-      if (s.wasUp) s.need = Math.min(s.need * 2, ADAPT.needMax);   // volvió a caer después de subir: subir cuesta el doble
+      if (s.wasUp) {                                                  // volvió a caer enseguida después de subir
+        s.need = Math.min(s.need * 2, ADAPT.needMax);                 // subir cuesta el doble
+        if (++s.bounces >= ADAPT.bounceLock) s.ceiling = LEVELS[i - 1];   // y tras varios rebotes, no sube más
+      }
       s.wasUp = false; s.bad = 0;
       s.level = LEVELS[i - 1];
       return { state: s, action: { type: 'level', level: s.level } };
@@ -88,7 +94,7 @@ export function stepAdaptive(st, f, { focused = true } = {}) {
   }
   s.bad = 0;
   if (f >= ADAPT.up && i < top) {
-    if (++s.good >= s.need) { s.good = 0; s.wasUp = true; s.level = LEVELS[i + 1]; return { state: s, action: { type: 'level', level: s.level } }; }
+    if (++s.good >= s.need) { s.good = 0; s.wasUp = true; s.sinceUp = 0; s.level = LEVELS[i + 1]; return { state: s, action: { type: 'level', level: s.level } }; }
   } else s.good = 0;
   return { state: s, action: null };
 }
