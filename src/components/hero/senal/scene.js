@@ -990,7 +990,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     // corrPost: DOS cuadros con el post del pasillo apenas está listo (o tras un cambio de tamaño). En el primer render
     // three arma los nodos y el DOF corre anidado a otra profundidad que en los siguientes: sus pasadas se recompilaban en
     // el segundo render, que era la entrada a Projects (las 4 compilaciones del DOF). Con galW 0 empata con el del hero.
-    let pl = pipeline, warmHero = false;
+    let pl = pipeline, warmHero = false, warmCorr = false;
     if (warmPost && corr && !skipRender && performance.now() - lastScrollT > 600) {
       warmPost = false;
       if (G.w > 0) warmHero = true; else corrPost = 2;   // con galW 0 el post del pasillo empata con el del hero
@@ -1003,9 +1003,17 @@ async function boot({ S, root, after, assetBase }, ctl) {
       // R2-02: umbral alto en la vitrina: la línea del canto (≤ el rojo de marca, 0,81 lineal) no entra al bloom; sólo
       // la cabeza de la señal, que tiene su propio resplandor en el shader
       if (vw > 0) { cb.radius.value += (0.12 - cb.radius.value) * vw; cb.strength.value += (0.75 - cb.strength.value) * vw; cb.threshold.value += (0.9 - cb.threshold.value) * vw; }
-      pl = corr.pipeline; if (corrPost > 0) corrPost--;
+      // D-01: con la galería cerrada el precalentado dibuja el post del pasillo ANTES que el del hero (el último render
+      // gana el canvas): antes quedaba en pantalla un cuadro desenfocado en el hero y el About (~4 s tras la carga y en
+      // cada resize)
+      if (G.w > 0) pl = corr.pipeline; else warmCorr = true;
+      if (corrPost > 0) corrPost--;
     }
-    if (!skipRender) { if (warmHero) pipeline.render(); pl.render(); }   // el último render gana el canvas
+    if (!skipRender) {                                   // el último render gana el canvas
+      if (warmHero) pipeline.render();
+      if (warmCorr) corr.pipeline.render();
+      pl.render();
+    }
     placeFg();
 
     // rótulos en el espacio (mismo frame que el render) y placa bajo el puntero
