@@ -150,7 +150,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   // DPR por nivel (alto: el de siempre, min(dpr, 2), la cara nítida en retina). En el teléfono nunca menos de 1,5.
   const dprFor = (lv) => { const c = Math.min(devicePixelRatio, QUALITY[lv].dprCap); return isMobile() ? Math.max(c, Math.min(devicePixelRatio, 1.5)) : c; };
   renderer.setPixelRatio(dprFor(Qs.level));
-  console.info('[senal] quality:', Qs.level, '|', Qs.reason);
+  if (params.has('perf')) console.info('[senal] quality:', Qs.level, '|', Qs.reason);   // D-04: el diagnóstico sólo con ?perf
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.setClearColor(0x080808, 1);
   renderer.toneMapping = THREE.NoToneMapping;
@@ -710,7 +710,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     if (corr && corr.bloom) corr.bloom.setResolutionScale(QL().bloomRes);
     applyDust();
     warmPost = true;
-    console.info('[senal] quality: →', lv, f != null ? 'at ' + f.toFixed(1) + ' fps' : '');
+    if (params.has('perf')) console.info('[senal] quality: →', lv, f != null ? 'at ' + f.toFixed(1) + ' fps' : '');
   }
   function adaptive(dtMs, t) {
     // C-01: con un cambio pendiente no se mide (la escena todavía dibuja el nivel anterior); al aplicarlo, la ventana
