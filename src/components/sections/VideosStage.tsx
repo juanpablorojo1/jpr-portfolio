@@ -59,6 +59,13 @@ export default function VideosStage() {
   const [frontOn, setFrontOn] = useState(false);
   // la escena dibuja el tambor (stage.is-live): con data-gallery, el póster de carga sólo hace falta mientras no
   const [sceneLive, setSceneLive] = useState(false);
+  // la cara anterior (para el fundido del póster de carga) y el nivel de calidad de la escena (medio y bajo piden el
+  // póster -720 de las caras verticales: convención de 03-media-manifiesto.md §5, la misma de quality.js poster720)
+  const frontHist = useRef<[number, number]>([0, 0]);
+  if (frontHist.current[1] !== front) frontHist.current = [frontHist.current[1], front];
+  const prevFront = frontHist.current[0];
+  const qLevel = (sRef.current as unknown as { q?: { level?: string } } | null)?.q?.level;
+  const lowQ = qLevel === 'medio' || qLevel === 'bajo';
   const total = pad2(N);
 
   useEffect(() => { if (sRef.current) sRef.current.fbf.paused = paused; }, [paused]);
@@ -329,11 +336,18 @@ export default function VideosStage() {
         >
           {/* sin escena viva: el póster de la cara de frente, con fundido al cambiar (con la escena, el tambor es 3D) */}
           <div className="fv-front" aria-hidden="true">
-            {frontOn && VIDEOS.map((item, k) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={item.id} src={item.poster} alt="" decoding="async" loading="lazy" width={item.width} height={item.height}
-                data-land={item.width > item.height ? '' : undefined} data-on={k === front ? '' : undefined} />
-            ))}
+            {VIDEOS.map((item, k) => {
+              // R-01: sin escena posible (frontOn) van los 12, como siempre. Con la escena por venir (data-gallery y el
+              // tambor todavía sin dibujar) sólo la cara de frente y la anterior (el fundido), con el póster del nivel:
+              // el mismo byte que pide el tambor (C-06: sin doble descarga). Con la escena viva, ninguno.
+              if (!frontOn && (sceneLive || (k !== front && k !== prevFront))) return null;
+              const src = !frontOn && lowQ && item.width < item.height ? item.poster.replace(/\.(webp|jpg)$/, '-720.$1') : item.poster;
+              return (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={item.id} src={src} alt="" decoding="async" loading="lazy" width={item.width} height={item.height}
+                  data-land={item.width > item.height ? '' : undefined} data-on={k === front ? '' : undefined} />
+              );
+            })}
           </div>
           <div ref={dragRef} className="fv-drag" aria-hidden="true" />
 
