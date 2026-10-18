@@ -26,6 +26,19 @@ test('pickLevel: GPU por WebGPU + WebGL', () => {
   for (const [g, lv] of Object.entries(cases)) assert.equal(pickLevel(null, g, nav).level, lv, g);
 });
 
+test('pickLevel: manda WebGPU; WebGL sólo si WebGPU es ambiguo (R-03)', () => {
+  const cases = {
+    'webgpu: intel · xe-lpg | webgl: ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11)': 'medio',   // Meteor Lake
+    'webgpu: intel · gen-12lp | webgl: ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 Laptop GPU)': 'medio',                // Optimus
+    'webgpu: intel · xe-hpg | webgl: ANGLE (Intel, Intel(R) Arc(TM) A770 Graphics Direct3D11)': 'alto',
+    'webgpu: amd · gcn-5 | webgl: ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001638) Direct3D11)': 'medio',
+    'webgpu: amd · rdna-3 | webgl: ANGLE (AMD, AMD Radeon(TM) RX 7600 Direct3D11)': 'alto',
+    'webgl: ANGLE (Intel, Intel(R) HD Graphics, or similar)': 'medio',
+    'webgpu: nvidia · ampere | webgl: ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 Laptop GPU)': 'alto',
+  };
+  for (const [g, lv] of Object.entries(cases)) assert.equal(pickLevel(null, g, nav).level, lv, g);
+});
+
 test('pickLevel: 4 GB o 4 hilos bajan un nivel', () => {
   assert.equal(pickLevel(null, 'nvidia geforce', { deviceMemory: 4, hardwareConcurrency: 8 }).level, 'medio');
   assert.equal(pickLevel(null, 'intel uhd', { deviceMemory: 8, hardwareConcurrency: 4 }).level, 'bajo');
