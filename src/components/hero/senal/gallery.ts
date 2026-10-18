@@ -44,10 +44,10 @@ export const GAL_PROJECTS: ReadonlyArray<{
   id: GalleryId; side: -1 | 1; screen: string; cropX?: number; word: string;
   pos: readonly [number, number, number]; yaw: number;
 }> = [
-  { id: 'traumavision', side: -1, screen: 'traumavision/tv-01-resultado-revisar.jpg', word: 'TRAUMAVISION', pos: [0, 0, 0], yaw: 0 },
-  { id: 'kibbo', side: 1, screen: 'kibbo/kibbo-01-hero.jpg', word: 'KIBBO', pos: [-16, 0.25, -9], yaw: 0.22 },
-  { id: 'eleven', side: -1, screen: 'eleven/eleven-01-hero.jpg', word: 'ELEVEN', pos: [-32, 0.05, -3.5], yaw: -0.16 },
-  { id: 'leex', side: 1, screen: 'leex/leex-01-deteccion-lote.jpg', cropX: 18, word: 'LEEX', pos: [-47.5, 0, -10], yaw: 0.2 },
+  { id: 'traumavision', side: -1, screen: 'traumavision/tv-01-resultado-revisar.webp', word: 'TRAUMAVISION', pos: [0, 0, 0], yaw: 0 },
+  { id: 'kibbo', side: 1, screen: 'kibbo/kibbo-01-hero.webp', word: 'KIBBO', pos: [-16, 0.25, -9], yaw: 0.22 },
+  { id: 'eleven', side: -1, screen: 'eleven/eleven-01-hero.webp', word: 'ELEVEN', pos: [-32, 0.05, -3.5], yaw: -0.16 },
+  { id: 'leex', side: 1, screen: 'leex/leex-01-deteccion-lote.webp', cropX: 18, word: 'LEEX', pos: [-47.5, 0, -10], yaw: 0.2 },
 ];
 
 /** bloque de texto visible: un poco antes y después de la estadía */
