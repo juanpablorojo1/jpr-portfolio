@@ -53,11 +53,13 @@ const CW = LW / 2 + 0.05;
 const flicker = (t) => (t < 0 ? 0 : t < 0.05 ? 1 : t < 0.11 ? 0.25 : t < 0.16 ? 0.95 : t < 0.22 ? 0.55 : 1);
 
 /** Arma la vitrina. Devuelve el controlador o null si se desmontó a mitad. */
-export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear, yieldToMain, assetBase = '/projects/', railStop, railY = 0.03, spot: spotIn = null }) {
+export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear, yieldToMain, assetBase = '/projects/', railStop, railY = 0.03, spot: spotIn = null, quality = null }) {
   const alive = () => !ctl.disposed && !S.dead;
   const group = new THREE.Group();
   group.name = 'vitrina';
-  const aniso = Math.min(16, renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : 8);
+  // nivel de calidad (quality.js) al armar: anisotropía 16/8/4 y, en medio/bajo, la notebook sin clearcoat
+  const q = quality || { aniso: 16, lite: false };
+  const aniso = Math.min(q.aniso, renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : 8);
   const REDL = vec3(0.807, 0.02, 0.023);         // #E8272A en lineal (el mismo RED de scene.js)
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -178,7 +180,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     outer.position.copy(home); outer.rotation.y = pr.yaw;
     group.add(outer);
     // aluK: TraumaVision (de frente al octabox principal) leía plata con el HDRI; lo baja al grafito de los otros tres
-    const nb = buildNotebook({ screenTex: scrTex[k], scrColor: scrCols[k], env, appear, RED: REDL, hdrEnv, aluK: hdrEnv && pr.yaw === 0 ? 0.8 : 1 });
+    const nb = buildNotebook({ screenTex: scrTex[k], scrColor: scrCols[k], env, appear, RED: REDL, hdrEnv, aluK: hdrEnv && pr.yaw === 0 ? 0.8 : 1, lite: q.lite });
     outer.add(nb.root);
     const lu = nb.u;
     // piso negro brillante: sólo existe donde llega la luz (el pozo del cenital y la luz de la pantalla adelante);
@@ -333,7 +335,7 @@ export async function buildVitrina({ renderer, camera, S, ctl, RED, OFF, appear,
     m.colorNode = vec3(1, 0.93, 0.88).mul(0.5);
     const edgeF = smoothstep(1.0, 0.6, rf).mul(smoothstep(0.12, 0.3, sAx));
     m.opacityNode = disk.mul(seedA.mul(0.5).add(0.25)).mul(float(1).sub(coc.min(1).mul(0.8))).mul(fade).mul(edgeF).mul(dustI).mul(appear);
-    const s = new THREE.Sprite(m); s.count = n; s.frustumCulled = false; s.renderOrder = 30;
+    const s = new THREE.Sprite(m); s.count = n; s.frustumCulled = false; s.renderOrder = 30; s.userData.dust = n;
     group.add(s);
     vDust = s;
   }
