@@ -65,14 +65,24 @@ let loopGate = true;
 const reduced = () => typeof window !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const wide = () => typeof window !== 'undefined' && matchMedia('(min-width: 1024px)').matches;
 
-/** A (T-01): AudioContext suspendido y sin gesto todavía en este documento (recarga o cambio EN/ES con el sonido
+/** A (T-01): AudioContext que nunca estuvo en running (nació sin gesto: recarga o cambio EN/ES con el sonido
     encendido). Howler encolaría cada play() hasta el primer clic y los soltaría todos juntos: lo bloqueado se descarta
-    (paleta-sonora.md:19) y se pide resume una vez. Con gesto previo, el contexto lo suspendió Howler tras 30 s de
-    silencio (autoSuspend) y lo reanuda él mismo en play(): ese disparo no se descarta. */
+    (paleta-sonora.md:19) y se pide resume una vez. Si ya corrió alguna vez, lo suspendió Howler tras 30 s de silencio
+    (autoSuspend) y lo reanuda él mismo en play(): ese disparo no se descarta. C-01: el criterio no depende de
+    navigator.userActivation (sin esa API el sitio quedaba mudo tras el autoSuspend). */
+let ctxRan = false, ctxWatched: AudioContext | null = null;
+function watchCtx() {
+  const c = H?.ctx;
+  if (!c || c === ctxWatched) return;
+  ctxWatched = c;
+  if (c.state === 'running') ctxRan = true;
+  c.addEventListener('statechange', () => { if (c.state === 'running') ctxRan = true; });
+}
 function blocked() {
   const c = H?.ctx;
-  if (!c || c.state === 'running') return false;
-  if (navigator.userActivation?.hasBeenActive) return false;
+  if (!c) return false;
+  watchCtx();
+  if (c.state === 'running' || ctxRan) return false;
   if (!resumeAsked) { resumeAsked = true; c.resume().catch(() => { /* lo desbloquea Howler con el primer gesto */ }); }
   return true;
 }
@@ -82,13 +92,14 @@ function load() {
   loading = import('howler').then(({ Howl, Howler }) => {
     H = Howler;
     Howler.volume(MASTER);
+    watchCtx();
     if (!visArmed) { visArmed = true; document.addEventListener('visibilitychange', onVisibility); }
     // L (T-06): los errores de carga y de reproducción se avisan en consola, por id
     const make = (n: SoundName, onload?: () => void) => {
       const s = def(n);
       loaded[n] = new Howl({
         src: [`/sounds/${n}.webm`, `/sounds/${n}.m4a`], volume: s.vol, loop: !!s.loop, preload: true, onload,
-        onloaderror: (_id, e) => { console.warn(`[sound] ${n}: no cargó`, e); if (n === 'ui-on') { loopGate = true; onload?.(); } },
+        onloaderror: (_id, e) => { console.warn(`[sound] ${n}: no cargó`, e); if (n === 'ui-on') { uiOnFailed = true; loopGate = true; onload?.(); } },
         onplayerror: (_id, e) => { console.warn(`[sound] ${n}: no sonó`, e); if (n === 'ui-on') loopGate = true; },
       });
     };
@@ -103,10 +114,12 @@ function load() {
   return loading;
 }
 
-/** E: suena ui-on y abre los loops recién cuando arrancó (si no llega a sonar, los abre igual) */
+/** E: suena ui-on y abre los loops recién cuando arrancó (si no llega a sonar, los abre igual). C-02: un ui-on que no
+    cargó nunca emite play (Howler lo encola para siempre): no se espera. */
+let uiOnFailed = false;
 function chime() {
   const h = loaded['ui-on'];
-  if (h && playSound('ui-on')) h.once('play', () => { loopGate = true; });
+  if (h && !uiOnFailed && playSound('ui-on')) h.once('play', () => { loopGate = true; });
   else loopGate = true;
 }
 
@@ -140,7 +153,8 @@ export function onSound(f: (on: boolean) => void) {
 
 /** Retiene los sonidos de escena mientras viaja un scroll suave: hasta scrollend más 0,9 s, lo que tarda en llegar la
     cámara amortiguada (CAM_LAMBDA 4 en scene.js, ~0,25 s de constante: sin esa cola, al llegar sonaban los cambios de
-    modo que la cámara cruzaba detrás del scroll). Sin scrollend (no hubo scroll, o Safari viejo), `ms`. Durante 4 s,
+    modo que la cámara cruzaba detrás del scroll), nunca menos de `ms`: un salto instantáneo termina enseguida y su
+    scrollend acortaba la retención (functional-tester F-01, tanda 1 de sonido). Durante 4 s,
     cada scroll también la empuja: un scroll suave que arranca tarde no queda sin retención (design-critic S-03). */
 export function holdScene(ms: number) {
   const t0 = performance.now();
@@ -149,7 +163,7 @@ export function holdScene(ms: number) {
   addEventListener('scroll', push, { passive: true });
   setTimeout(() => removeEventListener('scroll', push), 4000);
   // un salto que no scrolleó deja el listener armado: el scrollend de un scroll propio, más tarde, no retiene nada
-  addEventListener('scrollend', () => { const t = performance.now(); if (t - t0 < 4000) holdUntil = t + 900; }, { once: true });
+  addEventListener('scrollend', () => { const t = performance.now(); if (t - t0 < 4000) holdUntil = Math.max(holdUntil, t + 900); }, { once: true });
 }
 
 /** variación por disparo en [−1, 1], nunca pegada a la anterior: dos disparos seguidos nunca suenan idénticos */

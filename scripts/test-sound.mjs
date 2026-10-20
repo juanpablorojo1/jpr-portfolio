@@ -25,7 +25,12 @@ export const fades = [];
 export const stops = [];
 export const instances = {};
 export const Howler = {
-  ctx: { state: 'running', resumes: 0, resume() { this.resumes++; return new Promise(() => {}); } },
+  ctx: {
+    state: 'running', resumes: 0, ls: [],
+    resume() { this.resumes++; return new Promise(() => {}); },
+    addEventListener(t, f) { if (t === 'statechange') this.ls.push(f); },
+    set(s) { this.state = s; this.ls.forEach((f) => f()); },
+  },
   master: null, stopped: 0,
   volume(v) { this.master = v; },
   stop() { this.stopped++; },
@@ -145,14 +150,17 @@ test('variación: rate/vol en rango, nunca idénticos seguidos; gain × 0,5; sig
   assert.ok(r.vol === 0.6 && r.rate === 1);
 });
 
-test('salto: air-jump retiene la escena hasta scrollend + 0,9 s o 1,6 s; la interfaz sigue', () => {
+test('salto: air-jump retiene la escena hasta lo último entre 1,6 s y scrollend + 0,9 s; la interfaz sigue', () => {
   now = 100000; S.playSound('air-jump'); now += 300; S.playSound('mat-focus'); S.playSound('ui-click');
   assert.ok(count('mat-focus') === 0 && count('ui-click') > 0, 'escena retenida, la interfaz no');
   now += 1400; S.playSound('mat-focus'); assert.equal(count('mat-focus'), 1, 'la escena vuelve a 1,6 s');
+  // F-01 (functional-tester, tanda 1): un scroll corto o instantáneo termina enseguida; su scrollend no acorta el 1,6 s
   now += 2000; S.playSound('air-jump'); now += 300; fire('scrollend'); listeners.scrollend = []; S.playSound('sig-beat');
   assert.equal(count('sig-beat'), 0, 'recién terminado el scroll, escena retenida');
   now += 950; S.playSound('sig-beat');
-  assert.equal(count('sig-beat'), 1, 'la escena vuelve a scrollend + 0,9 s');
+  assert.equal(count('sig-beat'), 0, 'scrollend a 0,3 s: a 1,25 s sigue retenida (no se acorta a scrollend + 0,9 s)');
+  now += 400; S.playSound('sig-beat');
+  assert.equal(count('sig-beat'), 1, 'la escena vuelve a 1,6 s');
   now += 3000; S.playSound('air-jump'); now += 1000; fire('scrollend'); listeners.scrollend = []; now += 800; S.playSound('mat-hinge');
   assert.equal(count('mat-hinge'), 0, 'salto largo: scrollend a 1 s + 0,8 s sigue retenido');
   now += 3000; S.playSound('air-jump'); now += 6000; fire('scrollend'); listeners.scrollend = []; now += 300; S.playSound('mat-focus');
@@ -197,8 +205,13 @@ test('pestaña oculta, angosto y reduced motion: 0 disparos', () => {
 });
 
 test('restaurar la sesión no hace sonar ui-on', async () => {
-  S.setSound(false); const on0 = count('ui-on'); S.restoreSound(); await ticks();
-  assert.equal(count('ui-on'), on0);
+  // C-03 (code-reviewer): la sesión guardada tiene que estar encendida, si no restoreSound no hace nada
+  S.setSound(false); now += 5000; const on0 = count('ui-on');
+  sessionStorage.s['jpr-sound'] = '1';
+  assert.equal(S.restoreSound(), true, 'restaurada: encendido');
+  await ticks();
+  assert.ok(S.soundOn());
+  assert.equal(count('ui-on'), on0, 'sin ui-on');
   S.setSound(false);
 });
 
@@ -232,6 +245,44 @@ test('A: contexto suspendido por Howler tras 30 s de silencio (con gesto previo)
   H.Howler.ctx.state = 'suspended';   // autoSuspend de Howler: lo reanuda él mismo en play()
   now += 3000; S.playSound('ui-click');
   assert.equal(count('ui-click'), 1);
+});
+
+// C-01 (code-reviewer): el criterio es «el contexto nunca estuvo en running», no navigator.userActivation
+
+test('C-01: sin navigator.userActivation, tras el autoSuspend de 30 s el sitio sigue sonando', async () => {
+  const { H, S, count } = await fresh();
+  nav.userActivation = undefined;
+  await turnOn(H, S);
+  now += 3000; S.playSound('ui-click');
+  H.Howler.ctx.set('suspended');                       // autoSuspend de Howler
+  for (let k = 0; k < 5; k++) { now += 3000; S.playSound('ui-click'); }
+  assert.equal(count('ui-click'), 6);
+  now += 16; S.loopSound('mat-hum', true);
+  assert.equal(count('mat-hum'), 1);
+});
+
+test('C-01: nació suspendido, Howler lo desbloquea con el clic sin que suene nada, y después el autoSuspend: no queda mudo', async () => {
+  const { H, S, count } = await fresh();
+  nav.userActivation = undefined;
+  H.Howler.ctx.state = 'suspended';
+  sessionStorage.s['jpr-sound'] = '1'; S.restoreSound(); await ticks();
+  H.inst('ui-on').emit('load'); await ticks();
+  now += 3000; S.playSound('mat-focus');
+  assert.equal(count('mat-focus'), 0, 'nacido sin gesto: descartado');
+  H.Howler.ctx.set('running');                         // primer clic (desbloqueo de Howler)
+  H.Howler.ctx.set('suspended');                       // 30 s sin sonar
+  now += 3000; S.playSound('mat-focus');
+  assert.equal(count('mat-focus'), 1);
+});
+
+test('C-01: activación sin clic (WebKit) con el contexto que nunca corrió: se descarta igual', async () => {
+  const { H, S } = await fresh();
+  nav.userActivation = { hasBeenActive: true };
+  H.Howler.ctx.state = 'suspended';
+  sessionStorage.s['jpr-sound'] = '1'; S.restoreSound(); await ticks();
+  H.inst('ui-on').emit('load'); await ticks();
+  for (const n of ['mat-focus', 'sig-beat', 'ui-hover']) { now += 3000; S.playSound(n); }
+  assert.equal(H.plays.length, 0);
 });
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -290,6 +341,17 @@ test('E: al restaurar la sesión (sin ui-on) los loops no esperan', async () => 
   H.inst('ui-on').emit('load'); await ticks();
   now += 3000; S.loopSound('mat-hum', true);
   assert.equal(count('ui-on'), 0);
+  assert.equal(count('mat-hum'), 1);
+});
+
+test('C-02: si ui-on no cargó, apagar y reencender no deja trabado el zumbido', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  const { H, S, count } = await fresh();
+  S.setSound(true); await ticks();
+  H.inst('ui-on').emit('loaderror', 1, 'x'); await ticks();
+  now += 3000; S.setSound(false);
+  now += 3000; S.setSound(true); await ticks();
+  for (let k = 0; k < 5; k++) { now += 16; S.loopSound('mat-hum', true); }
   assert.equal(count('mat-hum'), 1);
 });
 
