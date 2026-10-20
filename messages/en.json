@@ -499,7 +499,7 @@
     "label": "Sound",
     "on": "on",
     "off": "off",
-    "aria": "Sound (camera focus)"
+    "aria": "Site sound"
   },
   "notfound": {
     "label": "404",

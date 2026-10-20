@@ -25,7 +25,8 @@ import { FBF_SECTION_VH, FBF_STAY, FBF_OFF, fbfCtrlWanted, fbfCanTurn, fbfChrome
 import { GAL_DWELLS } from '../hero/senal/gallery';
 import { VIDEOS } from '../../lib/content';
 import { idleTask, lazySet } from '../../lib/idle';
-import { playSound } from '../../lib/sound';
+import { holdScene, playSound } from '../../lib/sound';
+import { arrowStep } from '../../lib/keys';
 import './videos-senal.css';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -212,20 +213,27 @@ export default function VideosStage() {
 
       // ← → con el tambor frente a la cámara (no en campos de texto ni con modificadores)
       const onKey = (e: KeyboardEvent) => {
-        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        const d = arrowStep(e);                               // F (I-03): la tecla mantenida no gira (una cara por pulsación)
+        if (!d) return;
         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.defaultPrevented) return;
         const tg = e.target as HTMLElement | null;
         if (tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
         if (!ring.hasAttribute('data-on')) return;
+        // G (I-04): el keydown está en window: sólo con el Tambor a la vista (su centro dentro de la pantalla). Sin escena
+        // viva el anillo queda con data-on; con escena, data-on llega ~300 ms tarde tras un salto que lo cruza (F-03)
+        { const r = ring.getBoundingClientRect(), c = (r.top + r.bottom) / 2; if (!r.width || c < 0 || c > innerHeight) return; }
         e.preventDefault();
-        goRef.current(e.key === 'ArrowRight' ? 1 : -1);
+        goRef.current(d);
       };
       addEventListener('keydown', onKey);
       // teclado: el foco en la galería apagada lleva el scroll a la estadía (la cámara queda frente al tambor)
       // F-01: el foco dispara primero el scroll-into-view nativo (alinea .fv-ring con el borde de la sección, menos el
       // scroll-padding del nav: u ≈ 11,23). El salto propio va en el frame siguiente, después de ese scroll, y sólo si
       // los controles todavía no están encendidos.
-      const onFocusIn = () => {
+      const onFocusIn = (e: FocusEvent) => {
+        // H (I-05): el foco que entra desde afuera ya es un salto (el scroll-into-view nativo), salte o no el handler:
+        // retiene la escena, como el menú (functional-tester F-01: sin salto propio, sonaba mat-focus sin retención)
+        if (!section.contains(e.relatedTarget as Node | null)) holdScene(1600);
         if (!liveRef.current || !S || fbfCtrlWanted(S.state.gal)) return;
         requestAnimationFrame(() => {
           if (!liveRef.current || !S || fbfCtrlWanted(S.state.gal)) return;
