@@ -35,7 +35,6 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { GAL_END, GAL_DWELLS } from './gallery';
 import { FBF_RUN, FBF_BEAM, FBF_STAY, FBF_OFF, FBF_END, FBF_DRUM } from './frames';
 import { VIDEOS } from '../../../lib/content';
-import { src720, poster720 } from './quality';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const clamp01 = (x) => Math.min(1, Math.max(0, x));
@@ -87,14 +86,17 @@ export async function buildProjector({
      apagado del tambor, camino a Stack. */
   const lookW = uniform(0);
   const texs = [];
-  /* nivel de calidad vigente (quality.js): en medio y bajo el video 720p y su póster; en bajo, src sólo para la cara de
-     frente (la que llega en un giro lo pide al empezar el giro). Se aplica en cada asignación, nunca a un video que ya
-     corre. Anisotropía 16/8/4 al crear la textura. */
-  const Q = () => (quality ? quality() : { aniso: 16, video720: false, frontOnly: false });
-  const posterOf = (j) => (Q().video720 ? poster720(VIDEOS[j]) : VIDEOS[j].poster);
+  /* nivel de calidad vigente (quality.js): en bajo, src sólo para la cara de frente (la que llega en un giro lo pide al
+     empezar el giro). Se aplica en cada asignación, nunca a un video que ya corre.
+     La sección de Video no se optimiza (2026-10-20, Juan: «por que se ven tan feos los videos??»): en todos los niveles
+     el video y el póster 1080p (los -720 iban a ~0,4-0,8 Mbps) y las caras con anisotropía 16 (el máximo de WebGPU;
+     three lo recorta al del adaptador). sharp() sólo arma texturas de las caras (pósters y videos). */
+  const Q = () => (quality ? quality() : { frontOnly: false });
+  const posterOf = (j) => VIDEOS[j].poster;
+  const ANISO = Math.min(16, renderer && renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : 16);
   const sharp = (t) => {
     t.colorSpace = THREE.SRGBColorSpace; t.generateMipmaps = true;
-    t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = Q().aniso;
+    t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = ANISO;
     t.needsUpdate = true; texs.push(t); ctl.texs.push(t); return t;
   };
   /** sube la textura a la GPU (con sus mipmaps) en un hueco ocioso, no en el primer cuadro en que se ve: los pósters que
@@ -478,7 +480,7 @@ export async function buildProjector({
         showVid(k);
       });
     });
-    v.src = Q().video720 ? src720(VIDEOS[k]) : VIDEOS[k].src;
+    v.src = VIDEOS[k].src;
     v.load();                                                // explícito: fuera del DOM Chrome puede no empezar a cargar solo
     vids[k] = rec;
     return rec;

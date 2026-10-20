@@ -1,6 +1,9 @@
 /* Niveles de calidad de la escena «Señal» (perf, 2026-10-17; plan 02-plan.md, «Después: niveles de calidad»).
    Juan: «Necesito optimizar el sitio. que sea mas liviano y no requiera una buena pc.» Alto = el sitio de hoy, idéntico;
-   medio y bajo simplifican lo que casi no se nota en una PC modesta (resolución, partículas, videos 720p).
+   medio y bajo simplifican lo que casi no se nota en una PC modesta (resolución, partículas).
+   Excepción, la sección de Video (2026-10-20, Juan: «por que se ven tan feos los videos??»; aprobó «dejar la optimización
+   en todo el sitio, salvo en la sección de videos»): en todos los niveles, los videos y pósters del Tambor van en 1080p,
+   las caras con anisotropía 16 (projector.js) y, con la cámara en la sección, el DPR sube a min(dpr, 2) (scene.js).
 
    Cómo se elige (al arrancar, antes de crear el renderer: el MSAA se decide ahí):
    - `?q=alto|medio|bajo` lo fuerza (sin ajuste en vivo).
@@ -13,19 +16,19 @@
      en 4 ventanas seguidas con la ventana al frente) → la versión estática (`S.goStatic`), como con reduced motion.
    Lo que se fija al arrancar y no cambia en vivo (cambiarlo recompila todos los pipelines): MSAA, anisotropía, materiales
    de la notebook. Lo que cambia en vivo (sólo con el scroll quieto: cambiar el tamaño de los render targets recompila
-   el DOF y el bloom): DPR, resolución del bloom, cantidad de polvo. El video 720 y «sólo la cara de frente con src»
-   se aplican en la próxima asignación de cada cara. */
+   el DOF y el bloom): DPR, resolución del bloom, cantidad de polvo. «Sólo la cara de frente con src» se aplica en la
+   próxima asignación de cada cara. */
 
 export const LEVELS = ['bajo', 'medio', 'alto'];
 
 /** palancas por nivel (alto = hoy) */
 export const QUALITY = {
-  alto: { dprCap: 2, msaa: true, bloomRes: 0.5, dust: 1, aniso: 16, lite: false, video720: false, frontOnly: false },
-  medio: { dprCap: 1, msaa: true, bloomRes: 0.25, dust: 0.6, aniso: 8, lite: true, video720: true, frontOnly: false },
+  alto: { dprCap: 2, msaa: true, bloomRes: 0.5, dust: 1, aniso: 16, lite: false, frontOnly: false },
+  medio: { dprCap: 1, msaa: true, bloomRes: 0.25, dust: 0.6, aniso: 8, lite: true, frontOnly: false },
   // bajo con MSAA 4× (WebGPU sólo admite 1 o 4 muestras): sin él, a DPR 0,85 se dentaban el borde de la pantalla de la
   // notebook y las cintas rojas. Costo medido con __senal.bench (CPU+GPU por cuadro, Intel UHD, 1536×730): Projects
   // 7,35 → 7,16 ms (ruido), Tambor 6,12 → 7,62 ms. Sin pasada nueva (FXAA sumaba un render a pantalla completa).
-  bajo: { dprCap: 0.85, msaa: true, bloomRes: 0.25, dust: 0.35, aniso: 4, lite: true, video720: true, frontOnly: true },
+  bajo: { dprCap: 0.85, msaa: true, bloomRes: 0.25, dust: 0.35, aniso: 4, lite: true, frontOnly: true },
 };
 
 // dedicada primero (C-08). Intel Arc dedicada: «xe-hpg» por WebGPU, «Arc(TM) A770 / B580» por WebGL; la Arc integrada
@@ -122,8 +125,3 @@ export function stepAdaptive(st, f, { focused = true } = {}) {
   } else s.good = 0;
   return { state: s, action: null };
 }
-
-/** video y póster por nivel (convención de 03-media-manifiesto.md §5: los 12 videos tienen -720.mp4; sólo los pósters
-    verticales tienen -720) */
-export const src720 = (v) => v.src.replace(/\.mp4$/, '-720.mp4');
-export const poster720 = (v) => (v.width < v.height ? v.poster.replace(/\.(webp|jpg)$/, '-720.$1') : v.poster);
