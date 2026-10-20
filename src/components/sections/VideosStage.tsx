@@ -25,7 +25,7 @@ import { FBF_SECTION_VH, FBF_STAY, FBF_OFF, fbfCtrlWanted, fbfCanTurn, fbfChrome
 import { GAL_DWELLS } from '../hero/senal/gallery';
 import { VIDEOS } from '../../lib/content';
 import { idleTask, lazySet } from '../../lib/idle';
-import { playSound } from '../../lib/sound';
+import { holdScene, playSound } from '../../lib/sound';
 import { arrowStep } from '../../lib/keys';
 import './videos-senal.css';
 
@@ -219,6 +219,9 @@ export default function VideosStage() {
         const tg = e.target as HTMLElement | null;
         if (tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
         if (!ring.hasAttribute('data-on')) return;
+        // G (I-04): sin escena viva (estático, o antes de prep()) el anillo queda con data-on y el keydown está en
+        // window: sólo con el Tambor a la vista (su centro dentro de la pantalla)
+        if (!liveRef.current) { const r = ring.getBoundingClientRect(), c = (r.top + r.bottom) / 2; if (!r.width || c < 0 || c > innerHeight) return; }
         e.preventDefault();
         goRef.current(d);
       };
@@ -232,6 +235,7 @@ export default function VideosStage() {
         requestAnimationFrame(() => {
           if (!liveRef.current || !S || fbfCtrlWanted(S.state.gal)) return;
           measure();                                          // siempre fresco antes de saltar
+          holdScene(1600);                                    // H (I-05): el salto retiene la escena, como el menú
           window.scrollTo({ top: land + ((FBF_STAY[0] + FBF_STAY[1]) / 2) * innerHeight, behavior: 'instant' as ScrollBehavior });
         });
       };
