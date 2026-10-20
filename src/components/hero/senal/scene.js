@@ -16,6 +16,7 @@ import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { GAL_ABOUT_OUT } from './gallery';
+import { FBF_V0, FBF_END } from './frames';
 import { QUALITY, probeGpu, pickLevel, initAdaptive, stepAdaptive } from './quality';
 // corridor / network / ecg / convergence: en shots.js, importado por proximidad (startCorridor)
 let shotsMod = null;
@@ -702,9 +703,30 @@ async function boot({ S, root, after, assetBase }, ctl) {
     const k = QL().dust;
     scene.traverse((o) => { if (o.userData && o.userData.dust) o.count = Math.max(1, Math.round(o.userData.dust * k)); });
   };
+  /* La sección de Video no se optimiza (2026-10-20, Juan: «por que se ven tan feos los videos??»; aprobó «dejar la
+     optimización en todo el sitio, salvo en la sección de videos»): con la cámara en la sección (u FBF_V0–FBF_END, el
+     pasillo abierto) el DPR es min(dpr, 2) en todos los niveles; al salir vuelve al del nivel. Como cualquier cambio de
+     DPR, se aplica con el scroll quieto (> 600 ms); si el usuario vuelve sin parar hasta el About (galW < 0,5), en
+     pleno scroll, para que el post del hero no se arme al DPR alto. Mientras rige, el ajuste en vivo no mide: esos fps
+     no son del nivel.
+     Sin el precalentado del post del hero (warmPost): en Video se dibuja sólo el del pasillo, que rehace sus render
+     targets en el cuadro del cambio (medido, Intel UHD en medio: ~17 ms). El del hero conserva los del DPR del nivel
+     (heroDpr) y sólo se precalienta al salir si se llegó a dibujar al DPR alto. Con el precalentado, la entrada sumaba
+     un cuadro de ~44 ms. */
+  const vid = { hi: false };
+  let heroDpr = renderer.getPixelRatio();       // DPR con que el post del hero armó sus render targets
+  const dprNow = () => (vid.hi ? Math.max(Math.min(devicePixelRatio, 2), dprFor(Qs.level)) : dprFor(Qs.level));
+  function videoDpr() {
+    const want = !!corr && G.w > 0.5 && gal.p >= FBF_V0 && gal.p <= FBF_END;
+    if (want === vid.hi || (performance.now() - lastScrollT <= 600 && !(vid.hi && G.w < 0.5))) return;
+    vid.hi = want;
+    const d = dprNow();
+    if (renderer.getPixelRatio() !== d) { renderer.setPixelRatio(d); U.dpr.value = d; if (!vid.hi && heroDpr !== d) warmPost = true; }
+    if (params.has('perf')) console.info('[senal] video dpr:', vid.hi ? 'on' : 'off', d);
+  }
   function applyLevel(lv, f) {
     Qs.level = lv;
-    const d = dprFor(lv);
+    const d = dprNow();
     if (renderer.getPixelRatio() !== d) { renderer.setPixelRatio(d); U.dpr.value = d; }   // setPixelRatio rehace el canvas
     bl.setResolutionScale(QL().bloomRes);
     if (corr && corr.bloom) corr.bloom.setResolutionScale(QL().bloomRes);
@@ -720,7 +742,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
       if (performance.now() - lastScrollT > 600) { const p = aq.pending; aq.pending = null; applyLevel(p.lv, p.f); }
       return;
     }
-    if (dtMs > 250 || document.hidden) { aq.n = 0; aq.sum = 0; return; }
+    if (dtMs > 250 || document.hidden || vid.hi) { aq.n = 0; aq.sum = 0; return; }
     if (t <= 6 || Qs.forced) return;                        // el arranque (compilación, latido) no cuenta
     aq.n++; aq.sum += dtMs;
     if (aq.n < (aq.first ? 60 : 120)) return;
@@ -990,6 +1012,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
     // corrPost: DOS cuadros con el post del pasillo apenas está listo (o tras un cambio de tamaño). En el primer render
     // three arma los nodos y el DOF corre anidado a otra profundidad que en los siguientes: sus pasadas se recompilaban en
     // el segundo render, que era la entrada a Projects (las 4 compilaciones del DOF). Con galW 0 empata con el del hero.
+    if (!skipRender) videoDpr();
     let pl = pipeline, warmHero = false, warmCorr = false;
     if (warmPost && corr && !skipRender && performance.now() - lastScrollT > 600) {
       warmPost = false;
@@ -1013,6 +1036,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
       if (warmHero) pipeline.render();
       if (warmCorr) corr.pipeline.render();
       pl.render();
+      if (warmHero || pl === pipeline) heroDpr = renderer.getPixelRatio();
     }
     placeFg();
 
