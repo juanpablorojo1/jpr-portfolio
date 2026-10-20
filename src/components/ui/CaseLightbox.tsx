@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { arrowStep } from '../../lib/keys';
 
 export interface CaseShot {
   src: string;
@@ -46,8 +47,8 @@ export default function CaseLightbox({ shots, index, onChange }: Props) {
     if (index === null) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { e.preventDefault(); onChange(null); return; }
-      if (e.key === 'ArrowRight') onChange((index + 1) % total);
-      if (e.key === 'ArrowLeft') onChange((index - 1 + total) % total);
+      const d = arrowStep(e);   // F (I-03): una pantalla por pulsación; Tab mantenido sigue en la trampa de foco
+      if (d) onChange((index + d + total) % total);
       if (e.key === 'Tab' && dialogRef.current) {
         const focusables = Array.from(
           dialogRef.current.querySelectorAll<HTMLElement>('button, a[href]')

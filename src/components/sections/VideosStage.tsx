@@ -26,6 +26,7 @@ import { GAL_DWELLS } from '../hero/senal/gallery';
 import { VIDEOS } from '../../lib/content';
 import { idleTask, lazySet } from '../../lib/idle';
 import { playSound } from '../../lib/sound';
+import { arrowStep } from '../../lib/keys';
 import './videos-senal.css';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -212,13 +213,14 @@ export default function VideosStage() {
 
       // ← → con el tambor frente a la cámara (no en campos de texto ni con modificadores)
       const onKey = (e: KeyboardEvent) => {
-        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        const d = arrowStep(e);                               // F (I-03): la tecla mantenida no gira (una cara por pulsación)
+        if (!d) return;
         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.defaultPrevented) return;
         const tg = e.target as HTMLElement | null;
         if (tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
         if (!ring.hasAttribute('data-on')) return;
         e.preventDefault();
-        goRef.current(e.key === 'ArrowRight' ? 1 : -1);
+        goRef.current(d);
       };
       addEventListener('keydown', onKey);
       // teclado: el foco en la galería apagada lleva el scroll a la estadía (la cámara queda frente al tambor)

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --test src/components/hero/senal/quality.test.mjs scripts/immutable-assets.test.mjs scripts/test-sound.mjs"
+    "test": "node --test src/components/hero/senal/quality.test.mjs scripts/immutable-assets.test.mjs scripts/test-sound.mjs src/lib/keys.test.mjs"
   },
   "dependencies": {
     "gsap": "3.15.0",

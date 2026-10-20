@@ -12,6 +12,7 @@ import ProjectsGallery from './ProjectsGallery';
 import { CaseStudyMobile, useNear, type CaseStudyData, type CaseStat } from './CaseStudy';
 import { phoneReveal } from '../../lib/phoneMotion';
 import { playSound } from '../../lib/sound';
+import { arrowStep } from '../../lib/keys';
 import {
   TRAUMAVISION_STACK,
   TRAUMAVISION_SCREENSHOTS,
@@ -85,8 +86,8 @@ export default function Projects() {
     if (lightboxIndex === null || isPhone) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setLightboxIndex(null);
-      if (e.key === 'ArrowRight') setLightboxIndex((i) => i !== null ? (i + 1) % TRAUMAVISION_SCREENSHOTS.length : null);
-      if (e.key === 'ArrowLeft') setLightboxIndex((i) => i !== null ? (i - 1 + TRAUMAVISION_SCREENSHOTS.length) % TRAUMAVISION_SCREENSHOTS.length : null);
+      const d = arrowStep(e);   // F (I-03): una pantalla por pulsación (la tecla mantenida no tabletea ui-step)
+      if (d) setLightboxIndex((i) => i !== null ? (i + d + TRAUMAVISION_SCREENSHOTS.length) % TRAUMAVISION_SCREENSHOTS.length : null);
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -97,8 +98,8 @@ export default function Projects() {
     if (elevenLightboxIndex === null || isPhone) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setElevenLightboxIndex(null);
-      if (e.key === 'ArrowRight') setElevenLightboxIndex((i) => i !== null ? (i + 1) % ELEVEN_SCREENSHOTS.length : null);
-      if (e.key === 'ArrowLeft') setElevenLightboxIndex((i) => i !== null ? (i - 1 + ELEVEN_SCREENSHOTS.length) % ELEVEN_SCREENSHOTS.length : null);
+      const d = arrowStep(e);   // F (I-03)
+      if (d) setElevenLightboxIndex((i) => i !== null ? (i + d + ELEVEN_SCREENSHOTS.length) % ELEVEN_SCREENSHOTS.length : null);
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
