@@ -219,9 +219,9 @@ export default function VideosStage() {
         const tg = e.target as HTMLElement | null;
         if (tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
         if (!ring.hasAttribute('data-on')) return;
-        // G (I-04): sin escena viva (estático, o antes de prep()) el anillo queda con data-on y el keydown está en
-        // window: sólo con el Tambor a la vista (su centro dentro de la pantalla)
-        if (!liveRef.current) { const r = ring.getBoundingClientRect(), c = (r.top + r.bottom) / 2; if (!r.width || c < 0 || c > innerHeight) return; }
+        // G (I-04): el keydown está en window: sólo con el Tambor a la vista (su centro dentro de la pantalla). Sin escena
+        // viva el anillo queda con data-on; con escena, data-on llega ~300 ms tarde tras un salto que lo cruza (F-03)
+        { const r = ring.getBoundingClientRect(), c = (r.top + r.bottom) / 2; if (!r.width || c < 0 || c > innerHeight) return; }
         e.preventDefault();
         goRef.current(d);
       };
@@ -230,12 +230,14 @@ export default function VideosStage() {
       // F-01: el foco dispara primero el scroll-into-view nativo (alinea .fv-ring con el borde de la sección, menos el
       // scroll-padding del nav: u ≈ 11,23). El salto propio va en el frame siguiente, después de ese scroll, y sólo si
       // los controles todavía no están encendidos.
-      const onFocusIn = () => {
+      const onFocusIn = (e: FocusEvent) => {
+        // H (I-05): el foco que entra desde afuera ya es un salto (el scroll-into-view nativo), salte o no el handler:
+        // retiene la escena, como el menú (functional-tester F-01: sin salto propio, sonaba mat-focus sin retención)
+        if (!section.contains(e.relatedTarget as Node | null)) holdScene(1600);
         if (!liveRef.current || !S || fbfCtrlWanted(S.state.gal)) return;
         requestAnimationFrame(() => {
           if (!liveRef.current || !S || fbfCtrlWanted(S.state.gal)) return;
           measure();                                          // siempre fresco antes de saltar
-          holdScene(1600);                                    // H (I-05): el salto retiene la escena, como el menú
           window.scrollTo({ top: land + ((FBF_STAY[0] + FBF_STAY[1]) / 2) * innerHeight, behavior: 'instant' as ScrollBehavior });
         });
       };
