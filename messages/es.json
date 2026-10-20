@@ -499,7 +499,7 @@
     "label": "Sonido",
     "on": "activado",
     "off": "apagado",
-    "aria": "Sonido (enfoque de cámara)"
+    "aria": "Sonido del sitio"
   },
   "notfound": {
     "label": "404",
