@@ -139,6 +139,15 @@ export default async function LocaleLayout({ children, params: { locale } }: Pro
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>
+        {/* Vercel Web Analytics (sin cookies, sin banner): sólo en producción de Vercel. Juan, 2026-10-20: «Activa». */}
+        {process.env.VERCEL_ENV === 'production' && (
+          <>
+            <Script id="va-init" strategy="afterInteractive">
+              {`window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};`}
+            </Script>
+            <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />
+          </>
+        )}
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
           <>
             <Script
