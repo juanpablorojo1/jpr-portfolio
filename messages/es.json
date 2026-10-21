@@ -19,7 +19,7 @@
     "tagline": "Del equipamiento hospitalario a la AI clínica, productos web y automatización digital.",
     "cta1": "Ver proyectos",
     "cta2": "Descargar CV",
-    "marquee": ["INGENIERÍA BIOMÉDICA", "AI ENGINEER", "AUTOMATIZACIÓN", "PRODUCTOS WEB", "FUNDADOR", "CÓRDOBA AR"],
+    "marquee": ["INGENIERÍA BIOMÉDICA", "IA APLICADA", "AUTOMATIZACIÓN", "PRODUCTOS WEB", "CÓRDOBA AR"],
     "scroll_cue": "scroll"
   },
   "about": {
@@ -510,7 +510,7 @@
     "meta_title": "404 · Página no encontrada · Juan Pablo Rojo"
   },
   "meta": {
-    "title": "Juan Pablo Rojo — Ingeniería Biomédica · AI Engineer · Fundador",
+    "title": "Juan Pablo Rojo — Ingeniería Biomédica · IA aplicada",
     "description": "Ingeniería biomédica, IA aplicada, automatización y web. Tesis: TraumaVision, detección de fracturas en radiografías de muñeca pediátrica. Fundador de Eleven."
   }
 }
