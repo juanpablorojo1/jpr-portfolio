@@ -19,7 +19,7 @@
     "tagline": "From Hospital Equipment to Clinical AI, Web Products, and Digital Automation.",
     "cta1": "View Projects",
     "cta2": "Download CV",
-    "marquee": ["BIOMEDICAL ENGINEERING", "AI ENGINEER", "AUTOMATION", "WEB PRODUCTS", "FOUNDER", "CÓRDOBA AR"],
+    "marquee": ["BIOMEDICAL ENGINEERING", "APPLIED AI", "AUTOMATION", "WEB PRODUCTS", "CÓRDOBA AR"],
     "scroll_cue": "scroll"
   },
   "about": {
@@ -510,7 +510,7 @@
     "meta_title": "404 · Page not found · Juan Pablo Rojo"
   },
   "meta": {
-    "title": "Juan Pablo Rojo — Biomedical Engineering · AI Engineer · Founder",
+    "title": "Juan Pablo Rojo — Biomedical Engineering · Applied AI",
     "description": "Biomedical engineering, applied AI, automation and web products. Thesis: TraumaVision, fracture detection on pediatric wrist X-rays. Founder of Eleven."
   }
 }
