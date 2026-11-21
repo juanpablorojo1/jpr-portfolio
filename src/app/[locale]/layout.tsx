@@ -6,7 +6,7 @@ import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server
 import { notFound } from 'next/navigation';
 import { routing } from '../../../i18n';
 import { SITE_URL } from '../../lib/site';
-import { SOCIAL_LINKS } from '../../lib/content';
+import { jsonLdString, personJsonLd, type Locale } from '../../lib/person';
 import '../globals.css';
 
 // Fuentes locales (public/fonts, las mismas woff2 que la maqueta «Señal»), mismas variables CSS de siempre.
@@ -112,19 +112,9 @@ export default async function LocaleLayout({ children, params: { locale } }: Pro
   // Provide messages to client components
   const messages = await getMessages();
 
-  // Datos estructurados (D-07): sólo lo que ya dice el sitio. jobTitle = la línea de rol del título de la página
-  // (meta.title, después de «— »); description = el rol del hero; sameAs = LinkedIn y GitHub del Contacto.
-  const tMeta = await getTranslations({ locale, namespace: 'meta' });
-  const tHero = await getTranslations({ locale, namespace: 'hero' });
-  const personLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    name: 'Juan Pablo Rojo',
-    jobTitle: tMeta('title').split(' — ').slice(1).join(' — ') || undefined,
-    description: tHero('role'),
-    url: `${SITE_URL}/${locale}`,
-    sameAs: [SOCIAL_LINKS.linkedin, SOCIAL_LINKS.github],
-  };
+  // Datos estructurados: el Person sale de lib/person.ts (fase C, 2026-11-20), desacoplado de messages/*.json.
+  // Sin jobTitle (decisión de Juan: nada de «engineer»/«founder»); formación = «Ingeniería Biomédica (UNC)».
+  const personLd = personJsonLd(locale as Locale);
 
   return (
     <html
@@ -134,7 +124,7 @@ export default async function LocaleLayout({ children, params: { locale } }: Pro
       <body className="bg-bg text-white font-ui">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd).replace(/</g, '\\u003c') }}
+          dangerouslySetInnerHTML={{ __html: jsonLdString(personLd) }}
         />
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}

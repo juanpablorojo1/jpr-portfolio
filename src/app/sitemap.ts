@@ -1,21 +1,16 @@
 import { MetadataRoute } from 'next'
-import { SITE_URL } from '../lib/site'
+import { SITE_ROUTES, languagesFor, urlFor } from '../lib/routes'
 
+// Todas las rutas públicas (lib/routes.ts), una entrada por idioma existente; hreflang solo donde hay par.
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = SITE_URL
-
-  return [
-    {
-      url: `${baseUrl}/en`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/es`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.9,
-    },
-  ]
+  return SITE_ROUTES.flatMap((route) => {
+    const languages = languagesFor(route)
+    return route.locales.map((locale) => ({
+      url: urlFor(locale, route.path),
+      lastModified: new Date(`${route.updated}T00:00:00Z`),
+      changeFrequency: route.changeFrequency,
+      priority: route.path === '' && locale === 'es' ? 0.9 : route.priority,
+      ...(languages ? { alternates: { languages } } : {}),
+    }))
+  })
 }

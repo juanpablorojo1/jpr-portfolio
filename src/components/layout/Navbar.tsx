@@ -31,6 +31,12 @@ type SectionKey = (typeof SECTION_IDS)[number];
    del teléfono en vertical es 0). */
 const restBarHeight = () => (window.innerWidth < 1024 ? 64 : 80);
 
+/* Capacitaciones (2026-11-21): otra página, no una sección de la home. Va último, después de las secciones, así el
+   orden de las secciones, su numeración (01-05) y el índice del dock no cambian. Mismo estilo que los demás links;
+   navega de verdad (sin preventDefault ni scroll) y suena como el otro link que sale de la página (el CV).
+   Existe solo en español: en EN el rótulo lo avisa («Training (ES)», messages/en.json) y el link lleva hrefLang="es". */
+const TRAINING_HREF = '/es/capacitaciones';
+
 /* La misma traza que el hero (static-trace en Hero.tsx), plana y 2D. */
 const TRACE_D = 'M0 90 H340 l10 -6 l8 6 H372 l5 5 l9 -86 l9 96 l6 -15 H470 q22 -18 44 0 H1000';
 
@@ -262,6 +268,12 @@ export default function Navbar() {
                   </a>
                 </li>
               ))}
+              <li>
+                <a className="jnav-link" href={TRAINING_HREF} hrefLang="es" onClick={() => playSound('ui-click')}>
+                  <span className="jnav-dot" aria-hidden="true" />
+                  {t('training')}
+                </a>
+              </li>
             </ul>
           </nav>
           <span className="jnav-rule" aria-hidden="true" />
@@ -346,6 +358,14 @@ export default function Navbar() {
                 </a>
               </li>
             ))}
+            <li style={{ ['--i' as string]: navLinks.length }}>
+              {/* cierra el menú (sin preventDefault) y navega: al volver con «atrás» no queda abierto */}
+              <a className="jnav-sheet-link jnav-sheet-link--page" href={TRAINING_HREF} hrefLang="es" onClick={closeSheet}>
+                <span className="jnav-sheet-num" aria-hidden="true">{String(navLinks.length + 1).padStart(2, '0')}</span>
+                <span className="jnav-sheet-label">{t('training')}</span>
+                <span className="jnav-dot" aria-hidden="true" />
+              </a>
+            </li>
           </ol>
         </nav>
 

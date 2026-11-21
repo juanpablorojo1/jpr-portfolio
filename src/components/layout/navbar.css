@@ -367,3 +367,18 @@ html { scroll-padding-top: 65px; }
 @media (max-width: 1023px) {
   [data-nav-focus]:focus { outline: none; }
 }
+
+/* ---------- Capacitaciones en el menú de pantalla completa (2026-11-21) ----------
+   Mismo rótulo que los demás, pero es la palabra más larga del menú: medida con la fuente (Barlow Condensed 700,
+   fontTools sobre public/fonts) «CAPACITACIONES» = 6,17 em y «TRAINING (ES)» = 5,15 em; la más larga de las
+   secciones, «EXPERIENCIA», 4,70 em. A 375 px el rótulo común (13vw = 48,75 px) daba ≈301 px para ≈270 px de
+   renglón (100vw − 2 × pad − 61 px de número, huecos y punto): se cortaba. Este rótulo toma el tamaño de los demás
+   y solo se achica lo justo para entrar en el renglón (a 375: ≈43 px en ES; en EN no cambia por encima de ≈330 px). */
+.jnav-sheet-link--page .jnav-sheet-label {
+  --fit: 6.25;
+  font-size: min(12.5vw, 8.5svh, 92px, calc((100vw - 2 * var(--pad) - 61px) / var(--fit)));
+}
+:lang(en) .jnav-sheet-link--page .jnav-sheet-label { --fit: 5.22; }
+@media (max-width: 1023px) {
+  .jnav-sheet-link--page .jnav-sheet-label { font-size: min(13vw, 8svh, 72px, calc((100vw - 2 * var(--pad) - 61px) / var(--fit))); }
+}

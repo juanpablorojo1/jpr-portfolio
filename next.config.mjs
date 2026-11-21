@@ -9,6 +9,14 @@ const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
   },
+  // Capacitaciones existe solo en español (03-mapa-de-paginas §Idioma): /en/capacitaciones* y /capacitaciones* (sin
+  // prefijo) van a /es, nunca a un 404. Corre antes del middleware de next-intl.
+  async redirects() {
+    return [
+      { source: '/en/capacitaciones/:path*', destination: '/es/capacitaciones/:path*', permanent: true },
+      { source: '/capacitaciones/:path*', destination: '/es/capacitaciones/:path*', permanent: true },
+    ]
+  },
   async headers() {
     return [
       {
