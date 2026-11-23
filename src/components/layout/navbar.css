@@ -236,11 +236,14 @@ html { scroll-padding-top: 65px; }
 .jnav-sheet-foot .jnav-cv { height: 44px; padding: 0 18px 0 20px; }
 @starting-style { .jnav-sheet[open] .jnav-sheet-foot { opacity: 0; } }
 
-@media (min-width: 1200px) { .jnav-sheet { display: none; } }
+@media (min-width: 1400px) { .jnav-sheet { display: none; } }
 
 /* Por debajo de 1200 px los links cruzarían la columna de la cara (la figura vive al 70% del ancho
-   hasta 899 px y centrada debajo): menú compacto. Medido con el copy EN/ES de fe0c09e. */
-@media (max-width: 1199px) {
+   hasta 899 px y centrada debajo): menú compacto. Medido con el copy EN/ES de fe0c09e.
+   Capacitaciones (C1, 2026-11-23): con el ítem extra, entre 1200 y ~1385 px «EN / ES» pisaba el pelo de la foto del
+   hero (QA F-01 del 21/11): el menú compacto llega hasta 1399 px. Medido en la maqueta a 1400: el grupo ES termina en
+   x=862 y el pelo arranca en x≈938. */
+@media (max-width: 1399px) {
   .jnav-rule, .jnav-links, .jnav-lang-wide, .jnav-bar .jnav-cv { display: none; }
   .jnav-lang-compact { display: block; }
   .jnav-menu { display: block; }

@@ -1,0 +1,187 @@
+/* Capacitaciones: base de la sección de la home (C1) y de /es/capacitaciones. Todo con el vocabulario del sitio en vivo (31dd823), nada nuevo:
+   - rótulo: cuadrado rojo que brilla + mono 10.5-11 px en mayúsculas (About / Projects / Experience)
+   - titulares: Bebas Neue en mayúsculas, segunda línea en rojo (hero «JUAN PABLO / ROJO», contacto «TRABAJEMOS / JUNTOS.»)
+   - texto: Barlow Condensed; datos y números: JetBrains Mono
+   - lista numerada con filetes, flecha y barrido rojo bajo la fila (el índice de Projects en el teléfono)
+   - botones: los del hero (.btn-solid / .btn-ghost), mismo alto, mismo relleno que sube
+   - la traza del hero (static-trace) como firma, plana, con el punto que late al final
+   Arista izquierda = --pad del hero y del menú (5.5vw; 22 px en el teléfono). */
+
+.cap {
+  --bg: #080808;
+  --red: #e8272a;
+  --red-cta: #e62529;
+  --off: #e8e4de;
+  --white: #ffffff;
+  --dim: rgba(232, 228, 222, 0.62);
+  --line: rgba(232, 228, 222, 0.14);
+  --border: #2a2a2a;
+  --mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --ui: var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
+  --display: var(--font-bebas-neue), 'Arial Narrow', sans-serif;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --pad: 5.5vw;
+
+  position: relative;
+  background: var(--bg);
+  color: var(--off);
+  font-family: var(--ui);
+}
+.cap a { color: inherit; text-decoration: none; }
+.cap :focus-visible { outline: 1px solid var(--red); outline-offset: 4px; }
+
+/* ---------- rótulo ---------- */
+.cap-label {
+  display: flex; align-items: center; gap: 10px; margin: 0;
+  font: 11px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim);
+}
+.cap-sq { flex: none; width: 6px; height: 6px; background: var(--red); box-shadow: 0 0 10px var(--red); }
+.cap-meta { font: 11px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
+.cap-meta b { font-weight: 400; color: var(--off); }
+
+/* ---------- titulares ---------- */
+.cap-title {
+  margin: 0; font-family: var(--display); font-weight: 400; text-transform: uppercase; color: var(--white);
+  line-height: 0.9; letter-spacing: 0.005em;
+}
+.cap-title > span { display: block; }
+.cap-title .cap-red { color: var(--red); }
+
+.cap-lead { margin: 0; font-family: var(--ui); font-weight: 400; color: var(--off); line-height: 1.35; }
+
+/* ---------- botones (los del hero) ---------- */
+.cap-ctas { display: flex; gap: 14px; }
+.cap-btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  height: 48px; padding: 0 28px; overflow: hidden;
+  font-family: var(--ui); font-weight: 700; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase;
+  border: 1px solid var(--red); color: var(--white);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.12s ease;
+}
+.cap-btn > span { position: relative; z-index: 1; display: inline-block; }
+.cap-btn::before {
+  content: ''; position: absolute; inset: 0; background: var(--red);
+  transform: scaleY(0); transform-origin: bottom; transition: transform 0.45s var(--ease-out);
+}
+.cap-btn-solid { border-color: var(--red-cta); }
+.cap-btn-solid::before { transform: scaleY(1); background: var(--red-cta); }
+.cap-btn-ghost { border-color: var(--border); color: var(--off); }
+.cap-btn:active { transform: translateY(1px); }
+.cap-btn:focus-visible { box-shadow: 0 0 16px rgba(232, 39, 42, 0.2); }
+@media (hover: hover) and (pointer: fine) {
+  .cap-btn-solid:hover::before { transform: scaleY(0); transform-origin: top; }
+  .cap-btn-ghost:hover { border-color: var(--red); color: var(--white); }
+  .cap-btn-ghost:hover::before { transform: scaleY(1); background: var(--red-cta); }
+  .cap-btn:hover { box-shadow: 0 0 16px rgba(232, 39, 42, 0.2); }
+}
+
+/* ---------- la lista de programas (índice de Projects) ---------- */
+.cap-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.cap-list li { border-bottom: 1px solid var(--line); }
+.cap-row {
+  position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr) 28px; column-gap: 8px; align-items: baseline;
+  padding: 16px 0 14px; min-height: 64px; -webkit-tap-highlight-color: transparent;
+}
+.cap-row::before {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--red);
+  transform: scaleX(0); transform-origin: 0 50%; transition: transform 0.45s var(--ease-out);
+}
+.cap-n { grid-row: 1 / 3; font: 11px/1 var(--mono); letter-spacing: 0.14em; color: var(--dim); transition: color 0.2s; }
+.cap-t { font: 400 clamp(28px, 8.4vw, 40px)/0.95 var(--display); letter-spacing: 0.01em; color: var(--off); text-transform: uppercase; transition: color 0.2s; }
+.cap-s { grid-column: 2; margin-top: 7px; font: 400 15px/1.4 var(--ui); color: var(--dim); }
+.cap-a {
+  grid-column: 3; grid-row: 1 / 3; align-self: center; justify-self: end;
+  font: 15px/1 var(--mono); color: var(--dim); transition: transform 0.3s var(--ease-out), color 0.2s;
+}
+a.cap-row:focus-visible { outline: none; }
+a.cap-row:focus-visible::before, a.cap-row:active::before { transform: scaleX(1); }
+a.cap-row:focus-visible .cap-t, a.cap-row:active .cap-t { color: var(--white); }
+a.cap-row:focus-visible .cap-n, a.cap-row:active .cap-n { color: var(--red); }
+a.cap-row:active .cap-a { color: var(--red); transform: translateX(3px); }
+@media (hover: hover) and (pointer: fine) {
+  a.cap-row:hover::before { transform: scaleX(1); }
+  a.cap-row:hover .cap-t { color: var(--white); }
+  a.cap-row:hover .cap-n { color: var(--red); }
+  a.cap-row:hover .cap-a { color: var(--red); transform: translateX(3px); }
+}
+
+/* ---------- la traza del hero, plana ---------- */
+.cap-trace { position: relative; display: block; height: clamp(64px, 9vw, 120px); margin: 0 calc(-1 * var(--pad)); }
+.cap-trace svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.cap-trace path { fill: none; stroke: var(--red); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.cap-trace .cap-trace-glow { stroke-width: 6; opacity: 0.18; filter: blur(3px); }
+.cap-trace-dot {
+  position: absolute; right: calc(var(--pad) - 4px); width: 8px; height: 8px; border-radius: 50%;
+  background: #ff5254; box-shadow: 0 0 12px var(--red), 0 0 28px rgba(232, 39, 42, 0.6);
+  animation: cap-beat 1.6s 0.35s infinite;
+}
+.cap-trace-ch { position: absolute; right: var(--pad); font: 10.5px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); display: flex; gap: 8px; align-items: center; }
+.cap-trace-ch i { width: 5px; height: 5px; background: var(--red); }
+@keyframes cap-beat {
+  0%, 30%, 100% { transform: scale(1); }
+  7% { transform: scale(1.55); }
+  14% { transform: scale(1); }
+  21% { transform: scale(1.3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cap *, .cap *::before, .cap *::after { animation: none !important; transition: none !important; }
+}
+
+@media (max-width: 1023px) {
+  .cap { --pad: max(22px, env(safe-area-inset-left), env(safe-area-inset-right)); }
+  .cap-label { font-size: 10.5px; }
+  .cap-ctas { gap: 10px; }
+  .cap-btn { flex: 1 1 0; height: 52px; padding: 0 12px; font-size: 13px; letter-spacing: 0.12em; }
+}
+
+/* =====================================================================================================================
+   página /es/capacitaciones
+   ===================================================================================================================== */
+.cap-page { min-height: 100vh; }
+.cap-open { padding: calc(64px + clamp(40px, 12vw, 64px)) var(--pad) 0; }
+.cap-crumb { display: flex; align-items: center; gap: 10px; margin: 0 0 26px; font: 10.5px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
+.cap-crumb a { transition: color 0.2s; }
+.cap-crumb a:hover { color: var(--white); }
+.cap-crumb [aria-current] { color: var(--off); }
+.cap-crumb span[aria-hidden] { color: #3a3a3a; }
+.cap-open .cap-title { font-size: clamp(44px, 13.2vw, 96px); }
+.cap-open .cap-trace { margin-top: 8px; }
+.cap-open .cap-trace-dot { top: calc(75% - 4px); }
+.cap-open .cap-trace-ch { top: calc(75% + 16px); }
+.cap-open .cap-lead { margin-top: 18px; font-size: 18px; max-width: 46ch; }
+.cap-open .cap-ctas { margin-top: 28px; }
+
+.cap-progs { padding: clamp(88px, 24vw, 124px) var(--pad) 0; scroll-margin-top: 64px; }
+.cap-ghead { display: flex; align-items: center; gap: 14px; margin: 0 0 26px; }
+.cap-ghead::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.cap-ghead .cap-meta { order: 2; }
+
+.cap-who { padding: clamp(88px, 24vw, 124px) var(--pad) clamp(96px, 26vw, 140px); }
+.cap-who p { margin: 0 0 16px; font: 400 17px/1.5 var(--ui); color: var(--dim); max-width: 60ch; }
+.cap-who p b { font-weight: 700; color: var(--off); }
+.cap-who .cap-ctas { margin-top: 30px; }
+
+@media (min-width: 1024px) {
+  .cap-open { padding-top: calc(80px + clamp(36px, 3.6vw, 72px)); }
+  .cap-crumb { font-size: 11px; margin-bottom: clamp(28px, 2.6vw, 40px); }
+  .cap-open .cap-title { font-size: clamp(80px, 8.2vw, 156px); }
+  .cap-open .cap-trace { margin-top: clamp(4px, 0.6vw, 12px); }
+  .cap-open .cap-lead { margin-top: clamp(10px, 1vw, 18px); font-size: clamp(20px, 1.6vw, 26px); max-width: 62ch; }
+  .cap-open .cap-ctas { margin-top: clamp(24px, 2.2vw, 32px); }
+
+  .cap-progs { padding-top: clamp(56px, 5vw, 88px); scroll-margin-top: 64px; }
+  .cap-ghead { margin-bottom: clamp(18px, 1.6vw, 26px); }
+  .cap-progs .cap-row { grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1.05fr) 40px; column-gap: 24px; padding: 22px 0 20px; align-items: baseline; }
+  .cap-progs .cap-n { grid-row: auto; font-size: 12px; }
+  .cap-progs .cap-t { font-size: clamp(36px, 3.3vw, 56px); }
+  .cap-progs .cap-s { grid-column: 3; margin: 0; font-size: clamp(16px, 1.2vw, 19px); max-width: 58ch; }
+  .cap-progs .cap-a { grid-column: 4; grid-row: auto; font-size: 18px; }
+
+  .cap-who { display: grid; grid-template-columns: 5fr 7fr; column-gap: clamp(48px, 6vw, 112px); padding-top: clamp(96px, 9vw, 160px); padding-bottom: clamp(120px, 11vw, 180px); }
+  .cap-who .cap-title { font-size: clamp(56px, 5vw, 88px); }
+  .cap-who p { font-size: clamp(18px, 1.35vw, 21px); }
+}
+
+/* C1 (2026-11-23): retrato del About apagado mientras Capacitaciones pasa sobre la escena sostenida
+   (capMotion.ts, watchAboutFrame), después de que termina de cerrarse (0,4 s) */
+html[data-cap-over] .ab .ab-frame { visibility: hidden; transition: visibility 0s linear 0.45s; }

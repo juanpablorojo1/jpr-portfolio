@@ -26,6 +26,7 @@ import ProjectDemo from '../ui/ProjectDemo';
 import { idleTask, lazySet, setBatch } from '../../lib/idle';
 import { playSound } from '../../lib/sound';
 import './projects-senal.css';
+import { capShiftPx, capCleared } from '../hero/senal/capShift';
 
 gsap.registerPlugin(SplitText);
 
@@ -93,10 +94,12 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
       // L: el aterrizaje del About (su borde superior en el del viewport); el mismo que usa la cámara (trig.end)
       let land = 1;
       const measure = () => {
-        const about = zone.previousElementSibling as HTMLElement | null;
+        // Capacitaciones (C1): con Capacitaciones entre el About y Projects, el About es el anterior a esa sección y L suma su alto
+        const prev = zone.previousElementSibling as HTMLElement | null;
+        const about = (prev?.id === 'capacitaciones' ? prev.previousElementSibling : prev) as HTMLElement | null;
         let y = zone.parentElement?.offsetTop ?? 0;
         for (let el = about?.previousElementSibling; el; el = el.previousElementSibling) y += (el as HTMLElement).offsetHeight;
-        land = Math.max(1, y);
+        land = Math.max(1, y) + capShiftPx();
       };
       measure();
       addEventListener('resize', measure);
@@ -222,7 +225,8 @@ export default function ProjectsGallery({ traumavision, eleven, kibbo, leex, kib
         stage.classList.toggle('is-anchored', live);
         // la vitrina tiene su propio negro, grano y viñeta en la escena: el grano DOM del hero (fijo, z 30) y la barra
         // sólida del nav lo levantaban a #080808 plano (design-critic D-06)
-        const vit = live && u > 0.3 && u < LAST_OUT + 0.9;
+        // Capacitaciones (C1): con la escena sostenida (u en CAP_HOLD_AT) Capacitaciones pasa por debajo del menú: sólido hasta que sale
+        const vit = live && u > 0.3 && u < LAST_OUT + 0.9 && capCleared();
         if (vit !== html.classList.contains('pj-vit')) html.classList.toggle('pj-vit', vit);
         const wantChrome = u >= 1.25 && u <= LAST_OUT + 0.2;
         if (wantChrome !== chromeOn) {

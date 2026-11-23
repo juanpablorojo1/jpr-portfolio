@@ -28,6 +28,7 @@ import { idleTask, lazySet } from '../../lib/idle';
 import { holdScene, playSound } from '../../lib/sound';
 import { arrowStep } from '../../lib/keys';
 import './videos-senal.css';
+import { capShiftPx } from '../hero/senal/capShift';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const N = VIDEOS.length;
@@ -200,7 +201,7 @@ export default function VideosStage() {
       let secTop = 0, secBot = 0;
       const measure = () => {
         const hz = document.querySelector<HTMLElement>('.transition-zone[data-section="hero"]');
-        land = Math.max(1, (hz?.parentElement?.offsetTop ?? 0) + (hz?.offsetHeight ?? 0));
+        land = Math.max(1, (hz?.parentElement?.offsetTop ?? 0) + (hz?.offsetHeight ?? 0)) + capShiftPx();   // Capacitaciones (C1): + su alto (capShift.ts)
         const r = section.getBoundingClientRect();
         secTop = r.top + scrollY; secBot = r.bottom + scrollY;
       };

@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import Navbar from '../../components/layout/Navbar';
 import Hero from '../../components/sections/Hero';
 import TransitionZone from '../../components/motion/TransitionZone';
@@ -20,6 +20,9 @@ import '../../components/sections/contact-senal.css';
 import '../../components/sections/contact-phone.css';
 import SoundToggle from '../../components/ui/SoundToggle';
 import { phoneLoad } from '../../lib/phoneGate';
+// Capacitaciones (C1, Juan 2026-11-23: «Va C1»): HTML y CSS estáticos, como en la maqueta (su recta y su escena
+// sostenida se miden al montar). Solo en /es: las capacitaciones existen solo en español.
+import Capacitaciones from '../../components/sections/Capacitaciones';
 
 // Bajo el pliegue: HTML del servidor siempre; el JS de cada sección en su chunk, que en el teléfono se pide recién con la
 // página cargada y de a una (phoneLoad, U6b: el LCP del hero ya no espera la evaluación de todo el sitio). En escritorio, en el acto.
@@ -35,10 +38,11 @@ const Contact = dynamic(() => phoneLoad(() => import('../../components/sections/
 // hidratar (syncSeeThrough). Así el primer layout ya es el de la galería y la hidratación no rehace el de toda la página
 // (delivery-auditor D-01). Si después la escena no puede (sin GPU), hero-controller lo saca como siempre.
 // Contact queda afuera: su capa del punto es fixed y se vería sobre el hero hasta que ContactStage la apaga al hidratar.
-const GALLERY_SCRIPT = `(function(){if(!matchMedia('(min-width: 1024px)').matches||matchMedia('(prefers-reduced-motion: reduce)').matches||/[?&]static\\b/.test(location.search))return;['.transition-zone[data-section="projects"]','.fbf-zone','.stack-zone','.transition-zone[data-section="experience"]'].forEach(function(s){var z=document.querySelector(s);if(z)z.setAttribute('data-gallery','');});})();`;
+const GALLERY_SCRIPT = `(function(){if(!matchMedia('(min-width: 1024px)').matches||matchMedia('(prefers-reduced-motion: reduce)').matches||/[?&]static\\b/.test(location.search))return;['#capacitaciones[data-cap-hold]','.transition-zone[data-section="projects"]','.fbf-zone','.stack-zone','.transition-zone[data-section="experience"]'].forEach(function(s){var z=document.querySelector(s);if(z)z.setAttribute('data-gallery','');});})();`;
 
 export default function HomePage() {
   const t = useTranslations('nav');
+  const locale = useLocale();
   return (
     <>
       {/* Saltar al contenido (F-04): primer tabulable, invisible hasta recibir foco (globals.css .skip-link) */}
@@ -58,6 +62,11 @@ export default function HomePage() {
         <TransitionZone sectionId="about" zIndex={20} decor={false}>
           <About />
         </TransitionZone>
+
+        {/* Capacitaciones C1 «Línea de lectura» (solo /es): entre el About y Projects. En escritorio con la escena viva
+            entra transparente y la escena se sostiene en la pose del About mientras pasa (hero/senal/capShift.ts);
+            en /en no existe y la home queda idéntica a la publicada (31dd823). */}
+        {locale === 'es' && <Capacitaciones pageHref="/es/capacitaciones" />}
 
         <TransitionZone sectionId="projects" zIndex={30} overflowClip>
           <Projects />

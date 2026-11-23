@@ -26,6 +26,7 @@ import {
 } from '../hero/senal/experience';
 import { idleTask, lazySet, setBatch } from '../../lib/idle';
 import './experience-senal.css';
+import { capShiftPx } from '../hero/senal/capShift';
 
 gsap.registerPlugin(SplitText);
 
@@ -89,7 +90,7 @@ export default function ExperienceStage() {
       let land = 1, v0 = NaN;
       const measure = () => {
         const hz = document.querySelector<HTMLElement>('.transition-zone[data-section="hero"]');
-        land = Math.max(1, (hz?.parentElement?.offsetTop ?? 0) + (hz?.offsetHeight ?? 0));
+        land = Math.max(1, (hz?.parentElement?.offsetTop ?? 0) + (hz?.offsetHeight ?? 0)) + capShiftPx();   // Capacitaciones (C1): + su alto (capShift.ts)
         const prev = zone.previousElementSibling as HTMLElement | null;
         const top = prev ? prev.getBoundingClientRect().bottom + scrollY : NaN;
         v0 = (top - land) / innerHeight - 1;

@@ -17,9 +17,10 @@ export type SiteRoute = {
 };
 
 export const SITE_ROUTES: readonly SiteRoute[] = [
-  { path: '', locales: ['en', 'es'], updated: '2026-10-20', priority: 1, changeFrequency: 'monthly' },
-  // Rama capacitaciones-integradas (2026-11-21): solo las rutas que EXISTEN. Se suman cuando se construya cada página
-  // (con el diseño actual del sitio): '/capacitaciones' (es, 0.9), '/capacitaciones/ia-para-marketing' (es, 0.8),
+  { path: '', locales: ['en', 'es'], updated: '2026-11-23', priority: 1, changeFrequency: 'monthly' },
+  // Capacitaciones C1 (2026-11-23): solo ES (sin hreflang; /en/capacitaciones redirige con 308).
+  { path: '/capacitaciones', locales: ['es'], updated: '2026-11-23', priority: 0.9, changeFrequency: 'monthly' },
+  // Solo las rutas que EXISTEN. Se suman cuando se construya cada página: '/capacitaciones/ia-para-marketing' (es, 0.8),
   // '/proyectos/traumavision' (es + en, 0.8). Ninguna URL a 404 en el sitemap ni en llms.txt.
 ];
 

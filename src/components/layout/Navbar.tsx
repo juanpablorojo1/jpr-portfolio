@@ -4,7 +4,7 @@
    - En reposo sobre el hero: transparente (frame aprobado por Juan, 607f16a: «A, menú así»).
    - Al scrollear (cuando la tarjeta About llega al borde del menú): fondo sólido sin blur + borde de 1 px,
      y la sección activa con un punto rojo que late (IntersectionObserver, scroll nativo, aria-current).
-   - Celular (<1200): menú a pantalla completa en un <dialog> modal (foco atrapado por el navegador, Escape cierra,
+   - Celular (<1400 desde Capacitaciones; antes <1200): menú a pantalla completa en un <dialog> modal (foco atrapado por el navegador, Escape cierra,
      el foco vuelve al botón), links grandes en Barlow Condensed y la traza del hero cruzando el fondo, plana.
      Entrada con @starting-style en navbar.css; sin soporte, abre sin animar.
    El logo vive en <LogoSlot> con <LogoMark> inline (logo A «Asta»): la barra lleva los ids canónicos (#jpr-*)
@@ -24,18 +24,23 @@ const prefersReducedMotion = () =>
 
 /* Orden del documento. Las tarjetas del card stack quedan pegadas (sticky) debajo de la siguiente,
    así que varias pueden cortar la banda a la vez: manda la última en el orden del documento. */
-const SECTION_IDS = ['projects', 'videos', 'skills', 'experience', 'contact'] as const;
-type SectionKey = (typeof SECTION_IDS)[number];
+const BASE_IDS = ['projects', 'videos', 'skills', 'experience', 'contact'] as const;
+type SectionKey = (typeof BASE_IDS)[number] | 'capacitaciones';
 
 /* Alto del menú en reposo (navbar.css: 80 px; 64 px por debajo de 1024, más el safe area de arriba, que en el navegador
    del teléfono en vertical es 0). */
 const restBarHeight = () => (window.innerWidth < 1024 ? 64 : 80);
 
-/* Capacitaciones (2026-11-21): otra página, no una sección de la home. Va último, después de las secciones, así el
-   orden de las secciones, su numeración (01-05) y el índice del dock no cambian. Mismo estilo que los demás links;
-   navega de verdad (sin preventDefault ni scroll) y suena como el otro link que sale de la página (el CV).
-   Existe solo en español: en EN el rótulo lo avisa («Training (ES)», messages/en.json) y el link lleva hrefLang="es". */
+/* Capacitaciones (C1, Juan 2026-11-23: «Va C1»): primer ítem del menú (01), en la barra ancha, el menú de pantalla
+   completa y el dock, porque en /es es la primera sección después del About.
+   - /es (home): es una sección más (#capacitaciones): salta con scroll como las demás y se marca activa en la banda.
+   - /es/capacitaciones (page): el ítem es la página misma (aria-current="page"); los demás van a la home con #ancla.
+   - /en: la sección no existe (las capacitaciones son solo en español): el ítem lleva a la página en español, directo
+     a /es/capacitaciones (no a /en/capacitaciones, que es un 308), con hrefLang="es" y el rótulo «Training (ES)».
+   Con un ítem más, el menú ancho pisaba el pelo de la foto del hero entre 1200 y ~1385 px (QA F-01 del 21/11): el menú
+   compacto (hamburguesa) llega hasta 1399 px (navbar.css). */
 const TRAINING_HREF = '/es/capacitaciones';
+const WIDE_MIN = 1400;
 
 /* La misma traza que el hero (static-trace en Hero.tsx), plana y 2D. */
 const TRACE_D = 'M0 90 H340 l10 -6 l8 6 H372 l5 5 l9 -86 l9 96 l6 -15 H470 q22 -18 44 0 H1000';
@@ -51,10 +56,13 @@ function CvLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-export default function Navbar() {
+export default function Navbar({ page = false }: { page?: boolean } = {}) {
   const t = useTranslations('nav');
   const tHero = useTranslations('hero');
   const locale = useLocale();
+  // Capacitaciones es una sección de la home sólo en /es; en /en y en la página propia es un link a la página
+  const capSection = locale === 'es' && !page;
+  const SECTION_IDS: SectionKey[] = capSection ? ['capacitaciones', ...BASE_IDS] : [...BASE_IDS];
   const cvHref = locale === 'es' ? '/CV_Juan_Pablo_Rojo_ES.pdf' : '/CV_Juan_Pablo_Rojo_EN.pdf';
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState<SectionKey | null>(null);
@@ -80,6 +88,13 @@ export default function Navbar() {
      son relative: el hero sale de la franja. Regla única: About en la franja, o el hero fuera de ella.
      Sin listener de scroll. */
   useEffect(() => {
+    // página sin hero (/es/capacitaciones): sólido apenas se scrollea
+    if (page) {
+      const on = () => setScrolled(window.scrollY > 24);
+      on();
+      window.addEventListener('scroll', on, { passive: true });
+      return () => window.removeEventListener('scroll', on);
+    }
     const hero = document.querySelector('[data-section="hero"]');
     const about = document.querySelector('[data-section="about"]');
     if (!hero || !about) return;
@@ -121,7 +136,7 @@ export default function Navbar() {
     const onResize = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(build); };
     window.addEventListener('resize', onResize);
     return () => { io?.disconnect(); cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); };
-  }, []);
+  }, [page]);
 
   /* Sección activa: una banda fina al 45% del alto. De las secciones que la cortan, la última del documento
      es la que está arriba de la pila. Hero y About no tienen link: sin activa.
@@ -129,6 +144,7 @@ export default function Navbar() {
      sección cruce la banda. ContactStage marca `data-ct-head` en <html> mientras el titular está en pantalla
      (evento 'ct-head'); con esa marca, CONTACT se activa con el titular. */
   useEffect(() => {
+    if (page) { setActive('capacitaciones'); return; }
     const els = SECTION_IDS.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => !!el);
     const inBand = new Set<string>();
     const html = document.documentElement;
@@ -148,7 +164,9 @@ export default function Navbar() {
     els.forEach((el) => io.observe(el));
     window.addEventListener('ct-head', apply);
     return () => { io.disconnect(); window.removeEventListener('ct-head', apply); };
-  }, []);
+    // SECTION_IDS se deriva de page y capSection
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, capSection]);
 
   /* ---------- menú de celular ---------- */
   const unlockScroll = useCallback(() => {
@@ -193,8 +211,8 @@ export default function Navbar() {
       (openerRef.current ?? menuBtnRef.current)?.focus({ preventScroll: true });
     };
     sheet.addEventListener('close', onClose);
-    // Si la ventana pasa a ≥1200 con el menú abierto, el botón desaparece: se cierra.
-    const mq = window.matchMedia('(min-width: 1200px)');
+    // Si la ventana pasa a ≥1400 con el menú abierto, el botón desaparece: se cierra.
+    const mq = window.matchMedia(`(min-width: ${WIDE_MIN}px)`);
     const onMq = () => { if (mq.matches && sheet.open) sheet.close(); };
     mq.addEventListener('change', onMq);
     return () => {
@@ -205,6 +223,7 @@ export default function Navbar() {
   }, [unlockScroll]);
 
   const navLinks: { id: SectionKey; label: string }[] = [
+    { id: 'capacitaciones', label: t('training') },
     { id: 'projects', label: t('projects') },
     { id: 'videos', label: t('video') },
     { id: 'skills', label: t('skills') },
@@ -212,18 +231,30 @@ export default function Navbar() {
     { id: 'contact', label: t('contact') },
   ];
 
+  /* a dónde va cada link: en la home, el ancla; en la página, la home + ancla; Capacitaciones fuera de la home ES, la página */
+  const homeHref = `/${locale}`;
+  const isPageLink = (id: SectionKey) => id === 'capacitaciones' && !capSection;
+  const hrefOf = (id: SectionKey) => (isPageLink(id) ? TRAINING_HREF : page ? `/es#${id}` : `#${id}`);
+  const isJump = (id: SectionKey) => !page && !isPageLink(id);
+  const currentOf = (id: SectionKey) => (active !== id ? undefined : page ? ('page' as const) : ('location' as const));
+  const langOf = (id: SectionKey) => (isPageLink(id) && locale !== 'es' ? 'es' : undefined);
+
   const scrollToSection = (id: string) => {
     playSound('air-jump');   // un solo aire; la escena calla mientras viaja (lib/sound.ts)
     const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
     document.getElementById(id)?.scrollIntoView({ behavior });
   };
 
-  const handleNavClick = (e: MouseEvent<HTMLAnchorElement>, id: string) => {
+  const handleNavClick = (e: MouseEvent<HTMLAnchorElement>, id: SectionKey) => {
+    // fuera de la home (o a la página): navega de verdad, con el sonido del otro link que sale de la página (el CV)
+    if (!isJump(id)) { playSound('ui-click'); return; }
     e.preventDefault();
     scrollToSection(id);
   };
 
-  const handleSheetNavClick = (e: MouseEvent<HTMLAnchorElement>, id: string) => {
+  const handleSheetNavClick = (e: MouseEvent<HTMLAnchorElement>, id: SectionKey) => {
+    // cierra el menú (sin preventDefault) y navega: al volver con «atrás» no queda abierto
+    if (!isJump(id)) { closeSheet(); return; }
     e.preventDefault();
     if (openerRef.current === menuBtnRef.current && window.matchMedia('(max-width: 1023px)').matches) navTargetRef.current = id;
     closeSheet();
@@ -231,6 +262,7 @@ export default function Navbar() {
   };
 
   const handleLogoClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (page) return;   // en la página, el logo vuelve a la home
     e.preventDefault();
     if (sheetRef.current?.open) closeSheet();
     playSound('air-jump');
@@ -251,7 +283,7 @@ export default function Navbar() {
     <header className={`jnav${scrolled ? ' is-scrolled' : ''}`}>
       <div className="jnav-bar">
         <div className="jnav-left">
-          <LogoSlot href={`/${locale}`} label={logoLabel} onClick={handleLogoClick} svg={<LogoMark animated />} />
+          <LogoSlot href={homeHref} label={logoLabel} onClick={handleLogoClick} svg={page ? <LogoMark idSuffix="-pg" /> : <LogoMark animated />} />
           <span className="jnav-rule" aria-hidden="true" />
           <nav aria-label={t('menu_aria')}>
             <ul className="jnav-links">
@@ -259,8 +291,9 @@ export default function Navbar() {
                 <li key={link.id}>
                   <a
                     className="jnav-link"
-                    href={`#${link.id}`}
-                    aria-current={active === link.id ? 'location' : undefined}
+                    href={hrefOf(link.id)}
+                    hrefLang={langOf(link.id)}
+                    aria-current={currentOf(link.id)}
                     onClick={(e) => handleNavClick(e, link.id)}
                   >
                     <span className="jnav-dot" aria-hidden="true" />
@@ -268,12 +301,6 @@ export default function Navbar() {
                   </a>
                 </li>
               ))}
-              <li>
-                <a className="jnav-link" href={TRAINING_HREF} hrefLang="es" onClick={() => playSound('ui-click')}>
-                  <span className="jnav-dot" aria-hidden="true" />
-                  {t('training')}
-                </a>
-              </li>
             </ul>
           </nav>
           <span className="jnav-rule" aria-hidden="true" />
@@ -327,7 +354,7 @@ export default function Navbar() {
       {/* Menú de celular. Modal: el resto de la página queda inerte mientras está abierto. */}
       <dialog ref={sheetRef} id={panelId} className="jnav-sheet" data-from={openedFrom} aria-label={t('menu_aria')}>
         <div className="jnav-bar jnav-sheet-bar">
-          <LogoSlot href={`/${locale}`} label={logoLabel} onClick={handleLogoClick} svg={<LogoMark idSuffix="-menu" />} />
+          <LogoSlot href={homeHref} label={logoLabel} onClick={handleLogoClick} svg={<LogoMark idSuffix="-menu" />} />
           <div className="jnav-right">
             <LanguageSelector />
             <button ref={closeBtnRef} type="button" className="jnav-menu jnav-close" aria-label={closeLabel} onClick={closeSheet}>
@@ -347,9 +374,10 @@ export default function Navbar() {
             {navLinks.map((link, i) => (
               <li key={link.id} style={{ ['--i' as string]: i }}>
                 <a
-                  className="jnav-sheet-link"
-                  href={`#${link.id}`}
-                  aria-current={active === link.id ? 'location' : undefined}
+                  className={`jnav-sheet-link${link.id === 'capacitaciones' ? ' jnav-sheet-link--page' : ''}`}
+                  href={hrefOf(link.id)}
+                  hrefLang={langOf(link.id)}
+                  aria-current={currentOf(link.id)}
                   onClick={(e) => handleSheetNavClick(e, link.id)}
                 >
                   <span className="jnav-sheet-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
@@ -358,14 +386,6 @@ export default function Navbar() {
                 </a>
               </li>
             ))}
-            <li style={{ ['--i' as string]: navLinks.length }}>
-              {/* cierra el menú (sin preventDefault) y navega: al volver con «atrás» no queda abierto */}
-              <a className="jnav-sheet-link jnav-sheet-link--page" href={TRAINING_HREF} hrefLang="es" onClick={closeSheet}>
-                <span className="jnav-sheet-num" aria-hidden="true">{String(navLinks.length + 1).padStart(2, '0')}</span>
-                <span className="jnav-sheet-label">{t('training')}</span>
-                <span className="jnav-dot" aria-hidden="true" />
-              </a>
-            </li>
           </ol>
         </nav>
 

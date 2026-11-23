@@ -16,6 +16,7 @@ import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { GAL_ABOUT_OUT } from './gallery';
+import { capRemap, capShiftPx } from './capShift';
 import { FBF_V0, FBF_END } from './frames';
 import { QUALITY, probeGpu, pickLevel, initAdaptive, stepAdaptive } from './quality';
 // corridor / network / ecg / convergence: en shots.js, importado por proximidad (startCorridor)
@@ -686,7 +687,8 @@ async function boot({ S, root, after, assetBase }, ctl) {
   const CAM_LAMBDA = 4;                          // ~0,25 s de constante de tiempo: sigue al dedo, con masa
   // galería (Projects): u = viewports de scroll desde el aterrizaje del About (trig.end); mismo damp que la cámara
   const gal = { p: 0, target: 0 };
-  const galTarget = () => (wideMQ.matches ? Math.max(0, (scrollY - trig.end) / innerHeight) : 0);
+  // Capacitaciones (C1): con Capacitaciones entre el About y Projects la escena se sostiene en la pose del About (capShift.ts)
+  const galTarget = () => (wideMQ.matches ? capRemap(Math.max(0, (scrollY - trig.end) / innerHeight)) : 0);
   gal.target = gal.p = galTarget();
 
   /* ---------- loop ---------- */
@@ -904,7 +906,7 @@ async function boot({ S, root, after, assetBase }, ctl) {
   if (qa) {
     ctl.info.advance = (sec = 2, u) => {
       renderer.setAnimationLoop(null); loopOn = false;
-      if (u != null) window.scrollTo({ top: trig.end + u * innerHeight, behavior: 'instant' });
+      if (u != null) window.scrollTo({ top: trig.end + capShiftPx() + u * innerHeight, behavior: 'instant' });
       // ScrollTrigger actualiza en rAF (frenado con la pestaña oculta): el objetivo se toma del scroll real
       cam.target = Math.min(1, Math.max(0, scrollY / trig.end));
       if (wideMQ.matches) gal.target = galTarget();

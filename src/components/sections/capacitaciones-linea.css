@@ -1,0 +1,155 @@
+/* Capacitaciones C1 «Línea de lectura» (2026-11-23, maqueta bb71746). Vocabulario del sitio en vivo (capacitaciones.css): rótulo con cuadrado rojo,
+   Bebas con la segunda línea en rojo, Barlow Condensed, JetBrains Mono, los botones del hero, la traza del hero.
+   [data-gallery] (escritorio con escena posible; GALLERY_SCRIPT antes del primer pintado y hero-controller): layout
+   con el aire de la escena. [data-see-through] (escena viva): transparente, la recta es la del riel 3D. */
+
+.c1 { z-index: 25; overflow: clip; }
+.c1[data-see-through] { background: transparent; }
+
+/* ---------- cabeza ---------- */
+.c1-head { padding: 128px var(--pad) 0; }
+/* con la escena: el About se despide cuando la sección asoma (u 0,35, capShift.ts); el aire de arriba es el vacío
+   con la recta, y el contenido entra recién con el About ya ido */
+.c1[data-gallery] .c1-head { padding-top: 30vh; }   /* D-02: el rótulo asoma justo cuando el About se despide (u 0,30, CAP_ABOUT_OUT) */
+.c1-top { display: flex; justify-content: space-between; align-items: center; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+
+.c1-title {
+  margin: 40px 0 0; font-family: var(--display); font-weight: 400; text-transform: uppercase; color: var(--white);
+  font-size: clamp(56px, 10.4vw, 200px); line-height: 0.86; letter-spacing: 0.004em;
+  perspective: 900px;
+}
+.c1-title > span { display: block; }
+.c1-title .c1-l2 { color: var(--red); }
+.c1-title .char { display: inline-block; will-change: transform, opacity; }
+
+.c1-intro {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 48px; row-gap: 28px; align-items: end;
+  margin: 44px 0 0 calc(50% + 12px);
+}
+.c1-lead { grid-column: 1 / -1; margin: 0; max-width: 40ch; font-size: clamp(18px, 1.45vw, 22px); line-height: 1.35; color: var(--off); }
+.c1-intro .cap-ctas { grid-column: 1 / -1; }
+.c1-who {
+  grid-column: 1 / -1; margin: 0; padding-top: 18px; border-top: 1px solid var(--line);
+  font: 11px/1.6 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim);
+}
+.c1-who span { color: var(--red); margin-right: 10px; }
+
+/* ---------- cuerpo: la recta y los programas ---------- */
+.c1-body { position: relative; padding: 16vh var(--pad) 0; }
+
+/* la recta propia (sin escena): sticky a la altura de lectura; el tramo plano del SVG (y 90 de 120) cae en --rail */
+.c1-scan {
+  position: sticky; top: var(--rail, 46vh); z-index: 0; height: 0;
+  margin: 0 calc(-1 * var(--pad)); pointer-events: none;
+}
+.c1-scan svg { position: absolute; left: 0; top: -45px; width: 100%; height: 60px; overflow: visible; }
+.c1-scan path {
+  fill: none; stroke: var(--red); stroke-width: 1.6; vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 6px rgba(232, 39, 42, 0.75));
+}
+.c1[data-see-through] .c1-scan { display: none; }
+.c1-scan .c1-blip { display: none; }
+@media (max-width: 1023px) {
+  /* recta lisa a todo el ancho + el latido en la canaleta del número (no corta palabras del resumen) */
+  .c1-scan > svg:first-child { display: none; }
+  .c1-scan::before {
+    content: ''; position: absolute; left: 0; right: 0; top: -0.8px; height: 1.6px;
+    background: var(--red); box-shadow: 0 0 6px rgba(232, 39, 42, 0.75);
+  }
+  .c1-scan .c1-blip {
+    display: block; position: absolute; left: var(--pad); top: -34px; width: 34px; height: 44px; overflow: visible;
+  }
+  .c1-scan .c1-blip path { vector-effect: none; stroke-width: 1.6; }
+  /* al terminar la lista la recta se detiene debajo del último resumen, no encima */
+  /* (un padding no alcanza: el sticky se limita a la caja de contenido) */
+  .c1-read::after { content: ''; display: block; height: 40px; }
+}
+
+.c1-read { position: relative; }
+.c1-listhead {
+  position: relative; z-index: 1; display: flex; justify-content: space-between; margin: 0 0 14px;
+  font: 11px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim);
+}
+.c1-list { position: relative; z-index: 1; list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+
+.c1-row {
+  display: grid; grid-template-columns: 72px minmax(0, 1fr) minmax(0, 34ch) 56px; column-gap: 28px; align-items: end;
+  padding: 30px 0 20px; border-bottom: 1px solid var(--line);
+  --t: rgba(232, 228, 222, 0.5);   /* penumbra (D-03): AA de texto grande contra el piso real de la escena, no contra #080808 */
+  --halo: rgba(8, 8, 8, 0.92);
+  transition: border-color 0.5s var(--ease-out);
+}
+.c1-n { font: 12px/1 var(--mono); letter-spacing: 0.14em; color: var(--dim); padding-bottom: 0.7em; transition: color 0.4s var(--ease-out); }
+.c1-t {
+  font-family: var(--display); font-size: clamp(36px, 5.6vw, 104px); line-height: 0.86; text-transform: uppercase;
+  color: var(--t); transition: color 0.45s var(--ease-out), transform 0.6s var(--ease-out);
+}
+.c1-s {
+  font-size: clamp(15px, 1.15vw, 18px); line-height: 1.35; color: rgba(232, 228, 222, 0.66); padding-bottom: 0.25em;   /* D-03: AA contra el piso real */
+  transition: color 0.45s var(--ease-out), transform 0.6s var(--ease-out);
+}
+.c1-a { color: var(--dim); justify-self: end; padding-bottom: 0.6em; transition: color 0.4s, transform 0.5s var(--ease-out); }
+.c1-a svg { display: block; width: 28px; height: 14px; }
+
+/* los que ya pasaron la recta, en una penumbra más honda */
+.c1-row[data-past] { --t: rgba(232, 228, 222, 0.46); }
+.c1-row[data-past] .c1-s { color: rgba(232, 228, 222, 0.62); }
+
+/* sobre la recta (o con el puntero / el foco): encendida */
+.c1-row[data-lit], .c1-row:focus-visible { --t: var(--white); border-bottom-color: transparent; }
+.c1-row[data-lit] .c1-n, .c1-row:focus-visible .c1-n { color: var(--red); }
+.c1-row[data-lit] .c1-s, .c1-row:focus-visible .c1-s { color: var(--off); }
+/* D-05: la recta pasa por detrás de la fila encendida; un halo del color del fondo la corta alrededor de las letras */
+.c1-row[data-lit] .c1-t, .c1-row[data-lit] .c1-s { text-shadow: 0 0 12px var(--halo), 0 0 5px var(--halo), 0 0 2px var(--halo); }
+.c1[data-see-through] .c1-row { --halo: rgba(12, 10, 10, 0.9); }
+.c1-row[data-lit] .c1-a, .c1-row:focus-visible .c1-a { color: var(--red); transform: translateX(6px); }
+.c1-row:focus-visible { outline-offset: -1px; }
+@media (hover: hover) and (pointer: fine) {
+  .c1-row:hover { --t: var(--white); }
+  .c1-row:hover .c1-n, .c1-row:hover .c1-a { color: var(--red); }
+  .c1-row:hover .c1-s { color: var(--off); }
+  .c1-row:hover .c1-a { transform: translateX(6px); }
+}
+.c1-row:active .c1-t { transform: translateY(1px); }
+
+/* ---------- pie ---------- */
+.c1-foot {
+  position: relative; z-index: 1; display: flex; justify-content: flex-start; align-items: center; gap: 32px;
+  padding: 44px 0 120px;
+}
+/* con la escena: la escena retoma (la cámara gira hacia la vitrina) con el último programa ya pasado por la recta */
+.c1[data-gallery] .c1-foot { padding-bottom: 34vh; }
+.c1-more {
+  display: inline-flex; align-items: center; gap: 14px; min-height: 44px;
+  font-weight: 700; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--off);
+  transition: color 0.3s;
+}
+.c1-more svg { width: 24px; height: 12px; transition: transform 0.4s var(--ease-out); }
+.c1-more:hover, .c1-more:focus-visible { color: var(--white); }
+.c1-more:hover svg, .c1-more:focus-visible svg { transform: translateX(6px); color: var(--red); }
+.c1-foot-note { margin: 0; font: 11px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+
+/* ---------- < 1024: teléfono y tablet ---------- */
+@media (max-width: 1023px) {
+  .c1-head { padding-top: 96px; }
+  .c1-title { margin-top: 28px; font-size: clamp(44px, 13.4vw, 120px); }
+  .c1-intro { margin: 28px 0 0; grid-template-columns: 1fr; }
+  .c1-lead { font-size: 17px; }
+  .c1-intro .cap-ctas { flex-wrap: wrap; }
+  .c1-body { padding-top: 72px; }
+  .c1-row { grid-template-columns: 34px minmax(0, 1fr) 28px; column-gap: 12px; row-gap: 10px; padding: 22px 0 16px; }
+  .c1-n { grid-row: 1; padding-bottom: 0.35em; }
+  .c1-t { grid-row: 1; font-size: clamp(30px, 8.6vw, 60px); }
+  .c1-a { grid-row: 1; padding-bottom: 0.3em; }
+  .c1-s { grid-column: 2 / 3; grid-row: 2; font-size: 16px; }   /* D-06: el cuerpo del sitio en el celular */
+  .c1-foot { flex-direction: column; align-items: flex-start; gap: 18px; padding-bottom: 96px; }
+  .c1-foot .cap-btn { align-self: stretch; flex: none; }   /* cap.css le da flex 1 1 0: en columna colapsaba a 2 px */
+}
+@media (max-width: 479px) {
+  .c1-intro .cap-ctas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .c1-intro .cap-btn { padding: 0 14px; white-space: nowrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c1-row, .c1-t, .c1-s, .c1-a, .c1-n { transition: none; }
+}

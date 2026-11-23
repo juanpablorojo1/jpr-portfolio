@@ -70,7 +70,11 @@ export function initHero(root: HTMLElement, S: Senal, { channels, phone }: Opts)
      Entonces lo que tapa la escena ya no es el About sino la sección que le sigue (Projects). */
   const zone = root.closest('.transition-zone');
   const nextZone = (zone ?? root).nextElementSibling as HTMLElement | null;
-  const afterZone = (nextZone?.nextElementSibling ?? null) as HTMLElement | null;
+  // Capacitaciones (C1, 2026-11-23): la sección va entre el About y Projects (capShift.ts); se la saltea y entra
+  // transparente con la escena (data-see-through), sostenida en la pose del About. Solo en /es (en /en no existe).
+  const afterAbout = (nextZone?.nextElementSibling ?? null) as HTMLElement | null;
+  const capZone = afterAbout?.id === 'capacitaciones' ? afterAbout : null;
+  const afterZone = (capZone ? capZone.nextElementSibling : afterAbout) as HTMLElement | null;
   // Projects (afterZone) es la galería espacial: también entra transparente y la escena sigue detrás.
   // data-gallery (≥1024, con escena posible: no estática) elige su layout de galería; sin él, Projects queda apilado.
   // Frame by Frame (fbfZone, la sección de Video) es la sala de proyección: también transparente, misma escena detrás.
@@ -91,6 +95,8 @@ export function initHero(root: HTMLElement, S: Senal, { channels, phone }: Opts)
     const ok = !disposed && !S.dead && wide.matches;
     const on = ok && root.classList.contains('is-live');
     nextZone.toggleAttribute('data-see-through', on);
+    capZone?.toggleAttribute('data-see-through', on);
+    capZone?.toggleAttribute('data-gallery', ok);
     [afterZone, fbfZone, stackZone, expZone, ctcZone].forEach((z) => {
       if (!z) return;
       z.toggleAttribute('data-see-through', on);
@@ -102,6 +108,8 @@ export function initHero(root: HTMLElement, S: Senal, { channels, phone }: Opts)
   cleanups.push(() => {
     wide.removeEventListener('change', syncSeeThrough);
     nextZone?.removeAttribute('data-see-through');
+    capZone?.removeAttribute('data-see-through');
+    capZone?.removeAttribute('data-gallery');
     [afterZone, fbfZone, stackZone, expZone, ctcZone].forEach((z) => { z?.removeAttribute('data-see-through'); z?.removeAttribute('data-gallery'); });
   });
 
