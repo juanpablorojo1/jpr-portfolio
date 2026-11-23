@@ -12,13 +12,15 @@
    la lista, «Quiénes ya confiaron en mí» (Fruitlosophy, Rufus, ICARO) como prueba social, en el mismo vocabulario. */
 
 import { useEffect, useRef } from 'react';
-import { CAPACITACIONES as C } from '../../content/capacitaciones';
+import { CAPACITACIONES as C, type Trust } from '../../content/capacitaciones';
+import TrustMark from './TrustMark';
 import { SOCIAL_LINKS } from '../../lib/content';
 import { railY, isLive, riseTitle, watchAboutFrame } from './capMotion';
 import './capacitaciones.css';
 import './capacitaciones-linea.css';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
+const TRUST: readonly Trust[] = C.trust;
 /* la traza del hero (static-trace en Hero.tsx / TRACE_D del menú), plana, viewBox 0 0 1000 120 */
 const TRACE_D = 'M0 90 H340 l10 -6 l8 6 H372 l5 5 l9 -86 l9 96 l6 -15 H470 q22 -18 44 0 H1000';
 /* el mismo latido (P, QRS, T) en 34 × 44 px, la recta en y 34 */
@@ -146,15 +148,22 @@ export default function Capacitaciones({ pageHref }: { pageHref: string }) {
           </ol>
         </div>
 
-        {/* Quiénes ya confiaron en mí: la prueba social, con el mismo peso que los temas (nombres en Bebas grande, la línea
-            en Barlow). Sin logos ni colores de sus marcas. */}
+        {/* Quiénes ya confiaron en mí: la prueba social, con el mismo peso que los temas. Cada empresa es un link a su sitio
+            (Juan 2026-11-23: «Pone los iconos de las empresas, enlaces a sus sitios web»): el logo oficial en monocromo
+            claro (o el nombre en Bebas si todavía no hay logo), la línea en Barlow y el dominio con ↗. */}
         <div className="c1-trust" role="group" aria-labelledby="c1-trust-h">
           <p id="c1-trust-h" className="cap-label"><span className="cap-sq" aria-hidden="true" />{C.trustTitle}</p>
           <ul className="c1-trust-list">
-            {C.trust.map((t) => (
+            {TRUST.map((t) => (
               <li key={t.slug} className="c1-trust-item">
-                <span className="c1-trust-name">{t.name}</span>
-                <span className="c1-trust-line">{t.line}</span>
+                <a className="c1-trust-link" href={t.url} target="_blank" rel="noopener">
+                  <span className="c1-trust-name"><TrustMark t={t} /></span>
+                  <span className="c1-trust-line">{t.line}</span>
+                  <span className="c1-trust-url">
+                    {t.domain}<span className="c1-trust-arr" aria-hidden="true">↗</span>
+                    <span className="sr-only"> (se abre en una pestaña nueva)</span>
+                  </span>
+                </a>
               </li>
             ))}
           </ul>

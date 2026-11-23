@@ -14,9 +14,26 @@ export type Topic = {
   detail: string;
 };
 
+export type Logo = {
+  /** archivo en public/ (logo oficial, sin redibujar) */
+  src: string;
+  width: number;
+  height: number;
+  /** de dónde salió (para el registro) */
+  source: string;
+  /** factor de altura para igualar la altura óptica entre logos (1 = la altura base) */
+  k?: number;
+};
+
 export type Trust = {
   slug: string;
   name: string;
+  /** sitio oficial (Juan 2026-11-23: «enlaces a sus sitios web»); verificado con curl: 200 */
+  url: string;
+  /** cómo se muestra el link (dominio, sin protocolo) */
+  domain: string;
+  /** logo oficial; sin logo se muestra el nombre en Bebas */
+  logo?: Logo;
   /** una línea (sección de la home) */
   line: string;
   /** el caso (página) */
@@ -98,10 +115,14 @@ export const CAPACITACIONES = {
   ],
 
   trustTitle: 'Quiénes ya confiaron en mí',
+  trustLink: 'Ver sitio',
   trust: [
     {
       slug: 'fruitlosophy',
       name: 'Fruitlosophy',
+      url: 'https://fruitlosophy.com',
+      domain: 'fruitlosophy.com',
+      // logo: PENDIENTE, el oficial de fruitlosophy.com todavía no está en public/ (mientras, el nombre en Bebas)
       line: 'Claude Code para su equipo: planillas, PDFs, facturas, remitos y stock.',
       story:
         'Fruitlosophy lleva fruta y snacks a las oficinas de otras empresas. Capacité a su equipo en Claude Code para automatizar planillas, PDFs, facturas, remitos y stock. El objetivo: que cada uno sepa cómo funciona Claude Code, cómo se crea un proyecto, cómo se integra con Google Sheets y cómo se arma un agente y un flujo de trabajo.',
@@ -109,6 +130,15 @@ export const CAPACITACIONES = {
     {
       slug: 'rufus',
       name: 'Rufus',
+      url: 'https://rufusocial.com',
+      domain: 'rufusocial.com',
+      logo: {
+        src: '/logos/clientes/rufus.svg',
+        width: 119,
+        height: 22,
+        source: 'Documents/Capacitaciones/clientes/2026-11-gustavo-haas/anexos/rufus/rufus-logo.svg (SVG oficial, copiado)',
+        k: 1.1,   // wordmark ancho y pesado: a 1,1 sus mayúsculas igualan las del Bebas de al lado
+      },
       line: 'Claude para ventas y producto, finanzas y RR. HH., cada uno con sus tareas.',
       story:
         'Rufus es una agencia creativa. Capacité en Claude a personas de ventas y producto, finanzas y RR. HH., cada una con sus propias tareas y ejemplos armados sobre el negocio de la agencia.',
@@ -116,6 +146,9 @@ export const CAPACITACIONES = {
     {
       slug: 'icaro-unc',
       name: 'ICARO (UNC)',
+      url: 'https://icaro.org.ar/producto/ia-aplicada-automatizacion/',
+      domain: 'icaro.org.ar',
+      // logo: PENDIENTE, el oficial de icaro.org.ar todavía no está en public/ (mientras, el nombre en Bebas)
       line: 'Docente del curso «IA Aplicada y Automatización», para gente que no programa.',
       story:
         'Soy docente del curso «IA Aplicada y Automatización» de ICARO, de la UNC. Es un curso para gente que no programa: doy clases sobre conectores, búsqueda web con validación, privacidad, pedidos claros, archivos y dashboards, y skills.',

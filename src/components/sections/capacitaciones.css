@@ -214,6 +214,28 @@ html[data-cap-over] .ab .ab-frame { visibility: hidden; transition: visibility 0
   text-transform: uppercase; color: var(--white);
 }
 .cap-trust-item p { margin: 0; max-width: 62ch; font: 400 17px/1.5 var(--ui); color: var(--dim); }
+.cap-trust-link {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 14px;
+  font-weight: 700; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--off);
+  transition: color 0.3s;
+}
+.cap-trust-arr { display: inline-block; font-size: 15px; transition: transform 0.4s var(--ease-out), color 0.3s; }
+.cap-trust-link:focus-visible, .cap-trust-link:active { color: var(--white); }
+.cap-trust-link:focus-visible .cap-trust-arr, .cap-trust-link:active .cap-trust-arr { color: var(--red); transform: translate(3px, -3px); }
+@media (hover: hover) and (pointer: fine) {
+  .cap-trust-link:hover { color: var(--white); }
+  .cap-trust-link:hover .cap-trust-arr { color: var(--red); transform: translate(3px, -3px); }
+}
+
+/* ---------- la marca de cada empresa (TrustMark): logo oficial o nombre en Bebas ----------
+   El tamaño sale del font-size del contenedor (el Bebas de los nombres): el logo ocupa el alto de la línea del nombre
+   y su altura visible es la de las mayúsculas del Bebas (≈0,7 em; --k corrige la altura óptica de cada logo).
+   Monocromo blanco sobre el negro, como los nombres en Bebas (sin los colores de la marca). */
+.trust-mark.is-logo { display: flex; align-items: center; height: 0.86em; }
+.trust-mark.is-logo img {
+  display: block; width: auto; height: calc(0.62em * var(--k, 1)); max-width: 100%;
+  filter: brightness(0) invert(1);
+}
 
 .cap-who p.cap-close { margin-top: 26px; color: var(--off); font-size: 19px; line-height: 1.4; }
 

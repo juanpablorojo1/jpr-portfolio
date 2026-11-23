@@ -130,7 +130,22 @@
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: clamp(32px, 3.4vw, 64px);
 }
-.c1-trust-item { display: flex; flex-direction: column; gap: 18px; padding: clamp(36px, 4vw, 56px) 0 0; }
+.c1-trust-item { padding: clamp(36px, 4vw, 56px) 0 0; }
+/* toda la empresa es el link a su sitio (target _blank): hover y foco encienden la línea y mueven la flecha */
+.c1-trust-link { display: flex; flex-direction: column; gap: 18px; -webkit-tap-highlight-color: transparent; }
+.c1-trust-url {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 2px;
+  font: 11px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim);
+  transition: color 0.3s;
+}
+.c1-trust-arr { display: inline-block; font-size: 13px; transition: transform 0.4s var(--ease-out), color 0.3s; }
+.c1-trust-link:focus-visible .c1-trust-url, .c1-trust-link:active .c1-trust-url { color: var(--white); }
+.c1-trust-link:focus-visible .c1-trust-arr, .c1-trust-link:active .c1-trust-arr { color: var(--red); transform: translate(3px, -3px); }
+@media (hover: hover) and (pointer: fine) {
+  .c1-trust-link:hover .c1-trust-url { color: var(--white); }
+  .c1-trust-link:hover .c1-trust-arr { color: var(--red); transform: translate(3px, -3px); }
+  .c1-trust-link:hover .c1-trust-line { color: var(--white); }
+}
 /* «FRUITLOSOPHY» = 4,42 em en Bebas: a 5,6vw entra en su columna desde 1024 (a 1440: 81 px, 356 de ≈395 px) */
 .c1-trust-name {
   font-family: var(--display); font-size: clamp(48px, 5.6vw, 112px); line-height: 0.86; text-transform: uppercase;
@@ -175,7 +190,8 @@
   .c1-s { grid-column: 2 / 3; grid-row: 2; font-size: 16px; }   /* D-06: el cuerpo del sitio en el celular */
   .c1-trust { margin-top: 88px; }
   .c1-trust-list { grid-template-columns: 1fr; }
-  .c1-trust-item { gap: 12px; padding: 28px 0 26px; border-bottom: 1px solid var(--line); }
+  .c1-trust-item { padding: 28px 0 26px; border-bottom: 1px solid var(--line); }
+  .c1-trust-link { gap: 12px; }
   .c1-trust-name { font-size: clamp(44px, 12vw, 80px); }
   .c1-trust-line { font-size: 16px; }
   .c1-foot { flex-direction: column; align-items: flex-start; gap: 18px; padding-bottom: 96px; }

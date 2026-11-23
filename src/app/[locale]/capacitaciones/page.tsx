@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import Navbar from '../../../components/layout/Navbar';
 import LogoMark from '../../../components/layout/LogoMark';
-import { CAPACITACIONES as C } from '../../../content/capacitaciones';
+import { CAPACITACIONES as C, type Trust } from '../../../content/capacitaciones';
+import TrustMark from '../../../components/sections/TrustMark';
 import { SOCIAL_LINKS } from '../../../lib/content';
 import { jsonLdString, personRef } from '../../../lib/person';
 import { urlFor } from '../../../lib/routes';
@@ -24,6 +25,7 @@ export function generateStaticParams() {
 
 const URL_SELF = urlFor('es', C.path);
 const pad2 = (n: number) => String(n).padStart(2, '0');
+const TRUST: readonly Trust[] = C.trust;
 const MAILTO = `mailto:${SOCIAL_LINKS.email}?subject=${encodeURIComponent(C.cta.subject)}`;
 /* la traza del hero (static-trace en Hero.tsx / TRACE_D del menú), plana, viewBox 0 0 1000 120 */
 const TRACE_D = 'M0 90 H340 l10 -6 l8 6 H372 l5 5 l9 -86 l9 96 l6 -15 H470 q22 -18 44 0 H1000';
@@ -161,10 +163,15 @@ export default async function CapacitacionesPage({ params: { locale } }: { param
             <h2 id="cap-trust-h" className="cap-label"><span className="cap-sq" aria-hidden="true" />{C.trustTitle}</h2>
           </div>
           <ul className="cap-trust-list">
-            {C.trust.map((t) => (
+            {TRUST.map((t) => (
               <li key={t.slug} id={t.slug} className="cap-trust-item">
-                <h3 className="cap-trust-name">{t.name}</h3>
+                <h3 className="cap-trust-name"><TrustMark t={t} /></h3>
                 <p>{t.story}</p>
+                {/* Juan 2026-11-23: enlaces a sus sitios */}
+                <a className="cap-trust-link" href={t.url} target="_blank" rel="noopener">
+                  <span>{C.trustLink}</span><span className="cap-trust-arr" aria-hidden="true">↗</span>
+                  <span className="sr-only">: {t.name}, {t.domain} (se abre en una pestaña nueva)</span>
+                </a>
               </li>
             ))}
           </ul>
