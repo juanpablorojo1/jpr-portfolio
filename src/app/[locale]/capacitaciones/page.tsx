@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import Navbar from '../../../components/layout/Navbar';
+import LogoMark from '../../../components/layout/LogoMark';
 import { CAPACITACIONES as C } from '../../../content/capacitaciones';
 import { SOCIAL_LINKS } from '../../../lib/content';
 import { jsonLdString, personRef } from '../../../lib/person';
@@ -84,9 +85,10 @@ function jsonLd() {
   return [service, breadcrumb];
 }
 
-export default function CapacitacionesPage({ params: { locale } }: { params: { locale: string } }) {
+export default async function CapacitacionesPage({ params: { locale } }: { params: { locale: string } }) {
   if (locale !== 'es') notFound();
   setRequestLocale(locale);
+  const tc = await getTranslations({ locale, namespace: 'contact' });
   const home = '/es';
 
   return (
@@ -162,6 +164,19 @@ export default function CapacitacionesPage({ params: { locale } }: { params: { l
           </div>
         </section>
       </main>
+
+      {/* DF-02 (design-critic 2026-11-23): la página cierra con el pie del sitio, el mismo de la sección Contacto sin escena
+          (Contact.tsx, .ctm-foot): logo, «Hecho con» y ©, con sus mismas clases. .cap da el fondo y el --pad de la página;
+          abajo deja lugar para el dock del celular (56 px). */}
+      <footer className="cap">
+        <div className="mx-[var(--pad)] pb-24 lg:pb-12 border-t border-border pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <a href={home} aria-label={tc('logo_alt')} className="inline-flex h-7 text-white opacity-60 [&>svg]:h-full [&>svg]:w-auto">
+            <LogoMark idSuffix="-foot-cap" />
+          </a>
+          <p className="font-mono text-xs text-muted hidden sm:block">{tc('built_with')}</p>
+          <p className="font-mono text-xs text-muted">{tc('copyright')}</p>
+        </div>
+      </footer>
     </>
   );
 }
