@@ -229,12 +229,19 @@ html[data-cap-over] .ab .ab-frame { visibility: hidden; transition: visibility 0
 
 /* ---------- la marca de cada empresa (TrustMark): logo oficial o nombre en Bebas ----------
    El tamaño sale del font-size del contenedor (el Bebas de los nombres): el logo ocupa el alto de la línea del nombre
-   y su altura visible es la de las mayúsculas del Bebas (≈0,7 em; --k corrige la altura óptica de cada logo).
+   y su altura es 0,62 em × --k. --k iguala el peso visual entre logos de proporciones distintas (área pareja: alto ∝
+   1/√proporción, corregido por el grosor del trazo), con Rufus como referencia: Rufus 5,4:1 → 1;
+   Fruitlosophy 6,7:1, trazo fino → 1,12; ICARO + UNC 10,4:1 → 0,74 (además, el ancho de su columna).
    Monocromo blanco sobre el negro, como los nombres en Bebas (sin los colores de la marca). */
 .trust-mark.is-logo { display: flex; align-items: center; height: 0.86em; }
 .trust-mark.is-logo img {
+  /* object-fit: si la columna es más angosta que el logo (≈1024 px), achica sin deformar */
   display: block; width: auto; height: calc(0.62em * var(--k, 1)); max-width: 100%;
+  object-fit: contain; object-position: left center;
   filter: brightness(0) invert(1);
+}
+@media (max-width: 1023px) {
+  .trust-mark.is-logo img { height: calc(0.62em * var(--km, var(--k, 1))); }
 }
 
 .cap-who p.cap-close { margin-top: 26px; color: var(--off); font-size: 19px; line-height: 1.4; }

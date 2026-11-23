@@ -23,6 +23,8 @@ export type Logo = {
   source: string;
   /** factor de altura para igualar la altura óptica entre logos (1 = la altura base) */
   k?: number;
+  /** el mismo factor por debajo de 1024 (columna única y ancha), si cambia */
+  km?: number;
 };
 
 export type Trust = {
@@ -122,7 +124,14 @@ export const CAPACITACIONES = {
       name: 'Fruitlosophy',
       url: 'https://fruitlosophy.com',
       domain: 'fruitlosophy.com',
-      // logo: PENDIENTE, el oficial de fruitlosophy.com todavía no está en public/ (mientras, el nombre en Bebas)
+      logo: {
+        src: '/logos/clientes/fruitlosophy-logo-blanco.png',
+        width: 1200,
+        height: 180,
+        source:
+          'https://static.wixstatic.com/media/792d2f_ece02ef0d0b94735929091c0cc43b0b0~mv2.png (Fruitlosophy_Logo_Blanco.png de fruitlosophy.com; recortado a su caja y reducido a 1200 px)',
+        k: 1.12,   // trazo fino y minúsculas: más alto que Rufus para pesar lo mismo
+      },
       line: 'Claude Code para su equipo: planillas, PDFs, facturas, remitos y stock.',
       story:
         'Fruitlosophy lleva fruta y snacks a las oficinas de otras empresas. Capacité a su equipo en Claude Code para automatizar planillas, PDFs, facturas, remitos y stock. El objetivo: que cada uno sepa cómo funciona Claude Code, cómo se crea un proyecto, cómo se integra con Google Sheets y cómo se arma un agente y un flujo de trabajo.',
@@ -137,7 +146,7 @@ export const CAPACITACIONES = {
         width: 119,
         height: 22,
         source: 'Documents/Capacitaciones/clientes/2026-11-gustavo-haas/anexos/rufus/rufus-logo.svg (SVG oficial, copiado)',
-        k: 1.1,   // wordmark ancho y pesado: a 1,1 sus mayúsculas igualan las del Bebas de al lado
+        k: 1,   // wordmark pesado en mayúsculas: la referencia
       },
       line: 'Claude para ventas y producto, finanzas y RR. HH., cada uno con sus tareas.',
       story:
@@ -148,7 +157,15 @@ export const CAPACITACIONES = {
       name: 'ICARO (UNC)',
       url: 'https://icaro.org.ar/producto/ia-aplicada-automatizacion/',
       domain: 'icaro.org.ar',
-      // logo: PENDIENTE, el oficial de icaro.org.ar todavía no está en public/ (mientras, el nombre en Bebas)
+      logo: {
+        src: '/logos/clientes/icaro-unc.webp',
+        width: 1002,
+        height: 96,
+        source:
+          'https://icaro.org.ar/wp-content/uploads/2026/08/Logo-IcaroUNC-1024x110.png.webp (logo ICARO + UNC + FCEFyN de la página del curso; recortado a su caja)',
+        k: 0.74,   // lockup de 10,4:1: más bajo para que su área quede pareja con los otros dos y entre en su columna
+        km: 0.9,   // en el celular la columna es ancha: más alto, para que «unc» y «FCEFyN» se lean
+      },
       line: 'Docente del curso «IA Aplicada y Automatización», para gente que no programa.',
       story:
         'Soy docente del curso «IA Aplicada y Automatización» de ICARO, de la UNC. Es un curso para gente que no programa: doy clases sobre conectores, búsqueda web con validación, privacidad, pedidos claros, archivos y dashboards, y skills.',
