@@ -1,65 +1,136 @@
-/* Contenido de /es/capacitaciones (página pilar, solo ES). Fuente: clients/jpr-portfolio/contenido/
-   2026-11-17-reposicionamiento/05-copy.md §3 y 03-mapa-de-paginas.md (tabla de programas).
-   Decisiones de Juan aplicadas (2026-11-20, «Sí, defaults»): sin «No hace falta saber programar»; licitaciones como
-   «todos los portales de compras públicas», sin número; CTA único «Escribime»; «TraumaVision AI» junto al nombre.
-   PENDIENTE, NO se publica hasta que Juan lo dé: formato (in-company/remoto), formatos, temas, «Así es una jornada»,
-   casos y FAQ (sin FAQPage). Los títulos y resúmenes de los 7 programas son PROVISORIOS (03-mapa) hasta que se escriba
-   cada programa y Juan confirme cuáles da hoy. */
+/* Capacitaciones: la sección de la home (/es) y la página /es/capacitaciones (solo ES).
+   Fuente única: clients/jpr-portfolio/contenido/2026-11-23-capacitaciones-real.md (copy con hechos reales, cada uno con su
+   fuente en la carpeta de capacitaciones de Juan). Reemplaza al contenido inventado anterior (programas y áreas que Juan
+   no da, «Para quién es», «Inversión» y el «Quién enseña» con Eleven, LEEX y TraumaVision).
+   Juan 2026-11-23: «Pone capacitaciones, de que son las capacitaciones, y quienes ya confiaron en mi para capacitar su
+   empresa». No se agrega nada que no esté en el copy. */
 
-export type Program = {
+export type Topic = {
   slug: string;
   title: string;
+  /** una línea (sección de la home) */
   summary: string;
-  /** true solo si la página del programa existe (sin links a 404). */
-  hasPage: boolean;
+  /** el detalle (página) */
+  detail: string;
+};
+
+export type Trust = {
+  slug: string;
+  name: string;
+  /** una línea (sección de la home) */
+  line: string;
+  /** el caso (página) */
+  story: string;
 };
 
 export const CAPACITACIONES = {
   path: '/capacitaciones',
-  updated: '2026-11-20',
+  updated: '2026-11-23',
   meta: {
-    // Juan 2026-11-23: nada de «Capacitación en IA para equipos»; en el title, la forma nominal de su frase
-    title: 'Capacitación de equipos y empresas en automatización e IA | Juan Pablo Rojo',
+    title: 'Capacitaciones en Claude y automatización | Juan Pablo Rojo',
     description:
-      'Capacito equipos y empresas en automatización e inteligencia artificial: marketing, ventas, RR. HH., administración y salud, sobre las tareas reales del equipo. Desde Córdoba.',
+      'Capacito equipos y empresas en Claude: Claude Code, planillas, PDFs, facturas, agentes y flujos. Fruitlosophy y Rufus ya confiaron. Docente en ICARO.',
   },
   breadcrumb: { home: 'Inicio', self: 'Capacitaciones' },
+  label: 'Capacitaciones',
+  /** Titular aprobado por Juan (2026-11-23), no se toca. */
   h1: 'Capacito equipos y empresas en automatización e inteligencia artificial',
-  /** Respuesta directa (05-copy §3), sin la oración del formato (PENDIENTE). */
-  // Respuesta directa v2 (05-copy §3b, geo-seo-aeo M3, 2026-11-21): dice quién capacita y desde dónde, en tercera
-  // persona, para que se sostenga citada sin la página. También es la `description` del Service.
-  answer:
-    'Juan Pablo Rojo da capacitaciones prácticas en inteligencia artificial a equipos de empresas desde Córdoba, Argentina: marketing, ventas, recursos humanos, administración, salud y dirección. No usa ejemplos de manual: trabaja sobre las tareas que el equipo hace todas las semanas, con sus documentos y sus herramientas. Inversión: la conversamos personalmente.',
+  /** Bajada de la sección de la home. */
+  lead:
+    'Enseño a usar Claude (Claude Code, Cowork y la app de escritorio) a empresas, sobre todo pymes. Trabajamos sobre las tareas reales de tu equipo, en clases en vivo una vez por semana.',
+  /** Intro de la página. */
+  intro:
+    'Doy capacitaciones en Claude (Claude Code, Cowork y la app de escritorio) a empresas, sobre todo pymes. Los ejemplos de clase se arman sobre el negocio de cada empresa, y cada persona practica con sus propias tareas. Enseño lo necesario para que después tu equipo arme sus propias automatizaciones.',
   cta: {
     label: 'Escribime',
-    subject: 'Capacitación en IA para mi equipo',
+    subject: 'Quiero capacitar a mi equipo',
   },
-  programsTitle: 'Programas por área',
-  programs: [
-    { slug: 'ia-para-marketing', title: 'IA para marketing', summary: 'Contenidos, campañas, análisis y briefs con IA, sobre el trabajo real del equipo.', hasPage: true },
-    { slug: 'ia-para-ventas', title: 'IA para ventas', summary: 'Prospección, propuestas, seguimiento y WhatsApp con IA para equipos B2B.', hasPage: false },
-    { slug: 'ia-para-recursos-humanos', title: 'IA para recursos humanos', summary: 'Búsquedas, onboarding, manuales y comunicación interna con IA, con cuidado de los datos personales.', hasPage: false },
-    { slug: 'ia-para-lideres', title: 'IA para líderes', summary: 'Qué cambia la IA en el negocio, qué delegar, qué medir y cómo llevar al equipo.', hasPage: false },
-    { slug: 'ia-para-administracion', title: 'IA para administración y finanzas', summary: 'Conciliaciones, reportes, documentos y planillas con IA; sección para estudios contables.', hasPage: false },
-    { slug: 'ia-para-salud', title: 'IA en salud', summary: 'Para equipos de clínicas, hospitales y empresas de equipamiento médico: administración, gestión y biomédica, con criterio clínico.', hasPage: false },
-    { slug: 'agentes-y-automatizacion', title: 'Agentes de IA y automatización', summary: 'Cómo construir agentes y automatizaciones con Claude, ChatGPT y herramientas no-code, con casos en producción.', hasPage: false },
-  ] satisfies Program[],
-  forWhomTitle: 'Para quién es',
-  /** 05-copy §3 `for_whom`, sin «No hace falta saber programar.» (decisión de Juan). Una oración por renglón. */
-  forWhom: [
-    'Para equipos que ya usan ChatGPT, Claude o Gemini cada uno por su lado y quieren hacerlo con criterio común.',
-    'Para áreas con tareas que se repiten (propuestas, reportes, contenidos, búsquedas, respuestas a clientes) y que todavía se hacen a mano.',
-    'Y para responsables de área que necesitan decidir qué pasar a IA, qué no y cómo cuidar los datos de la empresa.',
+  more: { label: 'Ver más' },
+  whoLine: 'Juan Pablo Rojo · docente en ICARO (UNC) y capacitador de empresas',
+
+  topicsTitle: 'De qué son las capacitaciones',
+  topics: [
+    {
+      slug: 'claude-code-desde-cero',
+      title: 'Claude Code desde cero',
+      summary: 'Cómo funciona, para qué sirve cada herramienta y cómo se arma un proyecto.',
+      detail: 'Cómo funciona Claude Code, para qué sirve cada herramienta y cómo se crea un proyecto. Es la base de todo lo demás.',
+    },
+    {
+      slug: 'planillas-pdfs-y-facturas',
+      title: 'Planillas, PDFs y facturas',
+      summary: 'Las tareas de todos los días: planillas, PDFs, facturas, remitos y stock.',
+      detail: 'Lo que hoy se hace a mano todas las semanas: planillas, PDFs, facturas, remitos y stock. Se automatiza sobre los archivos con los que el equipo ya trabaja.',
+    },
+    {
+      slug: 'conectar-tus-herramientas',
+      title: 'Conectar tus herramientas',
+      summary: 'Claude trabajando con Google Sheets y Gmail.',
+      detail: 'Claude integrado con otras plataformas, como Google Sheets y Gmail, para que lea y arme la información donde ya está.',
+    },
+    {
+      slug: 'agentes-y-flujos',
+      title: 'Agentes y flujos',
+      summary: 'Cómo se crea un agente y un flujo de trabajo.',
+      detail: 'Cómo se crea un agente, cómo se arma un flujo de trabajo y cuándo conviene repartir una tarea entre varios agentes.',
+    },
+    {
+      slug: 'pedidos-y-skills',
+      title: 'Pedidos y skills',
+      summary: 'Pedir con claridad, y guardar en una skill lo que pedís siempre igual.',
+      detail: 'Lo que cambia el resultado no es la herramienta: es la claridad del pedido. Y lo que pedís siempre igual, lo guardás en una skill.',
+    },
+    {
+      slug: 'datos-con-criterio',
+      title: 'Datos con criterio',
+      summary: 'La IA predice: vos validás lo que devuelve y elegís qué datos le das.',
+      detail: 'La IA predice. Los conectores y la web le dan datos reales, y vos validás lo que devuelve y elegís qué le das.',
+    },
+  ] satisfies Topic[],
+
+  howTitle: 'Cómo es una capacitación',
+  /** strong + resto de la oración (la parte en negrita del copy va en strong) */
+  how: [
+    { strong: 'En vivo, una vez por semana.', rest: ' Yo muestro en clase; ustedes practican afuera.' },
+    { strong: 'Una entrega entre clase y clase', rest: ', sobre el trabajo real de cada uno.' },
+    { strong: 'Soporte para dudas', rest: ', personalizado, mientras dura el curso.' },
+    { strong: 'Herramientas que quedan', rest: ', como agentes, para seguir usándolas después.' },
   ],
+
+  trustTitle: 'Quiénes ya confiaron en mí',
+  trust: [
+    {
+      slug: 'fruitlosophy',
+      name: 'Fruitlosophy',
+      line: 'Claude Code para su equipo: planillas, PDFs, facturas, remitos y stock.',
+      story:
+        'Fruitlosophy lleva fruta y snacks a las oficinas de otras empresas. Capacité a su equipo en Claude Code para automatizar planillas, PDFs, facturas, remitos y stock. El objetivo: que cada uno sepa cómo funciona Claude Code, cómo se crea un proyecto, cómo se integra con Google Sheets y cómo se arma un agente y un flujo de trabajo.',
+    },
+    {
+      slug: 'rufus',
+      name: 'Rufus',
+      line: 'Claude para ventas y producto, finanzas y RR. HH., cada uno con sus tareas.',
+      story:
+        'Rufus es una agencia creativa. Capacité en Claude a personas de ventas y producto, finanzas y RR. HH., cada una con sus propias tareas y ejemplos armados sobre el negocio de la agencia.',
+    },
+    {
+      slug: 'icaro-unc',
+      name: 'ICARO (UNC)',
+      line: 'Docente del curso «IA Aplicada y Automatización», para gente que no programa.',
+      story:
+        'Soy docente del curso «IA Aplicada y Automatización» de ICARO, de la UNC. Es un curso para gente que no programa: doy clases sobre conectores, búsqueda web con validación, privacidad, pedidos claros, archivos y dashboards, y skills.',
+    },
+  ] satisfies Trust[],
+
   whoTitle: 'Quién enseña',
-  /** 05-copy §3 `who_teaches`. LEEX: «todos los portales», sin número. TraumaVision AI. */
-  who: [
-    'Enseño lo que uso para construir. Mi estudio, Eleven, opera con un pipeline de agentes sobre Claude API. Para LEEX desarrollo un sistema que barre todos los portales de compras públicas y prepara borradores de veredicto para Ventas. Mi tesis, TraumaVision AI, es un detector de fracturas en radiografías de muñeca pediátrica.',
-    'Lo que llega a una capacitación ya lo probé en ese trabajo. Soy capacitador en Academia Ícaro.',
-  ],
-  /** /sobre-mi todavía no existe: la trayectoria vive en la sección About de la home. */
-  trajectory: { label: 'Ver mi trayectoria', href: '/es#about' },
-  contactTitle: 'Contacto',
-  updatedLabel: 'Actualizado el',
-  updatedHuman: '20 de noviembre de 2026',
+  whoText:
+    'Soy Juan Pablo Rojo. Capacito empresas en Claude y soy docente en ICARO (UNC). Yo enseño y ustedes deciden: en clase muestro, y la práctica la hace cada uno sobre su propio trabajo.',
+  closing: 'Contame qué tareas se repiten en tu equipo y armamos la capacitación sobre eso.',
+
+  /** JSON-LD Service (versión citable en tercera persona) y llms.txt, textuales del copy. */
+  serviceType: 'Capacitación en automatización e inteligencia artificial con Claude para empresas',
+  serviceDescription:
+    'Juan Pablo Rojo capacita equipos de empresas, sobre todo pymes, en Claude (Claude Code, Cowork y la app de escritorio): proyectos, automatización de planillas, PDFs y facturas, conexión con Google Sheets y Gmail, agentes, flujos de trabajo y skills. Clases en vivo semanales con entregas entre clases y soporte para dudas. Capacitó a equipos de Fruitlosophy y Rufus, y es docente del curso «IA Aplicada y Automatización» de ICARO (UNC).',
+  llms:
+    'Juan Pablo Rojo capacita equipos y empresas en automatización e inteligencia artificial con Claude (Claude Code, Cowork y la app de escritorio): proyectos, planillas, PDFs y facturas, conexión con Google Sheets y Gmail, agentes, flujos de trabajo y skills. Clases en vivo semanales. Capacitó a equipos de Fruitlosophy y Rufus, y es docente del curso «IA Aplicada y Automatización» de ICARO (UNC). Solo en español.',
 } as const;

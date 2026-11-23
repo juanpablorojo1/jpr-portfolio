@@ -37,7 +37,7 @@
 }
 .c1-who span { color: var(--red); margin-right: 10px; }
 
-/* ---------- cuerpo: la recta y los programas ---------- */
+/* ---------- cuerpo: la recta y los temas ---------- */
 .c1-body { position: relative; padding: 16vh var(--pad) 0; }
 
 /* la recta propia (sin escena): sticky a la altura de lectura; el tramo plano del SVG (y 90 de 120) cae en --rail */
@@ -73,6 +73,10 @@
   position: relative; z-index: 1; display: flex; justify-content: space-between; margin: 0 0 14px;
   font: 11px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim);
 }
+/* rótulo largo («De qué son las capacitaciones»): en el celular parte en dos y no toca «N.° / tema» */
+.c1-listhead { gap: 16px; align-items: flex-end; }
+.c1-listhead > span:first-child { line-height: 1.45; }
+.c1-listhead > span:last-child { flex: none; white-space: nowrap; }
 .c1-list { position: relative; z-index: 1; list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 
 .c1-row {
@@ -115,12 +119,35 @@
 }
 .c1-row:active .c1-t { transform: translateY(1px); }
 
+/* ---------- quiénes ya confiaron en mí (2026-11-23) ----------
+   Prueba social con el peso de los temas: rótulo con el cuadrado rojo y una línea fina, los nombres en Bebas grande
+   (blanco) y su línea en Barlow. Tres columnas en escritorio, apiladas en el celular. Sin logos ni colores ajenos.
+   Con la escena viva la recta 3D puede pasar por detrás: el halo del fondo la corta alrededor de las letras (D-05). */
+.c1-trust { position: relative; z-index: 1; margin-top: clamp(96px, 12vh, 160px); --halo: rgba(8, 8, 8, 0.92); }
+.c1[data-see-through] .c1-trust { --halo: rgba(12, 10, 10, 0.9); }
+.c1-trust > .cap-label { padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+.c1-trust-list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: clamp(32px, 3.4vw, 64px);
+}
+.c1-trust-item { display: flex; flex-direction: column; gap: 18px; padding: clamp(36px, 4vw, 56px) 0 0; }
+/* «FRUITLOSOPHY» = 4,42 em en Bebas: a 5,6vw entra en su columna desde 1024 (a 1440: 81 px, 356 de ≈395 px) */
+.c1-trust-name {
+  font-family: var(--display); font-size: clamp(48px, 5.6vw, 112px); line-height: 0.86; text-transform: uppercase;
+  color: var(--white); letter-spacing: 0.004em;
+  text-shadow: 0 0 12px var(--halo), 0 0 5px var(--halo), 0 0 2px var(--halo);
+}
+.c1-trust-line {
+  max-width: 34ch; font-size: clamp(16px, 1.2vw, 19px); line-height: 1.4; color: var(--off);
+  text-shadow: 0 0 12px var(--halo), 0 0 5px var(--halo);
+}
+
 /* ---------- pie ---------- */
 .c1-foot {
   position: relative; z-index: 1; display: flex; justify-content: flex-start; align-items: center; gap: 32px;
   padding: 44px 0 120px;
 }
-/* con la escena: la escena retoma (la cámara gira hacia la vitrina) con el último programa ya pasado por la recta */
+/* con la escena: la escena retoma (la cámara gira hacia la vitrina) con el último tema ya pasado por la recta */
 .c1[data-gallery] .c1-foot { padding-bottom: 34vh; }
 .c1-more {
   display: inline-flex; align-items: center; gap: 14px; min-height: 44px;
@@ -146,6 +173,11 @@
   .c1-t { grid-row: 1; font-size: clamp(30px, 8.6vw, 60px); }
   .c1-a { grid-row: 1; padding-bottom: 0.3em; }
   .c1-s { grid-column: 2 / 3; grid-row: 2; font-size: 16px; }   /* D-06: el cuerpo del sitio en el celular */
+  .c1-trust { margin-top: 88px; }
+  .c1-trust-list { grid-template-columns: 1fr; }
+  .c1-trust-item { gap: 12px; padding: 28px 0 26px; border-bottom: 1px solid var(--line); }
+  .c1-trust-name { font-size: clamp(44px, 12vw, 80px); }
+  .c1-trust-line { font-size: 16px; }
   .c1-foot { flex-direction: column; align-items: flex-start; gap: 18px; padding-bottom: 96px; }
   .c1-foot .cap-btn { align-self: stretch; flex: none; }   /* cap.css le da flex 1 1 0: en columna colapsaba a 2 px */
 }

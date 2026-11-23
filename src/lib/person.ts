@@ -24,7 +24,7 @@ export const PERSON = {
   givenName: 'Juan Pablo',
   familyName: 'Rojo',
   email: SOCIAL_LINKS.email,
-  /** Perfiles propios que ya enlaza el sitio (Contacto). Academia Ícaro se suma cuando exista la URL de su ficha. */
+  /** Perfiles propios que ya enlaza el sitio (Contacto). ICARO se suma cuando exista la URL de su ficha. */
   sameAs: [SOCIAL_LINKS.linkedin, SOCIAL_LINKS.github] as string[],
   education: {
     es: 'Ingeniería Biomédica (UNC)',
@@ -34,10 +34,10 @@ export const PERSON = {
     name: 'Universidad Nacional de Córdoba',
     url: 'https://www.unc.edu.ar',
   },
-  /** Academia Ícaro: Juan es capacitador ahí (el nombre lo dio Juan en el brief del 2026-11-17).
-      Sin `url` hasta que Juan confirme que es icaro.org.ar (lo dedujo el panel GEO; geo-seo-aeo M2, 2026-11-21). */
+  /** ICARO (UNC): Juan es docente del curso «IA Aplicada y Automatización» (contenido/2026-11-23-capacitaciones-real.md).
+      Sin `url` hasta que Juan confirme la de su ficha. */
   affiliation: {
-    name: 'Academia Ícaro',
+    name: 'ICARO (UNC)',
   },
   homeLocation: {
     es: 'Córdoba, Argentina',
@@ -45,10 +45,10 @@ export const PERSON = {
   },
   /** 05-copy.md §1 (55 palabras). Tercera persona a propósito: es la frase que cita un buscador o una IA. */
   description: {
-    es: 'Juan Pablo Rojo construye sistemas de IA aplicada y capacita a equipos de empresas para usar la IA en su trabajo. Estudió Ingeniería Biomédica en la UNC (tesis entregada, defensa pendiente), donde desarrolló TraumaVision AI, un detector de fracturas en radiografías pediátricas. Vive en Córdoba, Argentina, fundó el estudio Eleven y es capacitador en Academia Ícaro.',
-    en: 'Juan Pablo Rojo builds applied AI systems and trains company teams to use AI in their work. He studied Biomedical Engineering at UNC, Argentina (thesis submitted, defense pending), where he built TraumaVision AI, a fracture detector for pediatric X-rays. He is based in Córdoba, Argentina, founded the studio Eleven and is an instructor at Academia Ícaro.',
+    es: 'Juan Pablo Rojo construye sistemas de IA aplicada y capacita a equipos de empresas para usar la IA en su trabajo. Estudió Ingeniería Biomédica en la UNC (tesis entregada, defensa pendiente), donde desarrolló TraumaVision AI, un detector de fracturas en radiografías pediátricas. Vive en Córdoba, Argentina, fundó el estudio Eleven y es docente en ICARO (UNC).',
+    en: 'Juan Pablo Rojo builds applied AI systems and trains company teams to use AI in their work. He studied Biomedical Engineering at UNC, Argentina (thesis submitted, defense pending), where he built TraumaVision AI, a fracture detector for pediatric X-rays. He is based in Córdoba, Argentina, founded the studio Eleven and teaches at ICARO (UNC).',
   },
-  /** Línea corta de entidad (la misma idea que la bio pedida a Ícaro en 06-panel-geo A1). */
+  /** Línea corta de entidad (la misma idea que la bio pedida a ICARO en 06-panel-geo A1). */
   tagline: {
     es: 'Ingeniería Biomédica (UNC) · IA aplicada y capacitación para equipos de empresas',
     en: 'Biomedical Engineering (UNC) · Applied AI and training for company teams',

@@ -36,7 +36,7 @@
   font: 11px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim);
 }
 .cap-sq { flex: none; width: 6px; height: 6px; background: var(--red); box-shadow: 0 0 10px var(--red); }
-.cap-meta { font: 11px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
+.cap-meta { font: 11px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); white-space: nowrap; }
 .cap-meta b { font-weight: 400; color: var(--off); }
 
 /* ---------- titulares ---------- */
@@ -75,7 +75,7 @@
   .cap-btn:hover { box-shadow: 0 0 16px rgba(232, 39, 42, 0.2); }
 }
 
-/* ---------- la lista de programas (índice de Projects) ---------- */
+/* ---------- la lista de temas (índice de Projects) ---------- */
 .cap-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .cap-list li { border-bottom: 1px solid var(--line); }
 .cap-row {
@@ -88,7 +88,8 @@
 }
 .cap-n { grid-row: 1 / 3; font: 11px/1 var(--mono); letter-spacing: 0.14em; color: var(--dim); transition: color 0.2s; }
 .cap-t { font: 400 clamp(28px, 8.4vw, 40px)/0.95 var(--display); letter-spacing: 0.01em; color: var(--off); text-transform: uppercase; transition: color 0.2s; }
-.cap-s { grid-column: 2; margin-top: 7px; font: 400 15px/1.4 var(--ui); color: var(--dim); }
+.cap-t { margin: 0; }   /* en la página es un h3 */
+.cap-s { grid-column: 2; margin: 7px 0 0; font: 400 16px/1.45 var(--ui); color: var(--dim); }
 .cap-a {
   grid-column: 3; grid-row: 1 / 3; align-self: center; justify-self: end;
   font: 15px/1 var(--mono); color: var(--dim); transition: transform 0.3s var(--ease-out), color 0.2s;
@@ -155,6 +156,7 @@ a.cap-row:active .cap-a { color: var(--red); transform: translateX(3px); }
 .cap-ghead { display: flex; align-items: center; gap: 14px; margin: 0 0 26px; }
 .cap-ghead::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .cap-ghead .cap-meta { order: 2; }
+.cap-ghead .cap-label { line-height: 1.45; }   /* rótulos largos: en el celular parten en dos sin pegarse */
 
 .cap-who { padding: clamp(88px, 24vw, 124px) var(--pad) clamp(96px, 26vw, 140px); }
 /* :not(.cap-label): el rótulo «Quién enseña» es un <p> y tomaba el cuerpo de 17 px en vez del mono de 11 (design-critic 2026-11-23) */
@@ -189,3 +191,46 @@ a.cap-row:active .cap-a { color: var(--red); transform: translateX(3px); }
 /* C1 (2026-11-23): retrato del About apagado mientras Capacitaciones pasa sobre la escena sostenida
    (capMotion.ts, watchAboutFrame), después de que termina de cerrarse (0,4 s) */
 html[data-cap-over] .ab .ab-frame { visibility: hidden; transition: visibility 0s linear 0.45s; }
+
+/* =====================================================================================================================
+   página: contenido real (2026-11-23, contenido/2026-11-23-capacitaciones-real.md)
+   «Cómo es una capacitación» (4 puntos) y «Quiénes ya confiaron en mí» (3 casos), con el mismo vocabulario: rótulo con
+   filete (.cap-ghead), números en mono, texto en Barlow, nombres en Bebas grande. Sin logos ni colores ajenos.
+   ===================================================================================================================== */
+.cap-how, .cap-trust { padding: clamp(88px, 24vw, 124px) var(--pad) 0; scroll-margin-top: 64px; }
+.cap-how-list, .cap-trust-list { list-style: none; margin: 0; padding: 0; }
+.cap-how-list li {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 8px; align-items: baseline;
+  padding: 18px 0 16px; border-top: 1px solid var(--line);
+}
+.cap-how-list li:last-child { border-bottom: 1px solid var(--line); }
+.cap-how-list p { margin: 0; font: 400 17px/1.45 var(--ui); color: var(--dim); }
+.cap-how-list b { font-weight: 700; color: var(--off); }
+
+.cap-trust-item { padding: 28px 0 26px; border-top: 1px solid var(--line); }
+.cap-trust-item:last-child { border-bottom: 1px solid var(--line); }
+.cap-trust-name {
+  margin: 0 0 14px; font: 400 clamp(44px, 12vw, 72px)/0.86 var(--display); letter-spacing: 0.004em;
+  text-transform: uppercase; color: var(--white);
+}
+.cap-trust-item p { margin: 0; max-width: 62ch; font: 400 17px/1.5 var(--ui); color: var(--dim); }
+
+.cap-who p.cap-close { margin-top: 26px; color: var(--off); font-size: 19px; line-height: 1.4; }
+
+@media (min-width: 1024px) {
+  .cap-how, .cap-trust { padding-top: clamp(96px, 8vw, 144px); }
+  .cap-how-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(32px, 3.4vw, 64px); }
+  .cap-how-list li { grid-template-columns: 72px minmax(0, 1fr); padding: 24px 0 22px; }
+  .cap-how-list li:nth-last-child(2) { border-bottom: 1px solid var(--line); }
+  .cap-how-list .cap-n { font-size: 12px; }
+  .cap-how-list p { font-size: clamp(18px, 1.35vw, 21px); }
+
+  .cap-trust-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: clamp(32px, 3.4vw, 64px); }
+  .cap-trust-item { padding: clamp(32px, 3vw, 48px) 0 clamp(36px, 3.4vw, 52px); }
+  .cap-trust-item:nth-last-child(2), .cap-trust-item:nth-last-child(3) { border-bottom: 1px solid var(--line); }
+  /* «FRUITLOSOPHY» = 4,42 em en Bebas: a 5,2vw entra en su columna (a 1440: 75 px, 331 de ≈395 px) */
+  .cap-trust-name { font-size: clamp(52px, 5.2vw, 100px); margin-bottom: 20px; }
+  .cap-trust-item p { font-size: clamp(17px, 1.25vw, 20px); }
+
+  .cap-who p.cap-close { margin-top: 32px; font-size: clamp(21px, 1.6vw, 26px); }
+}

@@ -1,13 +1,15 @@
 'use client';
 
 /* Capacitaciones C1 «Línea de lectura» (Juan 2026-11-23: «Va C1»; maqueta bb71746). Entre el About y Projects, solo en /es.
-   La recta roja es la línea de lectura: los 7 programas suben en Bebas grande y cada uno se enciende cuando su pie
+   La recta roja es la línea de lectura: los 6 temas suben en Bebas grande y cada uno se enciende cuando su pie
    apoya en la recta (número en rojo, título blanco, resumen a plena luz); los que ya pasaron y los que vienen quedan
    en penumbra. Scroll nativo: sólo se lee la posición de las filas (sin scrub, sin pin, sin Lenis).
    - Escritorio con la escena viva: la sección es transparente y la recta es la del riel 3D, sostenida en la pose del
      About mientras pasa la sección (capShift.ts). El About se despide y la sección sube por encima del mismo vacío.
    - Celular, tablet y escritorio sin escena: fondo negro y la recta es propia (sticky, con el latido de la traza del
-     hero), a la misma altura de lectura. */
+     hero), a la misma altura de lectura.
+   Contenido real (2026-11-23, contenido/2026-11-23-capacitaciones-real.md): los temas de las capacitaciones y, después de
+   la lista, «Quiénes ya confiaron en mí» (Fruitlosophy, Rufus, ICARO) como prueba social, en el mismo vocabulario. */
 
 import { useEffect, useRef } from 'react';
 import { CAPACITACIONES as C } from '../../content/capacitaciones';
@@ -91,37 +93,34 @@ export default function Capacitaciones({ pageHref }: { pageHref: string }) {
     >
       <div className="c1-head">
         <div className="c1-top">
-          <p className="cap-label"><span className="cap-sq" aria-hidden="true" />Capacitaciones</p>
-          <p className="cap-meta"><b>{pad2(C.programs.length)}</b> programas por área</p>
+          <p className="cap-label"><span className="cap-sq" aria-hidden="true" />{C.label}</p>
+          <p className="cap-meta"><b>{pad2(C.topics.length)}</b> temas</p>
         </div>
 
         {/* Juan 2026-11-23: «Capacito equipos y empresas en automatización e inteligencia artificial». Tres renglones en
             escritorio (blanco / rojo / rojo); en el celular el blanco se parte en dos, con «y empresas en» entero (.c1-nb,
             nowrap: SplitText parte las palabras en cajas y un espacio duro no alcanza). */}
-        <h2 id="c1-h" className="c1-title" aria-label="Capacito equipos y empresas en automatización e inteligencia artificial">
+        <h2 id="c1-h" className="c1-title" aria-label={C.h1}>
           <span className="c1-l1" data-split="" aria-hidden="true">Capacito equipos <span className="c1-nb">y empresas en</span></span>
           <span className="c1-l2" data-split="" aria-hidden="true">automatización e</span>
           <span className="c1-l2" data-split="" aria-hidden="true">inteligencia artificial</span>
         </h2>
 
         <div className="c1-intro">
-          <p className="c1-lead">
-            Marketing, ventas, recursos humanos, administración, salud y dirección. Sobre las tareas que el equipo hace
-            todas las semanas, con sus documentos y sus herramientas.
-          </p>
+          <p className="c1-lead">{C.lead}</p>
           <div className="cap-ctas">
             <a className="cap-btn cap-btn-solid" href={mail}><span>{C.cta.label}</span></a>
-            <a className="cap-btn cap-btn-ghost" href={pageHref}><span>Ver programas</span></a>
+            <a className="cap-btn cap-btn-ghost" href={pageHref}><span>{C.more.label}</span></a>
           </div>
           <p className="c1-who">
-            <span>Quién enseña</span> Juan Pablo Rojo · capacitador en Academia Ícaro
+            <span>{C.whoTitle}</span> {C.whoLine}
           </p>
         </div>
       </div>
 
       <div className="c1-body">
         <p className="c1-listhead" aria-hidden="true">
-          <span>{C.programsTitle}</span><span>N.° / programa</span>
+          <span>{C.topicsTitle}</span><span>N.° / tema</span>
         </p>
         {/* la recta propia (sin escena): sticky a la altura de lectura, con el latido de la traza del hero. Vive sólo
             sobre la lista (D-05: no tacha el rótulo de arriba ni el pie) */}
@@ -131,8 +130,8 @@ export default function Capacitaciones({ pageHref }: { pageHref: string }) {
             {/* < 1024: recta lisa y el latido chico en la canaleta del número, donde no corta texto */}
             <svg className="c1-blip" viewBox="0 0 34 44" focusable="false"><path d={BLIP_D} /></svg>
           </div>
-          <ol className="c1-list" aria-label={C.programsTitle}>
-            {C.programs.map((p, i) => (
+          <ol className="c1-list" aria-label={C.topicsTitle}>
+            {C.topics.map((p, i) => (
               <li key={p.slug}>
                 <a className="c1-row" href={`${pageHref}#${p.slug}`}>
                   <span className="c1-n">{pad2(i + 1)}</span>
@@ -147,11 +146,25 @@ export default function Capacitaciones({ pageHref }: { pageHref: string }) {
           </ol>
         </div>
 
+        {/* Quiénes ya confiaron en mí: la prueba social, con el mismo peso que los temas (nombres en Bebas grande, la línea
+            en Barlow). Sin logos ni colores de sus marcas. */}
+        <div className="c1-trust" role="group" aria-labelledby="c1-trust-h">
+          <p id="c1-trust-h" className="cap-label"><span className="cap-sq" aria-hidden="true" />{C.trustTitle}</p>
+          <ul className="c1-trust-list">
+            {C.trust.map((t) => (
+              <li key={t.slug} className="c1-trust-item">
+                <span className="c1-trust-name">{t.name}</span>
+                <span className="c1-trust-line">{t.line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
         {/* remate: Escribime otra vez después del pico (design-critic D-04) */}
         <div className="c1-foot">
           <a className="cap-btn cap-btn-solid" href={mail}><span>{C.cta.label}</span></a>
           <a className="c1-more" href={pageHref}>
-            <span>Ver los {C.programs.length} programas</span>
+            <span>{C.more.label}</span>
             <svg viewBox="0 0 24 12" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden="true"><path d="M0 6h22M17 1l5 5-5 5" /></svg>
           </a>
         </div>
