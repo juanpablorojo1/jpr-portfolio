@@ -15,11 +15,14 @@
 
 .c1-title {
   margin: 40px 0 0; font-family: var(--display); font-weight: 400; text-transform: uppercase; color: var(--white);
-  font-size: clamp(56px, 10.4vw, 200px); line-height: 0.86; letter-spacing: 0.004em;
+  /* titular largo (Juan 2026-11-23): el renglón blanco «CAPACITO EQUIPOS Y EMPRESAS EN» mide 10,45 em en Bebas
+     (fontTools): a 8,2vw entra en las 89vw del contenido desde 1024 (a 1440: 118 px, 1233 px de 1282) */
+  font-size: clamp(56px, 8.2vw, 160px); line-height: 0.86; letter-spacing: 0.004em;
   perspective: 900px;
 }
 .c1-title > span { display: block; }
 .c1-title .c1-l2 { color: var(--red); }
+.c1-title .c1-nb { white-space: nowrap; }
 .c1-title .char { display: inline-block; will-change: transform, opacity; }
 
 .c1-intro {
@@ -132,7 +135,8 @@
 /* ---------- < 1024: teléfono y tablet ---------- */
 @media (max-width: 1023px) {
   .c1-head { padding-top: 96px; }
-  .c1-title { margin-top: 28px; font-size: clamp(44px, 13.4vw, 120px); }
+  /* < 1024: «INTELIGENCIA ARTIFICIAL» (7,42 em) entra en un renglón a 11,4vw (a 390: 44,5 px, 330 de 346 px) */
+  .c1-title { margin-top: 28px; font-size: clamp(40px, 11.4vw, 96px); }
   .c1-intro { margin: 28px 0 0; grid-template-columns: 1fr; }
   .c1-lead { font-size: 17px; }
   .c1-intro .cap-ctas { flex-wrap: wrap; }

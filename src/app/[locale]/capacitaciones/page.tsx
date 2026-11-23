@@ -106,9 +106,11 @@ export default async function CapacitacionesPage({ params: { locale } }: { param
             <span aria-hidden="true">/</span>
             <span aria-current="page">{C.breadcrumb.self}</span>
           </nav>
+          {/* Juan 2026-11-23: la misma frase y el mismo corte que el titular de la sección de la home */}
           <h1 className="cap-title" aria-label={C.h1}>
-            <span>Capacitación en IA</span>
-            <span className="cap-red">para equipos de empresas</span>
+            <span>Capacito equipos y empresas en</span>
+            <span className="cap-red">automatización e</span>
+            <span className="cap-red">inteligencia artificial</span>
           </h1>
           <div className="cap-trace" aria-hidden="true">
             <svg viewBox="0 0 1000 120" preserveAspectRatio="none" focusable="false">

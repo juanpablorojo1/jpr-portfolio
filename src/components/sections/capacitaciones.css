@@ -144,7 +144,7 @@ a.cap-row:active .cap-a { color: var(--red); transform: translateX(3px); }
 .cap-crumb a:hover { color: var(--white); }
 .cap-crumb [aria-current] { color: var(--off); }
 .cap-crumb span[aria-hidden] { color: #3a3a3a; }
-.cap-open .cap-title { font-size: clamp(44px, 13.2vw, 96px); }
+.cap-open .cap-title { font-size: clamp(40px, 11.4vw, 96px); }   /* el H1 largo: mismo corte que el titular de la home */
 .cap-open .cap-trace { margin-top: 8px; }
 .cap-open .cap-trace-dot { top: calc(75% - 4px); }
 .cap-open .cap-trace-ch { top: calc(75% + 16px); }

@@ -18,12 +18,13 @@ export const CAPACITACIONES = {
   path: '/capacitaciones',
   updated: '2026-11-20',
   meta: {
-    title: 'Capacitación en IA para empresas | Juan Pablo Rojo',
+    // Juan 2026-11-23: nada de «Capacitación en IA para equipos»; en el title, la forma nominal de su frase
+    title: 'Capacitación de equipos y empresas en automatización e IA | Juan Pablo Rojo',
     description:
-      'Capacitación práctica en IA para equipos de marketing, ventas, RR. HH., administración y salud, sobre las tareas reales del equipo. Desde Córdoba.',
+      'Capacito equipos y empresas en automatización e inteligencia artificial: marketing, ventas, RR. HH., administración y salud, sobre las tareas reales del equipo. Desde Córdoba.',
   },
   breadcrumb: { home: 'Inicio', self: 'Capacitaciones' },
-  h1: 'Capacitación en IA para equipos de empresas',
+  h1: 'Capacito equipos y empresas en automatización e inteligencia artificial',
   /** Respuesta directa (05-copy §3), sin la oración del formato (PENDIENTE). */
   // Respuesta directa v2 (05-copy §3b, geo-seo-aeo M3, 2026-11-21): dice quién capacita y desde dónde, en tercera
   // persona, para que se sostenga citada sin la página. También es la `description` del Service.
@@ -54,7 +55,7 @@ export const CAPACITACIONES = {
   /** 05-copy §3 `who_teaches`. LEEX: «todos los portales», sin número. TraumaVision AI. */
   who: [
     'Enseño lo que uso para construir. Mi estudio, Eleven, opera con un pipeline de agentes sobre Claude API. Para LEEX desarrollo un sistema que barre todos los portales de compras públicas y prepara borradores de veredicto para Ventas. Mi tesis, TraumaVision AI, es un detector de fracturas en radiografías de muñeca pediátrica.',
-    'Lo que llega a una capacitación ya lo probé en ese trabajo. Estudié Ingeniería Biomédica en la UNC y soy capacitador en Academia Ícaro.',
+    'Lo que llega a una capacitación ya lo probé en ese trabajo. Soy capacitador en Academia Ícaro.',
   ],
   /** /sobre-mi todavía no existe: la trayectoria vive en la sección About de la home. */
   trajectory: { label: 'Ver mi trayectoria', href: '/es#about' },

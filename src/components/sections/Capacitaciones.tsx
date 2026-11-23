@@ -95,9 +95,13 @@ export default function Capacitaciones({ pageHref }: { pageHref: string }) {
           <p className="cap-meta"><b>{pad2(C.programs.length)}</b> programas por área</p>
         </div>
 
-        <h2 id="c1-h" className="c1-title" aria-label="Capacitación en IA para equipos">
-          <span className="c1-l1" data-split="" aria-hidden="true">Capacitación en IA</span>
-          <span className="c1-l2" data-split="" aria-hidden="true">para equipos</span>
+        {/* Juan 2026-11-23: «Capacito equipos y empresas en automatización e inteligencia artificial». Tres renglones en
+            escritorio (blanco / rojo / rojo); en el celular el blanco se parte en dos, con «y empresas en» entero (.c1-nb,
+            nowrap: SplitText parte las palabras en cajas y un espacio duro no alcanza). */}
+        <h2 id="c1-h" className="c1-title" aria-label="Capacito equipos y empresas en automatización e inteligencia artificial">
+          <span className="c1-l1" data-split="" aria-hidden="true">Capacito equipos <span className="c1-nb">y empresas en</span></span>
+          <span className="c1-l2" data-split="" aria-hidden="true">automatización e</span>
+          <span className="c1-l2" data-split="" aria-hidden="true">inteligencia artificial</span>
         </h2>
 
         <div className="c1-intro">
@@ -110,7 +114,7 @@ export default function Capacitaciones({ pageHref }: { pageHref: string }) {
             <a className="cap-btn cap-btn-ghost" href={pageHref}><span>Ver programas</span></a>
           </div>
           <p className="c1-who">
-            <span>Quién enseña</span> Juan Pablo Rojo · Ingeniería Biomédica (UNC) · capacitador en Academia Ícaro
+            <span>Quién enseña</span> Juan Pablo Rojo · capacitador en Academia Ícaro
           </p>
         </div>
       </div>
