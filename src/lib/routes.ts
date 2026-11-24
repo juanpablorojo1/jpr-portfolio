@@ -1,5 +1,6 @@
 import { SITE_URL } from './site';
 import type { Locale } from './person';
+import { RECURSOS, RECURSOS_PATH } from '../content/recursos';
 
 /* Mapa de rutas públicas (fase C, 2026-11-20): una sola lista para sitemap.xml, llms.txt y los hreflang.
    `locales` dice en qué idiomas EXISTE la página: el hreflang se emite solo si hay par (03-mapa-de-paginas §Idioma).
@@ -20,6 +21,11 @@ export const SITE_ROUTES: readonly SiteRoute[] = [
   { path: '', locales: ['en', 'es'], updated: '2026-11-23', priority: 1, changeFrequency: 'monthly' },
   // Capacitaciones C1 (2026-11-23): solo ES (sin hreflang; /en/capacitaciones redirige con 308).
   { path: '/capacitaciones', locales: ['es'], updated: '2026-11-23', priority: 0.9, changeFrequency: 'monthly' },
+  // Recursos (2026-11-24): índice + una página por guía del bot de @jrojo.ia, solo ES.
+  { path: RECURSOS_PATH, locales: ['es'], updated: '2026-11-24', priority: 0.8, changeFrequency: 'weekly' },
+  ...RECURSOS.map((r) => ({
+    path: `${RECURSOS_PATH}/${r.slug}`, locales: ['es'] as const, updated: r.fecha, priority: 0.7, changeFrequency: 'monthly' as const,
+  })),
   // Solo las rutas que EXISTEN. Se suman cuando se construya cada página (p. ej. '/proyectos/traumavision', es + en,
   // 0.8). Ninguna URL a 404 en el sitemap ni en llms.txt.
 ];

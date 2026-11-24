@@ -15,6 +15,9 @@ const nextConfig = {
     return [
       { source: '/en/capacitaciones/:path*', destination: '/es/capacitaciones/:path*', permanent: true },
       { source: '/capacitaciones/:path*', destination: '/es/capacitaciones/:path*', permanent: true },
+      // Recursos: igual, solo ES (2026-11-24)
+      { source: '/en/recursos/:path*', destination: '/es/recursos/:path*', permanent: true },
+      { source: '/recursos/:path*', destination: '/es/recursos/:path*', permanent: true },
     ]
   },
   async headers() {

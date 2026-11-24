@@ -25,7 +25,7 @@ const prefersReducedMotion = () =>
 /* Orden del documento. Las tarjetas del card stack quedan pegadas (sticky) debajo de la siguiente,
    así que varias pueden cortar la banda a la vez: manda la última en el orden del documento. */
 const BASE_IDS = ['projects', 'videos', 'skills', 'experience', 'contact'] as const;
-type SectionKey = (typeof BASE_IDS)[number] | 'capacitaciones';
+type SectionKey = (typeof BASE_IDS)[number] | 'capacitaciones' | 'recursos';
 
 /* Alto del menú en reposo (navbar.css: 80 px; 64 px por debajo de 1024, más el safe area de arriba, que en el navegador
    del teléfono en vertical es 0). */
@@ -40,6 +40,8 @@ const restBarHeight = () => (window.innerWidth < 1024 ? 64 : 80);
    Con un ítem más, el menú ancho pisaba el pelo de la foto del hero entre 1200 y ~1385 px (QA F-01 del 21/11): el menú
    compacto (hamburguesa) llega hasta 1399 px (navbar.css). */
 const TRAINING_HREF = '/es/capacitaciones';
+/* Recursos (Juan 2026-11-24): las guías del bot de @jrojo.ia. Siempre es una página (solo ES), segundo ítem del menú. */
+const RESOURCES_HREF = '/es/recursos';
 const WIDE_MIN = 1400;
 
 /* La misma traza que el hero (static-trace en Hero.tsx), plana y 2D. */
@@ -56,7 +58,7 @@ function CvLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-export default function Navbar({ page = false }: { page?: boolean } = {}) {
+export default function Navbar({ page = false }: { page?: boolean | 'recursos' } = {}) {
   const t = useTranslations('nav');
   const tHero = useTranslations('hero');
   const locale = useLocale();
@@ -144,7 +146,7 @@ export default function Navbar({ page = false }: { page?: boolean } = {}) {
      sección cruce la banda. ContactStage marca `data-ct-head` en <html> mientras el titular está en pantalla
      (evento 'ct-head'); con esa marca, CONTACT se activa con el titular. */
   useEffect(() => {
-    if (page) { setActive('capacitaciones'); return; }
+    if (page) { setActive(page === 'recursos' ? 'recursos' : 'capacitaciones'); return; }
     const els = SECTION_IDS.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => !!el);
     const inBand = new Set<string>();
     const html = document.documentElement;
@@ -224,6 +226,7 @@ export default function Navbar({ page = false }: { page?: boolean } = {}) {
 
   const navLinks: { id: SectionKey; label: string }[] = [
     { id: 'capacitaciones', label: t('training') },
+    { id: 'recursos', label: t('resources') },
     { id: 'projects', label: t('projects') },
     { id: 'videos', label: t('video') },
     { id: 'skills', label: t('skills') },
@@ -233,8 +236,9 @@ export default function Navbar({ page = false }: { page?: boolean } = {}) {
 
   /* a dónde va cada link: en la home, el ancla; en la página, la home + ancla; Capacitaciones fuera de la home ES, la página */
   const homeHref = `/${locale}`;
-  const isPageLink = (id: SectionKey) => id === 'capacitaciones' && !capSection;
-  const hrefOf = (id: SectionKey) => (isPageLink(id) ? TRAINING_HREF : page ? `/es#${id}` : `#${id}`);
+  const isPageLink = (id: SectionKey) => id === 'recursos' || (id === 'capacitaciones' && !capSection);
+  const hrefOf = (id: SectionKey) =>
+    id === 'recursos' ? RESOURCES_HREF : isPageLink(id) ? TRAINING_HREF : page ? `/es#${id}` : `#${id}`;
   const isJump = (id: SectionKey) => !page && !isPageLink(id);
   const currentOf = (id: SectionKey) => (active !== id ? undefined : page ? ('page' as const) : ('location' as const));
   const langOf = (id: SectionKey) => (isPageLink(id) && locale !== 'es' ? 'es' : undefined);
@@ -374,7 +378,7 @@ export default function Navbar({ page = false }: { page?: boolean } = {}) {
             {navLinks.map((link, i) => (
               <li key={link.id} style={{ ['--i' as string]: i }}>
                 <a
-                  className={`jnav-sheet-link${link.id === 'capacitaciones' ? ' jnav-sheet-link--page' : ''}`}
+                  className={`jnav-sheet-link${link.id === 'capacitaciones' || link.id === 'recursos' ? ' jnav-sheet-link--page' : ''}`}
                   href={hrefOf(link.id)}
                   hrefLang={langOf(link.id)}
                   aria-current={currentOf(link.id)}

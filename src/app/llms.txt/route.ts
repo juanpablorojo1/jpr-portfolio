@@ -3,6 +3,8 @@ import { SOCIAL_LINKS } from '../../lib/content';
 import { urlFor } from '../../lib/routes';
 import { SITE_URL } from '../../lib/site';
 import { CAPACITACIONES } from '../../content/capacitaciones';
+import { RECURSOS, RECURSOS_PAGE, RECURSOS_PATH } from '../../content/recursos';
+import { getRecurso } from '../../lib/recursos';
 
 /* /llms.txt (llmstxt.org): quién es Juan y las URLs clave, en texto plano para las IAs. Estático: se arma en el build
    desde lib/person.ts y lib/routes.ts. El middleware no lo toca (su matcher excluye las rutas con punto). */
@@ -11,6 +13,7 @@ export const dynamic = 'force-static';
 // Capacitaciones (/es/capacitaciones, solo ES): la línea textual del copy real (content/capacitaciones.ts, `llms`).
 // El caso TraumaVision AI se suma a «Páginas principales» cuando exista su página (lib/routes.ts): sin links a 404.
 export function GET() {
+  const recursos = RECURSOS.map((r) => `- [${getRecurso(r.slug)!.title}](${urlFor('es', `${RECURSOS_PATH}/${r.slug}`)}): ${r.resumen}`).join('\n');
   const body = `# Juan Pablo Rojo
 
 > ${PERSON.description.es}
@@ -27,6 +30,11 @@ ${PERSON.tagline.es}. Sitio en español e inglés.
 - [Inicio (español)](${urlFor('es', '')}): quién es, capacitaciones, proyectos, videos, stack, experiencia y contacto.
 - [Home (English)](${urlFor('en', '')}): the same site in English.
 - [Capacitaciones](${urlFor('es', CAPACITACIONES.path)}): ${CAPACITACIONES.llms}
+- [Recursos](${urlFor('es', RECURSOS_PATH)}): ${RECURSOS_PAGE.llms}
+
+## Recursos
+
+${recursos}
 
 ## Perfiles
 
