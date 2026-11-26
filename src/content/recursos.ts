@@ -18,6 +18,8 @@ export type Recurso = {
 export const RECURSOS_PATH = '/recursos';
 
 export const RECURSOS: readonly Recurso[] = [
+  { slug: 'founder', resumen: 'La Founder Skill: once skills gratis de Claude que prueban tu negocio antes de lanzarlo, con un directorio que te pone nota y un panel de clientes simulados.', palabra: 'FOUNDER', fecha: '2026-11-26' },
+  { slug: 'agente', resumen: 'Coucou, el compañero gratis y de código abierto para tus agentes de IA: aprobás los permisos de Claude Code desde la muesca o el celular.', palabra: 'AGENTE', fecha: '2026-11-26' },
   { slug: 'motion', resumen: 'Cómo hacer un reel animado con Claude Code y Remotion: qué instalar, los prompts para el personaje y las escenas, cómo pedir correcciones y música libre.', palabra: 'MOTION', fecha: '2026-11-24' },
   { slug: 'harvey', resumen: 'Sellbird (antes Harvey), el agente de Claude de código abierto que busca clientes y les escribe: qué hace, qué necesita y cómo instalarlo.', palabra: 'HARVEY', fecha: '2026-11-24' },
   { slug: 'mcp', resumen: 'Qué es una API y qué es MCP, explicado para un negocio, con preguntas para hacerle al proveedor.', palabra: 'MCP', fecha: '2026-11-24' },
